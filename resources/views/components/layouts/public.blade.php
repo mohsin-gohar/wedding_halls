@@ -45,102 +45,131 @@
           } 
       }">
 
-    <!-- Main Navigation Bar (Luxury Obsidian & Champagne Gold, Zero-Pill) -->
-    <header class="sticky top-0 z-40 bg-[#171513]/95 backdrop-blur-lg border-b border-[#C6A15B]/40 transition-all duration-300 text-white shadow-[0_10px_40px_-15px_rgba(198,161,91,0.45)]" id="site-header">
+    <!-- Top Concierge Announcement Bar -->
+    <div class="bg-[#0F0D0A] text-[#C6A15B] border-b border-[#C6A15B]/30 py-1.5 px-4 text-[11px] font-mono tracking-wider flex items-center justify-between relative z-50">
+        <div class="max-w-7xl mx-auto w-full flex items-center justify-between gap-4 px-2">
+            <div class="flex items-center gap-3 overflow-hidden text-ellipsis whitespace-nowrap">
+                <span class="inline-block w-2 h-2 rounded-full bg-[#C6A15B] animate-ping"></span>
+                <span class="text-stone-300">Mughlai Catering &amp; Luxury Marquees</span>
+                <span class="text-stone-600 hidden md:inline">•</span>
+                <span class="text-stone-400 hidden md:inline">2026 Shift Booking Open Across Pakistan</span>
+            </div>
+            <div class="flex items-center gap-4 shrink-0 text-stone-300">
+                <a href="tel:+924235789000" class="hover:text-[#C6A15B] transition hidden sm:inline flex items-center gap-1">
+                    <span>📞 Concierge: +92 (42) 3578-9000</span>
+                </a>
+                <span class="text-stone-600 hidden sm:inline">|</span>
+                <a href="{{ route('public.availability') }}" class="text-[#C6A15B] hover:underline font-bold">
+                    ⚡ Live Slot Availability
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation Bar (Luxury Glassmorphic Obsidian & Gold Header) -->
+    <header class="sticky top-0 z-40 bg-[#171513]/90 backdrop-blur-xl border-b border-[#C6A15B]/30 transition-all duration-300 text-white shadow-[0_12px_45px_-10px_rgba(0,0,0,0.85)]" id="site-header">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="h-20 flex items-center justify-between gap-6">
                 
                 <!-- Brand Identity -->
-                <a href="{{ route('home') }}" class="flex items-center gap-3 group">
-                    <div class="w-10 h-10 border border-[#C6A15B] flex items-center justify-center bg-[#171513] text-[#C6A15B] transition group-hover:bg-gradient-to-br group-hover:from-[#C6A15B] group-hover:to-[#8F7239] group-hover:text-[#171513] shadow-[0_0_20px_-8px_rgba(198,161,91,0.4)] group-hover:shadow-[0_0_30px_rgba(198,161,91,0.6)]">
-                        <span class="font-cinzel text-lg font-bold">V</span>
+                <a href="{{ route('home') }}" class="flex items-center gap-3.5 group shrink-0">
+                    <div class="w-10 h-10 border-2 border-[#C6A15B] flex items-center justify-center bg-[#171513] text-[#C6A15B] transition-all duration-500 group-hover:bg-gradient-to-br group-hover:from-[#C6A15B] group-hover:to-[#8F7239] group-hover:text-[#171513] shadow-[0_0_20px_-4px_rgba(198,161,91,0.5)] group-hover:shadow-[0_0_35px_rgba(198,161,91,0.8)] group-hover:rotate-6">
+                        <span class="font-cinzel text-xl font-bold">V</span>
                     </div>
                     <div class="flex flex-col">
-                        <span class="font-cinzel text-xl font-bold tracking-[0.16em] text-white group-hover:text-[#C6A15B] transition">
+                        <span class="font-cinzel text-xl font-bold tracking-[0.18em] text-white group-hover:text-[#C6A15B] transition-colors duration-300">
                             VENUECLOUD
                         </span>
-                        <span class="text-[9px] tracking-[0.26em] text-[#C6A15B]/80 uppercase -mt-0.5 font-medium font-mono">
-                            Luxury Banquets &amp; Marquees
+                        <span class="text-[9px] tracking-[0.28em] text-[#C6A15B]/90 uppercase -mt-0.5 font-bold font-mono">
+                            Commercial Banquets &amp; SaaS
                         </span>
                     </div>
                 </a>
 
                 <!-- Desktop Navigation Links -->
-                <nav class="hidden lg:flex items-center space-x-7 text-[13px] font-semibold tracking-[0.03em] uppercase font-mono">
-                    <a href="{{ route('home') }}" class="py-2 transition {{ request()->routeIs('home') ? 'border-b-2 border-[#C6A15B] text-[#C6A15B]' : 'text-stone-300 hover:text-[#C6A15B]' }}">
+                <nav class="hidden lg:flex items-center space-x-6 text-[13px] font-semibold tracking-[0.05em] uppercase font-mono">
+                    <a href="{{ route('home') }}" class="py-2.5 transition relative group {{ request()->routeIs('home') ? 'text-[#C6A15B]' : 'text-stone-300 hover:text-white' }}">
                         Home
+                        <span class="absolute bottom-0 left-0 w-full h-0.5 bg-[#C6A15B] transition-transform duration-300 {{ request()->routeIs('home') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100' }}"></span>
                     </a>
-                    <a href="{{ route('public.venues') }}" class="py-2 transition {{ request()->routeIs('public.venues*') ? 'border-b-2 border-[#C6A15B] text-[#C6A15B]' : 'text-stone-300 hover:text-[#C6A15B]' }}">
-                        Explore Venues
+                    <a href="{{ route('public.venues') }}" class="py-2.5 transition relative group {{ request()->routeIs('public.venues*') ? 'text-[#C6A15B]' : 'text-stone-300 hover:text-white' }}">
+                        Venues
+                        <span class="absolute bottom-0 left-0 w-full h-0.5 bg-[#C6A15B] transition-transform duration-300 {{ request()->routeIs('public.venues*') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100' }}"></span>
                     </a>
-                    <a href="{{ route('public.packages') }}" class="py-2 transition {{ request()->routeIs('public.packages*') ? 'border-b-2 border-[#C6A15B] text-[#C6A15B]' : 'text-stone-300 hover:text-[#C6A15B]' }}">
-                        Catering &amp; Packages
+                    <a href="{{ route('public.packages') }}" class="py-2.5 transition relative group {{ request()->routeIs('public.packages*') ? 'text-[#C6A15B]' : 'text-stone-300 hover:text-white' }}">
+                        Catering &amp; Menus
+                        <span class="absolute bottom-0 left-0 w-full h-0.5 bg-[#C6A15B] transition-transform duration-300 {{ request()->routeIs('public.packages*') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100' }}"></span>
                     </a>
-                    <a href="{{ route('public.gallery') }}" class="py-2 transition {{ request()->routeIs('public.gallery*') ? 'border-b-2 border-[#C6A15B] text-[#C6A15B]' : 'text-stone-300 hover:text-[#C6A15B]' }}">
+                    <a href="{{ route('public.gallery') }}" class="py-2.5 transition relative group {{ request()->routeIs('public.gallery*') ? 'text-[#C6A15B]' : 'text-stone-300 hover:text-white' }}">
                         Gallery
+                        <span class="absolute bottom-0 left-0 w-full h-0.5 bg-[#C6A15B] transition-transform duration-300 {{ request()->routeIs('public.gallery*') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100' }}"></span>
                     </a>
-                    <a href="{{ route('public.services') }}" class="py-2 transition {{ request()->routeIs('public.services*') ? 'border-b-2 border-[#C6A15B] text-[#C6A15B]' : 'text-stone-300 hover:text-[#C6A15B]' }}">
+                    <a href="{{ route('public.services') }}" class="py-2.5 transition relative group {{ request()->routeIs('public.services*') ? 'text-[#C6A15B]' : 'text-stone-300 hover:text-white' }}">
                         Services
+                        <span class="absolute bottom-0 left-0 w-full h-0.5 bg-[#C6A15B] transition-transform duration-300 {{ request()->routeIs('public.services*') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100' }}"></span>
                     </a>
-                    <a href="{{ route('public.availability') }}" class="py-2 transition {{ request()->routeIs('public.availability*') ? 'border-b-2 border-[#C6A15B] text-[#C6A15B]' : 'text-stone-300 hover:text-[#C6A15B]' }}">
+                    <a href="{{ route('public.availability') }}" class="py-2.5 transition relative group {{ request()->routeIs('public.availability*') ? 'text-[#C6A15B]' : 'text-stone-300 hover:text-white' }}">
                         Availability
+                        <span class="absolute bottom-0 left-0 w-full h-0.5 bg-[#C6A15B] transition-transform duration-300 {{ request()->routeIs('public.availability*') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100' }}"></span>
                     </a>
-                    <a href="{{ route('public.about') }}" class="py-2 transition {{ request()->routeIs('public.about*') ? 'border-b-2 border-[#C6A15B] text-[#C6A15B]' : 'text-stone-300 hover:text-[#C6A15B]' }}">
+                    <a href="{{ route('public.about') }}" class="py-2.5 transition relative group {{ request()->routeIs('public.about*') ? 'text-[#C6A15B]' : 'text-stone-300 hover:text-white' }}">
                         About
+                        <span class="absolute bottom-0 left-0 w-full h-0.5 bg-[#C6A15B] transition-transform duration-300 {{ request()->routeIs('public.about*') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100' }}"></span>
                     </a>
-                    <a href="{{ route('public.contact') }}" class="py-2 transition {{ request()->routeIs('public.contact*') ? 'border-b-2 border-[#C6A15B] text-[#C6A15B]' : 'text-stone-300 hover:text-[#C6A15B]' }}">
+                    <a href="{{ route('public.contact') }}" class="py-2.5 transition relative group {{ request()->routeIs('public.contact*') ? 'text-[#C6A15B]' : 'text-stone-300 hover:text-white' }}">
                         Contact
+                        <span class="absolute bottom-0 left-0 w-full h-0.5 bg-[#C6A15B] transition-transform duration-300 {{ request()->routeIs('public.contact*') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100' }}"></span>
                     </a>
                 </nav>
 
-                <!-- Actions: Zero-Pill Buttons -->
+                <!-- Actions Header Strip -->
                 <div class="flex items-center gap-3">
-                    <!-- Theme Toggle Button -->
+                    <!-- Theme Switcher -->
                     <button type="button" 
                             @click="toggleTheme()" 
-                            class="h-9 px-2.5 border border-[#C6A15B]/40 bg-[#171513] text-[#C6A15B] hover:bg-[#C6A15B] hover:text-[#171513] transition flex items-center gap-1.5 text-xs font-mono font-semibold cursor-pointer"
-                            title="Toggle Light / Dark Mode">
+                            class="h-9 px-3 border border-[#C6A15B]/40 bg-[#171513] text-[#C6A15B] hover:bg-[#C6A15B] hover:text-[#171513] transition flex items-center gap-1.5 text-xs font-mono font-semibold cursor-pointer shadow"
+                            title="Toggle Light / Dark Theme">
                         <span x-show="darkMode">☀️ Light</span>
                         <span x-show="!darkMode">🌙 Dark</span>
                     </button>
 
                     @guest
-                        <a href="{{ route('public.contact') }}" class="btn-outline-gold !h-9 !text-xs !text-[#F8F5EF] !border-[#C6A15B]/60 hover:!text-[#171513] hover:!border-[#C6A15B] hover:!bg-[#C6A15B] hidden md:inline-flex transition-all duration-300">
-                            Request Quote
+                        <a href="{{ route('public.availability') }}" class="btn-outline-gold !h-9 !text-xs !text-[#F8F5EF] !border-[#C6A15B]/60 hover:!text-[#171513] hover:!border-[#C6A15B] hover:!bg-[#C6A15B] hidden xl:inline-flex transition-all duration-300">
+                            Check Slots
                         </a>
                         <a href="{{ route('login') }}" class="btn-outline-gold !h-9 !text-xs !text-[#F8F5EF] !border-[#C6A15B]/60 hover:!text-[#171513] hover:!border-[#C6A15B] hover:!bg-[#C6A15B] hidden sm:inline-flex transition-all duration-300">
                             Sign In
                         </a>
-                        <a href="{{ route('register') }}" class="btn-gold !h-9 !text-xs shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.5)] transition-all duration-300">
+                        <a href="{{ route('register') }}" class="btn-gold !h-9 !text-xs shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.6)] transition-all duration-300 font-bold">
                             List Your Hall &rarr;
                         </a>
                     @else
                         @if(auth()->user()->isSuperAdmin())
-                            <a href="{{ route('admin.dashboard') }}" class="btn-gold !h-9 !text-xs shadow-[0_0_15px_$1198, 161, 91,0.3)]">
+                            <a href="{{ route('admin.dashboard') }}" class="btn-gold !h-9 !text-xs shadow-[0_0_15px_rgba(198,161,91,0.4)]">
                                 Super Admin &rarr;
                             </a>
                         @elseif(auth()->user()->isTenantOwner() || auth()->user()->isFrontDesk() || auth()->user()->isChef())
-                            <a href="{{ route('dashboard') }}" class="btn-gold !h-9 !text-xs shadow-[0_0_15px_$1198, 161, 91,0.3)]">
+                            <a href="{{ route('dashboard') }}" class="btn-gold !h-9 !text-xs shadow-[0_0_15px_rgba(198,161,91,0.4)]">
                                 Vendor Console &rarr;
                             </a>
                         @else
-                            <a href="{{ route('customer.dashboard') }}" class="btn-gold !h-9 !text-xs shadow-[0_0_15px_$1198, 161, 91,0.3)]">
+                            <a href="{{ route('customer.dashboard') }}" class="btn-gold !h-9 !text-xs shadow-[0_0_15px_rgba(198,161,91,0.4)]">
                                 My Bookings &rarr;
                             </a>
                         @endif
 
                         <form method="POST" action="{{ route('logout') }}" class="inline">
                             @csrf
-                            <button type="submit" title="Sign Out" class="h-9 px-3 border border-white/20 bg-[#171513] text-stone-300 hover:text-[#171513] hover:border-[#C6A15B]/60 text-xs font-semibold transition">
+                            <button type="submit" title="Sign Out" class="h-9 px-3 border border-white/20 bg-[#171513] text-stone-300 hover:text-[#171513] hover:bg-stone-200 text-xs font-semibold transition">
                                 Exit
                             </button>
                         </form>
                     @endguest
 
                     <!-- Mobile Menu Hamburger -->
-                    <button type="button" @click="mobileNav = !mobileNav" class="lg:hidden w-10 h-10 border border-[#C6A15B]/40 bg-[#171513] flex items-center justify-center text-white" aria-label="Toggle Navigation">
+                    <button type="button" @click="mobileNav = !mobileNav" class="lg:hidden w-10 h-10 border border-[#C6A15B]/50 bg-[#171513] flex items-center justify-center text-white hover:text-[#C6A15B]" aria-label="Toggle Navigation">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6h16M4 12h16m-7 6h7"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
                         </svg>
                     </button>
                 </div>
@@ -159,27 +188,27 @@
              class="lg:hidden bg-[#171513] border-b border-[#C6A15B]/30 px-6 py-6 space-y-4 shadow-2xl text-white"
              style="display: none;"
              @click.outside="mobileNav = false">
-            <div class="text-[10px] uppercase font-bold tracking-[0.2em] text-[#C6A15B] font-mono">Navigation</div>
+            <div class="text-[10px] uppercase font-bold tracking-[0.2em] text-[#C6A15B] font-mono">Navigation Menu</div>
             <div class="grid grid-cols-2 gap-3 text-sm font-semibold text-stone-300 font-mono">
-                <a href="{{ route('home') }}" class="py-1 hover:text-[#C6A15B]">Home</a>
-                <a href="{{ route('public.venues') }}" class="py-1 hover:text-[#C6A15B]">Explore Venues</a>
-                <a href="{{ route('public.packages') }}" class="py-1 hover:text-[#C6A15B]">Packages &amp; Menus</a>
-                <a href="{{ route('public.gallery') }}" class="py-1 hover:text-[#C6A15B]">Photo &amp; Video</a>
-                <a href="{{ route('public.services') }}" class="py-1 hover:text-[#C6A15B]">Bespoke Services</a>
-                <a href="{{ route('public.availability') }}" class="py-1 hover:text-[#C6A15B]">Availability</a>
-                <a href="{{ route('public.about') }}" class="py-1 hover:text-[#C6A15B]">About VenueCloud</a>
-                <a href="{{ route('public.contact') }}" class="py-1 hover:text-[#C6A15B]">Contact &amp; Office</a>
+                <a href="{{ route('home') }}" class="py-1.5 hover:text-[#C6A15B]">Home</a>
+                <a href="{{ route('public.venues') }}" class="py-1.5 hover:text-[#C6A15B]">Explore Venues</a>
+                <a href="{{ route('public.packages') }}" class="py-1.5 hover:text-[#C6A15B]">Packages &amp; Menus</a>
+                <a href="{{ route('public.gallery') }}" class="py-1.5 hover:text-[#C6A15B]">Photo &amp; Video</a>
+                <a href="{{ route('public.services') }}" class="py-1.5 hover:text-[#C6A15B]">Bespoke Services</a>
+                <a href="{{ route('public.availability') }}" class="py-1.5 hover:text-[#C6A15B]">Shift Availability</a>
+                <a href="{{ route('public.about') }}" class="py-1.5 hover:text-[#C6A15B]">About Platform</a>
+                <a href="{{ route('public.contact') }}" class="py-1.5 hover:text-[#C6A15B]">Contact Us</a>
             </div>
 
             <div class="pt-4 border-t border-white/10 flex flex-col gap-2">
                 @guest
-                            <a href="{{ route('login') }}" class="btn-outline-gold !w-full !justify-center !text-[#F8F5EF] !border-[#C6A15B]/60 hover:!text-[#171513] hover:!border-[#C6A15B] hover:!bg-[#C6A15B] transition-all duration-300">Sign In (Vendor / Customer)</a>
-                            <a href="{{ route('register') }}" class="btn-gold !w-full !justify-center shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.5)] transition-all duration-300">Register Wedding Hall</a>
+                    <a href="{{ route('login') }}" class="btn-outline-gold !w-full !justify-center !text-[#F8F5EF] !border-[#C6A15B]/60 hover:!text-[#171513] hover:!border-[#C6A15B] hover:!bg-[#C6A15B] transition-all duration-300">Sign In (Vendor / Customer)</a>
+                    <a href="{{ route('register') }}" class="btn-gold !w-full !justify-center shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.5)] transition-all duration-300 font-bold">Register Wedding Hall</a>
                 @else
-                    <a href="{{ route('dashboard') }}" class="btn-gold !w-full !justify-center">Go to Dashboard</a>
+                    <a href="{{ route('dashboard') }}" class="btn-gold !w-full !justify-center">Go to Console</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="w-full text-center py-2 text-xs font-semibold text-[#171513]">Sign Out</button>
+                        <button type="submit" class="w-full text-center py-2 text-xs font-semibold text-stone-300 hover:text-white">Sign Out</button>
                     </form>
                 @endguest
             </div>
