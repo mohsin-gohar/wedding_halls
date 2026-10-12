@@ -1,0 +1,558 @@
+<?php
+
+namespace App\Livewire;
+
+use App\Models\Hall;
+use App\Models\Venue;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Livewire\Component;
+
+class HallMediaManager extends Component
+{
+    public ?Hall $hall = null;
+    public string $selectedHallId = '';
+    
+    // Hall Details
+    public string $name = '';
+    public string $tagline = '';
+    public string $description = '';
+    public string $operating_hours = '';
+    public string $policies = '';
+    public int $max_capacity = 500;
+    public int $min_capacity = 150;
+    public float $base_rent = 150000;
+    public bool $has_air_conditioning = true;
+    public bool $has_generator_backup = true;
+    public bool $has_bridal_room = true;
+    public bool $is_active = true;
+    public string $cover_image = '';
+    
+    // Services & Product Catalog (White-Label Storefront Features)
+    public array $services = [];
+    public string $newServiceTitle = '';
+    public float $newServicePrice = 0;
+    public bool $newServiceComplimentary = false;
+    public string $newServiceCategory = 'Decor & Ambience';
+    public string $newServiceDescription = '';
+    public string $newServiceIcon = 'sparkles';
+
+    // Venue / Complex Details (White-Label Branding)
+    public string $venue_name = '';
+    public string $city = 'Lahore';
+    public string $address = '';
+    public string $phone = '';
+
+    // Gallery Media
+    public array $images = [];
+    public array $videos = [];
+
+    // Website Builder & Section Visibility Customization
+    public array $website_settings = [
+        'announcement_banner' => 'Now accepting Winter 2026 wedding reservations with complimentary VIP bridal suite!',
+        'show_announcement' => true,
+        'show_video_tour' => true,
+        'show_services' => true,
+        'show_packages' => true,
+        'show_shift_matrix' => true,
+        'show_faqs' => true,
+        'show_reviews' => true,
+        'faqs' => [],
+        'reviews' => [],
+    ];
+
+    // FAQ & Review input states
+    public string $newFaqQuestion = '';
+    public string $newFaqAnswer = '';
+    public string $newReviewAuthor = '';
+    public string $newReviewEvent = 'Walima Reception';
+    public int $newReviewRating = 5;
+    public string $newReviewQuote = '';
+
+    // Inputs for adding new items
+    public string $newImageUrl = '';
+    public string $newVideoUrl = '';
+
+    // New Hall Creation Modal
+    public bool $showCreateModal = false;
+    public string $newHallName = '';
+    public int $newHallCapacity = 500;
+    public float $newHallRent = 150000;
+
+    protected $rules = [
+        'name' => 'required|string|min:3|max:120',
+        'venue_name' => 'required|string|min:3|max:120',
+        'city' => 'required|string|max:80',
+        'address' => 'nullable|string|max:255',
+        'phone' => 'nullable|string|max:50',
+        'description' => 'nullable|string|max:1500',
+        'max_capacity' => 'required|integer|min:50|max:10000',
+        'min_capacity' => 'required|integer|min:20|max:10000',
+        'base_rent' => 'required|numeric|min:10000',
+        'has_air_conditioning' => 'boolean',
+        'has_generator_backup' => 'boolean',
+        'has_bridal_room' => 'boolean',
+        'is_active' => 'boolean',
+        'cover_image' => 'nullable|url',
+    ];
+
+    public function mount()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // Retrieve halls strictly scoped to the user's tenant
+        $firstHall = Hall::where('tenant_id', $user->tenant_id)->first();
+
+        // If no hall exists for this tenant yet, auto-provision initial hall
+        if (!$firstHall && $user->tenant_id) {
+            $venue = Venue::where('tenant_id', $user->tenant_id)->first();
+            if (!$venue) {
+                $venue = Venue::create([
+                    'tenant_id' => $user->tenant_id,
+                    'name' => ($user->tenant->name ?? 'Venue Complex'),
+                    'slug' => Str::slug(($user->tenant->name ?? 'venue') . '-' . Str::random(4)),
+                    'city' => $user->tenant->city ?? 'Lahore',
+                    'address' => $user->tenant->address ?? 'Main Boulevard, Gulberg III, Lahore',
+                    'phone' => $user->tenant->phone ?? '+92 300 1234567',
+                    'is_active' => true,
+                ]);
+            }
+
+            $firstHall = Hall::create([
+                'tenant_id' => $user->tenant_id,
+                'venue_id' => $venue->id,
+                'name' => ($user->tenant->name ?? 'Royal Grand Hall'),
+                'min_capacity' => 150,
+                'max_capacity' => 500,
+                'base_rent' => 150000.00,
+                'description' => 'Luxury wedding banquet hall with central AC and heavy generator backup.',
+                'cover_image' => 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
+                'images' => [
+                    'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200&auto=format&fit=crop',
+                ],
+                'has_air_conditioning' => true,
+                'has_generator_backup' => true,
+                'has_bridal_room' => true,
+                'is_active' => true,
+            ]);
+        }
+
+        if ($firstHall) {
+            $this->loadHall($firstHall);
+        }
+    }
+
+    public function switchHall(string $hallId)
+    {
+        $user = Auth::user();
+        $hall = Hall::where('tenant_id', $user->tenant_id)->findOrFail($hallId);
+        $this->loadHall($hall);
+    }
+
+    private function loadHall(Hall $hall)
+    {
+        $this->hall = $hall;
+        $this->selectedHallId = $hall->id;
+        $this->name = $hall->name ?? '';
+        $this->tagline = $hall->tagline ?? '';
+        $this->description = $hall->description ?? '';
+        $this->operating_hours = $hall->operating_hours ?? '';
+        $this->policies = $hall->policies ?? '';
+        $this->max_capacity = $hall->max_capacity ?? 500;
+        $this->min_capacity = $hall->min_capacity ?? 150;
+        $this->base_rent = (float) ($hall->base_rent ?? 150000);
+        $this->has_air_conditioning = (bool) $hall->has_air_conditioning;
+        $this->has_generator_backup = (bool) $hall->has_generator_backup;
+        $this->has_bridal_room = (bool) $hall->has_bridal_room;
+        $this->is_active = (bool) $hall->is_active;
+        $this->cover_image = $hall->cover_image ?? '';
+        $this->services = is_array($hall->services) ? $hall->services : [];
+        $this->images = is_array($hall->images) ? $hall->images : [];
+        $this->videos = is_array($hall->videos) ? $hall->videos : [];
+        
+        $savedSettings = is_array($hall->website_settings) ? $hall->website_settings : [];
+        $this->website_settings = array_merge([
+            'announcement_banner' => 'Now accepting Winter 2026 wedding reservations with complimentary VIP bridal suite!',
+            'show_announcement' => true,
+            'show_video_tour' => true,
+            'show_services' => true,
+            'show_packages' => true,
+            'show_shift_matrix' => true,
+            'show_faqs' => true,
+            'show_reviews' => true,
+            'faqs' => [],
+            'reviews' => [],
+        ], $savedSettings);
+
+        // Venue details
+        $venue = $hall->venue;
+        if ($venue) {
+            $this->venue_name = $venue->name ?? '';
+            $this->city = $venue->city ?? 'Lahore';
+            $this->address = $venue->address ?? '';
+            $this->phone = $venue->phone ?? '';
+        } else {
+            $this->venue_name = Auth::user()->tenant->name ?? 'Venue Complex';
+            $this->city = Auth::user()->tenant->city ?? 'Lahore';
+            $this->address = Auth::user()->tenant->address ?? '';
+            $this->phone = Auth::user()->tenant->phone ?? '';
+        }
+    }
+
+    public function openCreateModal()
+    {
+        $tenant = Auth::user()->tenant;
+        if ($tenant && !$tenant->canAddHall()) {
+            session()->flash('error', "Hall limit reached (" . $tenant->halls()->count() . "/" . ($tenant->subscriptionPlan->max_halls ?? 1) . "). Please upgrade your SaaS subscription to add more banquet halls.");
+            return;
+        }
+
+        $this->newHallName = '';
+        $this->newHallCapacity = 500;
+        $this->newHallRent = 150000;
+        $this->showCreateModal = true;
+    }
+
+    public function closeCreateModal()
+    {
+        $this->showCreateModal = false;
+    }
+
+    public function createNewHall()
+    {
+        $tenant = Auth::user()->tenant;
+        if ($tenant && !$tenant->canAddHall()) {
+            session()->flash('error', "Hall limit reached. Please upgrade your SaaS subscription.");
+            $this->showCreateModal = false;
+            return;
+        }
+
+        $this->validate([
+            'newHallName' => 'required|string|min:3|max:120',
+            'newHallCapacity' => 'required|integer|min:50|max:10000',
+            'newHallRent' => 'required|numeric|min:10000',
+        ]);
+
+        $user = Auth::user();
+        $venue = Venue::where('tenant_id', $user->tenant_id)->first();
+        if (!$venue) {
+            $venue = Venue::create([
+                'tenant_id' => $user->tenant_id,
+                'name' => ($user->tenant->name ?? 'Venue Complex'),
+                'slug' => Str::slug(($user->tenant->name ?? 'venue') . '-' . Str::random(4)),
+                'city' => $user->tenant->city ?? 'Lahore',
+                'address' => $user->tenant->address ?? 'Main Boulevard, Gulberg III, Lahore',
+                'phone' => $user->tenant->phone ?? '+92 300 1234567',
+                'is_active' => true,
+            ]);
+        }
+
+        $newHall = Hall::create([
+            'tenant_id' => $user->tenant_id,
+            'venue_id' => $venue->id,
+            'name' => $this->newHallName,
+            'min_capacity' => (int) ($this->newHallCapacity * 0.4),
+            'max_capacity' => $this->newHallCapacity,
+            'base_rent' => $this->newHallRent,
+            'description' => 'Spectacular wedding banquet marquee ballroom.',
+            'cover_image' => 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
+            'images' => [
+                'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
+            ],
+            'has_air_conditioning' => true,
+            'has_generator_backup' => true,
+            'has_bridal_room' => true,
+            'is_active' => true,
+        ]);
+
+        $this->showCreateModal = false;
+        $this->loadHall($newHall);
+        session()->flash('message', "New hall [{$newHall->name}] created successfully! You can now configure its photos and pricing.");
+    }
+
+    public function addImage()
+    {
+        $this->validate([
+            'newImageUrl' => 'required|url'
+        ]);
+
+        $this->images[] = trim($this->newImageUrl);
+        if (empty($this->cover_image)) {
+            $this->cover_image = trim($this->newImageUrl);
+        }
+        $this->newImageUrl = '';
+        $this->save();
+        session()->flash('message', 'New photo added successfully!');
+    }
+
+    public function removeImage(int $index)
+    {
+        if (isset($this->images[$index])) {
+            $removedUrl = $this->images[$index];
+            unset($this->images[$index]);
+            $this->images = array_values($this->images);
+
+            if ($this->cover_image === $removedUrl) {
+                $this->cover_image = $this->images[0] ?? '';
+            }
+
+            $this->save();
+            session()->flash('message', 'Photo removed.');
+        }
+    }
+
+    public function setCoverImage(string $url)
+    {
+        $this->cover_image = $url;
+        $this->save();
+        session()->flash('message', 'Cover image updated!');
+    }
+
+    public function addVideo()
+    {
+        $this->validate([
+            'newVideoUrl' => 'required|url'
+        ]);
+
+        $url = trim($this->newVideoUrl);
+
+        if (str_contains($url, 'youtube.com/watch?v=')) {
+            preg_match('/v=([a-zA-Z0-9_-]+)/', $url, $matches);
+            if (!empty($matches[1])) {
+                $url = 'https://www.youtube.com/embed/' . $matches[1];
+            }
+        } elseif (str_contains($url, 'youtu.be/')) {
+            $id = substr(parse_url($url, PHP_URL_PATH), 1);
+            if (!empty($id)) {
+                $url = 'https://www.youtube.com/embed/' . $id;
+            }
+        }
+
+        $this->videos[] = $url;
+        $this->newVideoUrl = '';
+        $this->save();
+        session()->flash('message', 'Video walkthrough added successfully!');
+    }
+
+    public function removeVideo(int $index)
+    {
+        if (isset($this->videos[$index])) {
+            unset($this->videos[$index]);
+            $this->videos = array_values($this->videos);
+            $this->save();
+            session()->flash('message', 'Video removed.');
+        }
+    }
+
+    public function save()
+    {
+        $this->validate();
+
+        $user = Auth::user();
+
+        if ($this->hall) {
+            // Strictly check ownership
+            if ($this->hall->tenant_id !== $user->tenant_id) {
+                abort(403, 'Unauthorized.');
+            }
+
+            $this->hall->update([
+                'name' => $this->name,
+                'tagline' => $this->tagline,
+                'description' => $this->description,
+                'operating_hours' => $this->operating_hours,
+                'policies' => $this->policies,
+                'max_capacity' => $this->max_capacity,
+                'min_capacity' => $this->min_capacity,
+                'base_rent' => $this->base_rent,
+                'has_air_conditioning' => $this->has_air_conditioning,
+                'has_generator_backup' => $this->has_generator_backup,
+                'has_bridal_room' => $this->has_bridal_room,
+                'is_active' => $this->is_active,
+                'cover_image' => $this->cover_image,
+                'services' => array_values($this->services),
+                'website_settings' => $this->website_settings,
+                'images' => array_values($this->images),
+                'videos' => array_values($this->videos),
+            ]);
+
+            // Update venue record as well
+            if ($this->hall->venue) {
+                $this->hall->venue->update([
+                    'name' => $this->venue_name,
+                    'city' => $this->city,
+                    'address' => $this->address,
+                    'phone' => $this->phone,
+                ]);
+            }
+
+            // Update tenant name
+            if ($user->tenant) {
+                $user->tenant->update([
+                    'name' => $this->venue_name,
+                    'city' => $this->city,
+                    'address' => $this->address,
+                    'phone' => $this->phone,
+                ]);
+            }
+
+            session()->flash('message', "Hall & Venue [{$this->name}] updated successfully! Live website reflects all changes.");
+        }
+    }
+
+    public function deleteHall(string $hallId)
+    {
+        $user = Auth::user();
+        $totalHalls = Hall::where('tenant_id', $user->tenant_id)->count();
+        if ($totalHalls <= 1) {
+            session()->flash('error', 'You must maintain at least one active hall space for your venue.');
+            return;
+        }
+
+        $hall = Hall::where('tenant_id', $user->tenant_id)->findOrFail($hallId);
+
+        $activeBookings = $hall->bookings()->where('status', 'CONFIRMED')->count();
+        if ($activeBookings > 0) {
+            session()->flash('error', "Cannot delete [{$hall->name}] because it has {$activeBookings} active confirmed booking(s). Reassign or cancel the bookings first.");
+            return;
+        }
+
+        $hallName = $hall->name;
+        $hall->delete();
+
+        $remaining = Hall::where('tenant_id', $user->tenant_id)->first();
+        if ($remaining) {
+            $this->loadHall($remaining);
+        }
+
+        session()->flash('message', "Hall [{$hallName}] deleted successfully.");
+    }
+
+    public function addService()
+    {
+        $this->validate([
+            'newServiceTitle' => 'required|string|min:3|max:100',
+            'newServicePrice' => 'required|numeric|min:0',
+            'newServiceCategory' => 'required|string|max:60',
+        ]);
+
+        $this->services[] = [
+            'title' => trim($this->newServiceTitle),
+            'price' => (float) $this->newServicePrice,
+            'is_complimentary' => (bool) $this->newServiceComplimentary,
+            'category' => trim($this->newServiceCategory),
+            'description' => trim($this->newServiceDescription),
+            'icon' => $this->newServiceIcon ?: 'sparkles',
+        ];
+
+        // Reset service form fields
+        $this->newServiceTitle = '';
+        $this->newServicePrice = 0;
+        $this->newServiceComplimentary = false;
+        $this->newServiceCategory = 'Decor & Ambience';
+        $this->newServiceDescription = '';
+        $this->newServiceIcon = 'sparkles';
+
+        $this->save();
+        session()->flash('message', 'Service / Product added to your live website catalog!');
+    }
+
+    public function removeService(int $index)
+    {
+        if (isset($this->services[$index])) {
+            unset($this->services[$index]);
+            $this->services = array_values($this->services);
+            $this->save();
+            session()->flash('message', 'Service removed from catalog.');
+        }
+    }
+
+    public function toggleServiceComplimentary(int $index)
+    {
+        if (isset($this->services[$index])) {
+            $this->services[$index]['is_complimentary'] = !($this->services[$index]['is_complimentary'] ?? false);
+            $this->save();
+            session()->flash('message', 'Service status updated.');
+        }
+    }
+
+    public function addFaq()
+    {
+        $this->validate([
+            'newFaqQuestion' => 'required|string|min:4|max:200',
+            'newFaqAnswer' => 'required|string|min:5|max:1000',
+        ]);
+
+        $faqs = $this->website_settings['faqs'] ?? [];
+        $faqs[] = [
+            'question' => trim($this->newFaqQuestion),
+            'answer' => trim($this->newFaqAnswer),
+        ];
+
+        $this->website_settings['faqs'] = $faqs;
+        $this->newFaqQuestion = '';
+        $this->newFaqAnswer = '';
+        $this->save();
+        session()->flash('message', 'FAQ item added to your website!');
+    }
+
+    public function removeFaq(int $index)
+    {
+        if (isset($this->website_settings['faqs'][$index])) {
+            unset($this->website_settings['faqs'][$index]);
+            $this->website_settings['faqs'] = array_values($this->website_settings['faqs']);
+            $this->save();
+            session()->flash('message', 'FAQ item removed.');
+        }
+    }
+
+    public function addReview()
+    {
+        $this->validate([
+            'newReviewAuthor' => 'required|string|min:3|max:100',
+            'newReviewQuote' => 'required|string|min:5|max:500',
+        ]);
+
+        $reviews = $this->website_settings['reviews'] ?? [];
+        $reviews[] = [
+            'author' => trim($this->newReviewAuthor),
+            'event' => trim($this->newReviewEvent),
+            'rating' => (int) $this->newReviewRating,
+            'quote' => trim($this->newReviewQuote),
+            'date' => Carbon::now()->format('d M Y'),
+        ];
+
+        $this->website_settings['reviews'] = $reviews;
+        $this->newReviewAuthor = '';
+        $this->newReviewQuote = '';
+        $this->save();
+        session()->flash('message', 'Client testimonial added to your website!');
+    }
+
+    public function removeReview(int $index)
+    {
+        if (isset($this->website_settings['reviews'][$index])) {
+            unset($this->website_settings['reviews'][$index]);
+            $this->website_settings['reviews'] = array_values($this->website_settings['reviews']);
+            $this->save();
+            session()->flash('message', 'Review testimonial removed.');
+        }
+    }
+
+    public function render()
+    {
+        $user = Auth::user();
+        $allHalls = $user && $user->tenant_id 
+            ? Hall::where('tenant_id', $user->tenant_id)->get() 
+            : collect([]);
+
+        return view('livewire.hall-media-manager', [
+            'allHalls' => $allHalls,
+        ])->layout('components.layouts.app', ['title' => 'Hall Website & Brand Manager — Rent Admin']);
+    }
+}
