@@ -28,12 +28,12 @@ return new class extends Migration
             $table->foreignId('customer_id')->nullable()->after('booking_reference')->constrained('users')->nullOnDelete();
             $table->string('pipeline_stage', 40)->default('CONFIRMED')->after('status');
             // NEW_INQUIRY, CONTACTED, SITE_VISIT, QUOTATION_SENT, NEGOTIATION, DEPOSIT_PENDING, CONFIRMED, COMPLETED, CANCELLED
-            
+
             // Drop rigid unique constraint so cancelled bookings do not block slots
             // (Concurrency safety is enforced atomically in BookingService via Redis/DB lockForUpdate on active bookings)
             try {
                 $table->dropUnique('uq_hall_event_slot');
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // If index name differs or not supported by driver, ignore
             }
         });

@@ -15,7 +15,9 @@ use Livewire\Component;
 class StaffAttendance extends Component
 {
     public string $activeTab = 'daily'; // daily, leaves, monthly
+
     public string $selectedDate = '';
+
     public string $selectedMonth = '';
 
     // Daily attendance rows: [user_id => ['status' => 'PRESENT', 'check_in' => '10:00', 'check_out' => '22:00', 'overtime_hours' => 0, 'notes' => '']]
@@ -23,19 +25,25 @@ class StaffAttendance extends Component
 
     // Leave request modal state
     public bool $showLeaveModal = false;
+
     public ?int $leaveUserId = null;
+
     public string $leaveType = 'CASUAL';
+
     public string $leaveStartDate = '';
+
     public string $leaveEndDate = '';
+
     public string $leaveReason = '';
 
     public ?string $feedbackMessage = null;
+
     public ?string $errorMessage = null;
 
     public function mount()
     {
         $user = Auth::user();
-        if (!$user || (!$user->isTenantOwner() && !$user->isManager() && !$user->isSuperAdmin() && !$user->isAccountant())) {
+        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isSuperAdmin() && ! $user->isAccountant())) {
             abort(403, 'Unauthorized. Only Venue Owners or Managers have access to Attendance ERP.');
         }
 
@@ -101,7 +109,7 @@ class StaffAttendance extends Component
         foreach ($this->attendanceData as $userId => $val) {
             $this->attendanceData[$userId]['status'] = 'PRESENT';
         }
-        $this->feedbackMessage = 'Marked all team members as Present for ' . $this->selectedDate;
+        $this->feedbackMessage = 'Marked all team members as Present for '.$this->selectedDate;
     }
 
     public function saveDailyAttendance()
@@ -117,8 +125,8 @@ class StaffAttendance extends Component
                 ],
                 [
                     'status' => $data['status'] ?? 'PRESENT',
-                    'check_in' => !empty($data['check_in']) ? $data['check_in'] : null,
-                    'check_out' => !empty($data['check_out']) ? $data['check_out'] : null,
+                    'check_in' => ! empty($data['check_in']) ? $data['check_in'] : null,
+                    'check_out' => ! empty($data['check_out']) ? $data['check_out'] : null,
                     'overtime_hours' => (float) ($data['overtime_hours'] ?? 0),
                     'notes' => $data['notes'] ?? null,
                     'created_by' => Auth::id(),
@@ -134,7 +142,7 @@ class StaffAttendance extends Component
             $this->selectedDate
         );
 
-        $this->feedbackMessage = "Daily attendance recorded successfully for " . Carbon::parse($this->selectedDate)->format('d M Y') . ".";
+        $this->feedbackMessage = 'Daily attendance recorded successfully for '.Carbon::parse($this->selectedDate)->format('d M Y').'.';
     }
 
     // ==========================================
@@ -204,7 +212,7 @@ class StaffAttendance extends Component
             'action_by' => Auth::id(),
         ]);
 
-        $this->feedbackMessage = "Leave application rejected.";
+        $this->feedbackMessage = 'Leave application rejected.';
     }
 
     public function render()
@@ -222,7 +230,7 @@ class StaffAttendance extends Component
             ->paginate(15);
 
         // Monthly summary calculations
-        $monthStart = Carbon::parse($this->selectedMonth . '-01')->startOfMonth();
+        $monthStart = Carbon::parse($this->selectedMonth.'-01')->startOfMonth();
         $monthEnd = $monthStart->copy()->endOfMonth();
 
         $monthlyRecords = AttendanceRecord::where('tenant_id', $tenantId)

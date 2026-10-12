@@ -12,40 +12,63 @@ use Livewire\Component;
 class HallMediaManager extends Component
 {
     public ?Hall $hall = null;
+
     public string $selectedHallId = '';
-    
+
     // Hall Details
     public string $name = '';
+
     public string $tagline = '';
+
     public string $description = '';
+
     public string $operating_hours = '';
+
     public string $policies = '';
+
     public int $max_capacity = 500;
+
     public int $min_capacity = 150;
+
     public float $base_rent = 150000;
+
     public bool $has_air_conditioning = true;
+
     public bool $has_generator_backup = true;
+
     public bool $has_bridal_room = true;
+
     public bool $is_active = true;
+
     public string $cover_image = '';
-    
+
     // Services & Product Catalog (White-Label Storefront Features)
     public array $services = [];
+
     public string $newServiceTitle = '';
+
     public float $newServicePrice = 0;
+
     public bool $newServiceComplimentary = false;
+
     public string $newServiceCategory = 'Decor & Ambience';
+
     public string $newServiceDescription = '';
+
     public string $newServiceIcon = 'sparkles';
 
     // Venue / Complex Details (White-Label Branding)
     public string $venue_name = '';
+
     public string $city = 'Lahore';
+
     public string $address = '';
+
     public string $phone = '';
 
     // Gallery Media
     public array $images = [];
+
     public array $videos = [];
 
     // Website Builder & Section Visibility Customization
@@ -64,20 +87,29 @@ class HallMediaManager extends Component
 
     // FAQ & Review input states
     public string $newFaqQuestion = '';
+
     public string $newFaqAnswer = '';
+
     public string $newReviewAuthor = '';
+
     public string $newReviewEvent = 'Walima Reception';
+
     public int $newReviewRating = 5;
+
     public string $newReviewQuote = '';
 
     // Inputs for adding new items
     public string $newImageUrl = '';
+
     public string $newVideoUrl = '';
 
     // New Hall Creation Modal
     public bool $showCreateModal = false;
+
     public string $newHallName = '';
+
     public int $newHallCapacity = 500;
+
     public float $newHallRent = 150000;
 
     protected $rules = [
@@ -100,7 +132,7 @@ class HallMediaManager extends Component
     public function mount()
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
@@ -108,13 +140,13 @@ class HallMediaManager extends Component
         $firstHall = Hall::where('tenant_id', $user->tenant_id)->first();
 
         // If no hall exists for this tenant yet, auto-provision initial hall
-        if (!$firstHall && $user->tenant_id) {
+        if (! $firstHall && $user->tenant_id) {
             $venue = Venue::where('tenant_id', $user->tenant_id)->first();
-            if (!$venue) {
+            if (! $venue) {
                 $venue = Venue::create([
                     'tenant_id' => $user->tenant_id,
                     'name' => ($user->tenant->name ?? 'Venue Complex'),
-                    'slug' => Str::slug(($user->tenant->name ?? 'venue') . '-' . Str::random(4)),
+                    'slug' => Str::slug(($user->tenant->name ?? 'venue').'-'.Str::random(4)),
                     'city' => $user->tenant->city ?? 'Lahore',
                     'address' => $user->tenant->address ?? 'Main Boulevard, Gulberg III, Lahore',
                     'phone' => $user->tenant->phone ?? '+92 300 1234567',
@@ -174,7 +206,7 @@ class HallMediaManager extends Component
         $this->services = is_array($hall->services) ? $hall->services : [];
         $this->images = is_array($hall->images) ? $hall->images : [];
         $this->videos = is_array($hall->videos) ? $hall->videos : [];
-        
+
         $savedSettings = is_array($hall->website_settings) ? $hall->website_settings : [];
         $this->website_settings = array_merge([
             'announcement_banner' => 'Now accepting Winter 2026 wedding reservations with complimentary VIP bridal suite!',
@@ -207,8 +239,9 @@ class HallMediaManager extends Component
     public function openCreateModal()
     {
         $tenant = Auth::user()->tenant;
-        if ($tenant && !$tenant->canAddHall()) {
-            session()->flash('error', "Hall limit reached (" . $tenant->halls()->count() . "/" . ($tenant->subscriptionPlan->max_halls ?? 1) . "). Please upgrade your SaaS subscription to add more banquet halls.");
+        if ($tenant && ! $tenant->canAddHall()) {
+            session()->flash('error', 'Hall limit reached ('.$tenant->halls()->count().'/'.($tenant->subscriptionPlan->max_halls ?? 1).'). Please upgrade your SaaS subscription to add more banquet halls.');
+
             return;
         }
 
@@ -226,9 +259,10 @@ class HallMediaManager extends Component
     public function createNewHall()
     {
         $tenant = Auth::user()->tenant;
-        if ($tenant && !$tenant->canAddHall()) {
-            session()->flash('error', "Hall limit reached. Please upgrade your SaaS subscription.");
+        if ($tenant && ! $tenant->canAddHall()) {
+            session()->flash('error', 'Hall limit reached. Please upgrade your SaaS subscription.');
             $this->showCreateModal = false;
+
             return;
         }
 
@@ -240,11 +274,11 @@ class HallMediaManager extends Component
 
         $user = Auth::user();
         $venue = Venue::where('tenant_id', $user->tenant_id)->first();
-        if (!$venue) {
+        if (! $venue) {
             $venue = Venue::create([
                 'tenant_id' => $user->tenant_id,
                 'name' => ($user->tenant->name ?? 'Venue Complex'),
-                'slug' => Str::slug(($user->tenant->name ?? 'venue') . '-' . Str::random(4)),
+                'slug' => Str::slug(($user->tenant->name ?? 'venue').'-'.Str::random(4)),
                 'city' => $user->tenant->city ?? 'Lahore',
                 'address' => $user->tenant->address ?? 'Main Boulevard, Gulberg III, Lahore',
                 'phone' => $user->tenant->phone ?? '+92 300 1234567',
@@ -278,7 +312,7 @@ class HallMediaManager extends Component
     public function addImage()
     {
         $this->validate([
-            'newImageUrl' => 'required|url'
+            'newImageUrl' => 'required|url',
         ]);
 
         $this->images[] = trim($this->newImageUrl);
@@ -316,20 +350,20 @@ class HallMediaManager extends Component
     public function addVideo()
     {
         $this->validate([
-            'newVideoUrl' => 'required|url'
+            'newVideoUrl' => 'required|url',
         ]);
 
         $url = trim($this->newVideoUrl);
 
         if (str_contains($url, 'youtube.com/watch?v=')) {
             preg_match('/v=([a-zA-Z0-9_-]+)/', $url, $matches);
-            if (!empty($matches[1])) {
-                $url = 'https://www.youtube.com/embed/' . $matches[1];
+            if (! empty($matches[1])) {
+                $url = 'https://www.youtube.com/embed/'.$matches[1];
             }
         } elseif (str_contains($url, 'youtu.be/')) {
             $id = substr(parse_url($url, PHP_URL_PATH), 1);
-            if (!empty($id)) {
-                $url = 'https://www.youtube.com/embed/' . $id;
+            if (! empty($id)) {
+                $url = 'https://www.youtube.com/embed/'.$id;
             }
         }
 
@@ -411,6 +445,7 @@ class HallMediaManager extends Component
         $totalHalls = Hall::where('tenant_id', $user->tenant_id)->count();
         if ($totalHalls <= 1) {
             session()->flash('error', 'You must maintain at least one active hall space for your venue.');
+
             return;
         }
 
@@ -419,6 +454,7 @@ class HallMediaManager extends Component
         $activeBookings = $hall->bookings()->where('status', 'CONFIRMED')->count();
         if ($activeBookings > 0) {
             session()->flash('error', "Cannot delete [{$hall->name}] because it has {$activeBookings} active confirmed booking(s). Reassign or cancel the bookings first.");
+
             return;
         }
 
@@ -475,7 +511,7 @@ class HallMediaManager extends Component
     public function toggleServiceComplimentary(int $index)
     {
         if (isset($this->services[$index])) {
-            $this->services[$index]['is_complimentary'] = !($this->services[$index]['is_complimentary'] ?? false);
+            $this->services[$index]['is_complimentary'] = ! ($this->services[$index]['is_complimentary'] ?? false);
             $this->save();
             session()->flash('message', 'Service status updated.');
         }
@@ -547,8 +583,8 @@ class HallMediaManager extends Component
     public function render()
     {
         $user = Auth::user();
-        $allHalls = $user && $user->tenant_id 
-            ? Hall::where('tenant_id', $user->tenant_id)->get() 
+        $allHalls = $user && $user->tenant_id
+            ? Hall::where('tenant_id', $user->tenant_id)->get()
             : collect([]);
 
         return view('livewire.hall-media-manager', [

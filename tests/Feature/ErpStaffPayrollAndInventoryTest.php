@@ -7,6 +7,7 @@ use App\Livewire\StaffAttendance;
 use App\Livewire\StaffPayroll;
 use App\Models\Expense;
 use App\Models\InventoryItem;
+use App\Models\PurchaseOrder;
 use App\Models\StaffPayroll as PayrollModel;
 use App\Models\Tenant;
 use App\Models\User;
@@ -219,7 +220,7 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
             'status' => 'ORDERED',
         ]);
 
-        $po = \App\Models\PurchaseOrder::where('tenant_id', $tenant->id)->first();
+        $po = PurchaseOrder::where('tenant_id', $tenant->id)->first();
         Livewire::test(InventoryTracker::class)
             ->call('markPoPaid', $po->id);
 

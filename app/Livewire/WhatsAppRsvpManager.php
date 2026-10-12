@@ -4,7 +4,6 @@ namespace App\Livewire;
 
 use App\Models\Booking;
 use App\Models\GuestRsvp;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -14,11 +13,14 @@ class WhatsAppRsvpManager extends Component
 
     // RSVP Add Modal
     public string $guest_name = '';
+
     public string $phone = '';
 
     // Interactive WhatsApp Bot Simulator
     public string $simPhone = '';
+
     public string $simMessage = 'Attending: 4';
+
     public ?string $simBotReply = null;
 
     public function mount()
@@ -88,8 +90,9 @@ class WhatsAppRsvpManager extends Component
         }
         $rsvp = $query->first();
 
-        if (!$rsvp) {
+        if (! $rsvp) {
             $this->simBotReply = "❌ Number [{$this->simPhone}] not found in guest invitation registry.";
+
             return;
         }
 

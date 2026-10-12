@@ -10,12 +10,19 @@ use Livewire\Component;
 class UtilityFuelTracker extends Component
 {
     public ?string $selectedBookingId = null;
+
     public float $generator_run_hours = 3.5;
+
     public float $diesel_liters_consumed = 45.0;
+
     public float $diesel_rate_per_liter = 280.00;
+
     public float $wapda_units_consumed = 220.0;
+
     public float $wapda_unit_rate = 65.00;
+
     public ?string $notes = null;
+
     public ?string $successMessage = null;
 
     public function mount()
@@ -89,7 +96,7 @@ class UtilityFuelTracker extends Component
             ]
         );
 
-        $this->successMessage = "Generator run-hours and fuel consumption logged successfully!";
+        $this->successMessage = 'Generator run-hours and fuel consumption logged successfully!';
     }
 
     public function render()
@@ -97,7 +104,7 @@ class UtilityFuelTracker extends Component
         $user = Auth::user();
         $query = Booking::with(['hall', 'utilityLog'])
             ->whereIn('status', ['CONFIRMED', 'COMPLETED']);
-        
+
         if ($user && $user->tenant_id) {
             $query->where('tenant_id', $user->tenant_id);
         }

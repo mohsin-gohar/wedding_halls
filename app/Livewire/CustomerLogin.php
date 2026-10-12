@@ -10,7 +10,9 @@ use Livewire\Component;
 class CustomerLogin extends Component
 {
     public string $email = '';
+
     public string $password = '';
+
     public bool $remember = false;
 
     protected $rules = [
@@ -25,6 +27,7 @@ class CustomerLogin extends Component
         if (Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
             session()->regenerate();
             session()->flash('message', 'Welcome back! Signed in to your customer portal.');
+
             return redirect()->intended(route('customer.dashboard'));
         }
 

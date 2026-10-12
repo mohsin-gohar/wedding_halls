@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasColumn('bookings', 'booking_reference')) {
+        if (! Schema::hasColumn('bookings', 'booking_reference')) {
             Schema::table('bookings', function (Blueprint $table) {
                 $table->string('booking_reference', 40)->nullable()->after('created_by_user_id');
             });

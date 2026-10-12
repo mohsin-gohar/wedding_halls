@@ -9,6 +9,7 @@ use App\Models\InventoryLog;
 use App\Models\PurchaseOrder;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -16,7 +17,9 @@ use Livewire\Component;
 class InventoryTracker extends Component
 {
     public string $activeTab = 'stock'; // stock, movement, procurement
+
     public ?string $feedbackMessage = null;
+
     public ?string $errorMessage = null;
 
     // Filter
@@ -24,37 +27,57 @@ class InventoryTracker extends Component
 
     // Add / Edit Item Modal
     public bool $showItemModal = false;
+
     public bool $isEditingItem = false;
+
     public ?string $editingItemId = null;
+
     public string $itemName = '';
+
     public string $itemCategory = 'RAW_FOOD';
+
     public string $itemUnit = 'KG';
+
     public float $itemCurrentStock = 50.0;
+
     public float $itemMinThreshold = 15.0;
+
     public float $itemUnitCost = 1200.0;
+
     public string $itemSupplierName = '';
+
     public string $itemSupplierPhone = '';
 
     // Stock Movement Modal (Stock In / Out)
     public bool $showMovementModal = false;
+
     public ?string $movementItemId = null;
+
     public string $movementItemName = '';
+
     public string $movementType = 'STOCK_IN'; // STOCK_IN, STOCK_OUT, ADJUSTMENT, WASTAGE
+
     public float $movementQuantity = 10.0;
+
     public float $movementUnitPrice = 0.0;
+
     public string $movementNote = '';
 
     // Create Purchase Order Modal
     public bool $showPoModal = false;
+
     public string $poSupplierName = '';
+
     public string $poDate = '';
+
     public float $poTotalAmount = 25000.0;
+
     public string $poNotes = '';
 
     public function mount()
     {
         $user = Auth::user();
-        if (!$user || (!$user->isTenantOwner() && !$user->isManager() && !$user->isChef() && !$user->isAccountant() && !$user->isSuperAdmin())) {
+        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isChef() && ! $user->isAccountant() && ! $user->isSuperAdmin())) {
             abort(403, 'Unauthorized. Access to Inventory ERP is restricted to Owners, Chefs, and Managers.');
         }
 
@@ -198,47 +221,57 @@ class InventoryTracker extends Component
             'movementQuantity' => 'required|numeric|min:0.1',
         ]);
 
-        $item = InventoryItem::where('tenant_id', Auth::user()->tenant_id)->findOrFail($this->movementItemId);
         $tenantId = Auth::user()->tenant_id;
-
         $qty = (float) $this->movementQuantity;
-        $totalCost = round($qty * $this->movementUnitPrice, 2);
+        $unitPrice = (float) $this->movementUnitPrice;
+        $totalCost = round($qty * $unitPrice, 2);
 
-        if ($this->movementType === 'STOCK_IN') {
-            $item->current_stock += $qty;
-        } elseif ($this->movementType === 'STOCK_OUT' || $this->movementType === 'WASTAGE') {
-            if ($item->current_stock < $qty) {
-                $this->errorMessage = "Cannot deduct {$qty} {$item->unit}; available stock is only {$item->current_stock} {$item->unit}.";
-                return;
-            }
-            $item->current_stock -= $qty;
-        } elseif ($this->movementType === 'ADJUSTMENT') {
-            $item->current_stock = $qty;
+        try {
+            $item = DB::transaction(function () use ($tenantId, $qty, $unitPrice, $totalCost) {
+                $item = InventoryItem::where('tenant_id', $tenantId)
+                    ->lockForUpdate()
+                    ->findOrFail($this->movementItemId);
+
+                if ($this->movementType === 'STOCK_IN') {
+                    $item->current_stock += $qty;
+                } elseif ($this->movementType === 'STOCK_OUT' || $this->movementType === 'WASTAGE') {
+                    if ($item->current_stock < $qty) {
+                        throw new \Exception("Cannot deduct {$qty} {$item->unit}; available stock is only {$item->current_stock} {$item->unit}.");
+                    }
+                    $item->current_stock -= $qty;
+                } elseif ($this->movementType === 'ADJUSTMENT') {
+                    $item->current_stock = $qty;
+                }
+
+                $item->save();
+
+                InventoryLog::create([
+                    'tenant_id' => $tenantId,
+                    'inventory_item_id' => $item->id,
+                    'type' => $this->movementType,
+                    'quantity' => $qty,
+                    'unit_price' => $unitPrice,
+                    'total_cost' => $totalCost,
+                    'reference_note' => $this->movementNote,
+                    'logged_by' => Auth::id(),
+                ]);
+
+                AuditLog::log(
+                    'INVENTORY_MOVEMENT',
+                    "Recorded [{$this->movementType}] of {$qty} {$item->unit} for [{$item->name}].",
+                    $tenantId,
+                    'InventoryItem',
+                    $item->id
+                );
+
+                return $item;
+            });
+
+            $this->showMovementModal = false;
+            $this->feedbackMessage = "Stock movement logged. Current stock of [{$item->name}] is now {$item->current_stock} {$item->unit}.";
+        } catch (\Exception $e) {
+            $this->errorMessage = $e->getMessage();
         }
-
-        $item->save();
-
-        InventoryLog::create([
-            'tenant_id' => $tenantId,
-            'inventory_item_id' => $item->id,
-            'type' => $this->movementType,
-            'quantity' => $qty,
-            'unit_price' => $this->movementUnitPrice,
-            'total_cost' => $totalCost,
-            'reference_note' => $this->movementNote,
-            'logged_by' => Auth::id(),
-        ]);
-
-        AuditLog::log(
-            'INVENTORY_MOVEMENT',
-            "Recorded [{$this->movementType}] of {$qty} {$item->unit} for [{$item->name}].",
-            $tenantId,
-            'InventoryItem',
-            $item->id
-        );
-
-        $this->showMovementModal = false;
-        $this->feedbackMessage = "Stock movement logged. Current stock of [{$item->name}] is now {$item->current_stock} {$item->unit}.";
     }
 
     // ==========================================
@@ -262,7 +295,7 @@ class InventoryTracker extends Component
         ]);
 
         $tenantId = Auth::user()->tenant_id;
-        $poNumber = 'PO-' . date('Ymd') . '-' . rand(100, 999);
+        $poNumber = 'PO-'.date('Ymd').'-'.rand(100, 999);
 
         PurchaseOrder::create([
             'tenant_id' => $tenantId,
@@ -299,7 +332,7 @@ class InventoryTracker extends Component
 
         AuditLog::log(
             'PO_PAID',
-            "Purchase order [{$po->po_number}] of PKR " . number_format($po->total_amount) . " marked as PAID and auto-logged to Expenses.",
+            "Purchase order [{$po->po_number}] of PKR ".number_format($po->total_amount).' marked as PAID and auto-logged to Expenses.',
             Auth::user()->tenant_id,
             'PurchaseOrder',
             $po->id
@@ -318,8 +351,8 @@ class InventoryTracker extends Component
         }
         $items = $itemsQuery->get();
 
-        $totalInventoryValue = $items->sum(fn($i) => $i->current_stock * $i->unit_cost);
-        $lowStockCount = $items->filter(fn($i) => $i->isLowStock())->count();
+        $totalInventoryValue = $items->sum(fn ($i) => $i->current_stock * $i->unit_cost);
+        $lowStockCount = $items->filter(fn ($i) => $i->isLowStock())->count();
 
         $logs = InventoryLog::where('tenant_id', $tenantId)
             ->with(['item', 'logger'])
