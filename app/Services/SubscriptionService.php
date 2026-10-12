@@ -7,7 +7,7 @@ use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class SubscriptionService
 {
@@ -16,8 +16,6 @@ class SubscriptionService
     /**
      * Inspect all active/trial tenants and expire any accounts whose subscription + grace period has lapsed.
      * Crucial Guarantee: Data is NEVER deleted on expiry; historical records remain strictly intact.
-     *
-     * @return array
      */
     public function checkAndExpireSubscriptions(): array
     {
@@ -101,7 +99,7 @@ class SubscriptionService
         ?int $approvedByUserId = null
     ): SubscriptionPayment {
         $billingCycle = strtoupper($billingCycle);
-        if (!in_array($billingCycle, ['WEEKLY', 'MONTHLY', 'YEARLY'])) {
+        if (! in_array($billingCycle, ['WEEKLY', 'MONTHLY', 'YEARLY'])) {
             $billingCycle = 'MONTHLY';
         }
 
@@ -122,7 +120,7 @@ class SubscriptionService
             'billing_cycle' => $billingCycle,
             'amount' => $amount,
             'payment_method' => $paymentMethod,
-            'transaction_reference' => $transactionReference ?? ('VC-PAY-' . strtoupper(bin2hex(random_bytes(4)))),
+            'transaction_reference' => $transactionReference ?? ('VC-PAY-'.strtoupper(bin2hex(random_bytes(4)))),
             'status' => $status,
             'approved_by_user_id' => $autoApprove ? $approvedByUserId : null,
             'approved_at' => $autoApprove ? Carbon::now() : null,
@@ -141,35 +139,41 @@ class SubscriptionService
      */
     public function applyApprovedSubscription(Tenant $tenant, SubscriptionPlan $plan, string $billingCycle): void
     {
-        $now = Carbon::now();
-        // If current subscription is still active and not expired, extend from existing expiry date
-        $baseDate = ($tenant->subscription_expires_at && $tenant->subscription_expires_at->isFuture())
-            ? $tenant->subscription_expires_at
-            : $now;
+        DB::transaction(function () use ($tenant, $plan, $billingCycle) {
+            $lockedTenant = Tenant::where('id', $tenant->id)->lockForUpdate()->first() ?? $tenant;
 
-        $newExpiresAt = match (strtoupper($billingCycle)) {
-            'WEEKLY' => $baseDate->copy()->addDays(7),
-            'YEARLY' => $baseDate->copy()->addYear(),
-            default => $baseDate->copy()->addMonth(),
-        };
+            $now = Carbon::now();
+            // If current subscription is still active and not expired, extend from existing expiry date
+            $baseDate = ($lockedTenant->subscription_expires_at && $lockedTenant->subscription_expires_at->isFuture())
+                ? $lockedTenant->subscription_expires_at
+                : $now;
 
-        $tenant->update([
-            'subscription_plan_id' => $plan->id,
-            'subscription_plan' => $plan->name,
-            'billing_cycle' => strtoupper($billingCycle),
-            'subscription_status' => 'ACTIVE',
-            'subscription_starts_at' => $now,
-            'subscription_expires_at' => $newExpiresAt,
-            'is_active' => true,
-        ]);
+            $newExpiresAt = match (strtoupper($billingCycle)) {
+                'WEEKLY' => $baseDate->copy()->addDays(7),
+                'YEARLY' => $baseDate->copy()->addYear(),
+                default => $baseDate->copy()->addMonth(),
+            };
 
-        AuditLog::log(
-            'SUBSCRIPTION_RENEWED',
-            "Tenant [{$tenant->name}] subscription renewed for [{$plan->name}] on [{$billingCycle}] cycle until [{$newExpiresAt->format('Y-m-d H:i')}].",
-            $tenant->id,
-            'Tenant',
-            (string) $tenant->id
-        );
+            $lockedTenant->update([
+                'subscription_plan_id' => $plan->id,
+                'subscription_plan' => $plan->name,
+                'billing_cycle' => strtoupper($billingCycle),
+                'subscription_status' => 'ACTIVE',
+                'subscription_starts_at' => $now,
+                'subscription_expires_at' => $newExpiresAt,
+                'is_active' => true,
+            ]);
+
+            $tenant->fill($lockedTenant->getAttributes());
+
+            AuditLog::log(
+                'SUBSCRIPTION_RENEWED',
+                "Tenant [{$tenant->name}] subscription renewed for [{$plan->name}] on [{$billingCycle}] cycle until [{$newExpiresAt->format('Y-m-d H:i')}].",
+                $tenant->id,
+                'Tenant',
+                (string) $tenant->id
+            );
+        });
     }
 
     /**

@@ -4,10 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Booking;
 use App\Models\Expense;
-use App\Models\GuestRsvp;
 use App\Models\Hall;
-use App\Models\KitchenKot;
-use App\Models\Payment;
 use App\Models\UtilityLog;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +14,9 @@ class Dashboard extends Component
 {
     // Filter controls for Hall Owner
     public string $timeframe = 'MONTHLY'; // 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY'
+
     public string $selectedHallId = 'ALL';
+
     public string $chartMetric = 'sales'; // 'sales' or 'programs'
 
     public function setTimeframe(string $tf): void
@@ -45,7 +44,7 @@ class Dashboard extends Component
         if ($tenantId) {
             $hallsQuery->where('tenant_id', $tenantId);
         } else {
-            $hallsQuery->whereRaw('1 = 0');
+            $hallsQuery->where('id', '0');
         }
         $halls = $hallsQuery->get();
         $tenantHallIds = $halls->pluck('id')->toArray();
@@ -57,7 +56,7 @@ class Dashboard extends Component
                 $endDate = $now->copy()->endOfWeek()->format('Y-m-d');
                 $previousStartDate = $now->copy()->subWeek()->startOfWeek()->format('Y-m-d');
                 $previousEndDate = $now->copy()->subWeek()->endOfWeek()->format('Y-m-d');
-                $periodLabel = 'This Week (' . Carbon::parse($startDate)->format('d M') . ' - ' . Carbon::parse($endDate)->format('d M') . ')';
+                $periodLabel = 'This Week ('.Carbon::parse($startDate)->format('d M').' - '.Carbon::parse($endDate)->format('d M').')';
                 break;
 
             case 'QUARTERLY':
@@ -73,7 +72,7 @@ class Dashboard extends Component
                 $endDate = $now->copy()->endOfYear()->format('Y-m-d');
                 $previousStartDate = $now->copy()->subYear()->startOfYear()->format('Y-m-d');
                 $previousEndDate = $now->copy()->subYear()->endOfYear()->format('Y-m-d');
-                $periodLabel = 'Year ' . $now->year;
+                $periodLabel = 'Year '.$now->year;
                 break;
 
             case 'MONTHLY':
@@ -82,7 +81,7 @@ class Dashboard extends Component
                 $endDate = $now->copy()->endOfMonth()->format('Y-m-d');
                 $previousStartDate = $now->copy()->subMonth()->startOfMonth()->format('Y-m-d');
                 $previousEndDate = $now->copy()->subMonth()->endOfMonth()->format('Y-m-d');
-                $periodLabel = 'This Month (' . $now->format('F Y') . ')';
+                $periodLabel = 'This Month ('.$now->format('F Y').')';
                 break;
         }
 
@@ -97,8 +96,8 @@ class Dashboard extends Component
             $bookingsQuery->where('tenant_id', $tenantId);
             $prevQuery->where('tenant_id', $tenantId);
         } else {
-            $bookingsQuery->whereRaw('1 = 0');
-            $prevQuery->whereRaw('1 = 0');
+            $bookingsQuery->where('id', '0');
+            $prevQuery->where('id', '0');
         }
 
         if ($this->selectedHallId !== 'ALL' && in_array($this->selectedHallId, $tenantHallIds)) {
@@ -140,7 +139,7 @@ class Dashboard extends Component
         if ($tenantId) {
             $expenseQuery->where('tenant_id', $tenantId);
         } else {
-            $expenseQuery->whereRaw('1 = 0');
+            $expenseQuery->where('id', '0');
         }
         if ($this->selectedHallId !== 'ALL' && in_array($this->selectedHallId, $tenantHallIds)) {
             $expenseQuery->where(function ($q) {
@@ -163,8 +162,8 @@ class Dashboard extends Component
         // Net Operating Profit: uses actual recorded expenses if available, otherwise baseline overhead
         $totalOperationalCost = $actualRecordedExpenses > 0 ? $actualRecordedExpenses : ($estimatedFoodCost + $totalUtilityCost);
         $netOwnerProfit = $grossSalesTurnover - $totalOperationalCost;
-        $profitMarginPercent = $grossSalesTurnover > 0 
-            ? round(($netOwnerProfit / $grossSalesTurnover) * 100, 1) 
+        $profitMarginPercent = $grossSalesTurnover > 0
+            ? round(($netOwnerProfit / $grossSalesTurnover) * 100, 1)
             : 0;
 
         // 5. Programs Breakdown by Event Type
@@ -193,6 +192,7 @@ class Dashboard extends Component
         // 7. Hall-by-Hall Performance Matrix (Scoped to Owner's Halls)
         $hallPerformance = $halls->map(function ($h) use ($allPeriodBookings) {
             $hallBookings = $allPeriodBookings->where('hall_id', $h->id);
+
             return [
                 'id' => $h->id,
                 'name' => $h->name,
@@ -216,7 +216,7 @@ class Dashboard extends Component
         if ($tenantId) {
             $todayQuery->where('tenant_id', $tenantId);
         } else {
-            $todayQuery->whereRaw('1 = 0');
+            $todayQuery->where('id', '0');
         }
 
         if ($this->selectedHallId !== 'ALL' && in_array($this->selectedHallId, $tenantHallIds)) {
@@ -235,7 +235,7 @@ class Dashboard extends Component
         if ($tenantId) {
             $upcomingQuery->where('tenant_id', $tenantId);
         } else {
-            $upcomingQuery->whereRaw('1 = 0');
+            $upcomingQuery->where('id', '0');
         }
 
         if ($this->selectedHallId !== 'ALL' && in_array($this->selectedHallId, $tenantHallIds)) {
@@ -248,10 +248,10 @@ class Dashboard extends Component
         $todayEventsCount = $todayBookings->count();
         $upcomingEventsCount = Booking::where('event_date', '>=', $today)
             ->whereIn('status', ['CONFIRMED', 'HOLD'])
-            ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+            ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
             ->count();
         $pendingInquiriesCount = Booking::whereIn('status', ['INQUIRY', 'PENDING'])
-            ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+            ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
             ->count();
 
         return view('livewire.dashboard', [
@@ -302,12 +302,12 @@ class Dashboard extends Component
                 if ($tenantId) {
                     $q->where('tenant_id', $tenantId);
                 } else {
-                    $q->whereRaw('1 = 0');
+                    $q->where('id', '0');
                 }
-                
+
                 if ($hallId !== 'ALL' && in_array($hallId, $allowedHallIds)) {
                     $q->where('hall_id', $hallId);
-                } elseif (!empty($allowedHallIds)) {
+                } elseif (! empty($allowedHallIds)) {
                     $q->whereIn('hall_id', $allowedHallIds);
                 }
 
@@ -315,7 +315,7 @@ class Dashboard extends Component
                 $points[] = [
                     'label' => $day->format('D (d)'),
                     'value' => $val,
-                    'formatted' => ($metric === 'sales') ? 'PKR ' . number_format($val) : $val . ' Events',
+                    'formatted' => ($metric === 'sales') ? 'PKR '.number_format($val) : $val.' Events',
                 ];
             }
         } elseif ($timeframe === 'YEARLY') {
@@ -328,12 +328,12 @@ class Dashboard extends Component
                 if ($tenantId) {
                     $q->where('tenant_id', $tenantId);
                 } else {
-                    $q->whereRaw('1 = 0');
+                    $q->where('id', '0');
                 }
-                
+
                 if ($hallId !== 'ALL' && in_array($hallId, $allowedHallIds)) {
                     $q->where('hall_id', $hallId);
-                } elseif (!empty($allowedHallIds)) {
+                } elseif (! empty($allowedHallIds)) {
                     $q->whereIn('hall_id', $allowedHallIds);
                 }
 
@@ -341,7 +341,7 @@ class Dashboard extends Component
                 $points[] = [
                     'label' => $mDate->format('M'),
                     'value' => $val,
-                    'formatted' => ($metric === 'sales') ? 'PKR ' . number_format($val) : $val . ' Events',
+                    'formatted' => ($metric === 'sales') ? 'PKR '.number_format($val) : $val.' Events',
                 ];
             }
         } else {
@@ -357,20 +357,20 @@ class Dashboard extends Component
                 if ($tenantId) {
                     $q->where('tenant_id', $tenantId);
                 } else {
-                    $q->whereRaw('1 = 0');
+                    $q->where('id', '0');
                 }
-                
+
                 if ($hallId !== 'ALL' && in_array($hallId, $allowedHallIds)) {
                     $q->where('hall_id', $hallId);
-                } elseif (!empty($allowedHallIds)) {
+                } elseif (! empty($allowedHallIds)) {
                     $q->whereIn('hall_id', $allowedHallIds);
                 }
 
                 $val = ($metric === 'sales') ? (float) $q->sum('grand_total') : (int) $q->count();
                 $points[] = [
-                    'label' => 'Wk ' . $w . ' (' . $wStart->format('d M') . ')',
+                    'label' => 'Wk '.$w.' ('.$wStart->format('d M').')',
                     'value' => $val,
-                    'formatted' => ($metric === 'sales') ? 'PKR ' . number_format($val) : $val . ' Events',
+                    'formatted' => ($metric === 'sales') ? 'PKR '.number_format($val) : $val.' Events',
                 ];
             }
         }

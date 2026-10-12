@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Booking;
 use App\Models\KitchenKot;
-use App\Models\MenuItem;
 
 class KitchenOrderService
 {
@@ -12,10 +11,15 @@ class KitchenOrderService
      * Standard baseline catering consumption weights per guest (in KG or Liters)
      */
     public const MEAT_PER_GUEST_KG = 0.220; // 220g meat per head
+
     public const RICE_PER_GUEST_KG = 0.160; // 160g basmati rice per head
+
     public const OIL_PER_GUEST_LITER = 0.050; // 50ml cooking oil per head
+
     public const YOGURT_PER_GUEST_KG = 0.060; // 60g yogurt for raita
+
     public const SALAD_PER_GUEST_KG = 0.050; // 50g fresh salad
+
     public const SWEET_PER_GUEST_KG = 0.080; // 80g sweet/dessert
 
     /**
@@ -32,9 +36,9 @@ class KitchenOrderService
 
         // Gather dishes summary from booking custom menu or package
         $dishesSummary = [];
-        if (!empty($booking->custom_menu_json)) {
+        if (! empty($booking->custom_menu_json)) {
             $dishesSummary = $booking->custom_menu_json;
-        } elseif ($booking->package && !empty($booking->package->menu_items_json)) {
+        } elseif ($booking->package && ! empty($booking->package->menu_items_json)) {
             $dishesSummary = $booking->package->menu_items_json;
         } else {
             $dishesSummary = [

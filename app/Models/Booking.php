@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Booking extends Model
 {
-    use HasFactory, HasUuids;
+    use BelongsToTenant, HasFactory, HasUuids;
 
     protected $fillable = [
         'tenant_id',
@@ -113,6 +114,7 @@ class Booking extends Model
         $cateringTotal = (float) $this->per_head_rate * (int) $this->guest_count;
         $subtotal = $cateringTotal + (float) $this->hall_rent + (float) $this->addons_total;
         $total = ($subtotal - (float) $this->discount_amount) + (float) $this->tax_amount;
+
         return max(0, round($total, 2));
     }
 

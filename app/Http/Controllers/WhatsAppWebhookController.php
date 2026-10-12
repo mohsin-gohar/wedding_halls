@@ -14,13 +14,13 @@ class WhatsAppWebhookController extends Controller
      */
     public function verify(Request $request)
     {
-        $verifyToken = config('services.whatsapp.verify_token', 'Wedding_Hall_Secret_Token_2026');
-        
+        $verifyToken = config('services.whatsapp.verify_token');
+
         $mode = $request->query('hub_mode');
         $token = $request->query('hub_verify_token');
         $challenge = $request->query('hub_challenge');
 
-        if ($mode === 'subscribe' && $token === $verifyToken) {
+        if (! empty($verifyToken) && $mode === 'subscribe' && $token === $verifyToken) {
             return response($challenge, 200);
         }
 
@@ -32,11 +32,28 @@ class WhatsAppWebhookController extends Controller
      */
     public function handle(Request $request)
     {
+        $appSecret = config('services.whatsapp.app_secret');
+        if (! empty($appSecret)) {
+            $signatureHeader = $request->header('X-Hub-Signature-256');
+            if (! $signatureHeader) {
+                Log::warning('WhatsApp Webhook rejected: missing X-Hub-Signature-256 header.');
+
+                return response()->json(['error' => 'Missing signature'], 403);
+            }
+
+            $expectedSignature = 'sha256='.hash_hmac('sha256', $request->getContent(), $appSecret);
+            if (! hash_equals($expectedSignature, $signatureHeader)) {
+                Log::warning('WhatsApp Webhook rejected: invalid signature.');
+
+                return response()->json(['error' => 'Invalid signature'], 403);
+            }
+        }
+
         $payload = $request->all();
         Log::info('WhatsApp Webhook received', $payload);
 
         $entry = $payload['entry'][0]['changes'][0]['value'] ?? null;
-        if (!$entry || empty($entry['messages'])) {
+        if (! $entry || empty($entry['messages'])) {
             return response()->json(['status' => 'ignored'], 200);
         }
 
@@ -44,7 +61,7 @@ class WhatsAppWebhookController extends Controller
         $fromPhone = $messageObj['from'] ?? null;
         $messageBody = trim($messageObj['text']['body'] ?? '');
 
-        if (!$fromPhone || empty($messageBody)) {
+        if (! $fromPhone || empty($messageBody)) {
             return response()->json(['status' => 'empty'], 200);
         }
 
@@ -57,7 +74,7 @@ class WhatsAppWebhookController extends Controller
             ->latest()
             ->first();
 
-        $replyText = "Thank you for contacting Wedding_Hall.";
+        $replyText = 'Thank you for contacting Wedding_Hall.';
 
         if ($rsvp) {
             $status = 'ATTENDING';
@@ -114,7 +131,7 @@ class WhatsAppWebhookController extends Controller
                     'text' => ['body' => $message],
                 ]);
             } catch (\Exception $e) {
-                Log::error('WhatsApp dispatch error: ' . $e->getMessage());
+                Log::error('WhatsApp dispatch error: '.$e->getMessage());
             }
         } else {
             Log::info("WhatsApp Sandbox Outbound to [{$toPhone}]: {$message}");

@@ -7,11 +7,13 @@ use Exception;
 class SlotAlreadyBookedException extends Exception
 {
     protected string $hallId;
+
     protected string $eventDate;
+
     protected string $slotType;
 
     public function __construct(
-        string $message = "The selected hall slot is already booked for this date.",
+        string $message = 'The selected hall slot is already booked for this date.',
         int $code = 409,
         ?string $hallId = null,
         ?string $eventDate = null,

@@ -13,21 +13,34 @@ use Livewire\Component;
 class StaffManager extends Component
 {
     public bool $isCreating = false;
+
     public string $name = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public string $role = 'ROLE_FRONT_DESK';
+
     public string $password = '';
+
     // Edit Staff State
     public bool $isEditing = false;
+
     public ?int $editingStaffId = null;
+
     public string $editName = '';
+
     public string $editEmail = '';
+
     public string $editPhone = '';
+
     public string $editRole = 'ROLE_FRONT_DESK';
+
     public string $editPassword = '';
 
     public ?string $feedbackMessage = null;
+
     public ?string $errorMessage = null;
 
     protected $rules = [
@@ -41,7 +54,7 @@ class StaffManager extends Component
     public function mount()
     {
         $user = Auth::user();
-        if (!$user || (!$user->isTenantOwner() && !$user->isManager() && !$user->isSuperAdmin())) {
+        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isSuperAdmin())) {
             abort(403, 'Unauthorized. Only Venue Owners or General Managers can access Staff Management.');
         }
     }
@@ -49,8 +62,9 @@ class StaffManager extends Component
     public function openCreateModal()
     {
         $tenant = Auth::user()->tenant;
-        if ($tenant && !$tenant->canAddStaff()) {
-            $this->errorMessage = "Staff limit reached (" . $tenant->users()->count() . "/" . $tenant->subscriptionPlan->max_staff . "). Upgrade your SaaS subscription to add more team members.";
+        if ($tenant && ! $tenant->canAddStaff()) {
+            $this->errorMessage = 'Staff limit reached ('.$tenant->users()->count().'/'.$tenant->subscriptionPlan->max_staff.'). Upgrade your SaaS subscription to add more team members.';
+
             return;
         }
 
@@ -68,8 +82,9 @@ class StaffManager extends Component
     public function createStaffMember()
     {
         $tenant = Auth::user()->tenant;
-        if ($tenant && !$tenant->canAddStaff()) {
-            $this->errorMessage = "Staff limit reached. Please upgrade your subscription plan.";
+        if ($tenant && ! $tenant->canAddStaff()) {
+            $this->errorMessage = 'Staff limit reached. Please upgrade your subscription plan.';
+
             return;
         }
 
@@ -120,13 +135,13 @@ class StaffManager extends Component
 
     public function updateStaffMember()
     {
-        if (!$this->editingStaffId) {
+        if (! $this->editingStaffId) {
             return;
         }
 
         $this->validate([
             'editName' => 'required|string|max:100',
-            'editEmail' => 'required|email|unique:users,email,' . $this->editingStaffId,
+            'editEmail' => 'required|email|unique:users,email,'.$this->editingStaffId,
             'editPhone' => 'nullable|string|max:30',
             'editRole' => 'required|in:ROLE_MANAGER,ROLE_ACCOUNTANT,ROLE_FRONT_DESK,ROLE_CHEF,ROLE_FLOOR_STAFF',
             'editPassword' => 'nullable|string|min:6',
@@ -141,7 +156,7 @@ class StaffManager extends Component
             'role' => $this->editRole,
         ];
 
-        if (!empty($this->editPassword)) {
+        if (! empty($this->editPassword)) {
             $data['password'] = Hash::make($this->editPassword);
         }
 
@@ -164,14 +179,16 @@ class StaffManager extends Component
     {
         $currentUser = Auth::user();
         if ($currentUser->id === $userId) {
-            $this->errorMessage = "You cannot remove your own user account.";
+            $this->errorMessage = 'You cannot remove your own user account.';
+
             return;
         }
 
         $staff = User::where('tenant_id', $currentUser->tenant_id)->findOrFail($userId);
 
         if ($staff->isTenantOwner()) {
-            $this->errorMessage = "The primary venue business owner account cannot be deleted.";
+            $this->errorMessage = 'The primary venue business owner account cannot be deleted.';
+
             return;
         }
 
