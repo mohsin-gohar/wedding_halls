@@ -35,4 +35,39 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | WhatsApp Cloud API (Meta)
+    |--------------------------------------------------------------------------
+    |
+    | Credentials for the two-way WhatsApp RSVP webhook and outbound dispatch.
+    | When access_token + phone_number_id are absent the app falls back to
+    | logging outbound messages (sandbox mode).
+    |
+    */
+
+    'whatsapp' => [
+        'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
+        'access_token' => env('WHATSAPP_ACCESS_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'api_version' => env('WHATSAPP_API_VERSION', 'v19.0'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mailgun
+    |--------------------------------------------------------------------------
+    |
+    | Mailgun is used for transactional email (booking confirmations, payment
+    | receipts, password resets). Set MAIL_MAILER=mailgun and these values.
+    |
+    */
+
+    'mailgun' => [
+        'domain' => env('MAILGUN_DOMAIN'),
+        'secret' => env('MAILGUN_SECRET'),
+        'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'),
+        'scheme' => 'https',
+    ],
+
 ];

@@ -56,6 +56,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Force HTTPS
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, all plain HTTP requests are permanently redirected to HTTPS.
+    | Enable this in production behind a TLS-terminating proxy (Nginx,
+    | Cloudflare, or a load balancer) with trusted proxies configured so that
+    | Request::secure() correctly reports the scheme.
+    |
+    */
+
+    'force_https' => env('FORCE_HTTPS', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Security Headers / Content-Security-Policy
+    |--------------------------------------------------------------------------
+    |
+    | Toggle emission of the baseline Content-Security-Policy (and related
+    | security headers) applied by the SecurityHeaders middleware. Disable only
+    | if you serve the CSP from a higher layer (e.g. Nginx or Cloudflare).
+    |
+    */
+
+    'security_headers_csp' => env('SECURITY_HEADERS_CSP', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

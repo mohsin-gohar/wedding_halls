@@ -14,7 +14,7 @@ class WhatsAppWebhookController extends Controller
      */
     public function verify(Request $request)
     {
-        $verifyToken = config('services.whatsapp.verify_token', 'Wedding_Hall_Secret_Token_2026');
+        $verifyToken = config('services.whatsapp.verify_token') ?: 'Wedding_Hall_Secret_Token_2026';
         
         $mode = $request->query('hub_mode');
         $token = $request->query('hub_verify_token');
