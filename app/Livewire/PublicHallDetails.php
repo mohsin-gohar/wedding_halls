@@ -13,7 +13,6 @@ use Livewire\Component;
 class PublicHallDetails extends Component
 {
     public Hall $hall;
-
     public string $activePhoto = '';
 
     public function mount(string $id)
@@ -21,17 +20,17 @@ class PublicHallDetails extends Component
         // 1. Strict Visibility: Ensure hall exists, is active, and belongs to an active, approved vendor
         $this->hall = Hall::with(['venue', 'tenant'])->findOrFail($id);
 
-        if (! $this->hall->is_active) {
+        if (!$this->hall->is_active) {
             abort(404, 'This venue space is currently inactive.');
         }
 
-        if (! $this->hall->tenant || ! $this->hall->tenant->is_active || $this->hall->tenant->verification_status !== 'APPROVED') {
+        if (!$this->hall->tenant || !$this->hall->tenant->is_active || $this->hall->tenant->verification_status !== 'APPROVED') {
             abort(404, 'Venue is pending verification or currently unavailable.');
         }
 
         $images = is_array($this->hall->images) ? $this->hall->images : [];
-        $this->activePhoto = ! empty($this->hall->cover_image)
-            ? $this->hall->cover_image
+        $this->activePhoto = !empty($this->hall->cover_image) 
+            ? $this->hall->cover_image 
             : ($images[0] ?? 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop');
     }
 
@@ -63,14 +62,14 @@ class PublicHallDetails extends Component
             ->select(['id', 'hall_id', 'event_date', 'slot_type', 'status', 'event_type'])
             ->get()
             ->keyBy(function ($b) {
-                return $b->event_date->format('Y-m-d').'_'.$b->slot_type;
+                return $b->event_date->format('Y-m-d') . '_' . $b->slot_type;
             });
 
         // Ensure packages belong to this specific tenant or are platform standard offerings
         $packages = Package::where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('tenant_id')
-                    ->orWhere('tenant_id', $this->hall->tenant_id);
+                  ->orWhere('tenant_id', $this->hall->tenant_id);
             })
             ->get();
 

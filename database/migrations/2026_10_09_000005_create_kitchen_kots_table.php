@@ -22,7 +22,7 @@ return new class extends Migration
             $table->decimal('raw_meat_kg', 8, 2)->default(0.00);      // e.g. Mutton / Chicken kg
             $table->decimal('raw_rice_kg', 8, 2)->default(0.00);      // e.g. Basmati Rice kg
             $table->decimal('raw_oil_liters', 8, 2)->default(0.00);   // e.g. Cooking Oil liters
-
+            
             // JSON breakdown for detailed chef recipes, spices, yogurt, salads
             $table->json('ingredient_details')->nullable();
             $table->json('dishes_summary')->nullable();
@@ -32,7 +32,7 @@ return new class extends Migration
                 'PREPARING',
                 'READY',
                 'SERVED',
-                'CANCELLED',
+                'CANCELLED'
             ])->default('PENDING');
 
             $table->text('custom_instructions')->nullable();

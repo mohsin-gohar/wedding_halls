@@ -13,9 +13,7 @@ use App\Livewire\Dashboard;
 use App\Livewire\ExpenseTracker;
 use App\Livewire\FloorPlanDesigner;
 use App\Livewire\HallMediaManager;
-use App\Livewire\InventoryTracker;
 use App\Livewire\KitchenKotBoard;
-use App\Livewire\PackageManager;
 use App\Livewire\PublicAbout;
 use App\Livewire\PublicAvailabilityChecker;
 use App\Livewire\PublicContact;
@@ -31,6 +29,8 @@ use App\Livewire\PublicVenues;
 use App\Livewire\StaffAttendance;
 use App\Livewire\StaffManager;
 use App\Livewire\StaffPayroll;
+use App\Livewire\InventoryTracker;
+use App\Livewire\PackageManager;
 use App\Livewire\UtilityFuelTracker;
 use App\Livewire\WhatsAppRsvpManager;
 use App\Models\Hall;
@@ -48,7 +48,7 @@ Route::get('/', function () {
     $halls = Hall::where('is_active', true)
         ->whereHas('tenant', function ($q) {
             $q->where('is_active', true)
-                ->where('verification_status', 'APPROVED');
+              ->where('verification_status', 'APPROVED');
         })
         ->take(6)
         ->get();
@@ -56,10 +56,10 @@ Route::get('/', function () {
     $packages = Package::where('is_active', true)
         ->where(function ($query) {
             $query->whereNull('tenant_id')
-                ->orWhereHas('tenant', function ($q) {
-                    $q->where('is_active', true)
+                  ->orWhereHas('tenant', function ($q) {
+                      $q->where('is_active', true)
                         ->where('verification_status', 'APPROVED');
-                });
+                  });
         })
         ->take(4)
         ->get();
@@ -94,25 +94,17 @@ Route::get('/policies/{policy?}', PublicPolicies::class)->name('public.policies'
 Route::get('/policies/terms', [PublicPolicies::class, '__invoke'])->name('public.policies.terms');
 Route::get('/policies/privacy', [PublicPolicies::class, '__invoke'])->name('public.policies.privacy');
 Route::get('/policies/cancellation', [PublicPolicies::class, '__invoke'])->name('public.policies.cancellation');
-Route::get('/terms', function () {
-    return redirect()->route('public.policies', ['policy' => 'terms']);
-})->name('terms');
-Route::get('/privacy', function () {
-    return redirect()->route('public.policies', ['policy' => 'privacy']);
-})->name('privacy');
-Route::get('/cancellation', function () {
-    return redirect()->route('public.policies', ['policy' => 'cancellation']);
-})->name('cancellation');
-Route::get('/refund', function () {
-    return redirect()->route('public.policies', ['policy' => 'refund']);
-})->name('refund');
+Route::get('/terms', function () { return redirect()->route('public.policies', ['policy' => 'terms']); })->name('terms');
+Route::get('/privacy', function () { return redirect()->route('public.policies', ['policy' => 'privacy']); })->name('privacy');
+Route::get('/cancellation', function () { return redirect()->route('public.policies', ['policy' => 'cancellation']); })->name('cancellation');
+Route::get('/refund', function () { return redirect()->route('public.policies', ['policy' => 'refund']); })->name('refund');
 
 /*
 |--------------------------------------------------------------------------
 | 2. Customer Portal Authentication & Experience
 |--------------------------------------------------------------------------
 */
-Route::middleware(['guest', 'throttle:10,1'])->prefix('customer')->group(function () {
+Route::middleware('guest')->prefix('customer')->group(function () {
     Route::get('/login', CustomerLogin::class)->name('customer.login');
     Route::get('/register', CustomerRegister::class)->name('customer.register');
 });
@@ -127,7 +119,7 @@ Route::middleware('auth')->prefix('customer')->group(function () {
 | 3. Vendor Authentication Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware(['guest', 'throttle:10,1'])->group(function () {
+Route::middleware('guest')->group(function () {
     Route::get('/login', Login::class)->name('login');
     Route::get('/register', Register::class)->name('register');
 });
@@ -136,7 +128,6 @@ Route::post('/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
-
     return redirect()->route('login')->with('message', 'You have been signed out successfully.');
 })->name('logout');
 
@@ -175,7 +166,7 @@ Route::middleware('auth')->prefix('admin')->group(function () {
 | 6. Authoritative Printable & Downloadable Documents
 |--------------------------------------------------------------------------
 */
-Route::prefix('documents')->middleware(['throttle:60,1'])->name('documents.')->group(function () {
+Route::prefix('documents')->name('documents.')->group(function () {
     Route::get('/agreement/{id}', [DocumentController::class, 'bookingAgreement'])->name('agreement');
     Route::get('/receipt/{id}', [DocumentController::class, 'paymentReceipt'])->name('receipt');
     Route::get('/kot/{id}', [DocumentController::class, 'kitchenKot'])->name('kot');
@@ -189,7 +180,5 @@ Route::prefix('documents')->middleware(['throttle:60,1'])->name('documents.')->g
 | 7. Meta WhatsApp Cloud API 2-Way Webhook
 |--------------------------------------------------------------------------
 */
-Route::middleware(['throttle:60,1'])->group(function () {
-    Route::get('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'verify']);
-    Route::post('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'handle']);
-});
+Route::get('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'verify']);
+Route::post('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'handle']);

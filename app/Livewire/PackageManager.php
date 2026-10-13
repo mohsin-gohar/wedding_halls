@@ -12,7 +12,6 @@ use Livewire\Component;
 class PackageManager extends Component
 {
     public ?string $feedbackMessage = null;
-
     public ?string $errorMessage = null;
 
     // Filter
@@ -20,31 +19,24 @@ class PackageManager extends Component
 
     // Create / Edit Modal State
     public bool $showPackageModal = false;
-
     public bool $isEditing = false;
-
     public ?string $editingPackageId = null;
 
     // Form inputs
     public string $packageName = '';
-
     public string $packageDescription = '';
-
     public float $perHeadPrice = 2200;
-
     public int $minGuests = 200;
-
     public bool $isActive = true;
 
     // Dynamic Dish / Menu Items Management
     public array $menuItems = [];
-
     public string $newMenuItemName = '';
 
     public function mount()
     {
         $user = Auth::user();
-        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isChef() && ! $user->isSuperAdmin())) {
+        if (!$user || (!$user->isTenantOwner() && !$user->isManager() && !$user->isChef() && !$user->isSuperAdmin())) {
             abort(403, 'Unauthorized. Access to Catering Packages is restricted to Venue Owners, Chefs, and Managers.');
         }
 
@@ -68,7 +60,7 @@ class PackageManager extends Component
                         'Hot Tandoori Roghni Naan & Taftan',
                         'Zafrani Kheer & Gulab Jamun',
                         'Fresh Mint Raita & Organic Salad',
-                        'Chilled Soft Drinks & Mineral Water',
+                        'Chilled Soft Drinks & Mineral Water'
                     ],
                     'is_active' => true,
                 ],
@@ -85,7 +77,7 @@ class PackageManager extends Component
                         'Live Tawa Naan & Kalonji Kulcha',
                         'Shahi Tukray & Pistachio Kulfi',
                         'Russian Salad & Fresh Garden Greens',
-                        'Gourmet Kashmiri Chai with Crushed Almonds',
+                        'Gourmet Kashmiri Chai with Crushed Almonds'
                     ],
                     'is_active' => true,
                 ],
@@ -101,10 +93,10 @@ class PackageManager extends Component
                         'Roghni Tandoori Naan',
                         'Mutanjan Zarda with Sweet Khoya',
                         'Zeera Raita & Kachumber Salad',
-                        'Chilled Soft Drinks',
+                        'Chilled Soft Drinks'
                     ],
                     'is_active' => true,
-                ],
+                ]
             ];
 
             foreach ($defaultPackages as $pkg) {
@@ -130,7 +122,7 @@ class PackageManager extends Component
             'Mutton Qorma Degi',
             'Tandoori Roghni Naan',
             'Zafrani Kheer',
-            'Fresh Mint Raita & Salad',
+            'Fresh Mint Raita & Salad'
         ];
         $this->newMenuItemName = '';
         $this->feedbackMessage = null;
@@ -173,7 +165,7 @@ class PackageManager extends Component
             return;
         }
 
-        if (! in_array($item, $this->menuItems, true)) {
+        if (!in_array($item, $this->menuItems, true)) {
             $this->menuItems[] = $item;
         }
         $this->newMenuItemName = '';
@@ -189,7 +181,7 @@ class PackageManager extends Component
 
     public function addPresetDish(string $dish)
     {
-        if (! in_array($dish, $this->menuItems, true)) {
+        if (!in_array($dish, $this->menuItems, true)) {
             $this->menuItems[] = $dish;
         }
     }
@@ -207,8 +199,7 @@ class PackageManager extends Component
         ]);
 
         if (empty($this->menuItems)) {
-            $this->errorMessage = 'Please add at least one dish / menu item to this package.';
-
+            $this->errorMessage = "Please add at least one dish / menu item to this package.";
             return;
         }
 
@@ -268,7 +259,7 @@ class PackageManager extends Component
         $user = Auth::user();
         $package = Package::where('tenant_id', $user->tenant_id)->findOrFail($packageId);
         $package->update([
-            'is_active' => ! $package->is_active,
+            'is_active' => !$package->is_active,
         ]);
 
         $statusStr = $package->is_active ? 'Activated' : 'Archived';
@@ -283,7 +274,6 @@ class PackageManager extends Component
         $activeBookingsCount = $package->bookings()->whereIn('status', ['HOLD', 'CONFIRMED'])->count();
         if ($activeBookingsCount > 0) {
             $this->errorMessage = "Cannot delete [{$package->name}] because it is currently attached to {$activeBookingsCount} active booking(s). You can unpublish it instead.";
-
             return;
         }
 

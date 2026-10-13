@@ -4,9 +4,7 @@ namespace Tests\Feature;
 
 use App\Exceptions\SlotAlreadyBookedException;
 use App\Models\Booking;
-use App\Models\GuestRsvp;
 use App\Models\Hall;
-use App\Models\User;
 use App\Services\BookingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -120,7 +118,7 @@ class BookingConcurrencyTest extends TestCase
         $this->get(route('documents.agreement', $booking->id))->assertStatus(403);
 
         // 2. Authenticated tenant owner can download legal agreement
-        $owner = User::where('tenant_id', $booking->tenant_id)->first();
+        $owner = \App\Models\User::where('tenant_id', $booking->tenant_id)->first();
         $res = $this->actingAs($owner)->get(route('documents.agreement', $booking->id));
         $res->assertStatus(200);
 
@@ -145,7 +143,7 @@ class BookingConcurrencyTest extends TestCase
         $this->assertEquals('CHALLENGE_CODE_99', $verifyRes->getContent());
 
         // 2. Incoming message parsing for guest RSVP
-        $guestRsvp = GuestRsvp::first();
+        $guestRsvp = \App\Models\GuestRsvp::first();
         $this->assertNotNull($guestRsvp);
 
         $payload = [
@@ -177,3 +175,4 @@ class BookingConcurrencyTest extends TestCase
         $this->assertEquals(5, $guestRsvp->attending_count);
     }
 }
+

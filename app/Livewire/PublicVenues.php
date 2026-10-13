@@ -36,9 +36,7 @@ class PublicVenues extends Component
     public string $sort = 'popular'; // popular, price_asc, price_desc, capacity_desc
 
     public bool $hasAc = false;
-
     public bool $hasGenerator = false;
-
     public bool $hasBridal = false;
 
     public function updatingSearch()
@@ -83,27 +81,27 @@ class PublicVenues extends Component
             ->where('is_active', true)
             ->whereHas('tenant', function ($t) {
                 $t->where('is_active', true)
-                    ->where('verification_status', 'APPROVED');
+                  ->where('verification_status', 'APPROVED');
             });
 
         // 2. Filter by city
-        if ($this->city !== 'All' && ! empty($this->city)) {
+        if ($this->city !== 'All' && !empty($this->city)) {
             $query->whereHas('venue', function ($q) {
                 $q->where('city', $this->city);
             });
         }
 
         // 3. Search term (Hall name, description, venue complex name, area, city)
-        if (! empty($this->search)) {
-            $searchTerm = '%'.trim($this->search).'%';
+        if (!empty($this->search)) {
+            $searchTerm = '%' . trim($this->search) . '%';
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('name', 'like', $searchTerm)
-                    ->orWhere('description', 'like', $searchTerm)
-                    ->orWhereHas('venue', function ($v) use ($searchTerm) {
-                        $v->where('name', 'like', $searchTerm)
-                            ->orWhere('area', 'like', $searchTerm)
-                            ->orWhere('city', 'like', $searchTerm);
-                    });
+                  ->orWhere('description', 'like', $searchTerm)
+                  ->orWhereHas('venue', function ($v) use ($searchTerm) {
+                      $v->where('name', 'like', $searchTerm)
+                        ->orWhere('area', 'like', $searchTerm)
+                        ->orWhere('city', 'like', $searchTerm);
+                  });
             });
         }
 
@@ -129,7 +127,7 @@ class PublicVenues extends Component
         }
 
         // 7. Date and Shift Availability Filters
-        if (! empty($this->date)) {
+        if (!empty($this->date)) {
             $bookingQuery = Booking::whereDate('event_date', $this->date)
                 ->whereIn('status', ['HOLD', 'CONFIRMED']);
 

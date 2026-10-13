@@ -9,17 +9,11 @@ use Livewire\Component;
 class PublicContact extends Component
 {
     public string $name = '';
-
     public string $email = '';
-
     public string $phone = '';
-
     public string $city = 'Lahore';
-
     public string $eventDate = '';
-
     public string $message = '';
-
     public bool $isSubmitted = false;
 
     protected $rules = [

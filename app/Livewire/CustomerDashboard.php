@@ -11,17 +11,14 @@ use Livewire\Component;
 class CustomerDashboard extends Component
 {
     public ?string $selectedBookingId = null;
-
     public ?Booking $viewingBooking = null;
-
     public string $cancellationReason = '';
-
     public ?string $feedbackMessage = null;
 
     public function mount()
     {
         $user = Auth::user();
-        if (! $user) {
+        if (!$user) {
             return redirect()->route('customer.login');
         }
     }
@@ -30,9 +27,9 @@ class CustomerDashboard extends Component
     {
         $user = Auth::user();
         $this->viewingBooking = Booking::where(function ($q) use ($user) {
-            $q->where('customer_id', $user->id)
-                ->orWhere('customer_email', $user->email);
-        })
+                $q->where('customer_id', $user->id)
+                  ->orWhere('customer_email', $user->email);
+            })
             ->with(['hall.venue', 'package', 'payments', 'rsvps'])
             ->findOrFail($bookingId);
 
@@ -50,30 +47,30 @@ class CustomerDashboard extends Component
     {
         $user = Auth::user();
         $booking = Booking::where(function ($q) use ($user) {
-            $q->where('customer_id', $user->id)
-                ->orWhere('customer_email', $user->email);
-        })
+                $q->where('customer_id', $user->id)
+                  ->orWhere('customer_email', $user->email);
+            })
             ->findOrFail($bookingId);
 
         $booking->update([
-            'notes' => ($booking->notes ? $booking->notes.' | ' : '').'Customer requested cancellation: '.($this->cancellationReason ?: 'Personal reasons'),
+            'notes' => ($booking->notes ? $booking->notes . " | " : "") . "Customer requested cancellation: " . ($this->cancellationReason ?: 'Personal reasons'),
         ]);
 
-        $this->feedbackMessage = 'Your cancellation/reschedule inquiry has been registered. The venue concierge will contact you.';
+        $this->feedbackMessage = "Your cancellation/reschedule inquiry has been registered. The venue concierge will contact you.";
         $this->cancellationReason = '';
     }
 
     public function render()
     {
         $user = Auth::user();
-        if (! $user) {
+        if (!$user) {
             return view('livewire.customer-dashboard', ['bookings' => collect(), 'totalSpent' => 0, 'totalDue' => 0]);
         }
 
         $bookings = Booking::where(function ($q) use ($user) {
-            $q->where('customer_id', $user->id)
-                ->orWhere('customer_email', $user->email);
-        })
+                $q->where('customer_id', $user->id)
+                  ->orWhere('customer_email', $user->email);
+            })
             ->with(['hall.venue', 'package', 'payments'])
             ->latest()
             ->get();

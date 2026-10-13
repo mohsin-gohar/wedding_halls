@@ -10,7 +10,6 @@ use Livewire\Component;
 class PublicMenus extends Component
 {
     public int $calculatorGuests = 450;
-
     public ?string $selectedPackageId = null;
 
     public function mount()
@@ -18,7 +17,7 @@ class PublicMenus extends Component
         $first = Package::where('is_active', true)
             ->where(function ($query) {
                 $query->whereNull('tenant_id')
-                    ->orWhereHas('tenant', fn ($q) => $q->where('is_active', true)->where('verification_status', 'APPROVED'));
+                      ->orWhereHas('tenant', fn($q) => $q->where('is_active', true)->where('verification_status', 'APPROVED'));
             })
             ->first();
         if ($first) {
@@ -31,7 +30,7 @@ class PublicMenus extends Component
         $packages = Package::where('is_active', true)
             ->where(function ($query) {
                 $query->whereNull('tenant_id')
-                    ->orWhereHas('tenant', fn ($q) => $q->where('is_active', true)->where('verification_status', 'APPROVED'));
+                      ->orWhereHas('tenant', fn($q) => $q->where('is_active', true)->where('verification_status', 'APPROVED'));
             })
             ->get();
         $selectedPackage = Package::find($this->selectedPackageId) ?? $packages->first();

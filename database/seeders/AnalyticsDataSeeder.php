@@ -18,17 +18,13 @@ class AnalyticsDataSeeder extends Seeder
     public function run(): void
     {
         $tenant = Tenant::first();
-        if (! $tenant) {
-            return;
-        }
+        if (!$tenant) return;
 
         $frontDeskUser = User::where('role', 'ROLE_FRONT_DESK')->first() ?? User::first();
         $halls = Hall::where('tenant_id', $tenant->id)->get();
         $packages = Package::where('tenant_id', $tenant->id)->get();
 
-        if ($halls->isEmpty() || $packages->isEmpty()) {
-            return;
-        }
+        if ($halls->isEmpty() || $packages->isEmpty()) return;
 
         $hallRoyal = $halls->firstWhere('name', 'The Royal Ballroom') ?? $halls[0];
         $hallLawn = $halls->firstWhere('name', 'Executive Crystal Lawn') ?? ($halls[1] ?? $halls[0]);
@@ -85,9 +81,7 @@ class AnalyticsDataSeeder extends Seeder
                 ->where('slot_type', $slot)
                 ->exists();
 
-            if ($exists) {
-                continue;
-            }
+            if ($exists) continue;
 
             $addonsTotal = rand(2, 5) * 10000.00;
             $discount = ($idx % 3 === 0) ? 25000.00 : 0.00;
@@ -106,7 +100,7 @@ class AnalyticsDataSeeder extends Seeder
                     'customer_name' => $client[0],
                     'customer_phone' => $client[1],
                     'customer_cnic' => $client[2],
-                    'customer_email' => strtolower(str_replace(' ', '.', $client[0])).'@example.com',
+                    'customer_email' => strtolower(str_replace(' ', '.', $client[0])) . '@example.com',
                     'event_type' => $type,
                     'event_date' => $eventDate,
                     'slot_type' => $slot,
@@ -128,11 +122,11 @@ class AnalyticsDataSeeder extends Seeder
                     'tenant_id' => $tenant->id,
                     'booking_id' => $booking->id,
                     'received_by_user_id' => $frontDeskUser->id,
-                    'receipt_no' => 'RCT-'.date('Ym').'-'.rand(1000, 9999),
+                    'receipt_no' => 'RCT-' . date('Ym') . '-' . rand(1000, 9999),
                     'amount' => $advancePaid,
                     'payment_method' => ($idx % 2 === 0) ? 'CASH' : 'BANK_TRANSFER',
                     'payment_type' => 'TOKEN_ADVANCE',
-                    'transaction_reference' => 'TXN-MB-'.rand(100000, 999999),
+                    'transaction_reference' => 'TXN-MB-' . rand(100000, 999999),
                     'notes' => 'Token advance collected at front desk counter.',
                 ]);
 
@@ -140,7 +134,7 @@ class AnalyticsDataSeeder extends Seeder
                 KitchenKot::create([
                     'tenant_id' => $tenant->id,
                     'booking_id' => $booking->id,
-                    'kot_number' => 'KOT-'.date('Ym').'-'.rand(1000, 9999),
+                    'kot_number' => 'KOT-' . date('Ym') . '-' . rand(1000, 9999),
                     'guest_count' => $guests,
                     'raw_meat_kg' => round($guests * 0.12, 1),
                     'raw_rice_kg' => round($guests * 0.16, 1),

@@ -15,7 +15,6 @@ use Livewire\Component;
 class WalkInBookingModal extends Component
 {
     public bool $isOpen = false;
-
     public int $step = 1;
 
     // Mode flag: staff terminal vs public inquiry
@@ -23,63 +22,40 @@ class WalkInBookingModal extends Component
 
     // Step 1: Venue & Slot
     public ?string $hall_id = null;
-
     public string $event_date = '';
-
     public string $slot_type = 'EVENING';
-
     public string $event_type = 'Barat';
-
     public bool $isSlotAvailable = true;
-
     public ?string $slotMessage = null;
 
     // Step 2: Client Profile
     public string $customer_phone = '';
-
     public string $customer_name = '';
-
     public ?string $customer_cnic = '';
-
     public ?string $customer_email = '';
-
     public bool $clientFound = false;
 
     // Step 3: Catering & Financials
     public int $guest_count = 250;
-
     public ?string $package_id = null;
-
     public float $per_head_rate = 1850.00;
-
     public float $hall_rent = 120000.00;
-
     public array $selected_addons = [];
-
     public float $addons_total = 0.00;
-
     public float $discount_amount = 0.00;
-
     public float $tax_rate_percent = 5.00; // 5% provincial service tax
-
     public float $tax_amount = 0.00;
-
     public float $grand_total = 0.00;
 
     // Step 4: Advance Deposit (Staff terminal only)
     public float $advance_paid = 50000.00;
-
     public float $balance_due = 0.00;
-
     public string $payment_method = 'CASH';
-
     public ?string $transaction_reference = null;
-
     public ?string $notes = null;
 
     // Created booking reference
     public ?Booking $createdBooking = null;
-
     public ?string $errorMessage = null;
 
     protected $listeners = [
@@ -105,11 +81,11 @@ class WalkInBookingModal extends Component
     {
         $user = Auth::user();
 
-        if (! $user) {
+        if (!$user) {
             // Public guest browsing the marketplace: show all approved halls and
             // pre-select the first as a sensible default; the guest confirms the choice.
             $firstHall = Hall::where('is_active', true)
-                ->whereHas('tenant', fn ($t) => $t->where('is_active', true)->where('verification_status', 'APPROVED'))
+                ->whereHas('tenant', fn($t) => $t->where('is_active', true)->where('verification_status', 'APPROVED'))
                 ->first();
         } elseif ($this->isStaff && $user->tenant_id) {
             // Tenant staff (Owner / Manager / Front Desk, or a Super Admin assigned to a
@@ -137,30 +113,29 @@ class WalkInBookingModal extends Component
         $this->determineStaffMode();
         $this->isOpen = true;
 
-        if (! empty($payload['hall_id'])) {
+        if (!empty($payload['hall_id'])) {
             $hall = Hall::find($payload['hall_id']);
             if ($hall) {
                 // If staff mode, ensure hall belongs to tenant
                 $user = Auth::user();
-                if ($this->isStaff && ! $user->isSuperAdmin() && $hall->tenant_id !== $user->tenant_id) {
-                    $this->errorMessage = 'Unauthorized venue space selected.';
-
+                if ($this->isStaff && !$user->isSuperAdmin() && $hall->tenant_id !== $user->tenant_id) {
+                    $this->errorMessage = "Unauthorized venue space selected.";
                     return;
                 }
                 $this->hall_id = $hall->id;
                 $this->hall_rent = (float) $hall->base_rent;
             }
-        } elseif (! $this->hall_id) {
+        } elseif (!$this->hall_id) {
             $this->initDefaultHall();
         }
 
-        if (! empty($payload['event_date'])) {
+        if (!empty($payload['event_date'])) {
             $this->event_date = $payload['event_date'];
         }
-        if (! empty($payload['slot_type'])) {
+        if (!empty($payload['slot_type'])) {
             $this->slot_type = strtoupper($payload['slot_type']);
         }
-        if (! empty($payload['package_id'])) {
+        if (!empty($payload['package_id'])) {
             $this->package_id = $payload['package_id'];
             $pkg = Package::find($this->package_id);
             if ($pkg) {
@@ -177,9 +152,8 @@ class WalkInBookingModal extends Component
         $hall = Hall::find($value);
         if ($hall) {
             $user = Auth::user();
-            if ($this->isStaff && ! $user->isSuperAdmin() && $hall->tenant_id !== $user->tenant_id) {
-                $this->errorMessage = 'Unauthorized venue space.';
-
+            if ($this->isStaff && !$user->isSuperAdmin() && $hall->tenant_id !== $user->tenant_id) {
+                $this->errorMessage = "Unauthorized venue space.";
                 return;
             }
             $this->hall_rent = (float) $hall->base_rent;
@@ -200,7 +174,7 @@ class WalkInBookingModal extends Component
 
     public function checkAvailability()
     {
-        if (! $this->hall_id || ! $this->event_date || ! $this->slot_type) {
+        if (!$this->hall_id || !$this->event_date || !$this->slot_type) {
             return;
         }
 
@@ -212,10 +186,10 @@ class WalkInBookingModal extends Component
 
         if ($exists) {
             $this->isSlotAvailable = false;
-            $this->slotMessage = '⚠️ Shift is already reserved! Choose another date or shift.';
+            $this->slotMessage = "⚠️ Shift is already reserved! Choose another date or shift.";
         } else {
             $this->isSlotAvailable = true;
-            $this->slotMessage = '✅ Slot is 100% available for booking!';
+            $this->slotMessage = "✅ Slot is 100% available for booking!";
         }
     }
 
@@ -224,7 +198,7 @@ class WalkInBookingModal extends Component
         $this->clientFound = false;
 
         // Security: Only authorized staff may perform client lookups
-        if (! $this->isStaff) {
+        if (!$this->isStaff) {
             return;
         }
 
@@ -232,13 +206,13 @@ class WalkInBookingModal extends Component
         $phone = trim($this->customer_phone);
         $cnic = trim((string) $this->customer_cnic);
 
-        if (! $phone && ! $cnic) {
+        if (!$phone && !$cnic) {
             return;
         }
 
         // Strict Tenant Scoping: Never leak another tenant's customer data
         $query = Booking::query();
-        if (! $user->isSuperAdmin()) {
+        if (!$user->isSuperAdmin()) {
             $query->where('tenant_id', $user->tenant_id);
         }
 
@@ -359,9 +333,8 @@ class WalkInBookingModal extends Component
                 'slot_type' => 'required|in:AFTERNOON,EVENING,NIGHT,FULL_DAY',
             ]);
             $this->checkAvailability();
-            if (! $this->isSlotAvailable) {
-                $this->errorMessage = 'Cannot proceed: Selected shift is already reserved.';
-
+            if (!$this->isSlotAvailable) {
+                $this->errorMessage = "Cannot proceed: Selected shift is already reserved.";
                 return;
             }
         }
@@ -404,7 +377,7 @@ class WalkInBookingModal extends Component
         $user = Auth::user();
 
         // Server-Side Authorization & Tenant Isolation Checks
-        if ($this->isStaff && ! $user->isSuperAdmin() && $hall->tenant_id !== $user->tenant_id) {
+        if ($this->isStaff && !$user->isSuperAdmin() && $hall->tenant_id !== $user->tenant_id) {
             abort(403, 'Unauthorized venue space for the current tenant context.');
         }
 
@@ -413,7 +386,7 @@ class WalkInBookingModal extends Component
 
         if ($this->package_id) {
             $pkg = Package::findOrFail($this->package_id);
-            if ($this->isStaff && ! $user->isSuperAdmin() && $pkg->tenant_id && $pkg->tenant_id !== $user->tenant_id) {
+            if ($this->isStaff && !$user->isSuperAdmin() && $pkg->tenant_id && $pkg->tenant_id !== $user->tenant_id) {
                 abort(403, 'Unauthorized package selection.');
             }
             $this->per_head_rate = (float) $pkg->per_head_price;
@@ -466,7 +439,7 @@ class WalkInBookingModal extends Component
             $this->errorMessage = $e->getMessage();
             $this->step = 1;
         } catch (\Exception $e) {
-            $this->errorMessage = 'Booking failed: '.$e->getMessage();
+            $this->errorMessage = "Booking failed: " . $e->getMessage();
         }
     }
 
@@ -483,7 +456,7 @@ class WalkInBookingModal extends Component
         $user = Auth::user();
         $this->determineStaffMode();
 
-        if ($this->isStaff && ! $user->isSuperAdmin() && $user->tenant_id) {
+        if ($this->isStaff && !$user->isSuperAdmin() && $user->tenant_id) {
             $halls = Hall::where('tenant_id', $user->tenant_id)->where('is_active', true)->get();
             $packages = Package::where('is_active', true)
                 ->where(function ($q) use ($user) {
@@ -493,7 +466,7 @@ class WalkInBookingModal extends Component
             $selectedHall = Hall::find($this->hall_id);
             $tenantId = $selectedHall ? $selectedHall->tenant_id : null;
             $halls = Hall::where('is_active', true)
-                ->whereHas('tenant', fn ($t) => $t->where('is_active', true)->where('verification_status', 'APPROVED'))
+                ->whereHas('tenant', fn($t) => $t->where('is_active', true)->where('verification_status', 'APPROVED'))
                 ->get();
             $packages = Package::where('is_active', true)
                 ->where(function ($q) use ($tenantId) {
@@ -504,7 +477,7 @@ class WalkInBookingModal extends Component
                 })->get();
         } else {
             $halls = Hall::where('is_active', true)
-                ->whereHas('tenant', fn ($t) => $t->where('is_active', true)->where('verification_status', 'APPROVED'))
+                ->whereHas('tenant', fn($t) => $t->where('is_active', true)->where('verification_status', 'APPROVED'))
                 ->get();
             $packages = Package::where('is_active', true)->get();
         }

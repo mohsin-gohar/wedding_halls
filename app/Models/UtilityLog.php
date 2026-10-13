@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UtilityLog extends Model
 {
-    use BelongsToTenant, HasFactory, HasUuids;
+    use HasFactory, HasUuids;
 
     protected $fillable = [
         'tenant_id',
@@ -48,7 +47,6 @@ class UtilityLog extends Model
     {
         $dieselCost = (float) $this->diesel_liters_consumed * (float) $this->diesel_rate_per_liter;
         $wapdaCost = (float) $this->wapda_units_consumed * (float) $this->wapda_unit_rate;
-
         return round($dieselCost + $wapdaCost, 2);
     }
 }

@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Hall;
+use App\Models\Package;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -30,7 +32,7 @@ class PortalRoutesTest extends TestCase
 
         // 3. Public Venue Details
         if ($hall) {
-            $this->get('/venues/'.$hall->id)->assertStatus(200);
+            $this->get('/venues/' . $hall->id)->assertStatus(200);
         }
 
         // 4. Public Menus & Packages
