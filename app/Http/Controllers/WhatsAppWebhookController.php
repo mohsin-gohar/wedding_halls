@@ -14,13 +14,13 @@ class WhatsAppWebhookController extends Controller
      */
     public function verify(Request $request)
     {
-        $verifyToken = config('services.whatsapp.verify_token') ?: 'Wedding_Hall_Secret_Token_2026';
+        $verifyToken = config('services.whatsapp.verify_token');
         
         $mode = $request->query('hub_mode');
         $token = $request->query('hub_verify_token');
         $challenge = $request->query('hub_challenge');
 
-        if ($mode === 'subscribe' && $token === $verifyToken) {
+        if ($verifyToken && $mode === 'subscribe' && hash_equals($verifyToken, (string) $token)) {
             return response($challenge, 200);
         }
 
@@ -32,8 +32,18 @@ class WhatsAppWebhookController extends Controller
      */
     public function handle(Request $request)
     {
+        $appSecret = config('services.whatsapp.app_secret');
+        $signature = (string) $request->header('X-Hub-Signature-256');
+        $expectedSignature = $appSecret
+            ? 'sha256='.hash_hmac('sha256', $request->getContent(), $appSecret)
+            : '';
+
+        if (!$expectedSignature || !hash_equals($expectedSignature, $signature)) {
+            return response()->json(['status' => 'unauthorized'], 403);
+        }
+
         $payload = $request->all();
-        Log::info('WhatsApp Webhook received', $payload);
+        Log::info('WhatsApp Webhook received');
 
         $entry = $payload['entry'][0]['changes'][0]['value'] ?? null;
         if (!$entry || empty($entry['messages'])) {
@@ -104,10 +114,11 @@ class WhatsAppWebhookController extends Controller
     {
         $token = config('services.whatsapp.access_token');
         $phoneId = config('services.whatsapp.phone_number_id');
+        $apiVersion = config('services.whatsapp.api_version', 'v19.0');
 
         if ($token && $phoneId) {
             try {
-                Http::withToken($token)->post("https://graph.facebook.com/v19.0/{$phoneId}/messages", [
+                Http::withToken($token)->post("https://graph.facebook.com/{$apiVersion}/{$phoneId}/messages", [
                     'messaging_product' => 'whatsapp',
                     'to' => $toPhone,
                     'type' => 'text',

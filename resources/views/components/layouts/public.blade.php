@@ -48,18 +48,18 @@
     <!-- Main Navigation Bar (Luxury Obsidian & Champagne Gold, Zero-Pill) -->
     <header class="sticky top-0 z-40 bg-[#171513]/95 backdrop-blur-lg border-b border-[#C6A15B]/40 transition-all duration-300 text-white shadow-[0_10px_40px_-15px_rgba(198,161,91,0.45)]" id="site-header">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="h-20 flex items-center justify-between gap-6">
+            <div class="h-20 flex items-center justify-between gap-6 max-sm:gap-2">
                 
                 <!-- Brand Identity -->
-                <a href="{{ route('home') }}" class="flex items-center gap-3 group">
+                <a href="{{ route('home') }}" class="flex items-center gap-3 group max-sm:gap-2">
                     <div class="w-10 h-10 border border-[#C6A15B] flex items-center justify-center bg-[#171513] text-[#C6A15B] transition group-hover:bg-gradient-to-br group-hover:from-[#C6A15B] group-hover:to-[#8F7239] group-hover:text-[#171513] shadow-[0_0_20px_-8px_rgba(198,161,91,0.4)] group-hover:shadow-[0_0_30px_rgba(198,161,91,0.6)]">
                         <span class="font-cinzel text-lg font-bold">V</span>
                     </div>
                     <div class="flex flex-col">
-                        <span class="font-cinzel text-xl font-bold tracking-[0.16em] text-white group-hover:text-[#C6A15B] transition">
+                        <span class="font-cinzel text-base sm:text-xl font-bold tracking-[0.16em] text-white group-hover:text-[#C6A15B] transition">
                             VENUECLOUD
                         </span>
-                        <span class="text-[9px] tracking-[0.26em] text-[#C6A15B]/80 uppercase -mt-0.5 font-medium font-mono">
+                        <span class="hidden sm:block text-[9px] tracking-[0.26em] text-[#C6A15B]/80 uppercase -mt-0.5 font-medium font-mono">
                             Luxury Banquets &amp; Marquees
                         </span>
                     </div>
@@ -94,7 +94,7 @@
                 </nav>
 
                 <!-- Actions: Zero-Pill Buttons -->
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 max-sm:gap-1">
                     <!-- Theme Toggle Button -->
                     <button type="button" 
                             @click="toggleTheme()" 
@@ -111,25 +111,25 @@
                         <a href="{{ route('login') }}" class="btn-outline-gold !h-9 !text-xs !text-[#F8F5EF] !border-[#C6A15B]/60 hover:!text-[#171513] hover:!border-[#C6A15B] hover:!bg-[#C6A15B] hidden sm:inline-flex transition-all duration-300">
                             Sign In
                         </a>
-                        <a href="{{ route('register') }}" class="btn-gold !h-9 !text-xs shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.5)] transition-all duration-300">
+                        <a href="{{ route('register') }}" class="btn-gold !h-9 !text-xs hidden sm:inline-flex shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.5)] transition-all duration-300">
                             List Your Hall &rarr;
                         </a>
                     @else
                         @if(auth()->user()->isSuperAdmin())
-                            <a href="{{ route('admin.dashboard') }}" class="btn-gold !h-9 !text-xs shadow-[0_0_15px_$1198, 161, 91,0.3)]">
+                            <a href="{{ route('admin.dashboard') }}" class="btn-gold !h-9 !text-xs hidden sm:inline-flex shadow-[0_0_15px_rgba(198,161,91,0.3)]">
                                 Super Admin &rarr;
                             </a>
                         @elseif(auth()->user()->isTenantOwner() || auth()->user()->isFrontDesk() || auth()->user()->isChef())
-                            <a href="{{ route('dashboard') }}" class="btn-gold !h-9 !text-xs shadow-[0_0_15px_$1198, 161, 91,0.3)]">
+                            <a href="{{ route('dashboard') }}" class="btn-gold !h-9 !text-xs hidden sm:inline-flex shadow-[0_0_15px_rgba(198,161,91,0.3)]">
                                 Vendor Console &rarr;
                             </a>
                         @else
-                            <a href="{{ route('customer.dashboard') }}" class="btn-gold !h-9 !text-xs shadow-[0_0_15px_$1198, 161, 91,0.3)]">
+                            <a href="{{ route('customer.dashboard') }}" class="btn-gold !h-9 !text-xs hidden sm:inline-flex shadow-[0_0_15px_rgba(198,161,91,0.3)]">
                                 My Bookings &rarr;
                             </a>
                         @endif
 
-                        <form method="POST" action="{{ route('logout') }}" class="inline">
+                        <form method="POST" action="{{ route('logout') }}" class="inline max-sm:hidden">
                             @csrf
                             <button type="submit" title="Sign Out" class="h-9 px-3 border border-white/20 bg-[#171513] text-stone-300 hover:text-[#171513] hover:border-[#C6A15B]/60 text-xs font-semibold transition">
                                 Exit
@@ -176,10 +176,16 @@
                             <a href="{{ route('login') }}" class="btn-outline-gold !w-full !justify-center !text-[#F8F5EF] !border-[#C6A15B]/60 hover:!text-[#171513] hover:!border-[#C6A15B] hover:!bg-[#C6A15B] transition-all duration-300">Sign In (Vendor / Customer)</a>
                             <a href="{{ route('register') }}" class="btn-gold !w-full !justify-center shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.5)] transition-all duration-300">Register Wedding Hall</a>
                 @else
-                    <a href="{{ route('dashboard') }}" class="btn-gold !w-full !justify-center">Go to Dashboard</a>
+                            @if(auth()->user()->isSuperAdmin())
+                                <a href="{{ route('admin.dashboard') }}" class="btn-gold !w-full !justify-center">Go to Dashboard</a>
+                            @elseif(auth()->user()->isTenantOwner() || auth()->user()->isFrontDesk() || auth()->user()->isChef())
+                                <a href="{{ route('dashboard') }}" class="btn-gold !w-full !justify-center">Go to Dashboard</a>
+                            @else
+                                <a href="{{ route('customer.dashboard') }}" class="btn-gold !w-full !justify-center">Go to Dashboard</a>
+                            @endif
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="w-full text-center py-2 text-xs font-semibold text-[#171513]">Sign Out</button>
+                        <button type="submit" class="w-full text-center py-2 text-xs font-semibold text-[#F8F5EF] hover:text-[#C6A15B]">Sign Out</button>
                     </form>
                 @endguest
             </div>

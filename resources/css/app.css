@@ -83,6 +83,7 @@ button {
 }
 
 /* Strict Zero-Pill Controls & Buttons */
+@layer components {
 .btn-gold {
     display: inline-flex;
     align-items: center;
@@ -225,6 +226,7 @@ button {
     background-color: var(--warm-sand);
     border-color: #E7E5E4;
     transform: translateY(-1px);
+}
 }
 
 /* Luxury Editorial Cards */

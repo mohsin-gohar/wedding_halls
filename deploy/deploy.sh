@@ -7,7 +7,7 @@
 #   sudo bash deploy/deploy.sh
 #
 # Assumes: PHP 8.2+, Composer, Node 20+, Redis, MySQL, Nginx already installed
-# and .env already configured (see .env.production).
+# and .env already configured (start from .env.example; see deploy/DEPLOYMENT.md).
 #
 # This script is safe to run on every deploy (idempotent).
 ################################################################
@@ -21,7 +21,7 @@ echo "==> [1/8] Enabling maintenance mode"
 php artisan down --render="errors::503" || true
 
 echo "==> [2/8] Pulling latest code (git)"
-git pull --no-edit || true
+git pull --ff-only
 
 echo "==> [3/8] Installing PHP dependencies (prod, optimized)"
 composer install --optimize-autoloader --no-dev --no-interaction --prefer-dist

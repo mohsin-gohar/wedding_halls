@@ -30,10 +30,11 @@ cd /var/www
 sudo git clone https://github.com/mohsin-gohar/wedding_halls.git venuecloud
 cd venuecloud
 
-# Production environment
-cp .env.production .env
+# Start from the tracked environment template, then apply production values.
+cp .env.example .env
 php artisan key:generate        # fills APP_KEY
-# Edit .env: DB_*, MAILGUN_*, WHATSAPP_*, AWS_* (S3), APP_URL, SESSION_*
+# Set APP_ENV=production, APP_DEBUG=false, and configure DB_*, Redis, mail, storage, APP_URL, and SESSION_*.
+# Set WHATSAPP_APP_SECRET when enabling the signed WhatsApp webhook.
 ```
 
 Create the MySQL database and user:
@@ -100,6 +101,7 @@ https://venuecloud.pk/webhooks/whatsapp
 ```
 
 - **Verify token**: must equal `WHATSAPP_VERIFY_TOKEN` in `.env`
+- **App secret**: set `WHATSAPP_APP_SECRET` to the Meta app secret; unsigned or invalidly signed callbacks are rejected.
 - **Subscribe to**: `messages`
 - Leave `WHATSAPP_ACCESS_TOKEN` / `WHATSAPP_PHONE_NUMBER_ID` empty to run in
   sandbox mode (outbound messages are logged instead of sent).

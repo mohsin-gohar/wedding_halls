@@ -138,7 +138,14 @@ class BookingConcurrencyTest extends TestCase
     public function test_whatsapp_webhook_verification_and_rsvp_processing()
     {
         // 1. Verification handshake
-        $verifyRes = $this->get('/webhooks/whatsapp?hub_mode=subscribe&hub_verify_token=Wedding_Hall_Secret_Token_2026&hub_challenge=CHALLENGE_CODE_99');
+        \Illuminate\Support\Facades\Http::fake();
+        config(['services.whatsapp.verify_token' => 'test-verify-token']);
+        config(['services.whatsapp.app_secret' => 'test-app-secret']);
+        config(['services.whatsapp.access_token' => 'test-access-token']);
+        config(['services.whatsapp.phone_number_id' => 'test-phone-id']);
+        config(['services.whatsapp.api_version' => 'v21.0']);
+
+        $verifyRes = $this->get('/webhooks/whatsapp?hub_mode=subscribe&hub_verify_token=test-verify-token&hub_challenge=CHALLENGE_CODE_99');
         $verifyRes->assertStatus(200);
         $this->assertEquals('CHALLENGE_CODE_99', $verifyRes->getContent());
 
@@ -167,12 +174,30 @@ class BookingConcurrencyTest extends TestCase
             ],
         ];
 
-        $postRes = $this->postJson('/webhooks/whatsapp', $payload);
+        $body = json_encode($payload, JSON_THROW_ON_ERROR);
+        $signature = 'sha256='.hash_hmac('sha256', $body, 'test-app-secret');
+        $postRes = $this->call('POST', '/webhooks/whatsapp', [], [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_X_HUB_SIGNATURE_256' => $signature,
+        ], $body);
         $postRes->assertStatus(200);
+        \Illuminate\Support\Facades\Http::assertSent(
+            fn (\Illuminate\Http\Client\Request $request) => $request->url() === 'https://graph.facebook.com/v21.0/test-phone-id/messages'
+        );
 
         $guestRsvp->refresh();
         $this->assertEquals('ATTENDING', $guestRsvp->rsvp_status);
         $this->assertEquals(5, $guestRsvp->attending_count);
+
+        $forgedPayload = $payload;
+        $forgedPayload['entry'][0]['changes'][0]['value']['messages'][0]['text']['body'] = 'Decline';
+        $forgedBody = json_encode($forgedPayload, JSON_THROW_ON_ERROR);
+        $this->call('POST', '/webhooks/whatsapp', [], [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_X_HUB_SIGNATURE_256' => 'sha256=invalid',
+        ], $forgedBody)->assertForbidden();
+
+        $this->assertSame(5, $guestRsvp->fresh()->attending_count);
     }
 }
 
