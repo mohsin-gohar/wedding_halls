@@ -96,7 +96,7 @@
                         <input type="text" wire:model="name"
                                placeholder="e.g. Royal Grand Ballroom"
                                class="w-full bg-[#171513] border border-white/15 text-white text-sm px-3.5 py-2.5 focus:border-[#C6A15B] outline-none">
-                        @error('name') <span class="text-[#171513] text-[11px] mt-1 block font-mono">{{ $message }}</span> @enderror
+                        @error('name') <span class="text-rose-400 text-[11px] mt-1 block font-mono">{{ $message }}</span> @enderror
                         <p class="text-[11px] text-white/40 mt-1">This is the title displayed prominently on your hall's website.</p>
                     </div>
 
@@ -109,7 +109,7 @@
                             <input type="text" wire:model="venue_name"
                                    placeholder="e.g. Royal Palm Banquets Complex"
                                    class="w-full bg-[#171513] border border-white/15 text-white text-sm px-3.5 py-2.5 focus:border-[#C6A15B] outline-none">
-                            @error('venue_name') <span class="text-[#171513] text-[11px] mt-1 block font-mono">{{ $message }}</span> @enderror
+                            @error('venue_name') <span class="text-rose-400 text-[11px] mt-1 block font-mono">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
@@ -266,7 +266,7 @@
                             </label>
                             <input type="text" wire:model="newServiceTitle" placeholder="e.g. Royal Fresh Rose Stage Decor"
                                    class="w-full bg-[#171513] border border-white/15 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
-                            @error('newServiceTitle') <span class="text-[#171513] text-[10px] font-mono mt-0.5 block">{{ $message }}</span> @enderror
+                            @error('newServiceTitle') <span class="text-rose-400 text-[10px] font-mono mt-0.5 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
@@ -576,7 +576,7 @@
                         + Add
                     </button>
                 </div>
-                @error('newImageUrl') <span class="text-[#171513] text-[10px] font-mono block">{{ $message }}</span> @enderror
+                @error('newImageUrl') <span class="text-rose-400 text-[10px] font-mono block">{{ $message }}</span> @enderror
 
                 <!-- Images Grid -->
                 <div class="grid grid-cols-2 gap-3 pt-2">
@@ -621,7 +621,7 @@
                         + Add Video
                     </button>
                 </div>
-                @error('newVideoUrl') <span class="text-[#171513] text-[10px] font-mono block">{{ $message }}</span> @enderror
+                @error('newVideoUrl') <span class="text-rose-400 text-[10px] font-mono block">{{ $message }}</span> @enderror
 
                 @foreach($videos as $vIdx => $vid)
                     <div class="space-y-2 pt-2">
@@ -629,7 +629,7 @@
                             <iframe src="{{ $vid }}" class="w-full h-full" allowfullscreen></iframe>
                         </div>
                         <button type="button" wire:click="removeVideo({{ $vIdx }})"
-                                class="text-[#171513] hover:text-[#F8F5EF] text-xs font-mono uppercase underline">
+                                class="text-rose-400 hover:text-rose-300 text-xs font-mono uppercase underline">
                             Remove Video
                         </button>
                     </div>
@@ -659,7 +659,7 @@
                         </label>
                         <input type="text" wire:model="newHallName" placeholder="e.g. Imperial Marquee / Banquet Hall B"
                                class="w-full bg-[#171513] border border-white/15 text-white text-sm px-3.5 py-2.5 focus:border-[#C6A15B] outline-none">
-                        @error('newHallName') <span class="text-[#171513] text-[10px] font-mono">{{ $message }}</span> @enderror
+                        @error('newHallName') <span class="text-rose-400 text-[10px] font-mono">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">

@@ -304,6 +304,68 @@ button {
     box-shadow: 0 24px 60px -14px rgba(0, 0, 0, 0.8), 0 0 40px -8px rgba(198, 161, 91, 0.3);
 }
 
+/* Card Typography Contrast Guarantees in Dark Mode */
+.dark .editorial-card h1,
+.dark .editorial-card h2,
+.dark .editorial-card h3,
+.dark .editorial-card h4,
+.dark .editorial-card h5,
+.dark .editorial-card h6,
+.dark .dark-editorial-card h1,
+.dark .dark-editorial-card h2,
+.dark .dark-editorial-card h3,
+.dark .dark-editorial-card h4,
+.dark .wedding-venue-card h1,
+.dark .wedding-venue-card h2,
+.dark .wedding-venue-card h3,
+.dark .wedding-venue-card h4,
+.dark .luxury-package-card h1,
+.dark .luxury-package-card h2,
+.dark .luxury-package-card h3,
+.dark .luxury-package-card h4,
+.dark .dashboard-kpi-card h1,
+.dark .dashboard-kpi-card h2,
+.dark .dashboard-kpi-card h3,
+.dark .dashboard-kpi-card h4 {
+    color: #F8F5EF !important;
+}
+
+.dark .editorial-card p,
+.dark .dark-editorial-card p,
+.dark .wedding-venue-card p,
+.dark .luxury-package-card p,
+.dark .dashboard-kpi-card p {
+    color: #D6CFC2 !important;
+}
+
+.dark .editorial-card .text-\[\#171513\],
+.dark .dark-editorial-card .text-\[\#171513\],
+.dark .wedding-venue-card .text-\[\#171513\],
+.dark .luxury-package-card .text-\[\#171513\],
+.dark .dashboard-kpi-card .text-\[\#171513\] {
+    color: #F8F5EF !important;
+}
+
+.dark .editorial-card .text-stone-600,
+.dark .editorial-card .text-stone-700,
+.dark .editorial-card .text-stone-800,
+.dark .dark-editorial-card .text-stone-600,
+.dark .dark-editorial-card .text-stone-700,
+.dark .wedding-venue-card .text-stone-600,
+.dark .wedding-venue-card .text-stone-700,
+.dark .luxury-package-card .text-stone-600,
+.dark .luxury-package-card .text-stone-700,
+.dark .dashboard-kpi-card .text-stone-600,
+.dark .dashboard-kpi-card .text-stone-700 {
+    color: #D6CFC2 !important;
+}
+
+.dark .editorial-card .btn-gold,
+.dark .wedding-venue-card .btn-gold,
+.dark .luxury-package-card .btn-gold {
+    color: #171513 !important;
+}
+
 .dark .btn-secondary {
     background: #171513;
     color: #F8F5EF;

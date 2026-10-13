@@ -39,12 +39,12 @@
                             <div>
                                 <label class="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1 font-mono">Your Full Name *</label>
                                 <input type="text" wire:model="name" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm">
-                                @error('name') <span class="text-xs text-[#171513] font-mono">{{ $message }}</span> @enderror
+                                @error('name') <span class="text-xs text-rose-600 dark:text-rose-400 font-mono">{{ $message }}</span> @enderror
                             </div>
                             <div>
                                 <label class="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1 font-mono">Email Address *</label>
                                 <input type="email" wire:model="email" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm">
-                                @error('email') <span class="text-xs text-[#171513] font-mono">{{ $message }}</span> @enderror
+                                @error('email') <span class="text-xs text-rose-600 dark:text-rose-400 font-mono">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -52,7 +52,7 @@
                             <div>
                                 <label class="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1 font-mono">Phone / WhatsApp *</label>
                                 <input type="text" wire:model="phone" placeholder="+92 300 1234567" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm">
-                                @error('phone') <span class="text-xs text-[#171513] font-mono">{{ $message }}</span> @enderror
+                                @error('phone') <span class="text-xs text-rose-600 dark:text-rose-400 font-mono">{{ $message }}</span> @enderror
                             </div>
                             <div>
                                 <label class="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1 font-mono">City</label>
@@ -73,7 +73,7 @@
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1 font-mono">Event Details &amp; Requirements *</label>
                             <textarea wire:model="message" rows="4" placeholder="Mention guest count, preferred halls, catering preferences, or hall owner inquiry..." class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm"></textarea>
-                            @error('message') <span class="text-xs text-[#171513] font-mono">{{ $message }}</span> @enderror
+                            @error('message') <span class="text-xs text-rose-600 dark:text-rose-400 font-mono">{{ $message }}</span> @enderror
                         </div>
 
                         <button type="submit" class="btn-gold !w-full !h-11 text-xs font-bold uppercase tracking-wider font-mono shadow-md">

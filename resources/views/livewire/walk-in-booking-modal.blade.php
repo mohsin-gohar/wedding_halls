@@ -142,13 +142,13 @@
                     <div>
                         <label class="block text-[11px] uppercase tracking-[0.1em] text-[#8F7239] dark:text-[#C6A15B] mb-1.5 font-mono font-bold">Host Full Name *</label>
                         <input type="text" wire:model="customer_name" placeholder="Chaudhry Muhammad Tariq" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 text-sm placeholder-stone-400">
-                        @error('customer_name') <span class="text-xs text-[#171513] mt-1 block">{{ $message }}</span> @enderror
+                        @error('customer_name') <span class="text-xs text-rose-600 dark:text-rose-400 font-mono mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     <div>
                         <label class="block text-[11px] uppercase tracking-[0.1em] text-[#8F7239] dark:text-[#C6A15B] mb-1.5 font-mono font-bold">Mobile Phone *</label>
                         <input type="text" wire:model="customer_phone" placeholder="03001234567" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 text-sm placeholder-stone-400">
-                        @error('customer_phone') <span class="text-xs text-[#171513] mt-1 block">{{ $message }}</span> @enderror
+                        @error('customer_phone') <span class="text-xs text-rose-600 dark:text-rose-400 font-mono mt-1 block">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
@@ -156,7 +156,7 @@
                     <div>
                         <label class="block text-[11px] uppercase tracking-[0.1em] text-[#8F7239] dark:text-[#C6A15B] mb-1.5 font-mono font-bold">Email Address (Optional)</label>
                         <input type="email" wire:model="customer_email" placeholder="client@example.com" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 text-sm placeholder-stone-400">
-                        @error('customer_email') <span class="text-xs text-[#171513] mt-1 block">{{ $message }}</span> @enderror
+                        @error('customer_email') <span class="text-xs text-rose-600 dark:text-rose-400 font-mono mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     @if($isStaff)

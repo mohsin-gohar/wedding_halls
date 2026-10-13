@@ -161,53 +161,56 @@
     <!-- ===================================================================
          SECTION 4: LIVE COOKING STATIONS & LIVE TANDOOR COUNTERS
          =================================================================== -->
-    <section class="py-16 bg-[#F8F5EF]/50 border-t border-b border-[#E7E5E4]">
+    <!-- ===================================================================
+         SECTION 4: LIVE COOKING STATIONS & LIVE TANDOOR COUNTERS
+         =================================================================== -->
+    <section class="py-16 bg-[#F8F5EF]/50 dark:bg-[#171513]/50 border-t border-b border-[#E7E5E4] dark:border-white/10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
             <div class="text-center space-y-2 max-w-2xl mx-auto">
-                <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8F7239] font-bold block">
+                <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8F7239] dark:text-[#C6A15B] font-bold block">
                     Sensory Dining
                 </span>
-                <h2 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] font-normal">
+                <h2 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white font-normal">
                     Live Cooking Stations &amp; Street Counters
                 </h2>
-                <p class="text-xs text-stone-600 font-sans">
+                <p class="text-xs text-stone-600 dark:text-stone-300 font-sans">
                     Treat your guests to the unforgettable aroma of live charcoal barbecue and sizzling sweet counters.
                 </p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Station 1 -->
-                <div class="editorial-card p-6 bg-white space-y-3">
+                <div class="editorial-card p-6 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-3">
                     <span class="text-2xl">🍢</span>
-                    <h4 class="font-serif-luxury text-xl text-[#171513]">Live Charcoal Seekh Bar</h4>
-                    <p class="text-xs text-stone-600 leading-relaxed">
+                    <h4 class="font-serif-luxury text-xl text-[#171513] dark:text-white">Live Charcoal Seekh Bar</h4>
+                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
                         Sizzling chicken and beef seekh kababs grilled directly over hardwood coals with mint chutney.
                     </p>
                 </div>
 
                 <!-- Station 2 -->
-                <div class="editorial-card p-6 bg-white space-y-3">
+                <div class="editorial-card p-6 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-3">
                     <span class="text-2xl">🫓</span>
-                    <h4 class="font-serif-luxury text-xl text-[#171513]">Clay Tandoor Hot Breads</h4>
-                    <p class="text-xs text-stone-600 leading-relaxed">
+                    <h4 class="font-serif-luxury text-xl text-[#171513] dark:text-white">Clay Tandoor Hot Breads</h4>
+                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
                         Piping hot sesame Roghni Naans, Taftan, and garlic butter kulchas straight from clay ovens.
                     </p>
                 </div>
 
                 <!-- Station 3 -->
-                <div class="editorial-card p-6 bg-white space-y-3">
+                <div class="editorial-card p-6 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-3">
                     <span class="text-2xl">🍯</span>
-                    <h4 class="font-serif-luxury text-xl text-[#171513]">Crisp Jalebi &amp; Rabri</h4>
-                    <p class="text-xs text-stone-600 leading-relaxed">
+                    <h4 class="font-serif-luxury text-xl text-[#171513] dark:text-white">Crisp Jalebi &amp; Rabri</h4>
+                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
                         Live wok-fried crispy saffron jalebis drenched in pure sugar syrup and topped with chilled creamy rabri.
                     </p>
                 </div>
 
                 <!-- Station 4 -->
-                <div class="editorial-card p-6 bg-white space-y-3">
+                <div class="editorial-card p-6 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-3">
                     <span class="text-2xl">☕</span>
-                    <h4 class="font-serif-luxury text-xl text-[#171513]">Pink Kashmiri Chai Khokha</h4>
-                    <p class="text-xs text-stone-600 leading-relaxed">
+                    <h4 class="font-serif-luxury text-xl text-[#171513] dark:text-white">Pink Kashmiri Chai Khokha</h4>
+                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
                         Slow-brewed traditional pink tea garnished with crushed pistachios, green cardamom, and almonds.
                     </p>
                 </div>
@@ -221,26 +224,26 @@
          =================================================================== -->
     <section class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="p-6 bg-white border border-[#E7E5E4] space-y-2">
-                <span class="text-xs font-mono uppercase font-bold text-[#8F7239]">100% Certified Halal</span>
-                <h4 class="font-serif-luxury text-xl text-[#171513]">Prime Grade Fresh Meat</h4>
-                <p class="text-xs text-stone-600 leading-relaxed">
+            <div class="p-6 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-2">
+                <span class="text-xs font-mono uppercase font-bold text-[#8F7239] dark:text-[#C6A15B]">100% Certified Halal</span>
+                <h4 class="font-serif-luxury text-xl text-[#171513] dark:text-white">Prime Grade Fresh Meat</h4>
+                <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
                     Sourced exclusively from verified hygienic abattoirs on the morning of each wedding program.
                 </p>
             </div>
 
-            <div class="p-6 bg-white border border-[#E7E5E4] space-y-2">
-                <span class="text-xs font-mono uppercase font-bold text-[#8F7239]">Punjab &amp; Sindh Food Authority</span>
-                <h4 class="font-serif-luxury text-xl text-[#171513]">Compliant Kitchen Sanitation</h4>
-                <p class="text-xs text-stone-600 leading-relaxed">
+            <div class="p-6 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-2">
+                <span class="text-xs font-mono uppercase font-bold text-[#8F7239] dark:text-[#C6A15B]">Punjab &amp; Sindh Food Authority</span>
+                <h4 class="font-serif-luxury text-xl text-[#171513] dark:text-white">Compliant Kitchen Sanitation</h4>
+                <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
                     Stainless steel preparation tables, industrial water filtration, and temperature-controlled food warming chafers.
                 </p>
             </div>
 
-            <div class="p-6 bg-white border border-[#E7E5E4] space-y-2">
-                <span class="text-xs font-mono uppercase font-bold text-[#8F7239]">Zero Food Shortage Guarantee</span>
-                <h4 class="font-serif-luxury text-xl text-[#171513]">10% Kitchen Safety Buffer</h4>
-                <p class="text-xs text-stone-600 leading-relaxed">
+            <div class="p-6 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-2">
+                <span class="text-xs font-mono uppercase font-bold text-[#8F7239] dark:text-[#C6A15B]">Zero Food Shortage Guarantee</span>
+                <h4 class="font-serif-luxury text-xl text-[#171513] dark:text-white">10% Kitchen Safety Buffer</h4>
+                <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
                     Every banquet booking includes an emergency kitchen surplus reserve to ensure all unannounced guests are served with honor.
                 </p>
             </div>

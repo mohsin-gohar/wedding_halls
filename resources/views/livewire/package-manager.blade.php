@@ -35,7 +35,7 @@
     @if($errorMessage)
         <div class="p-4 bg-[#171513]/90 border border-[#C6A15B]/60 text-[#F8F5EF] text-xs font-semibold shadow-md flex justify-between items-center">
             <span>⚠️ {{ $errorMessage }}</span>
-            <button wire:click="$set('errorMessage', null)" class="text-[#171513] font-bold text-sm">&times;</button>
+            <button wire:click="$set('errorMessage', null)" class="text-stone-300 hover:text-white font-bold text-sm">&times;</button>
         </div>
     @endif
 
@@ -190,7 +190,7 @@
                         </label>
                         <input type="text" wire:model="packageName" placeholder="e.g. Royal Barat Gold Feast"
                                class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3.5 py-2.5 outline-none focus:border-[#C6A15B]">
-                        @error('packageName') <span class="text-[#171513] text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
+                        @error('packageName') <span class="text-rose-400 text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -200,7 +200,7 @@
                             </label>
                             <input type="number" wire:model="perHeadPrice" step="50" min="500"
                                    class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3.5 py-2.5 outline-none focus:border-[#C6A15B] font-mono">
-                            @error('perHeadPrice') <span class="text-[#171513] text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
+                            @error('perHeadPrice') <span class="text-rose-400 text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
@@ -209,7 +209,7 @@
                             </label>
                             <input type="number" wire:model="minGuests" step="25" min="20"
                                    class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3.5 py-2.5 outline-none focus:border-[#C6A15B] font-mono">
-                            @error('minGuests') <span class="text-[#171513] text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
+                            @error('minGuests') <span class="text-rose-400 text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
                         </div>
                     </div>
 

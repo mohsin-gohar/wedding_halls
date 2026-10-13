@@ -43,7 +43,7 @@
                 <span class="font-bold">⚠️</span>
                 <span>{{ $errorMessage }}</span>
             </div>
-            <button wire:click="$set('errorMessage', null)" class="text-[#171513] hover:text-white">&times;</button>
+            <button wire:click="$set('errorMessage', null)" class="text-stone-300 hover:text-white font-bold text-sm">&times;</button>
         </div>
     @endif
 
@@ -370,7 +370,7 @@
                         <label class="block text-[10px] font-mono uppercase text-[#C6A15B] mb-1 font-semibold">Item Name *</label>
                         <input type="text" wire:model="itemName" placeholder="e.g. Mutton Goat (Fresh Cut)" 
                                class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
-                        @error('itemName') <span class="text-[#171513] text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
+                        @error('itemName') <span class="text-rose-400 text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
@@ -511,7 +511,7 @@
                         <label class="block text-[10px] font-mono uppercase text-[#C6A15B] mb-1 font-semibold">Supplier / Vendor Name *</label>
                         <input type="text" wire:model="poSupplierName" placeholder="e.g. Punjab Meat Mart" 
                                class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
-                        @error('poSupplierName') <span class="text-[#171513] text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
+                        @error('poSupplierName') <span class="text-rose-400 text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">

@@ -217,7 +217,7 @@
                 <!-- Explore Links -->
                 <div class="space-y-4">
                     <h4 class="font-cinzel text-xs font-bold uppercase tracking-[0.15em] text-[#C6A15B]">Marketplace</h4>
-                    <ul class="space-y-2.5 text-xs text-stone-400 font-normal">
+                    <ul class="space-y-2.5 text-xs text-stone-200 font-normal">
                         <li><a href="{{ route('public.venues') }}" class="hover:text-white transition">Explore Venues</a></li>
                         <li><a href="{{ route('public.packages') }}" class="hover:text-white transition">Wedding Packages</a></li>
                         <li><a href="{{ route('public.packages') }}" class="hover:text-white transition">Catering & Bawarchi</a></li>
@@ -230,7 +230,7 @@
                 <!-- Venue Owners / SaaS -->
                 <div class="space-y-4">
                     <h4 class="font-cinzel text-xs font-bold uppercase tracking-[0.15em] text-[#C6A15B]">Venue Owners</h4>
-                    <ul class="space-y-2.5 text-xs text-stone-400 font-normal">
+                    <ul class="space-y-2.5 text-xs text-stone-200 font-normal">
                         <li><a href="{{ route('register') }}" class="hover:text-white transition">List Your Venue</a></li>
                         <li><a href="{{ route('login') }}" class="hover:text-white transition">Vendor Portal Login</a></li>
                         <li><a href="{{ route('dashboard') }}" class="hover:text-white transition">Shift Matrix & Calendar</a></li>
@@ -242,7 +242,7 @@
                 <!-- Legal & Compliance -->
                 <div class="space-y-4">
                     <h4 class="font-cinzel text-xs font-bold uppercase tracking-[0.15em] text-[#C6A15B]">Trust & Policies</h4>
-                    <ul class="space-y-2.5 text-xs text-stone-400 font-normal">
+                    <ul class="space-y-2.5 text-xs text-stone-200 font-normal">
                         <li><a href="{{ route('public.policies.terms') }}" class="hover:text-white transition">Terms of Service</a></li>
                         <li><a href="{{ route('public.policies.privacy') }}" class="hover:text-white transition">Privacy Policy</a></li>
                         <li><a href="{{ route('public.policies.cancellation') }}" class="hover:text-white transition">Cancellation & Refund Policy</a></li>

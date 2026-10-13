@@ -330,7 +330,7 @@
                                 <option value="{{ $m->id }}">{{ $m->name }} ({{ str_replace('ROLE_', '', $m->role) }})</option>
                             @endforeach
                         </select>
-                        @error('leaveUserId') <span class="text-[#171513] text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
+                        @error('leaveUserId') <span class="text-rose-400 text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     <div>
@@ -357,7 +357,7 @@
                     <div>
                         <label class="block text-[10px] font-mono uppercase text-[#C6A15B] mb-1 font-semibold">Reason for Absence *</label>
                         <textarea wire:model="leaveReason" rows="3" placeholder="Provide justification for absence..." class="w-full bg-[#171513] border border-white/20 text-white text-xs p-2.5 outline-none focus:border-[#C6A15B]"></textarea>
-                        @error('leaveReason') <span class="text-[#171513] text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
+                        @error('leaveReason') <span class="text-rose-400 text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
