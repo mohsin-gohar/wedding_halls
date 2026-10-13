@@ -15,18 +15,18 @@
         </div>
 
         <div class="flex items-center gap-3">
-            <div class="flex border border-[#E7E5E4] dark:border-white/15 bg-[#F8F5EF] dark:bg-[#171513] p-0.5 text-xs font-mono">
-                <button wire:click="$set('period', 'THIS_MONTH')" class="px-3 py-1.5 transition {{ $period === 'THIS_MONTH' ? 'bg-[#C6A15B] text-[#171513] font-bold shadow' : 'text-stone-700 dark:text-stone-300 hover:text-[#171513] dark:hover:text-white' }}">
+            <div class="lux-btn-group">
+                <button wire:click="$set('period', 'THIS_MONTH')" class="lux-btn lux-btn--sm {{ $period === 'THIS_MONTH' ? 'is-active' : '' }}">
                     This Month
                 </button>
-                <button wire:click="$set('period', 'LAST_MONTH')" class="px-3 py-1.5 transition {{ $period === 'LAST_MONTH' ? 'bg-[#C6A15B] text-[#171513] font-bold shadow' : 'text-stone-700 dark:text-stone-300 hover:text-[#171513] dark:hover:text-white' }}">
+                <button wire:click="$set('period', 'LAST_MONTH')" class="lux-btn lux-btn--sm {{ $period === 'LAST_MONTH' ? 'is-active' : '' }}">
                     Last Month
                 </button>
-                <button wire:click="$set('period', 'ALL_TIME')" class="px-3 py-1.5 transition {{ $period === 'ALL_TIME' ? 'bg-[#C6A15B] text-[#171513] font-bold shadow' : 'text-stone-700 dark:text-stone-300 hover:text-[#171513] dark:hover:text-white' }}">
+                <button wire:click="$set('period', 'ALL_TIME')" class="lux-btn lux-btn--sm {{ $period === 'ALL_TIME' ? 'is-active' : '' }}">
                     All Time
                 </button>
             </div>
-            <button wire:click="openCreateModal" class="btn-gold !h-10 !px-5 text-xs font-bold uppercase tracking-wider shadow">
+            <button wire:click="openCreateModal" class="lux-btn lux-btn--gold lux-btn--sm">
                 + Log Expense
             </button>
         </div>

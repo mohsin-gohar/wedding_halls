@@ -31,7 +31,7 @@
             </div>
 
             <div class="self-end">
-                <button wire:click="openWalkInModal" class="btn-gold !h-[38px] !px-4 text-xs font-mono font-bold uppercase tracking-wider shadow">
+                <button wire:click="openWalkInModal" class="lux-btn lux-btn--gold lux-btn--sm">
                     + Walk-In Reservation
                 </button>
             </div>

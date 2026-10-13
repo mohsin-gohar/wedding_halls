@@ -48,18 +48,35 @@ class SecurityHeaders
 
     /**
      * Build the Content-Security-Policy header value.
+     *
+     * In local development the Vite dev server (http://[::1]:5173) serves
+     * modules/HMR over http + WebSocket, so those origins are whitelisted
+     * when the app is NOT running in production. In production the built
+     * assets are self-hosted and the CSP stays strict.
      */
     protected function contentSecurityPolicy(): string
     {
+        $viteOrigins = app()->isProduction()
+            ? []
+            : [
+                'http://localhost:5173',
+                'http://127.0.0.1:5173',
+                'http://[::1]:5173',
+            ];
+
+        $scriptSrc = trim("'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com ".implode(' ', $viteOrigins));
+        $styleSrc = trim("'self' 'unsafe-inline' https://fonts.googleapis.com ".implode(' ', $viteOrigins));
+        $connectSrc = trim("'self'".(app()->isProduction() ? '' : ' ws: wss: http://localhost:5173 http://127.0.0.1:5173 http://[::1]:5173'));
+
         return collect([
             "default-src 'self'",
             // Livewire & Alpine rely on inline scripts and runtime expression eval.
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com",
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+            "script-src {$scriptSrc}",
+            "style-src {$styleSrc}",
             "font-src 'self' data: https://fonts.gstatic.com",
             "img-src 'self' data: blob: https:",
             "media-src 'self' data: blob: https:",
-            "connect-src 'self'",
+            "connect-src {$connectSrc}",
             "frame-ancestors 'self'",
             "base-uri 'self'",
             "form-action 'self'",

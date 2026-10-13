@@ -4,13 +4,8 @@
          1. CINEMATIC LUXURY HERO SECTION (With Smooth Visual Depth)
          =================================================================== -->
     <section class="relative bg-[#171513] text-white min-h-[92vh] flex items-center justify-center overflow-hidden border-b border-[#C6A15B]/30">
-        <!-- Cinematic Wedding Hall Video Background (Luxury Wedding Banquet) -->
-        <video class="hero-video"
-               autoplay muted loop playsinline
-               poster="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=2000&auto=format&fit=crop">
-            <source src="https://videos.pexels.com/video-files/5657667/5657667-uhd_3840_2160_30fps.mp4" type="video/mp4">
-            <source src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=2000&auto=format&fit=crop" type="image/jpeg">
-        </video>
+        <!-- Cinematic Wedding Hall Background (Luxury Wedding Banquet) -->
+        <div class="hero-video" style="background-image: url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2000&auto=format&fit=crop');"></div>
 
         <!-- Deep Obsidian Gradient Overlays (layered for depth) -->
         <div class="absolute inset-0 bg-gradient-to-t from-[#171513]/95 via-[#171513]/80 to-[#171513]/90"></div>

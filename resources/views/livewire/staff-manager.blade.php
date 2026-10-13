@@ -21,7 +21,7 @@
                     {{ $currentStaffCount }} / {{ $maxStaff === -1 ? 'Unlimited' : $maxStaff }} Seats
                 </span>
             </div>
-            <button wire:click="openCreateModal" class="btn-gold !h-10 !px-5 text-xs font-bold uppercase tracking-wider shadow">
+            <button wire:click="openCreateModal" class="lux-btn lux-btn--gold lux-btn--sm">
                 + Add Staff Member
             </button>
         </div>

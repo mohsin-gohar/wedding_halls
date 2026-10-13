@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 return [
 
@@ -30,8 +30,8 @@ return [
     */
 
     'component_namespaces' => [
-        'layouts' => resource_path('views/layouts'),
-        'pages' => resource_path('views/pages'),
+        // 'layouts' => resource_path('views/layouts'),
+        // 'pages' => resource_path('views/pages'),
     ],
 
     /*
@@ -64,7 +64,7 @@ return [
     |---------------------------------------------------------------------------
     | This value determines the default configuration for the artisan make command
     | You can configure the component type (sfc, mfc, class) and whether to use
-    | the high-voltage (⚡) emoji as a prefix in the sfc|mfc component names.
+    | the high-voltage (âš¡) emoji as a prefix in the sfc|mfc component names.
     |
     */
 

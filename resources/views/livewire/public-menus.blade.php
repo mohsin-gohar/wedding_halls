@@ -3,8 +3,8 @@
     <!-- ===================================================================
          SECTION 1: HERO & CULINARY HERITAGE HEADLINE
          =================================================================== -->
-    <section class="relative bg-[#171513] text-white py-20 border-b border-[#C6A15B]/30 overflow-hidden">
-        <div class="absolute inset-0 bg-cover bg-center opacity-30" 
+    <section class="parallax-window relative bg-[#171513] text-white py-20 border-b border-[#C6A15B]/30 overflow-hidden">
+        <div class="parallax-bg opacity-30" data-parallax="0.25"
              style="background-image: url('https://images.unsplash.com/photo-1555244162-803834f70033?q=80&w=2000&auto=format&fit=crop');">
         </div>
         <div class="absolute inset-0 bg-gradient-to-t from-[#171513] via-[#171513]/75 to-[#171513]/90"></div>

@@ -855,6 +855,41 @@ button {
 }
 
 /* ==========================================================================
+   SCROLL PARALLAX BACKGROUND ENGINE (rAF-throttled — see app.js)
+   .parallax-window  = clipping container (the section)
+   .parallax-bg      = oversized image layer that translates slower than scroll
+   Add data-parallax="0.3" to tune speed (higher = drifts more).
+   ========================================================================== */
+.parallax-window {
+    position: relative;
+    overflow: hidden;
+}
+
+.parallax-bg {
+    position: absolute;
+    top: -25%;
+    left: 0;
+    width: 100%;
+    height: 150%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    will-change: transform;
+    z-index: 0;
+    /* Fallback when JS is unavailable: behave like a normal cover layer */
+    transform: translate3d(0, 0, 0);
+}
+
+/* Respect reduced-motion: freeze the parallax layer in place */
+@media (prefers-reduced-motion: reduce) {
+    .parallax-bg {
+        top: 0;
+        height: 100%;
+    }
+}
+
+
+/* ==========================================================================
    ROYAL PALACE & LUXURY BANQUET VISUAL UTILITIES
    ========================================================================== */
 
@@ -953,13 +988,15 @@ button {
     opacity: 1;
 }
 
-/* Cinematic hero video layer */
+/* Cinematic hero background layer */
 .hero-video {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     z-index: -2;
     animation: heroZoom 18s ease-in-out infinite alternate;
 }
@@ -1089,4 +1126,202 @@ button {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
 }
+
+/* ==========================================================================
+   UNIFIED LUXURY BUTTON SYSTEM
+   Zero-pill, themed controls for the entire SaaS & marketplace.
+   Prefer these over ad-hoc Tailwind height/padding overrides.
+
+   Base:      .lux-btn
+   Variants:  --gold (primary) --outline --obsidian --ghost --danger --success
+   Sizes:     --sm / (default md) / --lg
+   Modifiers: --icon (square) --block (full width) --loading (spinner)
+   Group:     .lux-btn-group  (segmented control)
+   ========================================================================== */
+
+.lux-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 22px;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    overflow: hidden;
+    will-change: transform;
+    transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---- Sizes ---- */
+.lux-btn--sm { height: 34px; padding: 0 14px; font-size: 11px; gap: 6px; }
+.lux-btn--lg { height: 52px; padding: 0 30px; font-size: 13px; }
+
+/* ---- Modifiers ---- */
+.lux-btn--icon { width: 44px; padding: 0; }
+.lux-btn--icon.lux-btn--sm { width: 34px; }
+.lux-btn--block { display: flex; width: 100%; }
+.lux-btn:disabled, .lux-btn[disabled] { opacity: 0.5; pointer-events: none; cursor: not-allowed; }
+
+/* ---- Gold (primary) ---- */
+.lux-btn--gold {
+    background: linear-gradient(135deg, #F2DE9A 0%, #E8C97A 35%, #D4AF37 65%, #C6A15B 100%);
+    color: #171513;
+    border-color: rgba(212, 175, 55, 0.65);
+    box-shadow: 0 6px 22px -6px rgba(212, 175, 55, 0.55), inset 0 1px 0 rgba(255, 235, 205, 0.8), inset 0 -1px 0 rgba(143, 114, 57, 0.25);
+}
+.lux-btn--gold:hover {
+    transform: translateY(-2px);
+    border-color: #F2DE9A;
+    box-shadow: 0 12px 32px -8px rgba(212, 175, 55, 0.7), 0 0 24px -6px rgba(212, 175, 55, 0.55), inset 0 1px 0 rgba(255, 245, 220, 0.9);
+}
+.lux-btn--gold:active { transform: translateY(0) scale(0.99); box-shadow: 0 3px 12px rgba(212, 175, 55, 0.3); }
+
+/* ---- Outline (gold) ---- */
+.lux-btn--outline {
+    background: transparent;
+    color: var(--champagne-dark, #8F7239);
+    border-color: rgba(198, 161, 91, 0.6);
+}
+.lux-btn--outline:hover {
+    background: rgba(198, 161, 91, 0.1);
+    border-color: #C6A15B;
+    color: #8F7239;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -10px rgba(198, 161, 91, 0.5);
+}
+.lux-btn--outline:active { transform: translateY(0); }
+
+/* ---- Obsidian (dark solid) ---- */
+.lux-btn--obsidian {
+    background: linear-gradient(145deg, #1E1C1A 0%, #100E0C 100%);
+    color: #F8F5EF;
+    border-color: rgba(198, 161, 91, 0.35);
+    box-shadow: 0 4px 18px -8px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.lux-btn--obsidian:hover {
+    border-color: #C6A15B;
+    color: #F2DE9A;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.9), 0 0 20px -6px rgba(198, 161, 91, 0.45);
+}
+
+/* ---- Ghost (minimal) ---- */
+.lux-btn--ghost {
+    background: transparent;
+    color: var(--stone-text, #44403C);
+    border-color: transparent;
+}
+.lux-btn--ghost:hover {
+    background: rgba(198, 161, 91, 0.08);
+    color: var(--champagne-dark, #8F7239);
+}
+.dark .lux-btn--ghost { color: #D6CFC2; }
+.dark .lux-btn--ghost:hover { color: #E8DCBE; }
+
+/* ---- Danger ---- */
+.lux-btn--danger {
+    background: linear-gradient(145deg, #7F1D1D 0%, #5C1414 100%);
+    color: #FEE2E2;
+    border-color: rgba(248, 113, 113, 0.4);
+    box-shadow: 0 4px 18px -8px rgba(127, 29, 29, 0.8);
+}
+.lux-btn--danger:hover {
+    background: linear-gradient(145deg, #991B1B 0%, #7F1D1D 100%);
+    border-color: #F87171;
+    color: #FEE2E2;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px -10px rgba(153, 27, 27, 0.7), 0 0 18px -6px rgba(248, 113, 113, 0.5);
+}
+
+/* ---- Success ---- */
+.lux-btn--success {
+    background: linear-gradient(145deg, #14532D 0%, #0B3D20 100%);
+    color: #DCFCE7;
+    border-color: rgba(74, 222, 128, 0.4);
+    box-shadow: 0 4px 18px -8px rgba(20, 83, 45, 0.8);
+}
+.lux-btn--success:hover {
+    background: linear-gradient(145deg, #166534 0%, #14532D 100%);
+    border-color: #4ADE80;
+    color: #F0FDF4;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px -10px rgba(22, 101, 52, 0.7), 0 0 18px -6px rgba(74, 222, 128, 0.5);
+}
+
+/* ---- Shimmer sweep on primary gold ---- */
+.lux-btn--gold::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -120%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.55) 50%, transparent 100%);
+    transform: skewX(-18deg);
+    transition: left 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+}
+.lux-btn--gold:hover::after { left: 130%; }
+
+/* ---- Segmented button group (toolbar toggles) ---- */
+.lux-btn-group {
+    display: inline-flex;
+    border: 1px solid rgba(198, 161, 91, 0.35);
+    border-radius: 3px;
+    overflow: hidden;
+    background: transparent;
+}
+.lux-btn-group > .lux-btn {
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    color: var(--stone-text, #44403C);
+}
+.lux-btn-group > .lux-btn + .lux-btn { border-left: 1px solid rgba(198, 161, 91, 0.25); }
+.lux-btn-group > .lux-btn:hover {
+    transform: none;
+    background: rgba(198, 161, 91, 0.1);
+    color: var(--champagne-dark, #8F7239);
+    box-shadow: none;
+}
+.lux-btn-group > .lux-btn.is-active {
+    background: linear-gradient(135deg, #C6A15B 0%, #B0894A 100%);
+    color: #171513;
+    font-weight: 800;
+}
+.dark .lux-btn-group { border-color: rgba(198, 161, 91, 0.3); }
+.dark .lux-btn-group > .lux-btn { color: #D6CFC2; }
+.dark .lux-btn-group > .lux-btn.is-active { color: #171513; }
+
+/* ---- Loading spinner state ---- */
+.lux-btn--loading { color: transparent !important; pointer-events: none; }
+.lux-btn--loading::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: luxSpin 0.7s linear infinite;
+}
+.lux-btn--gold.lux-btn--loading::before { border-color: #171513; border-top-color: transparent; }
+.lux-btn--outline.lux-btn--loading::before,
+.lux-btn--obsidian.lux-btn--loading::before { border-color: var(--champagne, #C6A15B); border-top-color: transparent; }
+
+@keyframes luxSpin { to { transform: rotate(360deg); } }
 
