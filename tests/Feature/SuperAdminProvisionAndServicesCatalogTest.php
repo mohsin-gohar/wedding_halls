@@ -61,7 +61,7 @@ class SuperAdminProvisionAndServicesCatalogTest extends TestCase
         $hall = Hall::where('name', 'Shehnai Royal Palace')->first();
         $this->assertNotNull($hall);
         $this->assertEquals('A Regal Jewel in Coastal Hospitality', $hall->tagline);
-        $this->assertEquals(280000, (float) $hall->base_rent);
+        $this->assertEquals(280000, (float)$hall->base_rent);
         $this->assertIsArray($hall->services);
         $this->assertNotEmpty($hall->services);
     }
@@ -139,8 +139,8 @@ class SuperAdminProvisionAndServicesCatalogTest extends TestCase
                     'category' => 'Multimedia & Video',
                     'description' => 'Dual 4K cinematic drones with live stage vision mixing.',
                     'icon' => 'camera',
-                ],
-            ],
+                ]
+            ]
         ]);
 
         Livewire::test(PublicHallDetails::class, ['id' => $hall->id])

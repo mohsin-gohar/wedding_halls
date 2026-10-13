@@ -11,9 +11,7 @@ use Livewire\Component;
 class PublicMarketplace extends Component
 {
     public string $city = 'All';
-
     public int $minCapacity = 100;
-
     public ?string $searchQuery = '';
 
     public function render()
@@ -33,7 +31,7 @@ class PublicMarketplace extends Component
         if ($this->searchQuery) {
             $query->where(function ($q) {
                 $q->where('name', 'like', "%{$this->searchQuery}%")
-                    ->orWhereHas('venue', fn ($vq) => $vq->where('name', 'like', "%{$this->searchQuery}%")->orWhere('area', 'like', "%{$this->searchQuery}%"));
+                  ->orWhereHas('venue', fn($vq) => $vq->where('name', 'like', "%{$this->searchQuery}%")->orWhere('area', 'like', "%{$this->searchQuery}%"));
             });
         }
 

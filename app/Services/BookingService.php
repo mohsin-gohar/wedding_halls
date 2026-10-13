@@ -7,11 +7,10 @@ use App\Exceptions\SlotAlreadyBookedException;
 use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\Payment;
-use Carbon\Carbon;
 use Illuminate\Contracts\Cache\LockTimeoutException;
-use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BookingService
 {
@@ -27,7 +26,7 @@ class BookingService
      */
     public function checkSlotAvailability(string $hallId, string $eventDate, string $slotType): bool
     {
-        return ! Booking::where('hall_id', $hallId)
+        return !Booking::where('hall_id', $hallId)
             ->where('event_date', $eventDate)
             ->where('slot_type', $slotType)
             ->whereIn('status', ['HOLD', 'CONFIRMED'])
@@ -37,12 +36,14 @@ class BookingService
     /**
      * Create an atomic, concurrency-safe reservation with Redis/Cache lock and DB transaction row lock.
      *
+     * @param array $data
+     * @return Booking
      * @throws SlotAlreadyBookedException
      */
     public function createReservation(array $data): Booking
     {
         $hallId = $data['hall_id'];
-        $eventDate = Carbon::parse($data['event_date'])->format('Y-m-d');
+        $eventDate = \Carbon\Carbon::parse($data['event_date'])->format('Y-m-d');
         $slotType = strtoupper($data['slot_type']);
 
         // Redis / Cache distributed mutex lock key (TTL: 600s / 10 mins)
@@ -54,7 +55,7 @@ class BookingService
             $lock->block(5);
         } catch (LockTimeoutException $e) {
             throw new SlotAlreadyBookedException(
-                'A concurrent reservation is currently in progress for this slot. Please try again momentarily.',
+                "A concurrent reservation is currently in progress for this slot. Please try again momentarily.",
                 423,
                 $hallId,
                 $eventDate,
@@ -84,7 +85,7 @@ class BookingService
 
                 // If tenant_id is not passed, derive from Hall
                 $tenantId = $data['tenant_id'] ?? null;
-                if (! $tenantId) {
+                if (!$tenantId) {
                     $hall = Hall::findOrFail($hallId);
                     $tenantId = $hall->tenant_id;
                 }
@@ -157,7 +158,7 @@ class BookingService
             });
 
             return $booking;
-        } catch (UniqueConstraintViolationException $e) {
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
             throw new SlotAlreadyBookedException(
                 "The slot [{$slotType}] on [{$eventDate}] for this hall is already booked in the database.",
                 409,

@@ -10,15 +10,10 @@ use Livewire\Component;
 class PublicGuestRsvp extends Component
 {
     public string $phone = '';
-
     public ?GuestRsvp $foundRsvp = null;
-
     public int $attendingGuests = 2;
-
     public string $statusResponse = 'ATTENDING'; // 'ATTENDING' or 'DECLINED'
-
     public ?string $feedbackMessage = null;
-
     public bool $isSubmitted = false;
 
     public function searchInvitation()
@@ -28,12 +23,12 @@ class PublicGuestRsvp extends Component
 
         $this->foundRsvp = GuestRsvp::with('booking.hall.venue')
             ->where(function ($q) use ($cleanPhone) {
-                $q->where('phone', 'like', '%'.$this->phone.'%')
-                    ->orWhere('phone', 'like', '%'.$cleanPhone.'%');
+                $q->where('phone', 'like', '%' . $this->phone . '%')
+                  ->orWhere('phone', 'like', '%' . $cleanPhone . '%');
             })
             ->first();
 
-        if (! $this->foundRsvp) {
+        if (!$this->foundRsvp) {
             $this->feedbackMessage = 'No active wedding invitation found with this phone number. Please verify with the event host.';
         } else {
             $this->attendingGuests = max(1, $this->foundRsvp->attending_count);
@@ -42,16 +37,14 @@ class PublicGuestRsvp extends Component
 
     public function submitRsvp()
     {
-        if (! $this->foundRsvp) {
-            return;
-        }
+        if (!$this->foundRsvp) return;
 
         $this->foundRsvp->update([
             'rsvp_status' => $this->statusResponse,
             'attending_count' => ($this->statusResponse === 'ATTENDING') ? $this->attendingGuests : 0,
-            'last_reply_message' => ($this->statusResponse === 'ATTENDING')
+            'last_reply_message' => ($this->statusResponse === 'ATTENDING') 
                 ? "Online RSVP: Attending with {$this->attendingGuests} guests"
-                : 'Online RSVP: Regret, cannot attend',
+                : "Online RSVP: Regret, cannot attend",
         ]);
 
         $this->isSubmitted = true;

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\Auth\Register;
+use App\Livewire\PublicHallDetails;
 use App\Livewire\PublicVenues;
 use App\Livewire\WalkInBookingModal;
 use App\Models\Booking;
@@ -10,6 +11,7 @@ use App\Models\Hall;
 use App\Models\KitchenKot;
 use App\Models\Package;
 use App\Models\Payment;
+use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Venue;
@@ -113,7 +115,7 @@ class TenantPrivacyAndSecurityAuditTest extends TestCase
         $ownerA = User::create([
             'tenant_id' => $tenantA->id,
             'name' => 'Staff Member Tenant A',
-            'email' => 'staffA_'.uniqid().'@marq.pk',
+            'email' => 'staffA_' . uniqid() . '@marq.pk',
             'phone' => '+92 300 1111222',
             'role' => 'ROLE_TENANT_OWNER',
             'password' => Hash::make('secret123'),
@@ -123,7 +125,7 @@ class TenantPrivacyAndSecurityAuditTest extends TestCase
         $tenantB = Tenant::create([
             'name' => 'Tenant B Luxury Hall',
             'slug' => 'tenant-b-hall',
-            'email' => 'ownerb_'.uniqid().'@luxury.pk',
+            'email' => 'ownerb_' . uniqid() . '@luxury.pk',
             'phone' => '+92 300 3334444',
             'verification_status' => 'APPROVED',
             'is_active' => true,
@@ -132,7 +134,7 @@ class TenantPrivacyAndSecurityAuditTest extends TestCase
         $venueB = Venue::create([
             'tenant_id' => $tenantB->id,
             'name' => 'Venue B',
-            'slug' => 'venue-b-'.uniqid(),
+            'slug' => 'venue-b-' . uniqid(),
             'city' => 'Lahore',
             'address' => 'Lahore',
             'is_active' => true,
@@ -152,7 +154,7 @@ class TenantPrivacyAndSecurityAuditTest extends TestCase
         Booking::create([
             'tenant_id' => $tenantB->id,
             'hall_id' => $hallB->id,
-            'booking_number' => 'BK-B-'.rand(1000, 9999),
+            'booking_number' => 'BK-B-' . rand(1000, 9999),
             'customer_name' => 'Private VIP Client',
             'customer_phone' => '+92 333 9998877',
             'customer_email' => 'clientb@vip.pk',
@@ -182,7 +184,7 @@ class TenantPrivacyAndSecurityAuditTest extends TestCase
         Booking::create([
             'tenant_id' => $tenantA->id,
             'hall_id' => $hallA->id,
-            'booking_number' => 'BK-A-'.rand(1000, 9999),
+            'booking_number' => 'BK-A-' . rand(1000, 9999),
             'customer_name' => 'Tenant A Valued Guest',
             'customer_phone' => '+92 321 1112233',
             'customer_email' => 'clienta@guest.pk',
@@ -252,7 +254,7 @@ class TenantPrivacyAndSecurityAuditTest extends TestCase
         $customer = User::create([
             'tenant_id' => $tenant->id,
             'name' => 'Host Customer',
-            'email' => 'host_'.uniqid().'@customer.pk',
+            'email' => 'host_' . uniqid() . '@customer.pk',
             'phone' => '+92 300 4443322',
             'role' => 'ROLE_CUSTOMER',
             'password' => Hash::make('password123'),
@@ -263,7 +265,7 @@ class TenantPrivacyAndSecurityAuditTest extends TestCase
             'tenant_id' => $tenant->id,
             'hall_id' => $hall->id,
             'customer_id' => $customer->id,
-            'booking_number' => 'BK-'.rand(10000, 99999),
+            'booking_number' => 'BK-' . rand(10000, 99999),
             'customer_name' => 'Host Customer',
             'customer_phone' => '+92 300 4443322',
             'event_date' => now()->addDays(15)->format('Y-m-d'),
@@ -279,7 +281,7 @@ class TenantPrivacyAndSecurityAuditTest extends TestCase
         $kot = KitchenKot::create([
             'tenant_id' => $tenant->id,
             'booking_id' => $booking->id,
-            'kot_number' => 'KOT-202610-'.rand(100, 999),
+            'kot_number' => 'KOT-202610-' . rand(100, 999),
             'guest_count' => 350,
             'preparation_status' => 'PENDING',
         ]);
@@ -297,7 +299,7 @@ class TenantPrivacyAndSecurityAuditTest extends TestCase
         $staff = User::create([
             'tenant_id' => $tenant->id,
             'name' => 'Operational Staff',
-            'email' => 'staff_'.uniqid().'@marquee.pk',
+            'email' => 'staff_' . uniqid() . '@marquee.pk',
             'phone' => '+92 300 8887766',
             'role' => 'ROLE_TENANT_OWNER',
             'password' => Hash::make('password123'),

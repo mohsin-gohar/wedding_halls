@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Tenant extends Model
@@ -61,38 +60,34 @@ class Tenant extends Model
             if ($this->subscription_expires_at && $this->subscription_expires_at->isPast()) {
                 return false;
             }
-
             return true;
         }
-
         return false;
     }
 
     public function canAddHall(): bool
     {
-        if (! $this->subscriptionPlan) {
+        if (!$this->subscriptionPlan) {
             return true; // Default fallback
         }
         if ($this->subscriptionPlan->max_halls === -1) {
             return true;
         }
-
         return $this->halls()->count() < $this->subscriptionPlan->max_halls;
     }
 
     public function canAddStaff(): bool
     {
-        if (! $this->subscriptionPlan) {
+        if (!$this->subscriptionPlan) {
             return true;
         }
         if ($this->subscriptionPlan->max_staff === -1) {
             return true;
         }
-
         return $this->users()->count() < $this->subscriptionPlan->max_staff;
     }
 
-    public function subscriptionPlan(): BelongsTo
+    public function subscriptionPlan(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(SubscriptionPlan::class);
     }

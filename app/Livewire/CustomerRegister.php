@@ -12,13 +12,9 @@ use Livewire\Component;
 class CustomerRegister extends Component
 {
     public string $name = '';
-
     public string $email = '';
-
     public string $phone = '';
-
     public string $password = '';
-
     public string $password_confirmation = '';
 
     protected $rules = [

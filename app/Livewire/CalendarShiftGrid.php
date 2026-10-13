@@ -13,14 +13,11 @@ use Livewire\Component;
 class CalendarShiftGrid extends Component
 {
     public string $currentMonth = '';
-
     public ?string $selectedVenueId = null;
-
     public ?string $selectedHallId = null;
-
+    
     // Quick Details Modal
     public ?Booking $viewingBooking = null;
-
     public bool $showDetailsModal = false;
 
     protected $listeners = [
@@ -66,12 +63,12 @@ class CalendarShiftGrid extends Component
 
     public function prevMonth()
     {
-        $this->currentMonth = Carbon::parse($this->currentMonth.'-01')->subMonth()->format('Y-m');
+        $this->currentMonth = Carbon::parse($this->currentMonth . '-01')->subMonth()->format('Y-m');
     }
 
     public function nextMonth()
     {
-        $this->currentMonth = Carbon::parse($this->currentMonth.'-01')->addMonth()->format('Y-m');
+        $this->currentMonth = Carbon::parse($this->currentMonth . '-01')->addMonth()->format('Y-m');
     }
 
     public function goToToday()
@@ -136,7 +133,7 @@ class CalendarShiftGrid extends Component
             $this->currentMonth = Carbon::now()->format('Y-m');
         }
 
-        $startOfMonth = Carbon::parse($this->currentMonth.'-01')->startOfMonth();
+        $startOfMonth = Carbon::parse($this->currentMonth . '-01')->startOfMonth();
         $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
         $selectedHall = $tenantId && $this->selectedHallId ? Hall::where('tenant_id', $tenantId)->find($this->selectedHallId) : null;
@@ -151,7 +148,7 @@ class CalendarShiftGrid extends Component
                 ->get();
 
             foreach ($bookingsList as $b) {
-                $bookings[$b->event_date.'_'.$b->slot_type] = $b;
+                $bookings[$b->event_date . '_' . $b->slot_type] = $b;
             }
         }
 

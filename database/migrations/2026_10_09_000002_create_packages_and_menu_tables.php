@@ -21,7 +21,7 @@ return new class extends Migration
                 'BREADS',
                 'DESSERTS',
                 'BEVERAGES',
-                'SALADS',
+                'SALADS'
             ])->default('MAINS');
             $table->string('name', 120);
             $table->text('description')->nullable();

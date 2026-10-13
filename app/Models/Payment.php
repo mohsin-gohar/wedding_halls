@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +10,7 @@ use Illuminate\Support\Str;
 
 class Payment extends Model
 {
-    use BelongsToTenant, HasFactory, HasUuids;
+    use HasFactory, HasUuids;
 
     protected $fillable = [
         'tenant_id',
@@ -46,10 +45,9 @@ class Payment extends Model
 
     public static function generateReceiptNumber(): string
     {
-        $prefix = 'WH-RCP-'.date('Ymd');
+        $prefix = 'WH-RCP-' . date('Ymd');
         $random = strtoupper(Str::random(4));
         $count = self::whereDate('created_at', today())->count() + 1;
-
         return sprintf('%s-%04d-%s', $prefix, $count, $random);
     }
 }

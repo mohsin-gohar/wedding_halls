@@ -22,7 +22,7 @@ class PublicGallery extends Component
             ->where('is_active', true)
             ->whereHas('tenant', function ($q) {
                 $q->where('is_active', true)
-                    ->where('verification_status', 'APPROVED');
+                  ->where('verification_status', 'APPROVED');
             })
             ->get();
 

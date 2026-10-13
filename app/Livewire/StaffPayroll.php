@@ -16,47 +16,32 @@ use Livewire\Component;
 class StaffPayroll extends Component
 {
     public string $selectedMonth = '';
-
     public ?string $feedbackMessage = null;
-
     public ?string $errorMessage = null;
 
     // Edit Payroll Modal
     public bool $showEditModal = false;
-
     public ?string $editingPayrollId = null;
-
     public string $editingEmployeeName = '';
-
     public float $editBasicSalary = 35000;
-
     public float $editOvertimeHours = 0;
-
     public float $editOvertimeRate = 250;
-
     public float $editAllowances = 0;
-
     public float $editDeductions = 0;
-
     public float $editNetSalary = 35000;
-
     public string $editPaymentMethod = 'CASH';
-
     public string $editNotes = '';
 
     // Mark as Paid Modal
     public bool $showPayModal = false;
-
     public ?string $payingPayrollId = null;
-
     public string $payMethod = 'BANK_TRANSFER';
-
     public string $payDate = '';
 
     public function mount()
     {
         $user = Auth::user();
-        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isSuperAdmin() && ! $user->isAccountant())) {
+        if (!$user || (!$user->isTenantOwner() && !$user->isManager() && !$user->isSuperAdmin() && !$user->isAccountant())) {
             abort(403, 'Unauthorized. Only Venue Owners or Accountants have access to Payroll ERP.');
         }
 
@@ -71,7 +56,7 @@ class StaffPayroll extends Component
             ->where('role', '!=', 'ROLE_CUSTOMER')
             ->get();
 
-        $monthStart = Carbon::parse($this->selectedMonth.'-01')->startOfMonth();
+        $monthStart = Carbon::parse($this->selectedMonth . '-01')->startOfMonth();
         $monthEnd = $monthStart->copy()->endOfMonth();
 
         $generatedCount = 0;
@@ -122,7 +107,7 @@ class StaffPayroll extends Component
             $this->selectedMonth
         );
 
-        $this->feedbackMessage = 'Monthly payroll successfully compiled for '.Carbon::parse($this->selectedMonth.'-01')->format('F Y').'!';
+        $this->feedbackMessage = "Monthly payroll successfully compiled for " . Carbon::parse($this->selectedMonth . '-01')->format('F Y') . "!";
     }
 
     public function openEditModal(string $payrollId)
@@ -197,7 +182,7 @@ class StaffPayroll extends Component
     public function markAsPaid()
     {
         $record = PayrollModel::where('tenant_id', Auth::user()->tenant_id)->with('user')->findOrFail($this->payingPayrollId);
-
+        
         $record->update([
             'status' => 'PAID',
             'paid_at' => Carbon::parse($this->payDate),
@@ -213,21 +198,21 @@ class StaffPayroll extends Component
             'expense_date' => $this->payDate,
             'payee' => $record->user->name,
             'payment_method' => $this->payMethod,
-            'receipt_number' => 'SLIP-'.strtoupper(substr($record->id, 0, 8)),
+            'receipt_number' => 'SLIP-' . strtoupper(substr($record->id, 0, 8)),
             'notes' => "Monthly staff salary disbursed via {$this->payMethod}.",
             'created_by_user_id' => Auth::id(),
         ]);
 
         AuditLog::log(
             'PAYROLL_PAID',
-            'Disbursed salary of PKR '.number_format($record->net_salary)." to [{$record->user->name}].",
+            "Disbursed salary of PKR " . number_format($record->net_salary) . " to [{$record->user->name}].",
             Auth::user()->tenant_id,
             'StaffPayroll',
             $record->id
         );
 
         $this->showPayModal = false;
-        $this->feedbackMessage = 'Salary slip marked as PAID and auto-posted to ERP Expense Ledger.';
+        $this->feedbackMessage = "Salary slip marked as PAID and auto-posted to ERP Expense Ledger.";
     }
 
     public function render()
@@ -240,7 +225,7 @@ class StaffPayroll extends Component
             ->get();
 
         $totalBasic = $payrolls->sum('basic_salary');
-        $totalOvertime = $payrolls->sum(fn ($p) => $p->overtime_hours * $p->overtime_rate);
+        $totalOvertime = $payrolls->sum(fn($p) => $p->overtime_hours * $p->overtime_rate);
         $totalAllowances = $payrolls->sum('allowances');
         $totalDeductions = $payrolls->sum('deductions');
         $totalNetPayroll = $payrolls->sum('net_salary');

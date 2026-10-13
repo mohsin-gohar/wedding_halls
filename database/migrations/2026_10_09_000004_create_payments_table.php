@@ -21,7 +21,7 @@ return new class extends Migration
                 'SECOND_INSTALLMENT',
                 'FINAL_SETTLEMENT',
                 'SECURITY_DEPOSIT',
-                'REFUND',
+                'REFUND'
             ])->default('TOKEN_ADVANCE');
             $table->enum('payment_method', [
                 'CASH',
@@ -30,7 +30,7 @@ return new class extends Migration
                 'JAZZCASH',
                 'EASYPAISA',
                 'CREDIT_CARD',
-                'CHEQUE',
+                'CHEQUE'
             ])->default('CASH');
             $table->string('receipt_no', 60)->unique();
             $table->string('transaction_reference', 100)->nullable();

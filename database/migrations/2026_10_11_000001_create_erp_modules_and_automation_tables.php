@@ -14,7 +14,7 @@ return new class extends Migration
         // 1. Add weekly price to subscription plans if missing
         if (Schema::hasTable('subscription_plans')) {
             Schema::table('subscription_plans', function (Blueprint $table) {
-                if (! Schema::hasColumn('subscription_plans', 'price_weekly')) {
+                if (!Schema::hasColumn('subscription_plans', 'price_weekly')) {
                     $table->decimal('price_weekly', 12, 2)->default(5000.00)->after('description');
                 }
             });
@@ -23,7 +23,7 @@ return new class extends Migration
         // 2. Add website customization settings to tenants and halls
         if (Schema::hasTable('tenants')) {
             Schema::table('tenants', function (Blueprint $table) {
-                if (! Schema::hasColumn('tenants', 'website_settings')) {
+                if (!Schema::hasColumn('tenants', 'website_settings')) {
                     $table->json('website_settings')->nullable()->after('verification_notes');
                 }
             });
@@ -31,7 +31,7 @@ return new class extends Migration
 
         if (Schema::hasTable('halls')) {
             Schema::table('halls', function (Blueprint $table) {
-                if (! Schema::hasColumn('halls', 'website_settings')) {
+                if (!Schema::hasColumn('halls', 'website_settings')) {
                     $table->json('website_settings')->nullable()->after('policies');
                 }
             });

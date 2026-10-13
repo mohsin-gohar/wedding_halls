@@ -28,7 +28,7 @@ class PublicAvailabilityChecker extends Component
         $halls = Hall::where('is_active', true)
             ->whereHas('tenant', function ($q) {
                 $q->where('is_active', true)
-                    ->where('verification_status', 'APPROVED');
+                  ->where('verification_status', 'APPROVED');
             })
             ->get();
         $date = Carbon::parse($this->selectedDate);
@@ -38,7 +38,7 @@ class PublicAvailabilityChecker extends Component
             ->whereIn('status', ['CONFIRMED', 'HOLD'])
             ->get()
             ->keyBy(function ($b) {
-                return $b->hall_id.'_'.$b->slot_type;
+                return $b->hall_id . '_' . $b->slot_type;
             });
 
         // Quick date shortcuts (This Friday, This Saturday, This Sunday, Next Saturday)

@@ -10,11 +10,8 @@ use Livewire\Component;
 class FloorPlanDesigner extends Component
 {
     public ?string $selectedHallId = null;
-
     public string $planName = 'Standard Wedding Banquet Layout';
-
     public array $elements = [];
-
     public ?string $successMessage = null;
 
     public function mount()
@@ -85,17 +82,17 @@ class FloorPlanDesigner extends Component
 
     public function removeElement(string $id)
     {
-        $this->elements = array_values(array_filter($this->elements, fn ($el) => $el['id'] !== $id));
+        $this->elements = array_values(array_filter($this->elements, fn($el) => $el['id'] !== $id));
     }
 
     public function saveFloorPlan()
     {
         $user = Auth::user();
         $hall = Hall::where('id', $this->selectedHallId)
-            ->when($user && $user->tenant_id, fn ($q) => $q->where('tenant_id', $user->tenant_id))
+            ->when($user && $user->tenant_id, fn($q) => $q->where('tenant_id', $user->tenant_id))
             ->first();
 
-        if (! $hall) {
+        if (!$hall) {
             abort(403, 'Unauthorized hall access.');
         }
 
