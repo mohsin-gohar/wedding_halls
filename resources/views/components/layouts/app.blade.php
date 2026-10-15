@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'VenueCloud — Vendor SaaS Management Suite' }}</title>
+    <title>{{ $title ?? 'EventHub — Vendor SaaS Management Suite' }}</title>
 
     <!-- Google Fonts: Cinzel, Playfair Display, Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,7 +19,7 @@
     <!-- Theme State Initializer (Default: Dark Luxury Palace) -->
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('venuecloud_theme');
+            const savedTheme = localStorage.getItem('EventHub_theme');
             if (savedTheme === 'light') {
                 document.documentElement.classList.remove('dark');
             } else {
@@ -36,10 +36,10 @@
               this.darkMode = !this.darkMode; 
               if (this.darkMode) { 
                   document.documentElement.classList.add('dark'); 
-                  localStorage.setItem('venuecloud_theme', 'dark'); 
+                  localStorage.setItem('EventHub_theme', 'dark'); 
               } else { 
                   document.documentElement.classList.remove('dark'); 
-                  localStorage.setItem('venuecloud_theme', 'light'); 
+                  localStorage.setItem('EventHub_theme', 'light'); 
               } 
           } 
       }">
@@ -49,7 +49,7 @@
         <div class="flex items-center gap-3">
             <span class="inline-block w-2 h-2 rounded-full bg-[#C6A15B] animate-pulse"></span>
             <span class="text-stone-300">
-                TENANT SUITE: <strong class="text-white">{{ auth()->user()->tenant->name ?? 'VenueCloud Host' }}</strong>
+                TENANT SUITE: <strong class="text-white">{{ auth()->user()->tenant->name ?? 'EventHub Host' }}</strong>
             </span>
             <span class="text-stone-600 hidden sm:inline">|</span>
             <span class="text-stone-400 hidden sm:inline">LOCK: ACID &amp; DISTRIBUTED MUTEX</span>
@@ -71,7 +71,7 @@
     <!-- Subscription Status Banners -->
     @if(auth()->user()->tenant && auth()->user()->tenant->subscription_status === 'EXPIRED')
         <div class="bg-[#171513] border-b border-[#C6A15B]/60 text-[#F8F5EF] px-4 py-3 text-xs text-center font-medium shadow-md">
-            🔒 <strong>Subscription Notice:</strong> Your VenueCloud SaaS subscription expired on {{ auth()->user()->tenant->subscription_expires_at?->format('d M Y') ?? 'recently' }}. All your halls, bookings, client records, and finances are 100% safe and preserved. Please submit your renewal payment to unlock operations.
+            🔒 <strong>Subscription Notice:</strong> Your EventHub SaaS subscription expired on {{ auth()->user()->tenant->subscription_expires_at?->format('d M Y') ?? 'recently' }}. All your halls, bookings, client records, and finances are 100% safe and preserved. Please submit your renewal payment to unlock operations.
         </div>
     @elseif(auth()->user()->tenant && auth()->user()->tenant->subscription_status === 'GRACE_PERIOD')
         <div class="bg-[#24211E] border-b border-[#A98746]/50 text-[#F8F5EF] px-4 py-2.5 text-xs text-center font-medium">
@@ -79,7 +79,7 @@
         </div>
     @elseif(auth()->user()->tenant && auth()->user()->tenant->verification_status === 'PENDING')
         <div class="bg-[#C6A15B]/20 border-b border-[#C6A15B]/60 text-[#8F7239] px-4 py-2.5 text-xs text-center font-medium">
-            ⚠️ <strong>Verification Notice:</strong> Your venue business credentials are under review by VenueCloud administrators. You can configure halls, photos, and menus now; public listings will become visible upon verification.
+            ⚠️ <strong>Verification Notice:</strong> Your venue business credentials are under review by EventHub administrators. You can configure halls, photos, and menus now; public listings will become visible upon verification.
         </div>
     @endif
 
@@ -95,7 +95,7 @@
                                 <span class="font-cinzel text-base font-bold">V</span>
                             </div>
                             <div>
-                                <span class="font-cinzel text-lg font-bold tracking-[0.15em] text-[#171513] dark:text-white block">VENUECLOUD</span>
+                                <span class="font-cinzel text-lg font-bold tracking-[0.15em] text-[#171513] dark:text-white block">EventHub</span>
                                 @if(auth()->user()->isSuperAdmin())
                                     <span class="text-[9px] uppercase tracking-[0.18em] text-[#C6A15B] font-bold block -mt-1 font-mono">Platform Super Admin</span>
                                 @else
@@ -208,7 +208,7 @@
                     @endphp
                     @if($userHall)
                         <div class="pt-6 px-1">
-                            <a href="{{ route('hall.showcase', $userHall->id) }}" target="_blank"
+                            <a href="{{ route('hall.showcase', $userHall->slug) }}" target="_blank"
                                class="w-full py-2 px-3 bg-[#171513] border border-[#C6A15B] text-[#C6A15B] text-[11px] font-mono uppercase tracking-wider hover:bg-[#C6A15B] hover:text-[#171513] transition flex items-center justify-center gap-1.5 font-bold shadow">
                                 <span>🌐 Live Hall Page ↗</span>
                             </a>
@@ -320,7 +320,7 @@
 
             <!-- Footer -->
             <footer class="bg-white dark:bg-[#171513] border-t border-[#E7E5E4] dark:border-white/10 py-4 px-8 text-xs text-stone-500 dark:text-stone-400 flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
-                <span>&copy; {{ date('Y') }} VenueCloud Enterprise Hospitality Architecture. All rights reserved.</span>
+                <span>&copy; {{ date('Y') }} EventHub Enterprise Hospitality Architecture. All rights reserved.</span>
                 <span class="font-mono text-[11px] text-stone-400 dark:text-stone-500">Strict Tenant Scoping Active</span>
             </footer>
 

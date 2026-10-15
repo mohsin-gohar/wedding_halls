@@ -18,7 +18,7 @@
 
         <div class="flex flex-wrap items-center gap-3">
             @if($hall)
-                <a href="{{ route('hall.showcase', $hall->id) }}" target="_blank"
+                <a href="{{ route('hall.showcase', $hall->slug) }}" target="_blank"
                    class="btn-outline-gold !h-9 !px-4 text-xs font-mono uppercase tracking-wider flex items-center gap-2 font-bold">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                     <span>View Live Hall Website ↗</span>
@@ -547,14 +547,14 @@
                         Share this dedicated URL with your wedding inquiry clients:
                     </p>
                     <div class="bg-[#171513] p-2.5 border border-white/15 flex items-center justify-between gap-2">
-                        <input type="text" readonly value="{{ route('hall.showcase', $hall->id) }}" id="hallUrlInput"
+                        <input type="text" readonly value="{{ route('hall.showcase', $hall->slug) }}" id="hallUrlInput"
                                class="bg-transparent text-xs font-mono text-[#C6A15B] w-full outline-none select-all">
                         <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('hallUrlInput').value); alert('Hall website URL copied to clipboard!');"
                                 class="px-2.5 py-1 bg-[#C6A15B] text-[#171513] text-[10px] font-mono font-bold uppercase tracking-wider shrink-0">
                             Copy
                         </button>
                     </div>
-                    <a href="{{ route('hall.showcase', $hall->id) }}" target="_blank"
+                    <a href="{{ route('hall.showcase', $hall->slug) }}" target="_blank"
                        class="text-xs font-mono text-[#C6A15B] hover:underline flex items-center gap-1.5 pt-1">
                         <span>Open &amp; Test Live Hall Page &rarr;</span>
                     </a>

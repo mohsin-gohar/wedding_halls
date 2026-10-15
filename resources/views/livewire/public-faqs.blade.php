@@ -21,10 +21,10 @@
             <!-- FAQ 1 -->
             <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-2">
                 <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-medium">
-                    1. How does VenueCloud guarantee zero double-bookings?
+                    1. How does EventHub guarantee zero double-bookings?
                 </h3>
                 <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
-                    When you initiate a booking, VenueCloud creates a distributed cache mutex lock in memory and locks the database row. If another user attempts to book the same hall on the same date and shift, our system immediately rejects the conflict. Confirmed reservations are atomically committed to our ACID database.
+                    When you initiate a booking, EventHub creates a distributed cache mutex lock in memory and locks the database row. If another user attempts to book the same hall on the same date and shift, our system immediately rejects the conflict. Confirmed reservations are atomically committed to our ACID database.
                 </p>
             </div>
 

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\Auth\Register;
 use App\Livewire\PublicHallDetails;
+use App\Livewire\PublicMarketplace;
 use App\Livewire\PublicVenues;
 use App\Livewire\WalkInBookingModal;
 use App\Models\Booking;
@@ -106,6 +107,124 @@ class TenantPrivacyAndSecurityAuditTest extends TestCase
         $approvedResponse = $this->get(route('hall.showcase', $pendingHall->id));
         $approvedResponse->assertStatus(200);
         $approvedResponse->assertSee('Unapproved Private Hall');
+    }
+
+    public function test_marketplace_hides_unapproved_tenants_and_inactive_venues(): void
+    {
+        $pendingTenant = Tenant::create([
+            'name' => 'Pending Marketplace Tenant',
+            'slug' => 'pending-marketplace-tenant',
+            'verification_status' => 'PENDING',
+            'is_active' => true,
+        ]);
+
+        $pendingVenue = Venue::create([
+            'tenant_id' => $pendingTenant->id,
+            'name' => 'Pending Marketplace Venue',
+            'slug' => 'pending-marketplace-venue',
+            'city' => 'Karachi',
+            'is_active' => true,
+        ]);
+
+        Hall::create([
+            'tenant_id' => $pendingTenant->id,
+            'venue_id' => $pendingVenue->id,
+            'name' => 'Pending Marketplace Hall',
+            'min_capacity' => 100,
+            'max_capacity' => 500,
+            'base_rent' => 100000,
+            'is_active' => true,
+        ]);
+
+        $inactiveVenue = Venue::create([
+            'tenant_id' => Tenant::first()->id,
+            'name' => 'Inactive Marketplace Venue',
+            'slug' => 'inactive-marketplace-venue',
+            'city' => 'Karachi',
+            'is_active' => false,
+        ]);
+
+        Hall::create([
+            'tenant_id' => $inactiveVenue->tenant_id,
+            'venue_id' => $inactiveVenue->id,
+            'name' => 'Inactive Venue Hall',
+            'min_capacity' => 100,
+            'max_capacity' => 500,
+            'base_rent' => 100000,
+            'is_active' => true,
+        ]);
+
+        $inactiveTenant = Tenant::create([
+            'name' => 'Inactive Marketplace Tenant',
+            'slug' => 'inactive-marketplace-tenant',
+            'verification_status' => 'APPROVED',
+            'is_active' => false,
+        ]);
+
+        $inactiveTenantVenue = Venue::create([
+            'tenant_id' => $inactiveTenant->id,
+            'name' => 'Inactive Tenant Venue',
+            'slug' => 'inactive-tenant-venue',
+            'city' => 'Karachi',
+            'is_active' => true,
+        ]);
+
+        Hall::create([
+            'tenant_id' => $inactiveTenant->id,
+            'venue_id' => $inactiveTenantVenue->id,
+            'name' => 'Inactive Tenant Hall',
+            'min_capacity' => 100,
+            'max_capacity' => 500,
+            'base_rent' => 100000,
+            'is_active' => true,
+        ]);
+
+        Livewire::test(PublicMarketplace::class)
+            ->assertDontSee('Pending Marketplace Hall')
+            ->assertDontSee('Inactive Venue Hall')
+            ->assertDontSee('Inactive Tenant Hall')
+            ->assertDontSee('Pending Marketplace Venue');
+    }
+
+    public function test_marketplace_paginates_public_halls_instead_of_loading_the_full_catalog(): void
+    {
+        $tenant = Tenant::first();
+        $venue = Venue::where('tenant_id', $tenant->id)->firstOrFail();
+        $existingHallCount = Hall::where('tenant_id', $tenant->id)
+            ->where('venue_id', $venue->id)
+            ->where('is_active', true)
+            ->count();
+
+        foreach (range(1, 11) as $number) {
+            Hall::create([
+                'tenant_id' => $tenant->id,
+                'venue_id' => $venue->id,
+                'name' => sprintf('Scale Test Hall %02d', $number),
+                'min_capacity' => 100,
+                'max_capacity' => 500,
+                'base_rent' => 100000,
+                'is_active' => true,
+            ]);
+        }
+
+        $expectedHallCount = $existingHallCount + 11;
+
+        $component = Livewire::test(PublicMarketplace::class)
+            ->assertViewHas('halls', function ($halls) use ($expectedHallCount) {
+                return $halls->count() === 9 && $halls->total() === $expectedHallCount;
+            });
+
+        $component->call('gotoPage', 2)
+            ->assertViewHas('halls', function ($halls) use ($expectedHallCount) {
+                return $halls->count() === $expectedHallCount - 9
+                    && $halls->total() === $expectedHallCount
+                    && $halls->currentPage() === 2;
+            });
+
+        $component->set('searchQuery', 'Scale Test Hall')
+            ->assertViewHas('halls', function ($halls) {
+                return $halls->currentPage() === 1 && $halls->total() === 11;
+            });
     }
 
     public function test_walk_in_booking_modal_cross_tenant_client_lookup_is_strictly_isolated(): void

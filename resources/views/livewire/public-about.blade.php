@@ -9,7 +9,7 @@
                 <span>Hospitality Innovation</span>
             </div>
             <h1 class="font-serif-luxury text-4xl sm:text-5xl text-[#171513] dark:text-white font-normal">
-                About VenueCloud
+                About EventHub
             </h1>
             <p class="text-stone-600 dark:text-stone-300 text-sm max-w-2xl font-normal leading-relaxed">
                 Transforming Pakistan's luxury wedding banqueting industry through verified venue discovery, atomic reservation concurrency, and multi-tenant operational SaaS.
@@ -28,7 +28,7 @@
                         Pakistani weddings are legendary milestones involving hundreds of distinguished guests, multi-course Mughlai feasts, and multi-day celebrations spanning Barat, Valima, and Mehndi. Yet, wedding hall management has historically suffered from manual paperwork registers, accidental overlapping double-bookings, volatile ingredient costs, and uncoordinated kitchen orders.
                     </p>
                     <p>
-                        <strong>VenueCloud</strong> was engineered as an authoritative two-sided platform: an ultra-refined luxury marketplace for wedding hosts to explore authentic venues with transparent PKR pricing, combined with a dedicated multi-tenant ERP software suite for banquet hall directors to manage shifts, kitchen raw materials, fuel consumption, and legally compliant contracts.
+                        <strong>EventHub</strong> was engineered as an authoritative two-sided platform: an ultra-refined luxury marketplace for wedding hosts to explore authentic venues with transparent PKR pricing, combined with a dedicated multi-tenant ERP software suite for banquet hall directors to manage shifts, kitchen raw materials, fuel consumption, and legally compliant contracts.
                     </p>
                 </div>
 
@@ -52,7 +52,7 @@
             <div class="lg:col-span-5 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-3 shadow-md">
                 <div class="aspect-[4/5] bg-stone-900 overflow-hidden relative">
                     <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1000&auto=format&fit=crop" 
-                         alt="VenueCloud Executive Headquarters" 
+                         alt="EventHub Executive Headquarters" 
                          class="w-full h-full object-cover">
                     <div class="absolute inset-0 bg-gradient-to-t from-[#171513]/80 via-transparent to-transparent"></div>
                     <div class="absolute bottom-6 left-6 right-6 text-white">
@@ -95,7 +95,7 @@
                     Reserve Your Dream Wedding Date Today.
                 </h3>
                 <p class="text-xs text-[#F8F5EF]/70 font-light max-w-xl">
-                    Lock in your preferred hall, shift, and catering package with VenueCloud's verified venue network. Our concierge will guide you through every detail.
+                    Lock in your preferred hall, shift, and catering package with EventHub's verified venue network. Our concierge will guide you through every detail.
                 </p>
             </div>
 

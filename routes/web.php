@@ -73,8 +73,8 @@ Route::middleware('auth')->get('/hall/media', HallMediaManager::class)->name('ha
 // Venue Exploration & Showcase
 Route::get('/venues', PublicVenues::class)->name('public.venues');
 Route::get('/marketplace', PublicMarketplace::class)->name('marketplace');
-Route::get('/venues/{id}', PublicHallDetails::class)->name('public.venue.details');
-Route::get('/hall/{id}', PublicHallDetails::class)->name('hall.showcase');
+Route::get('/venues/{slug}', PublicHallDetails::class)->name('public.venue.details');
+Route::get('/hall/{slug}', PublicHallDetails::class)->name('hall.showcase');
 
 // Visual Gallery, Packages & Menus
 Route::get('/gallery', PublicGallery::class)->name('public.gallery');

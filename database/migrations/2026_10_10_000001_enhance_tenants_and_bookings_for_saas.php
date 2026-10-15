@@ -32,6 +32,8 @@ return new class extends Migration
             // Drop rigid unique constraint so cancelled bookings do not block slots
             // (Concurrency safety is enforced atomically in BookingService via Redis/DB lockForUpdate on active bookings)
             try {
+                // MySQL requires dropping FK before dropping unique index that includes FK column
+                $table->dropForeign(['hall_id']);
                 $table->dropUnique('uq_hall_event_slot');
             } catch (\Throwable $e) {
                 // If index name differs or not supported by driver, ignore
@@ -53,6 +55,7 @@ return new class extends Migration
             $table->dropForeign(['customer_id']);
             $table->dropColumn(['booking_reference', 'customer_id', 'pipeline_stage']);
             $table->unique(['hall_id', 'event_date', 'slot_type'], 'uq_hall_event_slot');
+            $table->foreign('hall_id')->references('id')->on('halls')->restrictOnDelete();
         });
 
         Schema::table('tenants', function (Blueprint $table) {

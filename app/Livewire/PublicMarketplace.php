@@ -6,17 +6,45 @@ use App\Models\Hall;
 use App\Models\Venue;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('components.layouts.public')]
 class PublicMarketplace extends Component
 {
+    use WithPagination;
+
     public string $city = 'All';
     public int $minCapacity = 100;
     public ?string $searchQuery = '';
 
+    public function updatingCity(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingMinCapacity(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSearchQuery(): void
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
-        $query = Hall::with(['venue', 'tenant'])->where('is_active', true);
+        $query = Hall::query()
+            ->with(['venue', 'tenant'])
+            ->where('halls.is_active', true)
+            ->whereHas('venue', function ($venue) {
+                $venue->where('is_active', true)
+                    ->whereColumn('venues.tenant_id', 'halls.tenant_id');
+            })
+            ->whereHas('tenant', function ($tenant) {
+                $tenant->where('is_active', true)
+                    ->where('verification_status', 'APPROVED');
+            });
 
         if ($this->city !== 'All') {
             $query->whereHas('venue', function ($q) {
@@ -29,14 +57,28 @@ class PublicMarketplace extends Component
         }
 
         if ($this->searchQuery) {
-            $query->where(function ($q) {
-                $q->where('name', 'like', "%{$this->searchQuery}%")
-                  ->orWhereHas('venue', fn($vq) => $vq->where('name', 'like', "%{$this->searchQuery}%")->orWhere('area', 'like', "%{$this->searchQuery}%"));
+            $searchTerm = '%' . trim($this->searchQuery) . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('halls.name', 'like', $searchTerm)
+                    ->orWhereHas('venue', function ($venue) use ($searchTerm) {
+                        $venue->where('name', 'like', $searchTerm)
+                            ->orWhere('area', 'like', $searchTerm);
+                    });
             });
         }
 
-        $halls = $query->get();
-        $cities = Venue::where('is_active', true)->pluck('city')->unique();
+        $halls = $query->latest('halls.created_at')->latest('halls.id')->paginate(9);
+        $cities = Venue::query()
+            ->where('is_active', true)
+            ->whereHas('tenant', function ($tenant) {
+                $tenant->where('is_active', true)
+                    ->where('verification_status', 'APPROVED');
+            })
+            ->whereNotNull('city')
+            ->where('city', '!=', '')
+            ->distinct()
+            ->orderBy('city')
+            ->pluck('city');
 
         return view('livewire.public-marketplace', [
             'halls' => $halls,

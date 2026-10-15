@@ -15,10 +15,19 @@ class PublicHallDetails extends Component
     public Hall $hall;
     public string $activePhoto = '';
 
-    public function mount(string $id)
+    public function mount(?string $slug = null, ?string $id = null)
     {
-        // 1. Strict Visibility: Ensure hall exists, is active, and belongs to an active, approved vendor
-        $this->hall = Hall::with(['venue', 'tenant'])->findOrFail($id);
+        $identifier = $slug ?? $id;
+
+        if (!$identifier) {
+            abort(404, 'Venue not found.');
+        }
+
+        // 1. Strict Visibility: Support resolving by slug (preferred) or UUID fallback
+        $this->hall = Hall::with(['venue', 'tenant'])
+            ->where('slug', $identifier)
+            ->orWhere('id', $identifier)
+            ->firstOrFail();
 
         if (!$this->hall->is_active) {
             abort(404, 'This venue space is currently inactive.');

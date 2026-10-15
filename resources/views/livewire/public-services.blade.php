@@ -4,10 +4,11 @@
          SECTION 1: HERO & HOSPITALITY EXCELLENCE HEADLINE
          =================================================================== -->
     <section class="parallax-window relative bg-[#171513] text-white py-20 border-b border-[#C6A15B]/30 overflow-hidden">
-        <div class="parallax-bg opacity-30" data-parallax="0.25"
+        <div class="parallax-bg opacity-75" data-parallax="0.25"
              style="background-image: url('https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2000&auto=format&fit=crop');">
         </div>
-        <div class="absolute inset-0 bg-gradient-to-t from-[#171513] via-[#171513]/75 to-[#171513]/90"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-[#171513] via-[#171513]/40 to-[#171513]/65"></div>
+        <div class="absolute inset-0 bg-black/20"></div>
 
         <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 text-center">
             <div class="inline-flex items-center gap-2.5 px-4 py-1.5 border border-[#C6A15B]/50 bg-[#171513]/90 text-[#C6A15B] text-[11px] font-semibold tracking-[0.22em] uppercase font-mono">
@@ -20,7 +21,7 @@
             </h1>
 
             <p class="text-sm sm:text-base text-stone-300 max-w-2xl mx-auto font-light leading-relaxed">
-                VenueCloud partners with premier wedding halls equipped with enterprise-grade operational facilities, guaranteed continuous power, VIP bridal lounges, and culinary excellence.
+                EventHub partners with premier wedding halls equipped with enterprise-grade operational facilities, guaranteed continuous power, VIP bridal lounges, and culinary excellence.
             </p>
         </div>
     </section>
@@ -212,7 +213,7 @@
                 Our Hospitality Service Level Agreement
             </h3>
             <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed max-w-2xl mx-auto">
-                Every VenueCloud certified banquet is inspected for fire safety clearance, HVAC chiller temperature stability, commercial water filtration, and professional staff uniforms.
+                Every EventHub certified banquet is inspected for fire safety clearance, HVAC chiller temperature stability, commercial water filtration, and professional staff uniforms.
             </p>
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-xs font-mono text-stone-700 dark:text-stone-300">

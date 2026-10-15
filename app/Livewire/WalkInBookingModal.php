@@ -10,6 +10,7 @@ use App\Models\Package;
 use App\Services\BookingService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
 class WalkInBookingModal extends Component
@@ -40,8 +41,16 @@ class WalkInBookingModal extends Component
     public ?string $package_id = null;
     public float $per_head_rate = 1850.00;
     public float $hall_rent = 120000.00;
+    public array $addonPrices = [
+        'sparklers' => 15000.00,
+        'dj_lighting' => 30000.00,
+        'ac_extra' => 20000.00,
+        'valet' => 12000.00,
+        'stage_flowers' => 35000.00,
+    ];
     public array $selected_addons = [];
     public float $addons_total = 0.00;
+
     public float $discount_amount = 0.00;
     public float $tax_rate_percent = 5.00; // 5% provincial service tax
     public float $tax_amount = 0.00;
@@ -278,7 +287,7 @@ class WalkInBookingModal extends Component
         $this->calculateTotals();
     }
 
-    public function toggleAddon(string $addonKey, float $cost)
+    public function toggleAddon(string $addonKey)
     {
         if (in_array($addonKey, $this->selected_addons)) {
             $this->selected_addons = array_values(array_diff($this->selected_addons, [$addonKey]));
@@ -290,22 +299,14 @@ class WalkInBookingModal extends Component
 
     public function calculateTotals()
     {
-        // Addons map
-        $addonPrices = [
-            'sparklers' => 15000.00,
-            'dj_lighting' => 30000.00,
-            'ac_extra' => 20000.00,
-            'valet' => 12000.00,
-            'stage_flowers' => 35000.00,
-        ];
-
-        $addons = 0.00;
+        // Addons price map (editable per-addon, so middle-class / custom setups
+        // can price add-ons the way they want instead of hard-coded list prices).
+        $this->addons_total = 0.00;
         foreach ($this->selected_addons as $k) {
-            if (isset($addonPrices[$k])) {
-                $addons += $addonPrices[$k];
+            if (isset($this->addonPrices[$k])) {
+                $this->addons_total += $this->addonPrices[$k];
             }
         }
-        $this->addons_total = $addons;
 
         $catering = (float) $this->per_head_rate * (int) max(1, $this->guest_count);
         $subtotal = $catering + (float) $this->hall_rent + $this->addons_total - (float) $this->discount_amount;
@@ -320,6 +321,11 @@ class WalkInBookingModal extends Component
             $this->advance_paid = 0.00;
             $this->balance_due = $this->grand_total;
         }
+    }
+
+    public function updatedAddonPrices()
+    {
+        $this->calculateTotals();
     }
 
     public function goToStep(int $targetStep)
@@ -439,7 +445,16 @@ class WalkInBookingModal extends Component
             $this->errorMessage = $e->getMessage();
             $this->step = 1;
         } catch (\Exception $e) {
-            $this->errorMessage = "Booking failed: " . $e->getMessage();
+            // Never surface raw SQL / driver text to staff or guests. Log the
+            // full technical context and show a friendly, actionable message.
+            Log::error('Walk-in booking failed', [
+                'trace' => $e->getTraceAsString(),
+                'hall_id' => $this->hall_id,
+                'event_date' => $this->event_date,
+                'slot_type' => $this->slot_type,
+            ]);
+
+            $this->errorMessage = 'We could not save this reservation just now. Please try again; if the problem continues, call the venue directly so our team can confirm your booked shift.';
         }
     }
 

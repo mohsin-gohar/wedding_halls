@@ -1,6 +1,6 @@
-# VenueCloud
+# EventHub
 
-VenueCloud is a multi-tenant wedding venue marketplace and operations platform. It provides public venue discovery and booking inquiries alongside tools for venue owners to manage reservations, staff, inventory, finances, catering, and event operations.
+EventHub is a multi-tenant wedding venue marketplace and operations platform. It provides public venue discovery and booking inquiries alongside tools for venue owners to manage reservations, staff, inventory, finances, catering, and event operations.
 
 ## Capabilities
 
@@ -44,6 +44,7 @@ npm audit
 - `resources/views`, `resources/css`, and `resources/js`: Blade UI, design system, and browser code.
 - `tests/Feature` and `tests/Unit`: automated verification.
 - `deploy`: production environment, Nginx, queue-worker, and deployment guidance.
+- `deploy/SCALING.md`: production scaling stages, shared-service requirements, query tuning, and load-test gates.
 
 ## Production
 

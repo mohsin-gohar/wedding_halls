@@ -6,12 +6,7 @@
             <!-- Modal Header (Editorial Luxury Style Matching Home Hero) -->
             <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-5 flex items-start justify-between">
                 <div>
-                    <div class="inline-flex items-center gap-2 px-3 py-1 border border-[#C6A15B]/50 bg-[#171513] text-[#C6A15B] mb-2 font-mono">
-                        <span class="w-1.5 h-1.5 bg-[#C6A15B] animate-pulse"></span>
-                        <span class="text-[10px] tracking-[0.2em] uppercase font-bold">
-                            Direct Booking Terminal
-                        </span>
-                    </div>
+
                     <h2 class="font-serif-luxury text-2xl sm:text-3xl text-[#171513] dark:text-white font-normal tracking-wide mt-1">
                         Walk-in Reservation Wizard
                     </h2>
@@ -213,22 +208,51 @@
                 <!-- Addons Checkboxes (Clean Minimalist Cards) -->
                 <div>
                     <label class="block text-[11px] uppercase tracking-[0.1em] text-[#8F7239] dark:text-[#C6A15B] mb-2 font-mono font-bold">Hospitality Add-ons &amp; Decor</label>
-                    <div class="grid grid-cols-2 gap-2 text-xs">
-                        <label class="flex items-center gap-2.5 p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#171513] cursor-pointer hover:border-[#C6A15B] text-[#171513] dark:text-stone-200">
-                            <input type="checkbox" wire:click="toggleAddon('sparklers', 15000)" {{ in_array('sparklers', $selected_addons) ? 'checked' : '' }} class="accent-[#C6A15B] w-4 h-4">
-                            <span class="font-medium font-sans">Sparklers Entry (PKR 15,000)</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                        <label class="flex items-center justify-between gap-2 p-2.5 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#171513] cursor-pointer hover:border-[#C6A15B] text-[#171513] dark:text-stone-200 transition">
+                            <span class="inline-flex items-center gap-2 min-w-0">
+                                <input type="checkbox" wire:click="toggleAddon('sparklers')" {{ in_array('sparklers', $selected_addons) ? 'checked' : '' }} class="accent-[#C6A15B] w-4 h-4 shrink-0">
+                                <span class="font-medium font-sans truncate">Sparklers Entry</span>
+                            </span>
+                            <span class="inline-flex items-center gap-1 font-mono text-[11px] text-stone-500 shrink-0">
+                                <input type="number" wire:model.live="addonPrices.sparklers" min="0" step="500" class="w-20 border border-[#E7E5E4] dark:border-white/15 bg-white dark:bg-white/5 px-2 py-0.5 text-xs font-mono text-[#171513] dark:text-white text-right"> PKR
+                            </span>
                         </label>
-                        <label class="flex items-center gap-2.5 p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#171513] cursor-pointer hover:border-[#C6A15B] text-[#171513] dark:text-stone-200">
-                            <input type="checkbox" wire:click="toggleAddon('dj_lighting', 30000)" {{ in_array('dj_lighting', $selected_addons) ? 'checked' : '' }} class="accent-[#C6A15B] w-4 h-4">
-                            <span class="font-medium font-sans">DJ &amp; Moving Lights (PKR 30,000)</span>
+                        <label class="flex items-center justify-between gap-2 p-2.5 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#171513] cursor-pointer hover:border-[#C6A15B] text-[#171513] dark:text-stone-200 transition">
+                            <span class="inline-flex items-center gap-2 min-w-0">
+                                <input type="checkbox" wire:click="toggleAddon('dj_lighting')" {{ in_array('dj_lighting', $selected_addons) ? 'checked' : '' }} class="accent-[#C6A15B] w-4 h-4 shrink-0">
+                                <span class="font-medium font-sans truncate">DJ &amp; Moving Lights</span>
+                            </span>
+                            <span class="inline-flex items-center gap-1 font-mono text-[11px] text-stone-500 shrink-0">
+                                <input type="number" wire:model.live="addonPrices.dj_lighting" min="0" step="500" class="w-20 border border-[#E7E5E4] dark:border-white/15 bg-white dark:bg-white/5 px-2 py-0.5 text-xs font-mono text-[#171513] dark:text-white text-right"> PKR
+                            </span>
                         </label>
-                        <label class="flex items-center gap-2.5 p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#171513] cursor-pointer hover:border-[#C6A15B] text-[#171513] dark:text-stone-200">
-                            <input type="checkbox" wire:click="toggleAddon('stage_flowers', 35000)" {{ in_array('stage_flowers', $selected_addons) ? 'checked' : '' }} class="accent-[#C6A15B] w-4 h-4">
-                            <span class="font-medium font-sans">Fresh Floral Stage (PKR 35,000)</span>
+                        <label class="flex items-center justify-between gap-2 p-2.5 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#171513] cursor-pointer hover:border-[#C6A15B] text-[#171513] dark:text-stone-200 transition">
+                            <span class="inline-flex items-center gap-2 min-w-0">
+                                <input type="checkbox" wire:click="toggleAddon('stage_flowers')" {{ in_array('stage_flowers', $selected_addons) ? 'checked' : '' }} class="accent-[#C6A15B] w-4 h-4 shrink-0">
+                                <span class="font-medium font-sans truncate">Fresh Floral Stage</span>
+                            </span>
+                            <span class="inline-flex items-center gap-1 font-mono text-[11px] text-stone-500 shrink-0">
+                                <input type="number" wire:model.live="addonPrices.stage_flowers" min="0" step="500" class="w-20 border border-[#E7E5E4] dark:border-white/15 bg-white dark:bg-white/5 px-2 py-0.5 text-xs font-mono text-[#171513] dark:text-white text-right"> PKR
+                            </span>
                         </label>
-                        <label class="flex items-center gap-2.5 p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#171513] cursor-pointer hover:border-[#C6A15B] text-[#171513] dark:text-stone-200">
-                            <input type="checkbox" wire:click="toggleAddon('valet', 12000)" {{ in_array('valet', $selected_addons) ? 'checked' : '' }} class="accent-[#C6A15B] w-4 h-4">
-                            <span class="font-medium font-sans">Valet Parking Service (PKR 12,000)</span>
+                        <label class="flex items-center justify-between gap-2 p-2.5 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#171513] cursor-pointer hover:border-[#C6A15B] text-[#171513] dark:text-stone-200 transition">
+                            <span class="inline-flex items-center gap-2 min-w-0">
+                                <input type="checkbox" wire:click="toggleAddon('valet')" {{ in_array('valet', $selected_addons) ? 'checked' : '' }} class="accent-[#C6A15B] w-4 h-4 shrink-0">
+                                <span class="font-medium font-sans truncate">Valet Parking Service</span>
+                            </span>
+                            <span class="inline-flex items-center gap-1 font-mono text-[11px] text-stone-500 shrink-0">
+                                <input type="number" wire:model.live="addonPrices.valet" min="0" step="500" class="w-20 border border-[#E7E5E4] dark:border-white/15 bg-white dark:bg-white/5 px-2 py-0.5 text-xs font-mono text-[#171513] dark:text-white text-right"> PKR
+                            </span>
+                        </label>
+                        <label class="flex items-center justify-between gap-2 p-2.5 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#171513] cursor-pointer hover:border-[#C6A15B] text-[#171513] dark:text-stone-200 transition sm:col-span-2">
+                            <span class="inline-flex items-center gap-2 min-w-0">
+                                <input type="checkbox" wire:click="toggleAddon('ac_extra')" {{ in_array('ac_extra', $selected_addons) ? 'checked' : '' }} class="accent-[#C6A15B] w-4 h-4 shrink-0">
+                                <span class="font-medium font-sans truncate">AC Extra Capacity</span>
+                            </span>
+                            <span class="inline-flex items-center gap-1 font-mono text-[11px] text-stone-500 shrink-0">
+                                <input type="number" wire:model.live="addonPrices.ac_extra" min="0" step="500" class="w-20 border border-[#E7E5E4] dark:border-white/15 bg-white dark:bg-white/5 px-2 py-0.5 text-xs font-mono text-[#171513] dark:text-white text-right"> PKR
+                            </span>
                         </label>
                     </div>
                 </div>

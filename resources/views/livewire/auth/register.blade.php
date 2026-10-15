@@ -10,7 +10,7 @@
                 Register Your Wedding Hall
             </h1>
             <p class="text-xs text-stone-500 font-normal max-w-md mx-auto">
-                Create your verified venue account on VenueCloud to showcase your ballrooms, receive inquiries, and operate shifts with automated SaaS precision.
+                Create your verified venue account on EventHub to showcase your ballrooms, receive inquiries, and operate shifts with automated SaaS precision.
             </p>
         </div>
 

@@ -91,14 +91,14 @@
                 </h2>
                 <div class="flex items-center gap-2 text-xs font-mono text-stone-600 dark:text-stone-300">
                     <span>Client Website Link:</span>
-                    <a href="{{ route('hall.showcase', $activeHall->id) }}" target="_blank" class="text-[#8F7239] dark:text-[#C6A15B] underline hover:text-[#171513] dark:hover:text-[#D9C088] font-bold">
-                        {{ route('hall.showcase', $activeHall->id) }}
+                    <a href="{{ route('hall.showcase', $activeHall->slug) }}" target="_blank" class="text-[#8F7239] dark:text-[#C6A15B] underline hover:text-[#171513] dark:hover:text-[#D9C088] font-bold">
+                        {{ route('hall.showcase', $activeHall->slug) }}
                     </a>
                 </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-3 relative z-10">
-                <a href="{{ route('hall.showcase', $activeHall->id) }}" target="_blank"
+                <a href="{{ route('hall.showcase', $activeHall->slug) }}" target="_blank"
                    class="btn-outline-gold !h-9 !px-4 text-xs font-mono uppercase tracking-wider flex items-center gap-1.5 font-bold">
                     <span>Preview Hall Website ↗</span>
                 </a>

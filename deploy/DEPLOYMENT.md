@@ -130,6 +130,10 @@ php artisan about                          # environment = production
 - **Optional monitoring**: set `SENTRY_LARAVEL_DSN` and install
   `sentry/sentry-laravel` for error tracking.
 
+- **Scaling**: see [`SCALING.md`](SCALING.md) for Redis/session/queue requirements,
+  scale-out readiness, database query workflow, and load-test gates. Do not use
+  per-node file/array caches for booking locks on multiple app instances.
+
 ## 10. Security features already wired in code
 
 - **SecurityHeaders middleware** (`app/Http/Middleware/SecurityHeaders.php`):

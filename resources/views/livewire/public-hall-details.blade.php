@@ -17,11 +17,12 @@
          =================================================================== -->
     <section class="relative bg-[#171513] text-white min-h-[580px] flex items-center justify-center overflow-hidden border-b border-[#C6A15B]/30">
         <!-- Parallax Cover Image -->
-        <div class="absolute inset-0 bg-cover bg-center bg-fixed opacity-40 scale-100"
+        <div class="absolute inset-0 bg-cover bg-center bg-fixed opacity-75 scale-100"
              style="background-image: url('{{ $activePhoto }}');">
         </div>
-        <!-- Gradient Overlays -->
-        <div class="absolute inset-0 bg-gradient-to-t from-[#171513] via-[#171513]/70 to-[#171513]/85"></div>
+        <!-- Gradient Overlays: Subtle radial and vertical vignette for clear visibility + readability -->
+        <div class="absolute inset-0 bg-gradient-to-t from-[#171513] via-[#171513]/40 to-[#171513]/60"></div>
+        <div class="absolute inset-0 bg-black/20"></div>
 
         <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full space-y-6">
             
@@ -60,7 +61,7 @@
                     </span>
                     @if(!empty($videos) && count($videos) > 0)
                         <span class="px-3 py-1 bg-[#171513]/90 text-[#F8F5EF] text-[10px] font-mono uppercase tracking-widest border border-[#C6A15B]/45 flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-[#171513] animate-pulse"></span>
+                            <span class="w-2 h-2 rounded-full bg-[#C6A15B] animate-pulse"></span>
                             4K Virtual Tour Available
                         </span>
                     @endif
@@ -322,50 +323,56 @@
                 ];
             @endphp
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="space-y-4">
                 @foreach($catalogServices as $srv)
-                    <div class="editorial-card p-6 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 flex flex-col justify-between space-y-4 hover:shadow-md transition">
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="w-9 h-9 bg-[#171513] text-[#C6A15B] border border-[#C6A15B] flex items-center justify-center text-base">
-                                    @if(($srv['icon'] ?? '') === 'bolt') ⚡
-                                    @elseif(($srv['icon'] ?? '') === 'camera') 🎥
-                                    @elseif(($srv['icon'] ?? '') === 'truck') 🚗
-                                    @elseif(($srv['icon'] ?? '') === 'star') ⭐
-                                    @else ✨
-                                    @endif
-                                </span>
-                                <span class="text-[9px] font-mono uppercase px-2 py-0.5 bg-[#F8F5EF] dark:bg-white/10 border border-[#E7E5E4] dark:border-white/10 font-semibold text-stone-600 dark:text-stone-300">
-                                    {{ $srv['category'] ?? 'Service' }}
-                                </span>
+                    <div class="editorial-card p-5 sm:p-6 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B]/60 dark:hover:border-[#C6A15B]/50 transition-all duration-300 shadow-xs hover:shadow-md flex flex-col md:flex-row md:items-center justify-between gap-5 group">
+                        <!-- Left & Middle: Icon + Meta + Details -->
+                        <div class="flex items-start sm:items-center gap-4 sm:gap-5 flex-1 min-w-0">
+                            <!-- Icon Box -->
+                            <div class="w-12 h-12 shrink-0 bg-[#F8F5EF] dark:bg-white/5 border border-[#C6A15B]/50 text-[#C6A15B] flex items-center justify-center text-xl shadow-xs group-hover:scale-105 group-hover:border-[#C6A15B] transition-transform">
+                                @if(($srv['icon'] ?? '') === 'bolt') ⚡
+                                @elseif(($srv['icon'] ?? '') === 'camera') 🎥
+                                @elseif(($srv['icon'] ?? '') === 'truck') 🚗
+                                @elseif(($srv['icon'] ?? '') === 'star') ⭐
+                                @else ✨
+                                @endif
                             </div>
 
-                            <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-medium leading-snug">
-                                {{ $srv['title'] ?? 'Custom Service' }}
-                            </h3>
-
-                            <p class="text-xs text-stone-600 dark:text-stone-300 font-normal leading-relaxed">
-                                {{ $srv['description'] ?? 'Premium wedding amenity customized by banquet management.' }}
-                            </p>
+                            <!-- Details -->
+                            <div class="space-y-1.5 flex-1 min-w-0">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="font-serif-luxury text-lg sm:text-xl text-[#171513] dark:text-white font-medium group-hover:text-[#8F7239] dark:group-hover:text-[#C6A15B] transition-colors truncate">
+                                        {{ $srv['title'] ?? 'Custom Service' }}
+                                    </h3>
+                                    <span class="text-[9px] font-mono uppercase px-2 py-0.5 bg-[#F8F5EF] dark:bg-white/10 border border-[#E7E5E4] dark:border-white/15 font-semibold text-stone-600 dark:text-stone-300 tracking-wider">
+                                        {{ $srv['category'] ?? 'Service' }}
+                                    </span>
+                                </div>
+                                <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-300 font-normal leading-relaxed max-w-3xl">
+                                    {{ $srv['description'] ?? 'Premium wedding amenity customized by banquet management.' }}
+                                </p>
+                            </div>
                         </div>
 
-                        <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 flex items-center justify-between">
-                            <div>
-                                <span class="text-[9px] uppercase font-bold text-stone-400 font-mono block">PRICING</span>
+                        <!-- Right: Pricing & Action -->
+                        <div class="pt-4 md:pt-0 border-t md:border-t-0 md:border-l border-[#E7E5E4] dark:border-white/10 md:pl-6 flex items-center justify-between md:justify-end gap-5 shrink-0">
+                            <div class="text-left md:text-right">
+                                <span class="text-[9px] uppercase font-bold text-stone-400 font-mono block tracking-wider">PRICING</span>
                                 @if(!empty($srv['is_complimentary']))
-                                    <span class="text-xs font-bold font-mono text-[#8F7239] dark:text-[#C6A15B] bg-[#C6A15B]/15 dark:bg-[#171513]/85 px-2 py-0.5 border border-[#C6A15B]/60 dark:border-[#C6A15B]/70">
+                                    <span class="inline-block text-xs font-bold font-mono text-[#8F7239] dark:text-[#C6A15B] bg-[#C6A15B]/15 dark:bg-[#171513]/85 px-2.5 py-0.5 border border-[#C6A15B]/60 dark:border-[#C6A15B]/70 tracking-wider">
                                         COMPLIMENTARY
                                     </span>
                                 @else
-                                    <strong class="font-cinzel text-base text-[#171513] dark:text-white">
+                                    <strong class="font-cinzel text-lg sm:text-xl text-[#171513] dark:text-white tracking-wide">
                                         PKR {{ number_format($srv['price'] ?? 0) }}
                                     </strong>
                                 @endif
                             </div>
 
                             <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}' })" 
-                                    class="btn-obsidian dark:bg-white/10 dark:text-white dark:border-white/20 dark:hover:bg-[#C6A15B] dark:hover:text-[#171513] !h-8 !px-3 text-[11px] font-mono">
-                                Inquire &rarr;
+                                    class="btn-obsidian dark:bg-white/10 dark:text-white dark:border-white/20 dark:hover:bg-[#C6A15B] dark:hover:text-[#171513] !h-9 !px-4 text-xs font-mono tracking-wider flex items-center gap-1.5 whitespace-nowrap shadow-xs hover:shadow transition">
+                                <span>Inquire</span>
+                                <span>&rarr;</span>
                             </button>
                         </div>
                     </div>

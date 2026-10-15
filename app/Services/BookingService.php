@@ -83,12 +83,13 @@ class BookingService
                     );
                 }
 
-                // If tenant_id is not passed, derive from Hall
-                $tenantId = $data['tenant_id'] ?? null;
-                if (!$tenantId) {
-                    $hall = Hall::findOrFail($hallId);
-                    $tenantId = $hall->tenant_id;
-                }
+                // Authoritative tenant resolution: always derive the tenant from
+                // the hall record instead of trusting a caller-supplied tenant_id.
+                // A stale or mismatched value would otherwise either violate the
+                // bookings.tenant_id foreign key or file the booking under the
+                // wrong tenant.
+                $hall = Hall::findOrFail($hallId);
+                $tenantId = $hall->tenant_id;
 
                 // Financial Formulation
                 $guestCount = (int) ($data['guest_count'] ?? 100);

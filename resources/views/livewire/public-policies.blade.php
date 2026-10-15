@@ -18,7 +18,7 @@
                 @endif
             </h1>
             <p class="text-stone-600 dark:text-stone-400 text-xs font-mono uppercase tracking-wider">
-                Last updated: October 2026 • Effective for all VenueCloud customers and hall operators
+                Last updated: October 2026 • Effective for all EventHub customers and hall operators
             </p>
         </div>
 
@@ -41,7 +41,7 @@
                 <div class="space-y-4">
                     <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">1. Information Collection and Privacy</h3>
                     <p>
-                        VenueCloud Technologies (Pvt) Ltd ("VenueCloud") respects the privacy of our customers and partner wedding venues. We collect personal contact details (name, CNIC number, phone number, email address) solely for the purpose of booking confirmation, legal contract generation, guest RSVP checklists, and payment ledger maintenance.
+                        EventHub Technologies (Pvt) Ltd ("EventHub") respects the privacy of our customers and partner wedding venues. We collect personal contact details (name, CNIC number, phone number, email address) solely for the purpose of booking confirmation, legal contract generation, guest RSVP checklists, and payment ledger maintenance.
                     </p>
                     <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">2. CNIC &amp; Guest Privacy</h3>
                     <p>
@@ -66,18 +66,18 @@
                     </p>
                     <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">3. Force Majeure &amp; Weather Contingencies</h3>
                     <p>
-                        In the event of unpredicted natural disasters, governmental curbs, or extreme weather conditions affecting open-sky lawns, VenueCloud venues provide complimentary shift rescheduling to indoor banquet halls or subsequent open dates without cancellation penalties.
+                        In the event of unpredicted natural disasters, governmental curbs, or extreme weather conditions affecting open-sky lawns, EventHub venues provide complimentary shift rescheduling to indoor banquet halls or subsequent open dates without cancellation penalties.
                     </p>
                 </div>
             @else
                 <div class="space-y-4">
                     <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">1. Agreement to Platform Terms</h3>
                     <p>
-                        By using the VenueCloud marketplace or SaaS platform, clients and venue operators agree to adhere to these Terms of Service. All monetary amounts are quoted authoritatively in Pakistani Rupees (PKR) and are subject to applicable provincial sales tax on services (PRA in Punjab, SRB in Sindh, ICT in Islamabad).
+                        By using the EventHub marketplace or SaaS platform, clients and venue operators agree to adhere to these Terms of Service. All monetary amounts are quoted authoritatively in Pakistani Rupees (PKR) and are subject to applicable provincial sales tax on services (PRA in Punjab, SRB in Sindh, ICT in Islamabad).
                     </p>
                     <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">2. Concurrency &amp; Booking Validity</h3>
                     <p>
-                        A booking reservation is only officially confirmed once the token advance has been recorded and an official VenueCloud receipt number is issued. Online holds expire automatically after the designated window if unconfirmed.
+                        A booking reservation is only officially confirmed once the token advance has been recorded and an official EventHub receipt number is issued. Online holds expire automatically after the designated window if unconfirmed.
                     </p>
                     <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">3. Operating Shift Compliance</h3>
                     <p>

@@ -9,7 +9,7 @@
                 <span>Immediate Assistance</span>
             </div>
             <h1 class="font-serif-luxury text-4xl sm:text-5xl text-[#171513] dark:text-white font-normal">
-                Contact VenueCloud
+                Contact EventHub
             </h1>
             <p class="text-stone-600 dark:text-stone-300 text-sm max-w-2xl font-normal leading-relaxed">
                 Whether you are planning a high-profile wedding celebration or require enterprise hall management SaaS solutions, our dedicated team is at your service.
@@ -92,7 +92,7 @@
                     <p class="text-xs text-stone-300 font-light leading-relaxed">
                         For immediate shift checks, walk-in appointment scheduling, or urgent inquiries, message our 24/7 dedicated concierge desk.
                     </p>
-                    <a href="https://wa.me/923008472910?text=Hello%20VenueCloud%20Concierge,%20I%20have%20an%20inquiry%20regarding%20wedding%20venue%20booking" 
+                    <a href="https://wa.me/923008472910?text=Hello%20EventHub%20Concierge,%20I%20have%20an%20inquiry%20regarding%20wedding%20venue%20booking" 
                        target="_blank" 
                        class="btn-gold !w-full !h-11 text-xs font-bold uppercase flex items-center justify-center gap-2 font-mono shadow-md">
                         <span>Message on WhatsApp (+92 300 8472910)</span>

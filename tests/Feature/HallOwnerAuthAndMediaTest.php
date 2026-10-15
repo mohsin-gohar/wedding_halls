@@ -114,7 +114,7 @@ class HallOwnerAuthAndMediaTest extends TestCase
     public function test_public_hall_showcase_renders_with_images_and_videos(): void
     {
         $hall = Hall::first();
-        $response = $this->get(route('hall.showcase', $hall->id));
+        $response = $this->get(route('hall.showcase', $hall->slug));
         $response->assertStatus(200);
         $response->assertSee($hall->name);
         $response->assertSee('Upcoming 14-Day Shift Availability');
@@ -201,7 +201,6 @@ class HallOwnerAuthAndMediaTest extends TestCase
             ->call('openModalWithData')
             ->assertSet('isOpen', true)
             ->assertSee('Walk-in Reservation Wizard')
-            ->assertSee('Direct Booking Terminal')
             ->assertSee('Operational Shift Slot')
             ->assertSee('Afternoon')
             ->assertSee('Evening')
@@ -214,4 +213,38 @@ class HallOwnerAuthAndMediaTest extends TestCase
             ->call('closeModal')
             ->assertSet('isOpen', false);
     }
+    public function test_walk_in_modal_addons_calculation_uses_editable_price()
+    {
+        $result = Livewire::test(WalkInBookingModal::class)
+            ->set('step', 3)
+            ->set('per_head_rate', 2000.00)
+            ->set('guest_count', 100)
+            ->set('hall_rent', 110000.00)
+            ->set('isStaff', false);
+
+        // Base: catering 2000*100=200000 + rent 110000 = subtotal 310000; tax 5% = 15500; grand 325500
+        $result->assertSet('addons_total', 0.00)
+            ->assertSet('grand_total', 325500.00);
+
+        // Sparklers 15000 => subtotal 325000; tax 16250; grand 341250
+        $result->call('toggleAddon', 'sparklers')
+            ->assertSet('addons_total', 15000.00)
+            ->assertSet('grand_total', 341250.00);
+
+        // DJ 30000 => subtotal 355000; tax 17750; grand 372750
+        $result->call('toggleAddon', 'dj_lighting')
+            ->assertSet('addons_total', 45000.00)
+            ->assertSet('grand_total', 372750.00);
+
+        // Uncheck sparklers => only DJ 30000 => subtotal 340000; tax 17000; grand 357000
+        $result->call('toggleAddon', 'sparklers')
+            ->assertSet('addons_total', 30000.00)
+            ->assertSet('grand_total', 357000.00);
+
+        // Editable price: set DJ to 25000 => addons 25000 => subtotal 335000; tax 16750; grand 351750
+        $result->set('addonPrices.dj_lighting', 25000.00)
+            ->assertSet('addons_total', 25000.00)
+            ->assertSet('grand_total', 351750.00);
+    }
+
 }

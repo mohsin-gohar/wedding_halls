@@ -1,4 +1,4 @@
-<x-layouts.public title="VenueCloud — Transform Your Wedding Dreams Into Timeless Luxury">
+<x-layouts.public title="EventHub — Transform Your Wedding Dreams Into Timeless Luxury">
 
     <!-- ===================================================================
          1. CINEMATIC LUXURY HERO SECTION (With Smooth Visual Depth)
@@ -278,7 +278,7 @@
                                 
                                 <!-- View Details Overlay -->
                                 <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <a href="{{ route('public.venue.details', $hall->id) }}" class="btn-gold !h-11 !px-6 text-xs font-bold uppercase tracking-wider font-mono shadow-xl transform -translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                    <a href="{{ route('public.venue.details', $hall->slug) }}" class="btn-gold !h-11 !px-6 text-xs font-bold uppercase tracking-wider font-mono shadow-xl transform -translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                                         View Details &rarr;
                                     </a>
                                 </div>
@@ -287,7 +287,7 @@
                             <!-- Content Block -->
                             <div class="p-6 space-y-3">
                                 <h3 class="font-serif-luxury text-2xl text-[#F8F5EF] font-medium leading-snug group-hover:text-[#C6A15B] transition-colors duration-300">
-                                    <a href="{{ route('public.venue.details', $hall->id) }}">
+                                    <a href="{{ route('public.venue.details', $hall->slug) }}">
                                         {{ $hall->name }}
                                     </a>
                                 </h3>
@@ -316,7 +316,7 @@
                                 <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 block font-mono">STARTING FROM</span>
                                 <strong class="font-cinzel text-lg text-[#C6A15B]">PKR {{ number_format($hall->base_rent) }}</strong>
                             </div>
-                            <a href="{{ route('public.venue.details', $hall->id) }}" class="btn-gold !h-9 !px-5 text-[11px] font-bold uppercase tracking-wider font-mono shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300">
+                            <a href="{{ route('public.venue.details', $hall->slug) }}" class="btn-gold !h-9 !px-5 text-[11px] font-bold uppercase tracking-wider font-mono shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300">
                                 View Details &rarr;
                             </a>
                         </div>
@@ -731,14 +731,14 @@
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
                 <div class="lg:col-span-8 space-y-6 reveal-on-scroll">
                     <span class="text-xs font-mono uppercase tracking-[0.25em] text-[#C6A15B] block font-bold">
-                        VenueCloud Multi-Tenant SaaS
+                        EventHub Multi-Tenant SaaS
                     </span>
                     <h2 class="font-serif-luxury text-3xl sm:text-5xl font-normal leading-tight text-[#F8F5EF]">
                         Are You a Wedding Hall or Marquee Owner? <br>
-                        <span class="italic text-[#C6A15B]">Rent VenueCloud for Your Banquet.</span>
+                        <span class="italic text-[#C6A15B]">Rent EventHub for Your Banquet.</span>
                     </h2>
                     <p class="text-sm sm:text-base text-stone-300 font-light leading-relaxed max-w-2xl">
-                        Power your entire banquet operations on VenueCloud. Every hall gets its own dedicated public website link to share with clients, a private Rent Admin dashboard, zero double-booking shift locking, chef kitchen KOT order slips, and generator fuel expense tracking.
+                        Power your entire banquet operations on EventHub. Every hall gets its own dedicated public website link to share with clients, a private Rent Admin dashboard, zero double-booking shift locking, chef kitchen KOT order slips, and generator fuel expense tracking.
                     </p>
 
                     <!-- Features Grid -->
@@ -763,7 +763,7 @@
 
                     <div class="flex flex-wrap items-center gap-4 pt-4">
                           <a href="{{ route('register') }}" class="btn-gold !h-12 !px-8 text-xs font-bold uppercase tracking-wider font-mono shadow-[0_0_25px_rgba(198,161,91,0.4)] hover:shadow-[0_0_35px_rgba(198,161,91,0.55)] transition-all duration-300 group">
-                              <span class="relative z-10">Register Your Hall on VenueCloud &rarr;</span>
+                              <span class="relative z-10">Register Your Hall on EventHub &rarr;</span>
                               <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500"></span>
                           </a>
                         <a href="{{ route('public.about') }}" class="btn-outline-gold !h-12 !px-7 text-xs font-semibold text-white border-white/20 font-mono">

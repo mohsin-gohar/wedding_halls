@@ -78,7 +78,7 @@
 
             <div class="flex flex-wrap items-center gap-3 pt-2">
                     <button type="button" 
-                            onclick="const text = `Assalamu Alaikum {{ $provisionedCredentials['owner_name'] }}!\nYour VenueCloud Rent Admin portal for *{{ $provisionedCredentials['business_name'] }}* is ready.\n\nLogin URL: {{ $provisionedCredentials['login_url'] }}\nEmail: {{ $provisionedCredentials['email'] }}\nPassword: {{ $provisionedCredentials['password'] }}\n\nLive Hall Website: {{ $provisionedCredentials['hall_url'] }}\n\nPlease sign in to customize your hall photos, services catalog, and shifts.`; navigator.clipboard.writeText(text); alert('WhatsApp credentials message copied to clipboard!');"
+                            onclick="const text = `Assalamu Alaikum {{ $provisionedCredentials['owner_name'] }}!\nYour EventHub Rent Admin portal for *{{ $provisionedCredentials['business_name'] }}* is ready.\n\nLogin URL: {{ $provisionedCredentials['login_url'] }}\nEmail: {{ $provisionedCredentials['email'] }}\nPassword: {{ $provisionedCredentials['password'] }}\n\nLive Hall Website: {{ $provisionedCredentials['hall_url'] }}\n\nPlease sign in to customize your hall photos, services catalog, and shifts.`; navigator.clipboard.writeText(text); alert('WhatsApp credentials message copied to clipboard!');"
                             class="btn-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.55)] transition-all duration-300 group relative overflow-hidden">
                         <span class="relative z-10">Copy WhatsApp Handover Message</span>
                         <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
@@ -441,7 +441,7 @@
                                 </td>
                                 <td class="p-3 text-right">
                                     <div class="flex items-center justify-end gap-1.5 font-mono text-[11px]">
-                                        <a href="{{ route('hall.showcase', $hl->id) }}" target="_blank" class="px-2 py-1 bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300">
+                                        <a href="{{ route('hall.showcase', $hl->slug) }}" target="_blank" class="px-2 py-1 bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300">
                                             View ↗
                                         </a>
                                         <button wire:click="openEditHallModal('{{ $hl->id }}')" class="px-2.5 py-1 bg-stone-800 hover:bg-black text-white">
