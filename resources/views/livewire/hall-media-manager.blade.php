@@ -29,9 +29,9 @@
                 + Add Another Hall
             </button>
 
-            <button wire:click="save" class="btn-gold !h-9 !px-5 text-xs font-bold font-mono uppercase tracking-wider shadow-md">
-                Save All Changes
-            </button>
+         <button wire:click="save" class="btn-gold !h-10 !px-6 text-xs font-bold font-mono uppercase tracking-wider shadow-lg">
+             Save All Changes
+         </button>
         </div>
     </div>
 
@@ -116,17 +116,8 @@
                             <label class="block text-xs font-mono uppercase tracking-wider text-white/80 mb-1">
                                 City *
                             </label>
-                            <select wire:model="city" class="w-full bg-[#171513] border border-white/15 text-white text-sm px-3.5 py-2.5 focus:border-[#C6A15B] outline-none">
-                                <option value="Lahore">Lahore</option>
-                                <option value="Karachi">Karachi</option>
-                                <option value="Islamabad">Islamabad</option>
-                                <option value="Rawalpindi">Rawalpindi</option>
-                                <option value="Faisalabad">Faisalabad</option>
-                                <option value="Multan">Multan</option>
-                                <option value="Peshawar">Peshawar</option>
-                                <option value="Sialkot">Sialkot</option>
-                                <option value="Gujranwala">Gujranwala</option>
-                            </select>
+                            <input type="text" wire:model="city" placeholder="e.g. Lahore"
+                                   class="w-full bg-[#171513] border border-white/15 text-white text-sm px-3.5 py-2.5 focus:border-[#C6A15B] outline-none">
                         </div>
                     </div>
 

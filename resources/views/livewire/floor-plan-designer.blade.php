@@ -103,14 +103,14 @@
                           ($el['type'] === 'BUFFET' ? 'border-[#C6A15B]/60 dark:border-[#C6A15B]/50 bg-[#C6A15B]/20 dark:bg-[#171513]/85 text-stone-900 dark:text-white' : 
                           ($el['type'] === 'VIP_SOFA' ? 'border-[#C6A15B]/50 dark:border-[#C6A15B]/50 bg-[#171513]/10 dark:bg-[#171513]/85 text-stone-900 dark:text-white' : 'border-[#E7E5E4] dark:border-white/15 bg-white dark:bg-[#171513] text-stone-900 dark:text-white')) }}">
                         
-                        <div class="flex items-center justify-between border-b border-stone-200/60 dark:border-white/10 pb-1.5 mb-2">
-                            <span class="text-[9px] font-mono uppercase tracking-wider font-bold text-stone-500 dark:text-stone-400">
-                                {{ $el['type'] === 'STAGE' ? 'Stage' : ($el['type'] === 'BUFFET' ? 'Buffet' : ($el['type'] === 'VIP_SOFA' ? 'Sofa' : 'Table')) }}
-                            </span>
-                            <button wire:click="removeElement('{{ $el['id'] }}')" class="opacity-0 group-hover:opacity-100 text-[#171513] dark:text-[#F8F5EF] hover:text-[#171513] text-[10px] font-mono font-bold transition">
-                                &times; Remove
-                            </button>
-                        </div>
+                            <div class="flex items-center justify-between border-b border-stone-200/60 dark:border-white/10 pb-1.5 mb-2">
+                                <span class="text-[9px] font-mono uppercase tracking-wider font-bold text-stone-500 dark:text-stone-400">
+                                    {{ $el['type'] === 'STAGE' ? 'Stage' : ($el['type'] === 'BUFFET' ? 'Buffet' : ($el['type'] === 'VIP_SOFA' ? 'Sofa' : 'Table')) }}
+                                </span>
+                                <button wire:click="removeElement('{{ $el['id'] }}')" class="text-stone-900 dark:text-white hover:text-[#F8F5EF] font-mono text-sm px-2 py-1">
+                                    &times; Remove
+                                </button>
+                            </div>
 
                         <div>
                             <div class="font-sans text-xs font-bold text-[#171513] dark:text-white truncate">{{ $el['name'] }}</div>

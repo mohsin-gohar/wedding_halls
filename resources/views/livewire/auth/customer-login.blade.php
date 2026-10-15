@@ -46,9 +46,9 @@
                 <a href="{{ route('login') }}" class="text-[#8F7239] hover:underline font-semibold">Venue Owner? Sign in here</a>
             </div>
 
-            <button type="submit" class="btn-gold !w-full !h-11 text-xs font-bold uppercase tracking-wider">
-                Sign In to Customer Portal &rarr;
-            </button>
+             <button type="submit" class="btn-gold !w-full !h-11 text-xs font-bold uppercase tracking-wider">
+                 Sign In &rarr;
+             </button>
         </form>
 
         <div class="pt-4 border-t border-[#E7E5E4] text-center text-xs text-stone-500">

@@ -49,9 +49,9 @@
             </div>
 
             <div class="pt-2">
-                <button type="submit" class="btn-gold !w-full !h-11 text-xs font-bold uppercase tracking-wider">
-                    Sign In to Dashboard &rarr;
-                </button>
+                 <button type="submit" class="btn-gold !w-full !h-11 text-xs font-bold uppercase tracking-wider">
+                     Sign In &rarr;
+                 </button>
             </div>
         </form>
 

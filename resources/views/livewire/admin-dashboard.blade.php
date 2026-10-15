@@ -56,7 +56,14 @@
                 Share these login credentials with the hall owner. They will use them to sign in to their private Rent Admin portal and manage their hall's photos, videos, and services catalog.
             </p>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-[#171513] p-4 border border-white/10 font-mono text-xs">
+            @if(session('provisioned_password'))
+                <div class="mb-4 p-4 bg-[#171513]/90 border border-[#C6A15B]/60 text-[#C6A15B] text-xs font-semibold shadow-md flex justify-between items-center">
+                    <span>✓ For security, here is the one-time password for the Rent Admin:</span>
+                    <button wire:click="$set('provisioned_password', null)" class="text-[#C6A15B] font-bold text-sm">&times;</button>
+                </div>
+            @endif
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-[#171513] p-4 border border-white/10 font-mono text-xs">
                 <div>
                     <span class="text-stone-400 text-[10px] uppercase block">Business / Hall</span>
                     <strong class="text-white text-sm">{{ $provisionedCredentials['business_name'] }}</strong>
@@ -67,10 +74,6 @@
                     <strong class="text-[#C6A15B] select-all">{{ $provisionedCredentials['email'] }}</strong>
                 </div>
                 <div>
-                    <span class="text-stone-400 text-[10px] uppercase block">Assigned Password</span>
-                    <strong class="text-[#C6A15B] select-all font-mono">{{ $provisionedCredentials['password'] }}</strong>
-                </div>
-                <div>
                     <span class="text-stone-400 text-[10px] uppercase block">Direct Login URL</span>
                     <span class="text-stone-300 text-[11px] truncate block select-all">{{ $provisionedCredentials['login_url'] }}</span>
                 </div>
@@ -78,7 +81,7 @@
 
             <div class="flex flex-wrap items-center gap-3 pt-2">
                     <button type="button" 
-                            onclick="const text = `Assalamu Alaikum {{ $provisionedCredentials['owner_name'] }}!\nYour EventHub Rent Admin portal for *{{ $provisionedCredentials['business_name'] }}* is ready.\n\nLogin URL: {{ $provisionedCredentials['login_url'] }}\nEmail: {{ $provisionedCredentials['email'] }}\nPassword: {{ $provisionedCredentials['password'] }}\n\nLive Hall Website: {{ $provisionedCredentials['hall_url'] }}\n\nPlease sign in to customize your hall photos, services catalog, and shifts.`; navigator.clipboard.writeText(text); alert('WhatsApp credentials message copied to clipboard!');"
+                            onclick="const text = `Assalamu Alaikum {{ $provisionedCredentials['owner_name'] }}!\nYour EventHub Rent Admin portal for *{{ $provisionedCredentials['business_name'] }}* is ready.\n\nLogin URL: {{ $provisionedCredentials['login_url'] }}\nEmail: {{ $provisionedCredentials['email'] }}\n\nLive Hall Website: {{ $provisionedCredentials['hall_url'] }}\n\nPlease sign in to customize your hall photos, services catalog, and shifts.`; navigator.clipboard.writeText(text); alert('WhatsApp credentials message copied to clipboard!');"
                             class="btn-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.55)] transition-all duration-300 group relative overflow-hidden">
                         <span class="relative z-10">Copy WhatsApp Handover Message</span>
                         <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>

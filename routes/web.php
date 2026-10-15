@@ -104,10 +104,10 @@ Route::get('/refund', function () { return redirect()->route('public.policies', 
 | 2. Customer Portal Authentication & Experience
 |--------------------------------------------------------------------------
 */
-Route::middleware('guest')->prefix('customer')->group(function () {
-    Route::get('/login', CustomerLogin::class)->name('customer.login');
-    Route::get('/register', CustomerRegister::class)->name('customer.register');
-});
+    Route::middleware('guest')->prefix('customer')->group(function () {
+        Route::get('/login', CustomerLogin::class)->name('customer.login')->middleware('throttle:5,1');
+        Route::get('/register', CustomerRegister::class)->name('customer.register')->middleware('throttle:5,1');
+    });
 
 Route::middleware('auth')->prefix('customer')->group(function () {
     Route::get('/dashboard', CustomerDashboard::class)->name('customer.dashboard');
@@ -119,10 +119,10 @@ Route::middleware('auth')->prefix('customer')->group(function () {
 | 3. Vendor Authentication Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware('guest')->group(function () {
-    Route::get('/login', Login::class)->name('login');
-    Route::get('/register', Register::class)->name('register');
-});
+    Route::middleware('guest')->group(function () {
+        Route::get('/login', Login::class)->name('login')->middleware('throttle:5,1');
+        Route::get('/register', Register::class)->name('register')->middleware('throttle:5,1');
+    });
 
 Route::post('/logout', function () {
     Auth::logout();

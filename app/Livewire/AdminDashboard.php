@@ -147,10 +147,16 @@ class AdminDashboard extends Component
 
         $plan = $this->newPlanId ? SubscriptionPlan::find($this->newPlanId) : SubscriptionPlan::first();
 
-        // 1. Create Tenant
+        // 1. Create Tenant with unique slug
+        $baseSlug = Str::slug($this->newBusinessName);
+        $slug = $baseSlug;
+        $counter = 1;
+        while (Tenant::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $counter++;
+        }
         $tenant = Tenant::create([
             'name' => $this->newBusinessName,
-            'slug' => Str::slug($this->newBusinessName) . '-' . rand(100, 999),
+            'slug' => $slug,
             'subdomain' => Str::slug($this->newBusinessName),
             'email' => $this->newOwnerEmail,
             'phone' => $this->newOwnerPhone,
@@ -177,11 +183,17 @@ class AdminDashboard extends Component
             $user->assignRole('ROLE_TENANT_OWNER');
         }
 
-        // 3. Create Venue
+        // 3. Create Venue with unique slug
+        $baseSlug = Str::slug($this->newBusinessName);
+        $slug = $baseSlug;
+        $counter = 1;
+        while (Venue::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $counter++;
+        }
         $venue = Venue::create([
             'tenant_id' => $tenant->id,
             'name' => $this->newBusinessName . ' Complex',
-            'slug' => Str::slug($this->newBusinessName) . '-venue-' . rand(100, 999),
+            'slug' => $slug . '-venue',
             'city' => $this->newCity,
             'area' => 'Prime District',
             'address' => $this->newAddress ?: "Main Commercial Boulevard, {$this->newCity}",
@@ -191,49 +203,8 @@ class AdminDashboard extends Component
             'is_active' => true,
         ]);
 
-        // 4. Default 2026 Luxury Services Catalog
-        $defaultServices = [
-            [
-                'title' => 'VIP Bridal Luxury Dressing Suite',
-                'price' => 25000,
-                'is_complimentary' => true,
-                'category' => 'VIP Hospitality',
-                'description' => 'Air-conditioned private suite with attached restroom, illuminated Hollywood makeup vanity, and dedicated dressing concierge.',
-                'icon' => 'sparkles'
-            ],
-            [
-                'title' => '500 kVA Heavy Duty Standby Generator',
-                'price' => 35000,
-                'is_complimentary' => true,
-                'category' => 'Infrastructure',
-                'description' => 'Uninterrupted power system with automatic synchronization and fuel backup covering 100% chiller AC load.',
-                'icon' => 'bolt'
-            ],
-            [
-                'title' => 'Bespoke Fresh Rose Stage Decor & Walkway',
-                'price' => 85000,
-                'is_complimentary' => false,
-                'category' => 'Decor & Ambience',
-                'description' => 'Fresh imported gladiolus, red roses, golden filigree stage sofa, ambient pin spot lighting, and floral aisle runners.',
-                'icon' => 'star'
-            ],
-            [
-                'title' => 'Executive Chauffeur Valet Parking Service',
-                'price' => 20000,
-                'is_complimentary' => false,
-                'category' => 'Guest Logistics',
-                'description' => 'Dedicated 8-member uniformed valet team with electronic key logging and paved parking for 250+ cars.',
-                'icon' => 'truck'
-            ],
-            [
-                'title' => '4K Drone Aerial Cinematography & LED P3 Wall',
-                'price' => 60000,
-                'is_complimentary' => false,
-                'category' => 'Multimedia & Video',
-                'description' => 'Dual 16x10 ft P3 ultra-HD stage display screens with live dual-camera vision mixer for program broadcast.',
-                'icon' => 'camera'
-            ]
-        ];
+        // 4. Default 2026 Luxury Services Catalog from config
+        $defaultServices = config('hall.default_services');
 
         // 5. Create Hall
         $hall = Hall::create([
@@ -272,17 +243,21 @@ class AdminDashboard extends Component
         );
 
         $plainPassword = $this->newOwnerPassword;
+        // Flash the password for one-time display (do not store)
+        session()->flash('provisioned_password', $plainPassword);
         $this->provisionedCredentials = [
             'business_name' => $this->newBusinessName,
             'city' => $this->newCity,
             'owner_name' => $this->newOwnerName,
             'email' => $this->newOwnerEmail,
-            'password' => $plainPassword,
             'phone' => $this->newOwnerPhone,
             'login_url' => url('/login'),
             'hall_id' => $hall->id,
             'hall_url' => route('hall.showcase', $hall->id),
         ];
+
+        // Clear password field for security
+        $this->newOwnerPassword = '';
 
         $this->showProvisionModal = false;
         $this->feedbackMessage = "Hall [{$this->newBusinessName}] registered successfully! Hand over the credentials below to the hall owner.";
