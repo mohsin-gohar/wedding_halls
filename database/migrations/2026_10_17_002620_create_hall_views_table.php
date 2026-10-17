@@ -10,13 +10,14 @@ return new class extends Migration
     {
         Schema::create('hall_views', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('hall_id')->constrained()->onDelete('cascade');
-            $table->foreignId('tenant_id')->constrained()->onDelete('cascade');
-            $table->string('user_id')->nullable();
-            $table->string('ip_address')->nullable();
+            $table->foreignUuid('hall_id')->constrained('halls')->cascadeOnDelete();
+            $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->timestamp('viewed_at')->useCurrent();
             $table->timestamps();
+
             $table->index(['hall_id', 'viewed_at']);
             $table->index(['tenant_id', 'viewed_at']);
         });

@@ -22,6 +22,12 @@ class Dashboard extends Component
     public string $selectedHallId = 'ALL';
     public string $chartMetric = 'sales'; // 'sales' or 'programs'
 
+    // Interactive CRM Kanban & Customer Details Drawer
+    public bool $showCustomerModal = false;
+    public ?string $selectedBookingId = null;
+    public string $leadNoteText = '';
+    public ?string $crmFeedback = null;
+
     public function setTimeframe(string $tf): void
     {
         if (in_array($tf, ['WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY'])) {
@@ -34,6 +40,59 @@ class Dashboard extends Component
         if (in_array($metric, ['sales', 'programs'])) {
             $this->chartMetric = $metric;
         }
+    }
+
+    public function openCustomerDetails(string $bookingId): void
+    {
+        $this->selectedBookingId = $bookingId;
+        $this->leadNoteText = '';
+        $this->showCustomerModal = true;
+    }
+
+    public function closeCustomerDetails(): void
+    {
+        $this->showCustomerModal = false;
+        $this->selectedBookingId = null;
+        $this->crmFeedback = null;
+    }
+
+    public function updateLeadStage(string $bookingId, string $newStage): void
+    {
+        $tenantId = Auth::user()?->tenant_id;
+        $allowedStages = ['NEW_INQUIRY', 'SITE_VISIT', 'QUOTATION', 'CONFIRMED', 'CANCELLED'];
+        if (!in_array($newStage, $allowedStages)) {
+            return;
+        }
+
+        $booking = Booking::when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))->findOrFail($bookingId);
+        $updateData = ['crm_stage' => $newStage];
+        if ($newStage === 'CONFIRMED' && $booking->status === 'INQUIRY') {
+            $updateData['status'] = 'CONFIRMED';
+        }
+
+        $booking->update($updateData);
+
+        $this->crmFeedback = "Lead [{$booking->customer_name}] moved to " . str_replace('_', ' ', $newStage) . ".";
+    }
+
+    public function addLeadNote(): void
+    {
+        if (empty(trim($this->leadNoteText)) || !$this->selectedBookingId) {
+            return;
+        }
+
+        $tenantId = Auth::user()?->tenant_id;
+        $booking = Booking::when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))->findOrFail($this->selectedBookingId);
+
+        $timestamp = Carbon::now()->format('d M Y, h:i A');
+        $author = Auth::user()?->name ?? 'Staff';
+        $newNote = "[{$timestamp} by {$author}]: " . trim($this->leadNoteText);
+
+        $existingNotes = $booking->notes ? $booking->notes . "\n" : '';
+        $booking->update(['notes' => $existingNotes . $newNote]);
+
+        $this->leadNoteText = '';
+        $this->crmFeedback = "Interaction note recorded successfully.";
     }
 
     public function render()
@@ -288,6 +347,31 @@ class Dashboard extends Component
         $totalHallWishlists = HallWishlist::where('tenant_id', $tenantId)->count();
         $totalHallBookings = Booking::where('tenant_id', $tenantId)->count();
 
+        // 13. Interactive Kanban CRM Leads (Strictly Scoped to Tenant)
+        $crmLeadsQuery = Booking::with(['hall', 'package', 'payments'])
+            ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+            ->latest();
+
+        if ($this->selectedHallId !== 'ALL' && in_array($this->selectedHallId, $tenantHallIds)) {
+            $crmLeadsQuery->where('hall_id', $this->selectedHallId);
+        }
+
+        $allLeads = $crmLeadsQuery->take(60)->get();
+
+        $kanbanColumns = [
+            'NEW_INQUIRY' => $allLeads->filter(fn($b) => ($b->crm_stage === 'NEW_INQUIRY' || empty($b->crm_stage)) && $b->status !== 'CONFIRMED'),
+            'SITE_VISIT' => $allLeads->filter(fn($b) => $b->crm_stage === 'SITE_VISIT' || ($b->status === 'HOLD' && $b->crm_stage !== 'CONFIRMED' && $b->crm_stage !== 'QUOTATION')),
+            'QUOTATION' => $allLeads->filter(fn($b) => $b->crm_stage === 'QUOTATION'),
+            'CONFIRMED' => $allLeads->filter(fn($b) => $b->crm_stage === 'CONFIRMED' || $b->status === 'CONFIRMED'),
+        ];
+
+        $selectedLead = null;
+        if ($this->showCustomerModal && $this->selectedBookingId) {
+            $selectedLead = Booking::with(['hall', 'package', 'payments'])
+                ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+                ->find($this->selectedBookingId);
+        }
+
         return view('livewire.dashboard', [
             'halls' => $halls,
             'periodLabel' => $periodLabel,
@@ -321,6 +405,9 @@ class Dashboard extends Component
             'totalHallViews' => $totalHallViews,
             'totalHallWishlists' => $totalHallWishlists,
             'totalHallBookings' => $totalHallBookings,
+            'kanbanColumns' => $kanbanColumns,
+            'allLeads' => $allLeads,
+            'selectedLead' => $selectedLead,
         ]);
     }
 

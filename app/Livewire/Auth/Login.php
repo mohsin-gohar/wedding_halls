@@ -36,8 +36,15 @@ class Login extends Component
 
         if (Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
             RateLimiter::clear($throttleKey);
-            session()->regenerate();
             $user = Auth::user();
+
+            if ($user->status === 'SUSPENDED') {
+                Auth::logout();
+                $this->addError('email', 'Your account has been suspended by the platform administrator.');
+                return;
+            }
+
+            $user->recordLogin();
 
             // Only hall admins (tenant owners) and website owners (super admins) can use this login portal.
             // Customers must use the separate customer login.

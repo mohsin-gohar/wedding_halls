@@ -156,7 +156,36 @@ class PublicVenues extends Component
                 break;
         }
 
+        // Count BEFORE pagination (pagination mutates the query)
+        $totalHalls = (clone $query)->count();
+
         $halls = $query->paginate(9);
+
+        // Precompute 30-day shift availability aggregated across ALL active halls
+        $startDate = now()->toDateString();
+        $endDate = now()->addDays(30)->toDateString();
+
+        $bookingCounts = Booking::whereIn('status', ['HOLD', 'CONFIRMED'])
+            ->whereBetween('event_date', [$startDate, $endDate])
+            ->whereHas('hall', function ($q) {
+                $q->where('is_active', true);
+            })
+            ->groupBy('event_date', 'slot_type')
+            ->selectRaw('event_date, slot_type, COUNT(DISTINCT hall_id) as booked_count')
+            ->get();
+
+        $availability = [];
+        for ($d = 1; $d <= 30; $d++) {
+            $date = \Carbon\Carbon::now()->addDays($d)->format('Y-m-d');
+            $dayBookings = $bookingCounts->filter(function ($item) use ($date) {
+                return \Carbon\Carbon::parse($item->event_date)->format('Y-m-d') === $date;
+            });
+            $availability[$date] = [
+                'afternoon' => (int) ($dayBookings->firstWhere('slot_type', 'afternoon')->booked_count ?? 0),
+                'evening'   => (int) ($dayBookings->firstWhere('slot_type', 'evening')->booked_count ?? 0),
+                'night'     => (int) ($dayBookings->firstWhere('slot_type', 'night')->booked_count ?? 0),
+            ];
+        }
 
         // Track page visit for venues listing
         PageVisit::record(
@@ -169,6 +198,8 @@ class PublicVenues extends Component
 
         return view('livewire.public-venues', [
             'halls' => $halls,
+            'availability' => $availability,
+            'totalHalls' => $totalHalls,
         ]);
     }
 }

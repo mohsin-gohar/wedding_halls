@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,16 +10,17 @@ return new class extends Migration
     {
         Schema::create('page_visits', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('path');
-            $table->string('route_name')->nullable();
-            $table->string('user_id')->nullable();
-            $table->string('ip_address')->nullable();
+            $table->string('path', 500);
+            $table->string('route_name', 100)->nullable();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
-            $table->timestamp('visited_at')->default(DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('visited_at')->useCurrent();
             $table->timestamps();
+
             $table->index(['path', 'visited_at']);
             $table->index(['route_name', 'visited_at']);
-            $table->index(['user_id', 'visited_at']);
+            $table->index(['visited_at']);
         });
     }
 

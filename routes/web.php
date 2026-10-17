@@ -138,6 +138,7 @@ Route::post('/logout', function () {
 */
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
+    Route::get('/vendor/dashboard', Dashboard::class)->name('vendor.dashboard');
     Route::get('/calendar', CalendarShiftGrid::class)->name('calendar');
     Route::get('/kitchen-kots', KitchenKotBoard::class)->name('kitchen.board');
     Route::get('/utility-fuel', UtilityFuelTracker::class)->name('utility.fuel');

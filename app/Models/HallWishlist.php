@@ -37,16 +37,19 @@ class HallWishlist extends Model
         return $this->belongsTo(User::class);
     }
 
-    public static function isWishlisted(string $hallId, ?string $userId, ?string $sessionId): bool
+    public static function isWishlisted(string $hallId, ?string $userId = null, ?string $sessionId = null): bool
     {
         $query = self::where('hall_id', $hallId);
         if ($userId) {
             return $query->where('user_id', $userId)->exists();
         }
-        return $query->where('session_id', $sessionId)->exists();
+        if ($sessionId) {
+            return $query->where('session_id', $sessionId)->exists();
+        }
+        return false;
     }
 
-    public static function toggle(string $hallId, string $tenantId, ?string $userId, ?string $sessionId): bool
+    public static function toggle(string $hallId, string $tenantId, ?string $userId = null, ?string $sessionId = null): bool
     {
         $query = self::where('hall_id', $hallId);
         if ($userId) {

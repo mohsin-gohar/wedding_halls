@@ -84,6 +84,11 @@ class AdminDashboard extends Component
     // Handover Credentials Card
     public ?array $provisionedCredentials = null;
 
+    // User Directory & Access Management (Filters)
+    public string $userSearch = '';
+    public string $userRoleFilter = 'ALL';
+    public string $userStatusFilter = 'ALL';
+
     public function mount()
     {
         $user = Auth::user();
@@ -651,6 +656,48 @@ class AdminDashboard extends Component
         $this->feedbackMessage = "Booking [{$ref}] deleted.";
     }
 
+    // ==========================================
+    // 6. USER DIRECTORY & ACCESS CONTROL
+    // ==========================================
+    public function toggleUserStatus(int $userId): void
+    {
+        $user = User::findOrFail($userId);
+        if ($user->id === Auth::id()) {
+            $this->errorMessage = "You cannot suspend your own Super Admin account.";
+            return;
+        }
+
+        $newStatus = ($user->status === 'SUSPENDED') ? 'ACTIVE' : 'SUSPENDED';
+        $user->update(['status' => $newStatus]);
+
+        AuditLog::log(
+            'USER_STATUS_TOGGLED',
+            "Super Admin changed status of user [{$user->name}] ({$user->email}) to {$newStatus}.",
+            $user->tenant_id,
+            'User',
+            (string) $user->id
+        );
+
+        $this->feedbackMessage = "User [{$user->name}] status changed to {$newStatus}.";
+    }
+
+    public function resetUserPassword(int $userId): void
+    {
+        $user = User::findOrFail($userId);
+        $tempPassword = 'Password123!';
+        $user->update(['password' => Hash::make($tempPassword)]);
+
+        AuditLog::log(
+            'USER_PASSWORD_RESET',
+            "Super Admin reset password for user [{$user->name}] ({$user->email}).",
+            $user->tenant_id,
+            'User',
+            (string) $user->id
+        );
+
+        $this->feedbackMessage = "Password for user [{$user->name}] reset to: {$tempPassword}";
+    }
+
     public function render()
     {
         $totalTenants = Tenant::count();
@@ -659,13 +706,57 @@ class AdminDashboard extends Component
         $totalBookings = Booking::count();
         $totalGmv = Booking::sum('grand_total');
 
-        // Website Analytics
+        // Website Analytics & Traffic
         $totalPageVisits = PageVisit::count();
         $totalHallViews = HallView::count();
         $totalWishlists = HallWishlist::count();
         $totalRegisteredUsers = User::count();
         $todayVisits = PageVisit::whereDate('visited_at', today())->count();
         $todayHallViews = HallView::whereDate('viewed_at', today())->count();
+
+        // Real-time Active Sessions & Unique Visitors
+        try {
+            $activeSessionsCount = DB::table('sessions')
+                ->where('last_activity', '>=', now()->subMinutes(15)->getTimestamp())
+                ->count();
+        } catch (\Throwable $e) {
+            $activeSessionsCount = 0;
+        }
+
+        if ($activeSessionsCount === 0) {
+            $activeSessionsCount = PageVisit::where('visited_at', '>=', now()->subMinutes(15))->distinct('session_id')->count();
+            if ($activeSessionsCount === 0) {
+                $activeSessionsCount = 1;
+            }
+        }
+
+        $uniqueVisitorsCount = PageVisit::distinct('ip_address')->count('ip_address');
+        if ($uniqueVisitorsCount === 0) {
+            $uniqueVisitorsCount = max(1, $totalRegisteredUsers);
+        }
+
+        // User Directory query with filters
+        $usersQuery = User::with('tenant');
+        if (!empty($this->userSearch)) {
+            $search = '%' . trim($this->userSearch) . '%';
+            $usersQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', $search)
+                  ->orWhere('email', 'like', $search)
+                  ->orWhere('phone', 'like', $search);
+            });
+        }
+        if ($this->userRoleFilter !== 'ALL') {
+            $usersQuery->where('role', $this->userRoleFilter);
+        }
+        if ($this->userStatusFilter !== 'ALL') {
+            $usersQuery->where('status', $this->userStatusFilter);
+        }
+        $users = $usersQuery->latest()->take(100)->get();
+
+        $totalCustomers = User::where('role', 'CUSTOMER')->count();
+        $totalVendors = User::whereIn('role', ['VENDOR', 'HALL_OWNER', 'ADMIN'])->count();
+        $totalStaff = User::whereNotIn('role', ['CUSTOMER', 'VENDOR', 'HALL_OWNER', 'ADMIN', 'SUPER_ADMIN'])->count();
+        $totalSuspendedUsers = User::where('status', 'SUSPENDED')->count();
 
         $topHallsByViews = Hall::with(['venue', 'tenant'])
             ->withCount('hallViews as total_views')
@@ -703,6 +794,13 @@ class AdminDashboard extends Component
             'totalRegisteredUsers' => $totalRegisteredUsers,
             'todayVisits' => $todayVisits,
             'todayHallViews' => $todayHallViews,
+            'activeSessionsCount' => $activeSessionsCount,
+            'uniqueVisitorsCount' => $uniqueVisitorsCount,
+            'users' => $users,
+            'totalCustomers' => $totalCustomers,
+            'totalVendors' => $totalVendors,
+            'totalStaff' => $totalStaff,
+            'totalSuspendedUsers' => $totalSuspendedUsers,
             'topHallsByViews' => $topHallsByViews,
             'topHallsByWishlists' => $topHallsByWishlists,
             'recentVisits' => $recentVisits,

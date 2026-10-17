@@ -531,15 +531,15 @@
                         @for($d = 1; $d <= 30; $d++)
                             @php
                                 $day = \Carbon\Carbon::now()->addDays($d);
-                                $booked_shifts = \App\Models\Booking::where('hall_id', $hall->id)
-                                    ->where('booking_date', $day->format('Y-m-d'))
-                                    ->whereIn('shift_type', ['afternoon', 'evening', 'night'])
-                                    ->count();
-
-                                $cell_status = $booked_shifts === 3 ? 'bg-red-500/10' : ($booked_shifts > 0 ? 'bg-amber-500/10' : 'bg-emerald-500/5');
+                                $dateKey = $day->format('Y-m-d');
+                                $dayAvail = $availability[$dateKey] ?? ['afternoon' => 0, 'evening' => 0, 'night' => 0];
+                                $totalBooked = $dayAvail['afternoon'] + $dayAvail['evening'] + $dayAvail['night'];
+                                $totalCapacity = max(1, $totalHalls) * 3;
+                                $booked_ratio = $totalCapacity > 0 ? $totalBooked / $totalCapacity : 0;
+                                $cell_status = $booked_ratio >= 0.9 ? 'bg-red-500/10' : ($booked_ratio > 0.3 ? 'bg-amber-500/10' : 'bg-emerald-500/5');
                             @endphp
 
-                            <div class="bg-white dark:bg-[#171513] p-2 sm:p-3 min-h-[80px] sm:min-h-[100px] border-r border-l border-[#E7E5E4] dark:border-white/5 cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-[#C6A15B]/50 {{ $cell_status }}">
+                            <div class="bg-white dark:bg-[#171513] p-2 sm:p-3 min-h-[80px] sm:min-h-[100px] border-r border-l border-[#E7E5E4] dark:border-white/5 transition-all duration-200 hover:ring-2 hover:ring-[#C6A15B]/50 {{ $cell_status }}">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-[10px] font-mono font-bold text-[#8F7239] dark:text-[#C6A15B] uppercase">{{ $day->format('D') }}</span>
                                     <span class="text-[9px] font-mono text-stone-500">{{ $day->format('d M') }}</span>
@@ -549,39 +549,42 @@
                                     <div class="flex items-center gap-2 text-xs">
                                         <span class="w-2 h-2 rounded-full bg-[#C6A15B]/60 flex-shrink-0"></span>
                                         <span class="text-xs text-stone-600 dark:text-stone-400 truncate">Afternoon</span>
-                                        @if($booked_shifts >= 3)
+                                        @php $aLeft = max(0, $totalHalls - $dayAvail['afternoon']); @endphp
+                                        @if($aLeft === 0)
                                             <span class="text-[9px] font-mono bg-red-500/10 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-full font-bold">0 left</span>
                                         @else
-                                            <span class="text-[9px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">{{ 3 - $booked_shifts }} left</span>
+                                            <span class="text-[9px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">{{ $aLeft }} left</span>
                                         @endif
                                     </div>
                                     <div class="flex items-center gap-2 text-xs">
                                         <span class="w-2 h-2 rounded-full bg-[#C6A15B] flex-shrink-0"></span>
                                         <span class="text-xs text-stone-600 dark:text-stone-400 truncate">Evening</span>
-                                        @if($booked_shifts >= 2)
+                                        @php $eLeft = max(0, $totalHalls - $dayAvail['evening']); @endphp
+                                        @if($eLeft === 0)
                                             <span class="text-[9px] font-mono bg-red-500/10 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-full font-bold">0 left</span>
                                         @else
-                                            <span class="text-[9px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">{{ 3 - $booked_shifts }} left</span>
+                                            <span class="text-[9px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">{{ $eLeft }} left</span>
                                         @endif
                                     </div>
                                     <div class="flex items-center gap-2 text-xs">
                                         <span class="w-2 h-2 rounded-full bg-[#C6A15B]/30 flex-shrink-0"></span>
                                         <span class="text-xs text-stone-600 dark:text-stone-400 truncate">Night</span>
-                                        @if($booked_shifts >= 1)
+                                        @php $nLeft = max(0, $totalHalls - $dayAvail['night']); @endphp
+                                        @if($nLeft === 0)
                                             <span class="text-[9px] font-mono bg-red-500/10 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-full font-bold">0 left</span>
                                         @else
-                                            <span class="text-[9px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">{{ 3 - $booked_shifts }} left</span>
+                                            <span class="text-[9px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">{{ $nLeft }} left</span>
                                         @endif
                                     </div>
                                 </div>
 
                                 <div class="mt-2 pt-2 border-t border-[#E7E5E4] dark:border-white/5 flex justify-between items-center">
-                                    <span class="text-[8px] font-mono uppercase text-stone-500">{{ $booked_shifts }}/3 booked</span>
+                                    <span class="text-[8px] font-mono uppercase text-stone-500">{{ $totalBooked }}/{{ $totalCapacity }} booked</span>
                                     <span class="text-[9px] font-mono uppercase px-2 py-0.5 rounded-full">
-                                        @if($booked_shifts === 3)
-                                            <span class="text-red-600 dark:text-red-400 font-bold">Fully Booked</span>
-                                        @elseif($booked_shifts > 0)
-                                            <span class="text-amber-600 dark:text-amber-400 font-bold">Partial</span>
+                                        @if($booked_ratio >= 0.9)
+                                            <span class="text-red-600 dark:text-red-400 font-bold">Busy</span>
+                                        @elseif($booked_ratio > 0.3)
+                                            <span class="text-amber-600 dark:text-amber-400 font-bold">Filling</span>
                                         @else
                                             <span class="text-emerald-600 dark:text-emerald-400 font-bold">Available</span>
                                         @endif

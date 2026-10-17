@@ -148,6 +148,9 @@
         <button wire:click="setTab('bookings')" class="px-4 py-2 transition {{ $activeTab === 'bookings' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             All Bookings ({{ $recentBookings->count() }})
         </button>
+        <button wire:click="setTab('users')" class="px-4 py-2 transition {{ $activeTab === 'users' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+            Users Directory ({{ $totalRegisteredUsers }})
+        </button>
         <button wire:click="setTab('audit')" class="px-4 py-2 transition {{ $activeTab === 'audit' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             Security Audit Log ({{ $auditLogs->count() }})
         </button>
@@ -611,6 +614,188 @@
     <!-- ===================================================================
          TAB 7: WEBSITE ANALYTICS (Super Admin Platform Insights)
          =================================================================== -->
+    <!-- ===================================================================
+         TAB: USERS DIRECTORY (Platform Accounts & Access Control)
+         =================================================================== -->
+    @if($activeTab === 'users')
+        <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E7E5E4] gap-4">
+                <div>
+                    <h3 class="font-serif text-2xl text-[#171513] font-normal">
+                        Platform User Directory &amp; Access Control
+                    </h3>
+                    <p class="text-xs text-stone-500 mt-0.5">Manage customer accounts, hall vendors, staff permissions, and account status (Active, Pending, Suspended).</p>
+                </div>
+            </div>
+
+            <!-- User Metric Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm space-y-1">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 font-mono block">Total Accounts</span>
+                    <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalRegisteredUsers }}</strong>
+                    <span class="text-[11px] text-stone-400 block font-sans">All Users</span>
+                </div>
+                <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm space-y-1">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 font-mono block">Customers</span>
+                    <strong class="font-cinzel text-2xl text-[#8F7239]">{{ $totalCustomers }}</strong>
+                    <span class="text-[11px] text-stone-400 block font-sans">Event Organizers</span>
+                </div>
+                <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm space-y-1">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 font-mono block">Hall Vendors</span>
+                    <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalVendors }}</strong>
+                    <span class="text-[11px] text-stone-400 block font-sans">Marquee Owners</span>
+                </div>
+                <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm space-y-1">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 font-mono block">Hall Staff</span>
+                    <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalStaff }}</strong>
+                    <span class="text-[11px] text-stone-400 block font-sans">Managers &amp; KOT</span>
+                </div>
+                <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/50 p-5 shadow-sm space-y-1">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-red-600 font-mono block">Suspended</span>
+                    <strong class="font-cinzel text-2xl text-red-600">{{ $totalSuspendedUsers }}</strong>
+                    <span class="text-[11px] text-stone-400 block font-sans">Restricted Access</span>
+                </div>
+            </div>
+
+            <!-- Search & Filters -->
+            <div class="flex flex-col sm:flex-row items-center gap-3 bg-[#F8F5EF] p-4 border border-[#E7E5E4]">
+                <div class="w-full sm:w-1/2">
+                    <label class="block text-[10px] font-mono uppercase tracking-wider text-stone-600 font-bold mb-1">Search User Directory</label>
+                    <input type="text" wire:model.live.debounce.300ms="userSearch" placeholder="Search by name, email, or phone..."
+                           class="w-full bg-white border border-[#E7E5E4] text-xs px-3.5 py-2 font-mono outline-none focus:border-[#C6A15B]">
+                </div>
+                <div class="w-full sm:w-1/4">
+                    <label class="block text-[10px] font-mono uppercase tracking-wider text-stone-600 font-bold mb-1">Role Filter</label>
+                    <select wire:model.live="userRoleFilter" class="w-full bg-white border border-[#E7E5E4] text-xs px-3 py-2 font-mono outline-none focus:border-[#C6A15B]">
+                        <option value="ALL">All Roles</option>
+                        <option value="CUSTOMER">Customer / Client</option>
+                        <option value="VENDOR">Vendor / Hall Owner</option>
+                        <option value="ADMIN">Venue Admin</option>
+                        <option value="SUPER_ADMIN">Super Admin</option>
+                    </select>
+                </div>
+                <div class="w-full sm:w-1/4">
+                    <label class="block text-[10px] font-mono uppercase tracking-wider text-stone-600 font-bold mb-1">Account Status</label>
+                    <select wire:model.live="userStatusFilter" class="w-full bg-white border border-[#E7E5E4] text-xs px-3 py-2 font-mono outline-none focus:border-[#C6A15B]">
+                        <option value="ALL">All Statuses</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="SUSPENDED">Suspended</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
+                    <thead>
+                        <tr class="bg-[#F8F5EF] border-b border-[#E7E5E4] text-[10px] uppercase font-bold tracking-wider text-stone-600 font-mono">
+                            <th class="p-3 border-r border-[#E7E5E4]">User Details</th>
+                            <th class="p-3 border-r border-[#E7E5E4]">Role</th>
+                            <th class="p-3 border-r border-[#E7E5E4]">Business / Venue</th>
+                            <th class="p-3 border-r border-[#E7E5E4]">Joined Date</th>
+                            <th class="p-3 border-r border-[#E7E5E4]">Last Login</th>
+                            <th class="p-3 border-r border-[#E7E5E4]">Status</th>
+                            <th class="p-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#E7E5E4]">
+                        @forelse($users as $u)
+                            <tr class="hover:bg-[#F8F5EF] transition {{ $u->status === 'SUSPENDED' ? 'bg-red-50/40' : '' }}">
+                                <td class="p-3 border-r border-[#E7E5E4]">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-8 h-8 rounded-full bg-[#171513] text-[#C6A15B] flex items-center justify-center font-bold text-xs uppercase font-mono shrink-0">
+                                            {{ substr($u->name, 0, 2) }}
+                                        </div>
+                                        <div>
+                                            <div class="font-bold text-[#171513] text-sm">{{ $u->name }}</div>
+                                            <span class="text-[11px] text-stone-500 font-mono block select-all">{{ $u->email }}</span>
+                                            @if($u->phone)
+                                                <span class="text-[10px] text-stone-400 font-mono block">{{ $u->phone }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="p-3 border-r border-[#E7E5E4]">
+                                    @if($u->isSuperAdmin())
+                                        <span class="px-2 py-0.5 bg-[#171513] text-[#C6A15B] border border-[#C6A15B]/60 text-[10px] font-mono font-bold uppercase">
+                                            ★ Super Admin
+                                        </span>
+                                    @elseif(in_array($u->role, ['VENDOR', 'HALL_OWNER', 'ADMIN']))
+                                        <span class="px-2 py-0.5 bg-[#C6A15B]/15 text-[#8F7239] border border-[#C6A15B]/60 text-[10px] font-mono font-bold uppercase">
+                                            Hall Vendor
+                                        </span>
+                                    @elseif($u->role === 'CUSTOMER')
+                                        <span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-mono font-bold uppercase">
+                                            Customer
+                                        </span>
+                                    @else
+                                        <span class="px-2 py-0.5 bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-mono font-bold uppercase">
+                                            {{ $u->role }}
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="p-3 border-r border-[#E7E5E4] font-mono text-stone-700">
+                                    {{ $u->tenant->name ?? 'Platform Marketplace' }}
+                                </td>
+                                <td class="p-3 border-r border-[#E7E5E4] font-mono text-stone-500 text-[11px]">
+                                    {{ $u->created_at->format('d M Y') }}
+                                </td>
+                                <td class="p-3 border-r border-[#E7E5E4] font-mono text-[11px]">
+                                    @if($u->last_login_at)
+                                        <span class="text-stone-800 font-semibold">{{ $u->last_login_at->diffForHumans() }}</span>
+                                        <div class="text-[9px] text-stone-400">{{ $u->last_login_at->format('d M H:i') }}</div>
+                                    @else
+                                        <span class="text-stone-400 italic">Never</span>
+                                    @endif
+                                </td>
+                                <td class="p-3 border-r border-[#E7E5E4]">
+                                    @if($u->status === 'ACTIVE')
+                                        <span class="px-2 py-0.5 bg-[#C6A15B]/15 text-[#8F7239] border border-[#C6A15B]/60 text-[10px] font-mono font-bold uppercase">
+                                            Active
+                                        </span>
+                                    @elseif($u->status === 'SUSPENDED')
+                                        <span class="px-2 py-0.5 bg-red-100 text-red-700 border border-red-300 text-[10px] font-mono font-bold uppercase">
+                                            Suspended
+                                        </span>
+                                    @else
+                                        <span class="px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-mono font-bold uppercase">
+                                            Pending
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="p-3 text-right space-x-2 font-mono">
+                                    @if(!$u->isSuperAdmin() || $u->id !== auth()->id())
+                                        @if($u->status === 'SUSPENDED')
+                                            <button wire:click="toggleUserStatus({{ $u->id }})" class="px-2.5 py-1 bg-[#171513] text-[#C6A15B] border border-[#C6A15B] text-[10px] font-bold uppercase hover:bg-black transition">
+                                                Activate
+                                            </button>
+                                        @else
+                                            <button wire:click="toggleUserStatus({{ $u->id }})" wire:confirm="Are you sure you want to suspend this user account?" class="px-2.5 py-1 bg-red-50 text-red-600 border border-red-300 text-[10px] font-bold uppercase hover:bg-red-100 transition">
+                                                Suspend
+                                            </button>
+                                        @endif
+                                        <button wire:click="resetUserPassword({{ $u->id }})" wire:confirm="Reset password for {{ $u->name }} to 'Password123!'?" class="px-2.5 py-1 bg-stone-100 text-stone-700 border border-stone-300 text-[10px] font-bold uppercase hover:bg-stone-200 transition">
+                                            Reset Pwd
+                                        </button>
+                                    @else
+                                        <span class="text-[10px] text-stone-400 italic">Self Account</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="p-8 text-center text-stone-400 font-sans">
+                                    No registered users match your search criteria.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+
     @if($activeTab === 'analytics')
         <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
             <div class="border-b border-[#E7E5E4] pb-4 flex items-center justify-between">
@@ -623,12 +808,28 @@
             </div>
 
             <!-- Analytics Metric Cards -->
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div class="bg-[#171513] border border-[#C6A15B] p-5 shadow-xl space-y-1 relative overflow-hidden group">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span class="text-[10px] uppercase font-bold tracking-wider text-[#C6A15B] block font-mono">Live Sessions</span>
+                    </div>
+                    <strong class="font-cinzel text-2xl text-white block">{{ $activeSessionsCount }}</strong>
+                    <span class="text-[10px] text-stone-300 block font-sans">Active (15 min)</span>
+                </div>
+
                 <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group hover:border-[#C6A15B] transition">
                     <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-[#C6A15B] to-transparent absolute top-0 left-0 opacity-0 group-hover:opacity-100 dark:opacity-60 transition duration-300"></div>
-                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-mono">Total Visitors</span>
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-mono">Unique Visitors</span>
+                    <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $uniqueVisitorsCount }}</strong>
+                    <span class="text-[11px] text-stone-400 block font-sans">Distinct IPs</span>
+                </div>
+
+                <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group hover:border-[#C6A15B] transition">
+                    <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-[#C6A15B] to-transparent absolute top-0 left-0 opacity-0 group-hover:opacity-100 dark:opacity-60 transition duration-300"></div>
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-mono">Total Page Views</span>
                     <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalPageVisits }}</strong>
-                    <span class="text-[11px] text-stone-400 block font-sans">Page Views Today</span>
+                    <span class="text-[11px] text-stone-400 block font-sans">Marketplace Hits</span>
                 </div>
 
                 <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group hover:border-[#C6A15B] transition">

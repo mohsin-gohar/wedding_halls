@@ -40,6 +40,7 @@ class Booking extends Model
         'addons_json',
         'status',
         'pipeline_stage',
+        'crm_stage',
         'notes',
     ];
 

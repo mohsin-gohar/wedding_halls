@@ -25,8 +25,10 @@ class User extends Authenticatable
         'email',
         'phone',
         'role',
+        'status',
         'tenant_id',
         'password',
+        'last_login_at',
     ];
 
     /**
@@ -48,8 +50,19 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function recordLogin(): void
+    {
+        $this->update(['last_login_at' => now()]);
+    }
+
+    public function wishlists(): HasMany
+    {
+        return $this->hasMany(HallWishlist::class);
     }
 
     public function tenant(): BelongsTo

@@ -39,6 +39,15 @@ class CustomerLogin extends Component
         if (Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
             RateLimiter::clear($throttleKey);
             session()->regenerate();
+            $user = Auth::user();
+
+            if ($user->status === 'SUSPENDED') {
+                Auth::logout();
+                $this->addError('email', 'Your account has been suspended by the platform administrator.');
+                return;
+            }
+
+            $user->recordLogin();
             session()->flash('message', 'Welcome back! Signed in to your customer portal.');
             return redirect()->intended(route('customer.dashboard'));
         }

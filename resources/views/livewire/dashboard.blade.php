@@ -494,6 +494,199 @@
     </div>
 
     <!-- ===================================================================
+         INQUIRY & LEAD TRACKING CRM (Interactive Kanban Pipeline)
+         =================================================================== -->
+    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-6 shadow-sm dark:shadow-xl space-y-6 transition-colors duration-200">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#E7E5E4] dark:border-white/10 pb-4">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-[#C6A15B] animate-pulse"></span>
+                    <span class="text-[10px] font-mono uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B] font-bold">
+                        Lead Management CRM
+                    </span>
+                </div>
+                <h3 class="font-serif-luxury text-xl sm:text-2xl text-[#171513] dark:text-white font-bold mt-0.5">
+                    Interactive Inquiries Pipeline (Kanban)
+                </h3>
+                <p class="text-xs text-stone-600 dark:text-stone-400 font-sans mt-0.5">
+                    Move prospects between stages: New Inquiry &rarr; Site Visit &rarr; Quotation Sent &rarr; Confirmed Booking.
+                </p>
+            </div>
+            @if($crmFeedback)
+                <div class="px-3.5 py-1.5 bg-[#171513] border border-[#C6A15B] text-[#C6A15B] text-xs font-mono font-bold flex items-center gap-2">
+                    <span>✓ {{ $crmFeedback }}</span>
+                    <button wire:click="$set('crmFeedback', null)" class="text-white hover:text-[#C6A15B]">&times;</button>
+                </div>
+            @endif
+        </div>
+
+        <!-- 4 Column Kanban Board -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <!-- COLUMN 1: NEW INQUIRY -->
+            <div class="bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-4 space-y-3">
+                <div class="flex items-center justify-between pb-3 border-b border-stone-200 dark:border-white/10">
+                    <span class="text-xs font-mono uppercase font-bold text-stone-800 dark:text-stone-200">1. New Inquiry</span>
+                    <span class="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 font-mono text-[10px] font-bold">
+                        {{ $kanbanColumns['NEW_INQUIRY']->count() }}
+                    </span>
+                </div>
+                <div class="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                    @forelse($kanbanColumns['NEW_INQUIRY'] as $lead)
+                        <div class="bg-white dark:bg-[#171513] border border-stone-200 dark:border-white/15 p-3.5 space-y-2 hover:border-[#C6A15B] transition shadow-sm">
+                            <div class="flex items-start justify-between gap-2">
+                                <strong class="font-serif-luxury text-sm text-[#171513] dark:text-white">{{ $lead->customer_name }}</strong>
+                                <span class="text-[9px] font-mono uppercase px-1.5 py-0.5 bg-stone-100 dark:bg-white/10 text-stone-600 dark:text-stone-300">
+                                    {{ $lead->event_type }}
+                                </span>
+                            </div>
+                            <div class="text-[11px] font-mono text-stone-600 dark:text-stone-400 space-y-0.5">
+                                <div>📅 {{ $lead->event_date ? $lead->event_date->format('d M Y') : 'Date TBD' }} ({{ $lead->slot_type }})</div>
+                                <div>👥 {{ $lead->guest_count }} Guests • {{ $lead->hall->name ?? 'Hall' }}</div>
+                                <div class="font-bold text-[#8F7239] dark:text-[#C6A15B]">PKR {{ number_format($lead->grand_total) }}</div>
+                            </div>
+                            <div class="pt-2 border-t border-stone-100 dark:border-white/10 flex items-center justify-between text-[11px] font-mono">
+                                <button wire:click="openCustomerDetails('{{ $lead->id }}')" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline font-bold">
+                                    Details &rarr;
+                                </button>
+                                <button wire:click="updateLeadStage('{{ $lead->id }}', 'SITE_VISIT')" class="px-2 py-1 bg-[#171513] text-[#C6A15B] hover:bg-black font-bold uppercase text-[10px] transition">
+                                    Visit &rarr;
+                                </button>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="py-8 text-center text-stone-400 text-xs font-mono">No new inquiries</div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- COLUMN 2: SITE VISIT -->
+            <div class="bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-4 space-y-3">
+                <div class="flex items-center justify-between pb-3 border-b border-stone-200 dark:border-white/10">
+                    <span class="text-xs font-mono uppercase font-bold text-stone-800 dark:text-stone-200">2. Site Visit</span>
+                    <span class="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 font-mono text-[10px] font-bold">
+                        {{ $kanbanColumns['SITE_VISIT']->count() }}
+                    </span>
+                </div>
+                <div class="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                    @forelse($kanbanColumns['SITE_VISIT'] as $lead)
+                        <div class="bg-white dark:bg-[#171513] border border-amber-300/60 dark:border-amber-500/30 p-3.5 space-y-2 hover:border-[#C6A15B] transition shadow-sm">
+                            <div class="flex items-start justify-between gap-2">
+                                <strong class="font-serif-luxury text-sm text-[#171513] dark:text-white">{{ $lead->customer_name }}</strong>
+                                <span class="text-[9px] font-mono uppercase px-1.5 py-0.5 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300">
+                                    {{ $lead->event_type }}
+                                </span>
+                            </div>
+                            <div class="text-[11px] font-mono text-stone-600 dark:text-stone-400 space-y-0.5">
+                                <div>📅 {{ $lead->event_date ? $lead->event_date->format('d M Y') : 'Date TBD' }} ({{ $lead->slot_type }})</div>
+                                <div>👥 {{ $lead->guest_count }} Guests • {{ $lead->hall->name ?? 'Hall' }}</div>
+                                <div class="font-bold text-[#8F7239] dark:text-[#C6A15B]">PKR {{ number_format($lead->grand_total) }}</div>
+                            </div>
+                            <div class="pt-2 border-t border-stone-100 dark:border-white/10 flex items-center justify-between text-[11px] font-mono">
+                                <button wire:click="openCustomerDetails('{{ $lead->id }}')" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline font-bold">
+                                    Details &rarr;
+                                </button>
+                                <div class="flex items-center gap-1">
+                                    <button wire:click="updateLeadStage('{{ $lead->id }}', 'NEW_INQUIRY')" title="Move Back" class="px-1.5 py-1 text-stone-500 hover:text-stone-800 dark:hover:text-white font-bold">
+                                        &larr;
+                                    </button>
+                                    <button wire:click="updateLeadStage('{{ $lead->id }}', 'QUOTATION')" class="px-2 py-1 bg-[#171513] text-[#C6A15B] hover:bg-black font-bold uppercase text-[10px] transition">
+                                        Quote &rarr;
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="py-8 text-center text-stone-400 text-xs font-mono">No visits scheduled</div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- COLUMN 3: QUOTATION SENT -->
+            <div class="bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-4 space-y-3">
+                <div class="flex items-center justify-between pb-3 border-b border-stone-200 dark:border-white/10">
+                    <span class="text-xs font-mono uppercase font-bold text-stone-800 dark:text-stone-200">3. Quotation Sent</span>
+                    <span class="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 font-mono text-[10px] font-bold">
+                        {{ $kanbanColumns['QUOTATION']->count() }}
+                    </span>
+                </div>
+                <div class="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                    @forelse($kanbanColumns['QUOTATION'] as $lead)
+                        <div class="bg-white dark:bg-[#171513] border border-purple-300/60 dark:border-purple-500/30 p-3.5 space-y-2 hover:border-[#C6A15B] transition shadow-sm">
+                            <div class="flex items-start justify-between gap-2">
+                                <strong class="font-serif-luxury text-sm text-[#171513] dark:text-white">{{ $lead->customer_name }}</strong>
+                                <span class="text-[9px] font-mono uppercase px-1.5 py-0.5 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300">
+                                    {{ $lead->event_type }}
+                                </span>
+                            </div>
+                            <div class="text-[11px] font-mono text-stone-600 dark:text-stone-400 space-y-0.5">
+                                <div>📅 {{ $lead->event_date ? $lead->event_date->format('d M Y') : 'Date TBD' }} ({{ $lead->slot_type }})</div>
+                                <div>👥 {{ $lead->guest_count }} Guests • {{ $lead->hall->name ?? 'Hall' }}</div>
+                                <div class="font-bold text-[#8F7239] dark:text-[#C6A15B]">PKR {{ number_format($lead->grand_total) }}</div>
+                            </div>
+                            <div class="pt-2 border-t border-stone-100 dark:border-white/10 flex items-center justify-between text-[11px] font-mono">
+                                <button wire:click="openCustomerDetails('{{ $lead->id }}')" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline font-bold">
+                                    Details &rarr;
+                                </button>
+                                <div class="flex items-center gap-1">
+                                    <button wire:click="updateLeadStage('{{ $lead->id }}', 'SITE_VISIT')" title="Move Back" class="px-1.5 py-1 text-stone-500 hover:text-stone-800 dark:hover:text-white font-bold">
+                                        &larr;
+                                    </button>
+                                    <button wire:click="updateLeadStage('{{ $lead->id }}', 'CONFIRMED')" class="px-2 py-1 bg-[#C6A15B] text-[#171513] hover:bg-[#b08d4a] font-bold uppercase text-[10px] transition">
+                                        Confirm ✓
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="py-8 text-center text-stone-400 text-xs font-mono">No open quotations</div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- COLUMN 4: CONFIRMED -->
+            <div class="bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-4 space-y-3">
+                <div class="flex items-center justify-between pb-3 border-b border-stone-200 dark:border-white/10">
+                    <span class="text-xs font-mono uppercase font-bold text-stone-800 dark:text-stone-200">4. Confirmed</span>
+                    <span class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 font-mono text-[10px] font-bold">
+                        {{ $kanbanColumns['CONFIRMED']->count() }}
+                    </span>
+                </div>
+                <div class="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                    @forelse($kanbanColumns['CONFIRMED'] as $lead)
+                        <div class="bg-white dark:bg-[#171513] border border-emerald-300/60 dark:border-emerald-500/30 p-3.5 space-y-2 hover:border-[#C6A15B] transition shadow-sm">
+                            <div class="flex items-start justify-between gap-2">
+                                <strong class="font-serif-luxury text-sm text-[#171513] dark:text-white">{{ $lead->customer_name }}</strong>
+                                <span class="text-[9px] font-mono uppercase px-1.5 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300">
+                                    {{ $lead->event_type }}
+                                </span>
+                            </div>
+                            <div class="text-[11px] font-mono text-stone-600 dark:text-stone-400 space-y-0.5">
+                                <div>📅 {{ $lead->event_date ? $lead->event_date->format('d M Y') : 'Date TBD' }} ({{ $lead->slot_type }})</div>
+                                <div>👥 {{ $lead->guest_count }} Guests • {{ $lead->hall->name ?? 'Hall' }}</div>
+                                <div class="font-bold text-[#8F7239] dark:text-[#C6A15B]">
+                                    Adv: PKR {{ number_format($lead->advance_paid) }} / {{ number_format($lead->grand_total) }}
+                                </div>
+                            </div>
+                            <div class="pt-2 border-t border-stone-100 dark:border-white/10 flex items-center justify-between text-[11px] font-mono">
+                                <button wire:click="openCustomerDetails('{{ $lead->id }}')" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline font-bold">
+                                    Details &rarr;
+                                </button>
+                                <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-300 text-[10px] font-bold font-mono uppercase">
+                                    Booked ✓
+                                </span>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="py-8 text-center text-stone-400 text-xs font-mono">No confirmed leads</div>
+                    @endforelse
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===================================================================
          FULL RESERVATION & FINANCIAL LEDGER
          =================================================================== -->
     <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 shadow-sm dark:shadow-xl overflow-hidden transition-colors duration-200">
@@ -602,7 +795,7 @@
                 <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/50 gold-foil-border p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group">
                     <span class="text-[10px] uppercase font-bold tracking-wider text-[#8F7239] dark:text-[#C6A15B] block font-mono">Conversion Rate</span>
                     <strong class="font-cinzel text-xl text-[#171513] dark:text-[#C6A15B] block font-bold">
-                        @php($totalHallViews > 0 ? round(($totalHallBookings / $totalHallViews) * 100, 1) : 0)%</strong>
+                        {{ $totalHallViews > 0 ? round(($totalHallBookings / $totalHallViews) * 100, 1) : 0 }}%</strong>
                     <span class="text-[10px] text-stone-500 dark:text-stone-400 block font-mono">View to Booking</span>
                 </div>
             </div>
@@ -651,4 +844,144 @@
 
     </div>
 
+    <!-- ===================================================================
+         CUSTOMER DETAILS & INTERACTION HISTORY MODAL
+         =================================================================== -->
+    @if($showCustomerModal && $selectedLead)
+        <div class="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 overflow-y-auto">
+            <div class="bg-[#171513] border-2 border-[#C6A15B] max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl text-white my-8 relative">
+                <!-- Modal Header -->
+                <div class="border-b border-white/10 pb-4 flex items-center justify-between">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-[#C6A15B]"></span>
+                            <span class="text-[10px] font-mono uppercase tracking-widest text-[#C6A15B] font-bold">
+                                Customer Details &amp; Lead Record
+                            </span>
+                        </div>
+                        <h3 class="font-serif-luxury text-2xl text-white font-bold mt-0.5">
+                            {{ $selectedLead->customer_name }}
+                        </h3>
+                        <span class="text-xs text-stone-400 font-mono">
+                            Ref: {{ $selectedLead->booking_reference ?? $selectedLead->id }} • {{ $selectedLead->event_type }}
+                        </span>
+                    </div>
+                    <button wire:click="closeCustomerDetails" class="text-stone-400 hover:text-white text-2xl font-mono leading-none">&times;</button>
+                </div>
+
+                <!-- Quick Action Buttons: WhatsApp & Call -->
+                <div class="flex flex-wrap items-center gap-3">
+                    @php
+                        $cleanPhone = preg_replace('/[^0-9]/', '', $selectedLead->customer_phone ?? '');
+                        if (str_starts_with($cleanPhone, '03')) {
+                            $cleanPhone = '92' . substr($cleanPhone, 1);
+                        }
+                    @endphp
+                    @if($cleanPhone)
+                        <a href="https://wa.me/{{ $cleanPhone }}?text=Assalamu%20Alaikum%20{{ urlencode($selectedLead->customer_name) }},%20this%20is%20regarding%20your%20event%20inquiry%20for%20{{ urlencode($selectedLead->hall->name ?? 'our venue') }}."
+                           target="_blank"
+                           class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 shadow transition">
+                            <span>💬 WhatsApp Customer</span>
+                        </a>
+                    @endif
+                    @if($selectedLead->customer_phone)
+                        <a href="tel:{{ $selectedLead->customer_phone }}"
+                           class="px-4 py-2 bg-stone-800 hover:bg-stone-700 border border-white/20 text-white text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 transition">
+                            <span>📞 Call {{ $selectedLead->customer_phone }}</span>
+                        </a>
+                    @endif
+                </div>
+
+                <!-- Customer Details Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 bg-white/5 p-4 border border-white/10 font-mono text-xs">
+                    <div>
+                        <span class="text-stone-400 text-[10px] uppercase block">Email Address</span>
+                        <span class="text-white select-all">{{ $selectedLead->customer_email ?? 'Not provided' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-stone-400 text-[10px] uppercase block">CNIC / ID</span>
+                        <span class="text-white">{{ $selectedLead->customer_cnic ?? 'Not provided' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-stone-400 text-[10px] uppercase block">Assigned Hall</span>
+                        <strong class="text-[#C6A15B]">{{ $selectedLead->hall->name ?? 'Unassigned' }}</strong>
+                    </div>
+                    <div>
+                        <span class="text-stone-400 text-[10px] uppercase block">Event Date</span>
+                        <span class="text-white">{{ $selectedLead->event_date ? $selectedLead->event_date->format('d M Y') : 'Date TBD' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-stone-400 text-[10px] uppercase block">Shift Slot</span>
+                        <span class="text-white">{{ $selectedLead->slot_type }}</span>
+                    </div>
+                    <div>
+                        <span class="text-stone-400 text-[10px] uppercase block">Guests</span>
+                        <span class="text-white font-bold">{{ $selectedLead->guest_count }} Guests</span>
+                    </div>
+                    <div>
+                        <span class="text-stone-400 text-[10px] uppercase block">Grand Total</span>
+                        <strong class="text-white text-sm">PKR {{ number_format($selectedLead->grand_total) }}</strong>
+                    </div>
+                    <div>
+                        <span class="text-stone-400 text-[10px] uppercase block">Advance Paid</span>
+                        <strong class="text-emerald-400">PKR {{ number_format($selectedLead->advance_paid) }}</strong>
+                    </div>
+                    <div>
+                        <span class="text-stone-400 text-[10px] uppercase block">Balance Due</span>
+                        <strong class="text-amber-400">PKR {{ number_format($selectedLead->balance_due) }}</strong>
+                    </div>
+                </div>
+
+                <!-- CRM Pipeline Stage Control -->
+                <div class="space-y-1.5 font-mono">
+                    <label class="block text-[11px] uppercase tracking-wider text-[#C6A15B] font-bold">
+                        Pipeline CRM Stage:
+                    </label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        @foreach(['NEW_INQUIRY' => '1. New Inquiry', 'SITE_VISIT' => '2. Site Visit', 'QUOTATION' => '3. Quotation', 'CONFIRMED' => '4. Confirmed'] as $stageKey => $stageLabel)
+                            <button wire:click="updateLeadStage('{{ $selectedLead->id }}', '{{ $stageKey }}')"
+                                    class="px-3 py-2 text-xs font-mono font-bold uppercase transition border {{ ($selectedLead->crm_stage === $stageKey || ($stageKey === 'NEW_INQUIRY' && empty($selectedLead->crm_stage) && $selectedLead->status !== 'CONFIRMED')) ? 'bg-[#C6A15B] text-[#171513] border-[#C6A15B]' : 'bg-white/5 text-stone-300 border-white/10 hover:border-[#C6A15B]' }}">
+                                {{ $stageLabel }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Interaction History & Notes Log -->
+                <div class="space-y-3 font-mono">
+                    <label class="block text-[11px] uppercase tracking-wider text-[#C6A15B] font-bold">
+                        Customer Interaction History &amp; Staff Notes:
+                    </label>
+                    <div class="p-3 bg-black/60 border border-white/10 max-h-40 overflow-y-auto text-xs text-stone-300 space-y-1 whitespace-pre-line">
+                        @if(!empty($selectedLead->notes))
+                            {{ $selectedLead->notes }}
+                        @else
+                            <span class="text-stone-500 italic">No previous interaction notes recorded for this customer.</span>
+                        @endif
+                    </div>
+
+                    <!-- Add Note Input -->
+                    <div class="space-y-2 pt-2">
+                        <textarea wire:model="leadNoteText" rows="2" placeholder="Record new customer interaction note (e.g. called client, discussed menu customization, agreed on 500 guests)..."
+                                  class="w-full bg-[#171513] border border-white/20 text-white text-xs p-3 font-mono outline-none focus:border-[#C6A15B]"></textarea>
+                        <div class="flex justify-end">
+                            <button wire:click="addLeadNote" class="btn-gold !h-8 !px-4 text-xs font-bold uppercase font-mono shadow">
+                                + Save Interaction Note
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="pt-4 border-t border-white/10 flex justify-between items-center text-xs font-mono">
+                    <span class="text-stone-500">Created: {{ $selectedLead->created_at->format('d M Y, H:i') }}</span>
+                    <button wire:click="closeCustomerDetails" class="px-4 py-2 border border-white/20 hover:border-white text-white text-xs uppercase font-mono font-bold">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
 </div>
+

@@ -10,14 +10,14 @@ return new class extends Migration
     {
         Schema::create('hall_wishlists', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('hall_id')->constrained()->onDelete('cascade');
-            $table->foreignId('tenant_id')->constrained()->onDelete('cascade');
-            $table->string('user_id')->nullable();
-            $table->string('session_id')->nullable();
+            $table->foreignUuid('hall_id')->constrained('halls')->cascadeOnDelete();
+            $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('session_id', 100)->nullable();
             $table->timestamps();
-            $table->unique(['hall_id', 'user_id']);
-            $table->unique(['hall_id', 'session_id'])->whereNull('user_id');
-            $table->index(['hall_id', 'created_at']);
+
+            $table->index(['hall_id', 'user_id']);
+            $table->index(['hall_id', 'session_id']);
             $table->index(['tenant_id', 'created_at']);
         });
     }
