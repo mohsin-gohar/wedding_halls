@@ -44,6 +44,11 @@ class HallMediaManager extends Component
     public string $address = '';
     public string $phone = '';
 
+    // Venue Location (Latitude / Longitude / Google Maps)
+    public string $latitude = '';
+    public string $longitude = '';
+    public string $google_maps_url = '';
+
     // Gallery Media
     public array $images = [];
     public array $videos = [];
@@ -86,6 +91,9 @@ class HallMediaManager extends Component
         'city' => 'required|string|max:80',
         'address' => 'nullable|string|max:255',
         'phone' => 'nullable|string|max:50',
+        'latitude' => 'nullable|numeric|between:-90,90',
+        'longitude' => 'nullable|numeric|between:-180,180',
+        'google_maps_url' => 'nullable|url|max:500',
         'description' => 'nullable|string|max:1500',
         'max_capacity' => 'required|integer|min:50|max:10000',
         'min_capacity' => 'required|integer|min:20|max:10000',
@@ -196,11 +204,17 @@ class HallMediaManager extends Component
             $this->city = $venue->city ?? 'Lahore';
             $this->address = $venue->address ?? '';
             $this->phone = $venue->phone ?? '';
+            $this->latitude = (string) ($venue->latitude ?? '');
+            $this->longitude = (string) ($venue->longitude ?? '');
+            $this->google_maps_url = $venue->google_maps_url ?? '';
         } else {
             $this->venue_name = Auth::user()->tenant->name ?? 'Venue Complex';
             $this->city = Auth::user()->tenant->city ?? 'Lahore';
             $this->address = Auth::user()->tenant->address ?? '';
             $this->phone = Auth::user()->tenant->phone ?? '';
+            $this->latitude = '';
+            $this->longitude = '';
+            $this->google_maps_url = '';
         }
     }
 
@@ -388,6 +402,9 @@ class HallMediaManager extends Component
                     'city' => $this->city,
                     'address' => $this->address,
                     'phone' => $this->phone,
+                    'latitude' => $this->latitude ?: null,
+                    'longitude' => $this->longitude ?: null,
+                    'google_maps_url' => $this->google_maps_url ?: null,
                 ]);
             }
 

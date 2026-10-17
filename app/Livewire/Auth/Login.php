@@ -39,16 +39,27 @@ class Login extends Component
             session()->regenerate();
             $user = Auth::user();
 
+            // Only hall admins (tenant owners) and website owners (super admins) can use this login portal.
+            // Customers must use the separate customer login.
+            if ($user->isCustomer()) {
+                Auth::logout();
+                $this->addError('email', 'Customers must use the customer login portal. Please visit the booking website instead.');
+                return;
+            }
+
             session()->flash('message', "Welcome back, {$user->name}!");
 
-            if ($user->role === 'ROLE_SUPER_ADMIN' || (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin())) {
+            // Website Owner / Super Admin → Platform Admin Dashboard
+            if ($user->role === 'ROLE_SUPER_ADMIN' || $user->isSuperAdmin()) {
                 return redirect()->intended(route('admin.dashboard'));
             }
 
-            if ($user->role === 'ROLE_CUSTOMER') {
-                return redirect()->intended(route('customer.dashboard'));
+            // Hall Admin / Tenant Owner → Hall Admin Dashboard
+            if ($user->role === 'ROLE_TENANT_OWNER' || $user->isTenantOwner()) {
+                return redirect()->intended(route('dashboard'));
             }
 
+            // Fallback for any other staff role → Hall Admin Dashboard
             return redirect()->intended(route('dashboard'));
         }
 

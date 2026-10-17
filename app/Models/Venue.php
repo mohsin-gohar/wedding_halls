@@ -19,6 +19,9 @@ class Venue extends Model
         'city',
         'area',
         'address',
+        'latitude',
+        'longitude',
+        'google_maps_url',
         'phone',
         'email',
         'description',
@@ -27,6 +30,8 @@ class Venue extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'latitude' => 'decimal:7',
+        'longitude' => 'decimal:7',
     ];
 
     public function tenant(): BelongsTo

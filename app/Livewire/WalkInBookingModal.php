@@ -12,7 +12,9 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
+use Livewire\Attributes\Eager;
 
+#[Eager]
 class WalkInBookingModal extends Component
 {
     public bool $isOpen = false;

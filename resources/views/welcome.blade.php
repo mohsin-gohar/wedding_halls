@@ -3,27 +3,52 @@
     <!-- ===================================================================
          1. CINEMATIC LUXURY HERO SECTION (With Smooth Visual Depth)
          =================================================================== -->
-    <section class="relative bg-[#171513] text-white min-h-[92vh] flex items-center justify-center overflow-hidden border-b border-[#C6A15B]/30">
-        <!-- Cinematic Wedding Hall Background (Luxury Wedding Banquet) -->
-        <div class="hero-video" style="background-image: url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2000&auto=format&fit=crop');"></div>
+    <section class="relative text-white min-h-[92vh] flex items-center justify-center overflow-hidden border-b border-[#C6A15B]/30">
+        <!-- Cinematic Wedding Hall Background Image Slideshow -->
+        <div class="hero-slideshow absolute inset-0 z-[-1] overflow-hidden" id="heroSlideshow">
+            <!-- Slide 1: Elegant Wedding Venue -->
+            <div class="slideshow-slide absolute inset-0 w-full h-full">
+                <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2000&auto=format&fit=crop" alt="Luxury Wedding Venue" class="w-full h-full object-cover slideshow-image transition-opacity duration-750">
+            </div>
+            <!-- Slide 2: Grand Wedding Ballroom -->
+            <div class="slideshow-slide absolute inset-0 w-full h-full opacity-0">
+                <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=2000&auto=format&fit=crop" alt="Grand Wedding Ballroom" class="w-full h-full object-cover slideshow-image transition-opacity duration-750">
+            </div>
+            <!-- Slide 3: Wedding Ceremony Decor -->
+            <div class="slideshow-slide absolute inset-0 w-full h-full opacity-0">
+                <img src="https://i.pinimg.com/1200x/b6/1d/f9/b61df9ab70e16a13f6a00b8341f0057c.jpg" alt="Wedding Ceremony Decor" class="w-full h-full object-cover slideshow-image transition-opacity duration-750">
+            </div>
+            <!-- Slide 4: Elegant Banquet Hall -->
+            <div class="slideshow-slide absolute inset-0 w-full h-full opacity-0">
+                <img src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2000&auto=format&fit=crop" alt="Elegant Banquet Hall" class="w-full h-full object-cover slideshow-image transition-opacity duration-750">
+            </div>
+            <!-- Slide 5: Grand Wedding Reception -->
+            <div class="slideshow-slide absolute inset-0 w-full h-full opacity-0">
+                <img src="https://i.pinimg.com/1200x/d6/b6/bd/d6b6bdb32f8029dfc2bbe091a6a260df.jpg" alt="Grand Wedding Reception" class="w-full h-full object-cover slideshow-image transition-opacity duration-750">
+            </div>
 
-        <!-- Deep Obsidian Gradient Overlays (layered for depth) -->
-        <div class="absolute inset-0 bg-gradient-to-t from-[#171513]/95 via-[#171513]/80 to-[#171513]/90"></div>
-        <div class="absolute inset-0 bg-gradient-to-r from-[#171513]/95 via-[#171513]/60 to-[#171513]/85"></div>
-        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center_top,_var(--tw-gradient-stops))] from-transparent via-[#171513]/50 to-[#171513]"></div>
-        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center_bottom,_var(--tw-gradient-stops))] from-[#171513] to-transparent"></div>
+            <!-- Slideshow Navigation Dots -->
+            <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-3">
+                <button class="slideshow-dot w-2 h-2 rounded-full bg-[#C6A15B] transition-all duration-300" onclick="setSlide(0)" aria-label="Slide 1"></button>
+                <button class="slideshow-dot w-2 h-2 rounded-full bg-white/30 hover:bg-[#C6A15B] transition-all duration-300" onclick="setSlide(1)" aria-label="Slide 2"></button>
+                <button class="slideshow-dot w-2 h-2 rounded-full bg-white/30 hover:bg-[#C6A15B] transition-all duration-300" onclick="setSlide(2)" aria-label="Slide 3"></button>
+                <button class="slideshow-dot w-2 h-2 rounded-full bg-white/30 hover:bg-[#C6A15B] transition-all duration-300" onclick="setSlide(3)" aria-label="Slide 4"></button>
+                <button class="slideshow-dot w-2 h-2 rounded-full bg-white/30 hover:bg-[#C6A15B] transition-all duration-300" onclick="setSlide(4)" aria-label="Slide 5"></button>
+            </div>
 
-        <!-- Subtle gold accent lines top border -->
-        <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#C6A15B]/50 to-transparent"></div>
-        <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-l from-transparent via-[#C6A15B]/30 to-transparent"></div>
+            <!-- Subtle overlay for text readability -->
+            <div class="absolute inset-0 bg-black/20"></div>
+        </div>
+
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
 
         <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center space-y-8 flex flex-col items-center">
             
             <!-- Category Tag -->
-            <div class="inline-flex items-center gap-2.5 px-4 py-1.5 border border-[#C6A15B]/50 bg-[#171513]/90 text-[#C6A15B] text-[11px] font-semibold tracking-[0.22em] uppercase font-mono reveal-on-scroll">
+            <!-- <div class="inline-flex items-center gap-2.5 px-4 py-1.5 border border-[#C6A15B]/50 bg-[#171513]/90 text-[#C6A15B] text-[11px] font-semibold tracking-[0.22em] uppercase reveal-on-scroll">
                 <span class="w-1.5 h-1.5 bg-[#C6A15B]"></span>
                 <span>Pakistan's Exclusive Wedding Hall Marketplace</span>
-            </div>
+            </div> -->
 
             <!-- Headline: Cinzel / Playfair Editorial -->
             <h1 class="font-serif-luxury text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-normal leading-[1.08] tracking-tight max-w-4xl text-[#F8F5EF] reveal-on-scroll reveal-delay-1">
@@ -32,22 +57,22 @@
             </h1>
 
             <!-- Subtitle -->
-            <p class="text-base sm:text-lg md:text-xl text-stone-300 max-w-2xl mx-auto font-light leading-relaxed reveal-on-scroll reveal-delay-2">
+            <!-- <p class="text-base sm:text-lg md:text-xl text-stone-300 max-w-2xl mx-auto font-light leading-relaxed reveal-on-scroll reveal-delay-2">
                 Discover Pakistan's Most Exclusive Wedding Halls, Marquees, and Event Spaces.
-            </p>
+            </p> -->
 
 <!-- Zero-Pill CTAs -->
             <div class="flex flex-wrap items-center justify-center gap-4 pt-2 reveal-on-scroll reveal-delay-3">
-                <a href="#search-section" class="btn-gold !h-12 !px-8 text-xs font-bold uppercase tracking-wider font-mono shadow-[0_0_24px_rgba(212,175,55,0.35)] hover:shadow-[0_0_30px_rgba(212,175,55,0.5)] transition-all duration-300 relative overflow-hidden group">
+                <a href="#search-section" class="btn-gold !h-12 !px-8 text-xs font-bold uppercase tracking-wider shadow-[0_0_24px_rgba(212,175,55,0.35)] hover:shadow-[0_0_30px_rgba(212,175,55,0.5)] transition-all duration-300 relative overflow-hidden group">
                     <span class="relative z-10">Explore Wedding Halls &rarr;</span>
                     <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500"></span>
                 </a>
-                <a href="#featured-venues" class="btn-outline-gold !h-12 !px-7 text-xs font-bold uppercase tracking-wider font-mono !text-[#F8F5EF] !border-[#C6A15B]/60 hover:!text-[#171513] hover:!border-[#C6A15B] hover:!bg-[#C6A15B] transition-all duration-300">
+                <a href="#featured-venues" class="btn-outline-gold !h-12 !px-7 text-xs font-bold uppercase tracking-wider !text-[#F8F5EF] !border-[#C6A15B]/60 hover:!text-[#171513] hover:!border-[#C6A15B] hover:!bg-[#C6A15B] transition-all duration-300">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     Watch Venue Tour
                 </a>
                 @guest
-                    <a href="{{ route('register') }}" class="btn-gold !h-12 !px-8 text-xs font-bold uppercase tracking-wider font-mono shadow-[0_0_30px_rgba(198,161,91,0.45)] hover:shadow-[0_0_40px_rgba(198,161,91,0.6)] transition-all duration-300 flex items-center gap-2 group">
+                    <a href="{{ route('register') }}" class="btn-gold !h-12 !px-8 text-xs font-bold uppercase tracking-wider shadow-[0_0_30px_rgba(198,161,91,0.45)] hover:shadow-[0_0_40px_rgba(198,161,91,0.6)] transition-all duration-300 flex items-center gap-2 group">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                         <span class="relative z-10">List & Rent Your Wedding Hall &rarr;</span>
                         <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500"></span>
@@ -84,7 +109,7 @@
     <section class="relative -mt-10 z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8" id="search-section">
         <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/50 gold-foil-border p-6 sm:p-8 shadow-2xl reveal-on-scroll">
             <div class="text-center mb-6">
-                <span class="text-[10px] uppercase tracking-[0.2em] text-[#C6A15B] font-bold block font-mono mb-2">Find Your Perfect Venue</span>
+                <span class="text-[10px] uppercase tracking-[0.2em] text-[#C6A15B] font-bold block mb-2">Find Your Perfect Venue</span>
                 <h3 class="font-serif-luxury text-2xl sm:text-3xl text-[#171513] dark:text-white font-normal">Check Real-Time Availability</h3>
                 <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-400 mt-1">Select date, shift, and guest count to see live shift availability across all verified halls.</p>
             </div>
@@ -134,7 +159,7 @@
 
                 <!-- Submit Button -->
                 <div>
-                    <button type="submit" class="btn-gold !w-full !h-[42px] text-xs font-bold uppercase tracking-wider font-mono shadow-[0_0_25px_rgba(198,161,91,0.4)] hover:shadow-[0_0_35px_rgba(198,161,91,0.6)] transition-all duration-300 flex items-center justify-center gap-2 group relative overflow-hidden">
+                    <button type="submit" class="btn-gold !w-full !h-[42px] text-xs font-bold uppercase tracking-wider shadow-[0_0_25px_rgba(198,161,91,0.4)] hover:shadow-[0_0_35px_rgba(198,161,91,0.6)] transition-all duration-300 flex items-center justify-center gap-2 group relative overflow-hidden">
                         <span class="relative z-10">Search Halls</span>
                         <svg class="w-4 h-4 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                         <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
@@ -173,7 +198,7 @@
                     <p class="text-xs text-stone-400 leading-relaxed font-light">
                         Crystal-chandelier banquet halls with climate control, power backup, and bridal suites for up to 1,500 guests.
                     </p>
-                    <a href="{{ route('public.venues') }}" class="text-[11px] font-mono uppercase tracking-wider text-[#C6A15B] hover:text-[#E8DCBE] transition flex items-center gap-1 group-hover:gap-2 duration-300">
+                    <a href="{{ route('public.venues') }}" class="text-[11px] uppercase tracking-wider text-[#C6A15B] hover:text-[#E8DCBE] transition flex items-center gap-1 group-hover:gap-2 duration-300">
                         Explore Halls <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
                 </div>
@@ -187,7 +212,7 @@
                     <p class="text-xs text-stone-400 leading-relaxed font-light">
                         Expansive open-air marquees and manicured lawns, ideal for Mehndi pavilions and grand Barat receptions.
                     </p>
-                    <a href="{{ route('public.venues') }}" class="text-[11px] font-mono uppercase tracking-wider text-[#C6A15B] hover:text-[#E8DCBE] transition flex items-center gap-1">
+                    <a href="{{ route('public.venues') }}" class="text-[11px] uppercase tracking-wider text-[#C6A15B] hover:text-[#E8DCBE] transition flex items-center gap-1">
                         View Lawns <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
                 </div>
@@ -201,7 +226,7 @@
                     <p class="text-xs text-stone-400 leading-relaxed font-light">
                         Authentic Mughlai, BBQ, and continental feasts curated by master bawarchis with live counters and silver service.
                     </p>
-                    <a href="{{ route('public.packages') }}" class="text-[11px] font-mono uppercase tracking-wider text-[#C6A15B] hover:text-[#E8DCBE] transition flex items-center gap-1">
+                    <a href="{{ route('public.packages') }}" class="text-[11px] uppercase tracking-wider text-[#C6A15B] hover:text-[#E8DCBE] transition flex items-center gap-1">
                         View Menus <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
                 </div>
@@ -215,7 +240,7 @@
                     <p class="text-xs text-stone-400 leading-relaxed font-light">
                         Full-service décor, stage design, lighting, and dedicated coordinators to orchestrate your perfect celebration.
                     </p>
-                    <a href="{{ route('public.services') }}" class="text-[11px] font-mono uppercase tracking-wider text-[#C6A15B] hover:text-[#E8DCBE] transition flex items-center gap-1">
+                    <a href="{{ route('public.services') }}" class="text-[11px] uppercase tracking-wider text-[#C6A15B] hover:text-[#E8DCBE] transition flex items-center gap-1">
                         Plan Event <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
                 </div>
@@ -260,12 +285,12 @@
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30"></div>
 
                                 <!-- Location Badge -->
-                                <span class="absolute top-4 left-4 px-3 py-1 bg-[#171513]/95 text-white text-[10px] font-bold uppercase tracking-wider border border-[#C6A15B]/30 font-mono backdrop-blur-sm">
+                                <span class="absolute top-4 left-4 px-3 py-1 bg-[#171513]/95 text-white text-[10px] font-bold uppercase tracking-wider border border-[#C6A15B]/30 backdrop-blur-sm">
                                     {{ $hall->venue->city ?? 'Lahore' }} • {{ $hall->venue->area ?? 'Gulberg' }}
                                 </span>
 
                                 <!-- Capacity Badge -->
-                                <span class="absolute bottom-4 left-4 px-2.5 py-1 bg-black/85 text-stone-200 text-xs font-medium border border-white/10 font-mono backdrop-blur-sm">
+                                <span class="absolute bottom-4 left-4 px-2.5 py-1 bg-black/85 text-stone-200 text-xs font-medium border border-white/10 backdrop-blur-sm">
                                     {{ $hall->min_capacity }} - {{ $hall->max_capacity }} Guests
                                 </span>
 
@@ -278,7 +303,7 @@
                                 
                                 <!-- View Details Overlay -->
                                 <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <a href="{{ route('public.venue.details', $hall->slug) }}" class="btn-gold !h-11 !px-6 text-xs font-bold uppercase tracking-wider font-mono shadow-xl transform -translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                    <a href="{{ route('public.venue.details', $hall->slug) }}" class="btn-gold !h-11 !px-6 text-xs font-bold uppercase tracking-wider shadow-xl transform -translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                                         View Details &rarr;
                                     </a>
                                 </div>
@@ -316,7 +341,7 @@
                                 <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 block font-mono">STARTING FROM</span>
                                 <strong class="font-cinzel text-lg text-[#C6A15B]">PKR {{ number_format($hall->base_rent) }}</strong>
                             </div>
-                            <a href="{{ route('public.venue.details', $hall->slug) }}" class="btn-gold !h-9 !px-5 text-[11px] font-bold uppercase tracking-wider font-mono shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300">
+                            <a href="{{ route('public.venue.details', $hall->slug) }}" class="btn-gold !h-9 !px-5 text-[11px] font-bold uppercase tracking-wider shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300">
                                 View Details &rarr;
                             </a>
                         </div>
@@ -330,7 +355,7 @@
 
             @if($halls->count() > 0)
                 <div class="text-center pt-2 reveal-on-scroll">
-                    <a href="{{ route('public.venues') }}" class="btn-gold !h-11 !px-8 text-xs font-bold uppercase tracking-wider font-mono shadow-[0_0_25px_rgba(198,161,91,0.4)] hover:shadow-[0_0_35px_rgba(198,161,91,0.55)] transition-all duration-300 group">
+                    <a href="{{ route('public.venues') }}" class="btn-gold !h-11 !px-8 text-xs font-bold uppercase tracking-wider shadow-[0_0_25px_rgba(198,161,91,0.4)] hover:shadow-[0_0_35px_rgba(198,161,91,0.55)] transition-all duration-300 group">
                         <span class="relative z-10">View All Venues &rarr;</span>
                         <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500"></span>
                     </a>
@@ -372,7 +397,7 @@
         <div class="absolute inset-0 bg-gradient-to-r from-[#171513] via-transparent to-[#171513]"></div>
 
         <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-            <span class="text-xs font-mono uppercase tracking-[0.25em] text-[#C6A15B] block reveal-on-scroll">
+            <span class="text-xs uppercase tracking-[0.25em] text-[#C6A15B] block reveal-on-scroll">
                 A Legacy of Majestic Hospitality
             </span>
             <h2 class="font-serif-luxury text-3xl sm:text-5xl md:text-6xl text-white font-normal leading-tight reveal-on-scroll reveal-delay-1">
@@ -382,7 +407,7 @@
                 From candlelit Mehndi pavilions in Gulberg to palatial Barat ballrooms hosting 1,500 VIP guests along Islamabad Club Road.
             </p>
             <div class="pt-4 flex items-center justify-center gap-4 reveal-on-scroll reveal-delay-3">
-                <a href="{{ route('public.venues') }}" class="btn-gold !h-11 !px-8 text-xs font-bold uppercase tracking-wider font-mono shadow-[0_0_25px_rgba(198,161,91,0.4)] hover:shadow-[0_0_35px_rgba(198,161,91,0.55)] transition-all duration-300 group">
+                <a href="{{ route('public.venues') }}" class="btn-gold !h-11 !px-8 text-xs font-bold uppercase tracking-wider shadow-[0_0_25px_rgba(198,161,91,0.4)] hover:shadow-[0_0_35px_rgba(198,161,91,0.55)] transition-all duration-300 group">
                     <span class="relative z-10">Explore All Wedding Halls &rarr;</span>
                     <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500"></span>
                 </a>
@@ -521,7 +546,7 @@
                                 <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-mono">PER HEAD RATE</span>
                                 <strong class="font-cinzel text-xl text-[#171513] dark:text-[#C6A15B]">PKR {{ number_format($pkg->per_head_price) }}</strong>
                             </div>
-                            <button onclick="Livewire.dispatch('openWalkInModal', { package_id: '{{ $pkg->id }}' })" class="btn-obsidian !h-9 !px-4 text-xs font-semibold font-mono hover:border-[#C6A15B] hover:text-[#C6A15B] transition-all duration-300 flex items-center gap-1.5">
+                            <button onclick="Livewire.dispatch('openWalkInModal', { package_id: '{{ $pkg->id }}' })" class="btn-obsidian !h-9 !px-4 text-xs font-semibold hover:border-[#C6A15B] hover:text-[#C6A15B] transition-all duration-300 flex items-center gap-1.5">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                                 Reserve
                             </button>
@@ -553,7 +578,7 @@
              }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             <div class="text-center max-w-3xl mx-auto space-y-3 reveal-on-scroll">
-                <span class="text-xs font-mono uppercase tracking-[0.2em] text-[#C6A15B] block">
+                <span class="text-xs uppercase tracking-[0.2em] text-[#C6A15B] block">
                     Interactive Planning Assistant
                 </span>
                 <h2 class="font-serif-luxury text-3xl sm:text-5xl text-white font-normal">
@@ -568,13 +593,13 @@
                 <!-- Left: Interactive Controls (7 cols) -->
                 <div class="lg:col-span-7 space-y-6">
                     <div>
-                        <div class="flex justify-between items-center mb-2 font-mono text-xs">
+                        <div class="flex justify-between items-center mb-2 text-xs">
                             <span class="text-stone-300 uppercase tracking-wider">Expected Guest Count:</span>
                             <span class="text-[#C6A15B] font-bold text-base" x-text="guests + ' Guests'"></span>
                         </div>
                         <input type="range" min="100" max="1200" step="25" x-model.number="guests" 
                                class="w-full accent-[#C6A15B] cursor-pointer">
-                        <div class="flex justify-between text-[10px] text-stone-500 font-mono mt-1">
+                        <div class="flex justify-between text-[10px] text-stone-500 mt-1">
                             <span>100 Guests</span>
                             <span>500 Guests</span>
                             <span>1,200+ Guests</span>
@@ -583,27 +608,27 @@
 
                     <!-- Package Tier Selection -->
                     <div>
-                        <label class="block text-xs font-mono uppercase tracking-wider text-stone-300 mb-2">
+                        <label class="block text-xs uppercase tracking-wider text-stone-300 mb-2">
                             Select Feast Menu Standard:
                         </label>
                         <div class="grid grid-cols-3 gap-3">
                             <button type="button" @click="tier = 1850; hallRent = 120000"
                                     :class="tier === 1850 ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#C6A15B] font-bold' : 'border-white/10 text-stone-400 hover:border-white/30'"
-                                    class="p-3 border text-center transition font-mono text-xs">
+                                    class="p-3 border text-center transition text-xs">
                                 <div>Silver Feast</div>
                                 <div class="text-[10px] opacity-75 mt-0.5">PKR 1,850/Head</div>
                             </button>
 
                             <button type="button" @click="tier = 2200; hallRent = 150000"
                                     :class="tier === 2200 ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#C6A15B] font-bold' : 'border-white/10 text-stone-400 hover:border-white/30'"
-                                    class="p-3 border text-center transition font-mono text-xs">
+                                    class="p-3 border text-center transition text-xs">
                                 <div>Gold Mughlai</div>
                                 <div class="text-[10px] opacity-75 mt-0.5">PKR 2,200/Head</div>
                             </button>
 
                             <button type="button" @click="tier = 2850; hallRent = 200000"
                                     :class="tier === 2850 ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#C6A15B] font-bold' : 'border-white/10 text-stone-400 hover:border-white/30'"
-                                    class="p-3 border text-center transition font-mono text-xs">
+                                    class="p-3 border text-center transition text-xs">
                                 <div>Royal Imperial</div>
                                 <div class="text-[10px] opacity-75 mt-0.5">PKR 2,850/Head</div>
                             </button>
@@ -629,9 +654,9 @@
 
                 <!-- Right: Calculated Estimate Card (5 cols) -->
                 <div class="lg:col-span-5 bg-[#171513] border border-[#C6A15B]/40 p-6 sm:p-8 space-y-6">
-                    <span class="text-[10px] font-mono uppercase tracking-widest text-[#C6A15B] block">Authoritative Estimate</span>
+                    <span class="text-[10px] uppercase tracking-widest text-[#C6A15B] block">Authoritative Estimate</span>
                     
-                    <div class="space-y-3 font-mono text-xs border-b border-white/10 pb-4">
+                    <div class="space-y-3 text-xs border-b border-white/10 pb-4">
                         <div class="flex justify-between text-stone-300">
                             <span>Hall Shift Base Rent:</span>
                             <span class="text-white font-bold" x-text="'PKR ' + Number(hallRent).toLocaleString()"></span>
@@ -647,10 +672,10 @@
                         <div class="font-serif-luxury text-3xl sm:text-4xl text-[#C6A15B] font-semibold mt-1"
                              x-text="'PKR ' + Number(grandTotal).toLocaleString()">
                         </div>
-                        <span class="text-[10px] text-stone-500 font-mono block mt-1">Indicative estimate • Subject to applicable provincial sales taxes.</span>
+                        <span class="text-[10px] text-stone-500 block mt-1">Indicative estimate • Subject to applicable provincial sales taxes.</span>
                     </div>
 
-                    <a :href="'{{ route('public.venues') }}?guests=' + guests" class="btn-gold !w-full !h-11 text-xs font-bold uppercase tracking-wider block text-center font-mono">
+                    <a :href="'{{ route('public.venues') }}?guests=' + guests" class="btn-gold !w-full !h-11 text-xs font-bold uppercase tracking-wider block text-center">
                         View Matching Wedding Halls &rarr;
                     </a>
                 </div>
@@ -674,7 +699,7 @@
                     </h2>
                 </div>
                 <div class="flex items-center gap-3">
-                    <a href="{{ route('public.gallery') }}" class="btn-outline-gold !h-9 text-xs text-white border-[#C6A15B]/60">
+                    <a href="{{ route('public.gallery') }}" class="btn-outline-gold !h-9 text-xs text-white border-\[#C6A15B\]/60">
                         View Full Gallery &rarr;
                     </a>
                 </div>
@@ -730,7 +755,7 @@
         <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
                 <div class="lg:col-span-8 space-y-6 reveal-on-scroll">
-                    <span class="text-xs font-mono uppercase tracking-[0.25em] text-[#C6A15B] block font-bold">
+                    <span class="text-xs uppercase tracking-[0.25em] text-[#C6A15B] block font-bold">
                         EventHub Multi-Tenant SaaS
                     </span>
                     <h2 class="font-serif-luxury text-3xl sm:text-5xl font-normal leading-tight text-[#F8F5EF]">
@@ -742,7 +767,7 @@
                     </p>
 
                     <!-- Features Grid -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 font-mono text-xs text-stone-200">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-xs text-stone-200">
                         <div class="flex items-center gap-2">
                             <span class="text-[#C6A15B] font-bold">✓</span>
                             <span>Dedicated Public Website for Each Hall</span>
@@ -762,23 +787,23 @@
                     </div>
 
                     <div class="flex flex-wrap items-center gap-4 pt-4">
-                          <a href="{{ route('register') }}" class="btn-gold !h-12 !px-8 text-xs font-bold uppercase tracking-wider font-mono shadow-[0_0_25px_rgba(198,161,91,0.4)] hover:shadow-[0_0_35px_rgba(198,161,91,0.55)] transition-all duration-300 group">
+                          <a href="{{ route('register') }}" class="btn-gold !h-12 !px-8 text-xs font-bold uppercase tracking-wider shadow-[0_0_25px_rgba(198,161,91,0.4)] hover:shadow-[0_0_35px_rgba(198,161,91,0.55)] transition-all duration-300 group">
                               <span class="relative z-10">Register Your Hall on EventHub &rarr;</span>
                               <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500"></span>
                           </a>
-                        <a href="{{ route('public.about') }}" class="btn-outline-gold !h-12 !px-7 text-xs font-semibold text-white border-white/20 font-mono">
+                        <a href="{{ route('public.about') }}" class="btn-outline-gold !h-12 !px-7 text-xs font-semibold text-white border-white/20">
                             Explore SaaS Architecture
                         </a>
                     </div>
                 </div>
 
                 <div class="lg:col-span-4 bg-[#171513] border border-[#C6A15B]/50 p-6 sm:p-8 space-y-4 text-center">
-                    <span class="text-[10px] font-mono uppercase tracking-widest text-[#C6A15B] block">Hall Owner Portal</span>
+                    <span class="text-[10px] uppercase tracking-widest text-[#C6A15B] block">Hall Owner Portal</span>
                     <h3 class="font-serif-luxury text-2xl text-white font-normal">Already Listed?</h3>
                     <p class="text-xs text-stone-400">
                         Sign in to your Rent Admin dashboard to manage your hall website, calendar shifts, and payments.
                     </p>
-                      <a href="{{ route('login') }}" class="btn-obsidian !w-full !h-10 text-xs font-bold uppercase font-mono block hover:border-[#C6A15B] hover:text-[#C6A15B] transition-all duration-300">
+                      <a href="{{ route('login') }}" class="btn-obsidian !w-full !h-10 text-xs font-bold uppercase block hover:border-[#C6A15B] hover:text-[#C6A15B] transition-all duration-300">
                           Sign In as Rent Admin &rarr;
                       </a>
                 </div>
@@ -786,4 +811,37 @@
         </div>
     </section>
 
+    <script>
+        let currentSlide = 0;
+        const totalSlides = 5;
+        let slideInterval;
+
+        function showSlide(index) {
+            const slides = document.querySelectorAll('.slideshow-slide');
+            const dots = document.querySelectorAll('.slideshow-dot');
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('opacity-0', i !== index);
+                slide.classList.toggle('opacity-100', i === index);
+            });
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('bg-[#C6A15B]', i === index);
+                dot.classList.toggle('bg-white/30', i !== index);
+            });
+            currentSlide = index;
+        }
+
+        function nextSlide() { showSlide((currentSlide + 1) % totalSlides); resetInterval(); }
+        function setSlide(index) { showSlide(index); resetInterval(); }
+        function startInterval() { slideInterval = setInterval(() => { nextSlide(); }, 3500); }
+        function resetInterval() { clearInterval(slideInterval); startInterval(); }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            startInterval();
+            const slideshow = document.querySelector('.hero-slideshow');
+            if (slideshow) {
+                slideshow.addEventListener('mouseenter', () => clearInterval(slideInterval));
+                slideshow.addEventListener('mouseleave', () => startInterval());
+            }
+        });
+    </script>
 </x-layouts.public>

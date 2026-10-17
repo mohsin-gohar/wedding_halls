@@ -142,6 +142,42 @@
                         </div>
                     </div>
 
+                    <!-- Location: Latitude / Longitude / Google Maps -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-wider text-white/80 mb-1">
+                                Latitude
+                            </label>
+                            <input type="number" step="0.000001" wire:model="latitude"
+                                   placeholder="e.g. 31.5497"
+                                   class="w-full bg-[#171513] border border-white/15 text-white text-sm px-3.5 py-2.5 focus:border-[#C6A15B] outline-none font-mono">
+                            @error('latitude') <span class="text-rose-400 text-[11px] mt-1 block font-mono">{{ $message }}</span> @enderror
+                            <p class="text-[11px] text-white/40 mt-1">Map latitude coordinate of your hall.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-wider text-white/80 mb-1">
+                                Longitude
+                            </label>
+                            <input type="number" step="0.000001" wire:model="longitude"
+                                   placeholder="e.g. 74.3436"
+                                   class="w-full bg-[#171513] border border-white/15 text-white text-sm px-3.5 py-2.5 focus:border-[#C6A15B] outline-none font-mono">
+                            @error('longitude') <span class="text-rose-400 text-[11px] mt-1 block font-mono">{{ $message }}</span> @enderror
+                            <p class="text-[11px] text-white/40 mt-1">Map longitude coordinate of your hall.</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-mono uppercase tracking-wider text-white/80 mb-1">
+                            Google Maps Share URL
+                        </label>
+                        <input type="url" wire:model="google_maps_url"
+                               placeholder="https://maps.google.com/?q=..."
+                               class="w-full bg-[#171513] border border-white/15 text-white text-sm px-3.5 py-2.5 focus:border-[#C6A15B] outline-none">
+                        @error('google_maps_url') <span class="text-rose-400 text-[11px] mt-1 block font-mono">{{ $message }}</span> @enderror
+                        <p class="text-[11px] text-white/40 mt-1">Copied share link from Google Maps for your hall's location.</p>
+                    </div>
+
                     <!-- Tagline -->
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-wider text-white/80 mb-1">

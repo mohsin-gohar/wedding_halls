@@ -5,6 +5,9 @@ namespace App\Livewire;
 use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\Hall;
+use App\Models\HallView;
+use App\Models\HallWishlist;
+use App\Models\PageVisit;
 use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
@@ -12,6 +15,7 @@ use App\Models\User;
 use App\Models\Venue;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -655,6 +659,31 @@ class AdminDashboard extends Component
         $totalBookings = Booking::count();
         $totalGmv = Booking::sum('grand_total');
 
+        // Website Analytics
+        $totalPageVisits = PageVisit::count();
+        $totalHallViews = HallView::count();
+        $totalWishlists = HallWishlist::count();
+        $totalRegisteredUsers = User::count();
+        $todayVisits = PageVisit::whereDate('visited_at', today())->count();
+        $todayHallViews = HallView::whereDate('viewed_at', today())->count();
+
+        $topHallsByViews = Hall::with(['venue', 'tenant'])
+            ->withCount('hallViews as total_views')
+            ->orderByDesc('total_views')
+            ->take(10)
+            ->get();
+
+        $topHallsByWishlists = Hall::with(['venue', 'tenant'])
+            ->withCount('hallWishlists as total_wishlists')
+            ->orderByDesc('total_wishlists')
+            ->take(10)
+            ->get();
+
+        $recentVisits = PageVisit::with('user')
+            ->latest()
+            ->take(20)
+            ->get();
+
         $tenants = Tenant::with(['subscriptionPlan'])->withCount(['halls', 'bookings', 'users'])->latest()->get();
         $plans = SubscriptionPlan::withCount('tenants')->get();
         $subscriptionPayments = SubscriptionPayment::with(['tenant', 'plan'])->latest()->get();
@@ -668,6 +697,15 @@ class AdminDashboard extends Component
             'totalHalls' => $totalHalls,
             'totalBookings' => $totalBookings,
             'totalGmv' => $totalGmv,
+            'totalPageVisits' => $totalPageVisits,
+            'totalHallViews' => $totalHallViews,
+            'totalWishlists' => $totalWishlists,
+            'totalRegisteredUsers' => $totalRegisteredUsers,
+            'todayVisits' => $todayVisits,
+            'todayHallViews' => $todayHallViews,
+            'topHallsByViews' => $topHallsByViews,
+            'topHallsByWishlists' => $topHallsByWishlists,
+            'recentVisits' => $recentVisits,
             'tenants' => $tenants,
             'plans' => $plans,
             'subscriptionPayments' => $subscriptionPayments,

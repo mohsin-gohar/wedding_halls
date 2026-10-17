@@ -1435,3 +1435,287 @@ button {
 
 @keyframes luxSpin { to { transform: rotate(360deg); } }
 
+
+/* ==========================================================================
+   ENHANCED LUXURY BUTTON EFFECTS
+   ========================================================================== */
+
+/* Enhanced gold button with liquid metal effect */
+.lux-btn--gold {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #F2DE9A 0%, #E8C97A 35%, #D4AF37 65%, #C6A15B 100%);
+  background-size: 200% 200%;
+}
+
+.lux-btn--gold::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 30%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 60%,
+    rgba(255, 255, 255, 0.1) 70%,
+    transparent 80%,
+    transparent 100%
+  );
+  transform: rotate(30deg);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+}
+
+.lux-btn--gold:hover::before {
+  transform: rotate(30deg) translate(100%, 100%);
+}
+
+/* Enhanced hover shimmer */
+.lux-btn--gold::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  transition: left 0.75s ease;
+}
+
+.lux-btn--gold:hover::after {
+  left: 100%;
+}
+
+/* Enhanced obsidian button */
+.lux-btn--obsidian {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, #1E1C1A 0%, #100E0C 100%);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+}
+
+.lux-btn--obsidian::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(198, 161, 91, 0.1) 50%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.lux-btn--obsidian:hover::before {
+  opacity: 1;
+}
+
+/* Enhanced outline button */
+.lux-btn--outline {
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+  border: 1px solid rgba(212, 175, 55, 0.6);
+}
+
+.lux-btn--outline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 30%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 60%,
+    rgba(255, 255, 255, 0.1) 70%,
+    transparent 80%,
+    transparent 100%
+  );
+  transition: left 0.6s ease;
+}
+
+.lux-btn--outline:hover::before {
+  left: 100%;
+}
+
+/* Add subtle animation to gold foil border */
+.gold-foil-border::before {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(198, 161, 91, 0.45) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: goldFoilShift 4s ease-in-out infinite;
+}
+
+@keyframes goldFoilShift {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 0%; }
+  100% { background-position: 0% 0%; }
+}
+
+/* Enhance dark mode with more depth */
+.dark .glass-card-lux {
+  background: linear-gradient(
+    145deg,
+    rgba(23, 21, 19, 0.65) 0%,
+    rgba(23, 21, 19, 0.82) 100%
+  );
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 1px 1px rgba(198, 161, 91, 0.08);
+}
+
+.dark .glass-card-lux:hover {
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 1px 1px rgba(198, 161, 91, 0.12);
+}
+
+/* Add subtle glow to active states */
+.lux-btn--gold:active {
+  transform: translateY(0) scale(0.99);
+  box-shadow: 
+    0 3px 12px rgba(212, 175, 55, 0.3),
+    inset 0 1px 0 rgba(255, 235, 205, 0.6);
+}
+
+/* Enhance focus states for luxury feel */
+.input-luxury:focus,
+.input-luxury-dark:focus {
+  border-color: var(--champagne);
+  box-shadow: 
+    0 0 0 3px rgba(198, 161, 91, 0.15),
+    0 0 0 1px rgba(198, 161, 91, 0.05);
+}
+
+.dark .input-luxury-dark:focus {
+  box-shadow: 
+    0 0 0 3px rgba(198, 161, 91, 0.2),
+    0 0 0 1px rgba(198, 161, 91, 0.08);
+}
+
+
+/* ==========================================================================
+   ADDITIONAL LUXURY TOUCHES
+   ========================================================================== */
+
+/* Enhanced card hover with depth */
+.editorial-card, .luxury-package-card, .wedding-venue-card {
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), 
+              box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.4s ease;
+}
+
+.editorial-card:hover, .luxury-package-card:hover, .wedding-venue-card:hover {
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: 
+    0 25px 60px -12px rgba(23, 21, 19, 0.18),
+    0 0 40px -6px rgba(198, 161, 91, 0.25);
+}
+
+/* Dark mode card enhancements */
+.dark .editorial-card:hover, 
+.dark .luxury-package-card:hover, 
+.dark .wedding-venue-card:hover {
+  border-color: rgba(198, 161, 91, 0.5);
+  box-shadow: 
+    0 25px 60px -12px rgba(0, 0, 0, 0.8),
+    0 0 40px -6px rgba(198, 161, 91, 0.3);
+}
+
+/* Add subtle pulse to interactive elements on load */
+@keyframes luxuryPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.95; }
+}
+
+.lux-btn--gold {
+  animation: luxuryPulse 3s ease-in-out infinite;
+}
+
+/* Enhance scrollbar with luxury touch */
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(23, 21, 19, 0.1) 0%,
+    rgba(198, 161, 91, 0.3) 50%,
+    rgba(23, 21, 19, 0.1) 100%
+  );
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(23, 21, 19, 0.2) 0%,
+    rgba(198, 161, 91, 0.4) 50%,
+    rgba(23, 21, 19, 0.2) 100%
+  );
+}
+
+/* Add gradient text animation for special elements */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.text-gold-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease infinite;
+}
+
+/* Add subtle hover lift to all interactive elements */
+.hover-luxury-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-luxury-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -4px rgba(23, 21, 19, 0.08);
+}
+
+/* Enhance form input focus with luxury feel */
+.input-luxury, .input-luxury-dark {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.input-luxury:focus {
+  background: #FFFDF8;
+  box-shadow: 
+    0 0 0 3px rgba(198, 161, 91, 0.15),
+    0 0 0 1px rgba(198, 161, 91, 0.05);
+}
+
+.input-luxury-dark:focus {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 0 0 3px rgba(198, 161, 91, 0.2),
+    0 0 0 1px rgba(198, 161, 91, 0.08);
+}
+

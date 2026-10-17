@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Booking;
 use App\Models\Hall;
+use App\Models\PageVisit;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -156,6 +157,15 @@ class PublicVenues extends Component
         }
 
         $halls = $query->paginate(9);
+
+        // Track page visit for venues listing
+        PageVisit::record(
+            request()->path(),
+            request()->route()->getName(),
+            auth()->id() ? (string) auth()->id() : null,
+            request()->ip(),
+            request()->userAgent() ?? ''
+        );
 
         return view('livewire.public-venues', [
             'halls' => $halls,

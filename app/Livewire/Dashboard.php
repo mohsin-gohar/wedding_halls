@@ -6,6 +6,8 @@ use App\Models\Booking;
 use App\Models\Expense;
 use App\Models\GuestRsvp;
 use App\Models\Hall;
+use App\Models\HallView;
+use App\Models\HallWishlist;
 use App\Models\KitchenKot;
 use App\Models\Payment;
 use App\Models\UtilityLog;
@@ -254,6 +256,38 @@ class Dashboard extends Component
             ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
             ->count();
 
+        // 12. Hall Analytics: Views, Wishlists, Bookings per hall
+        $hallAnalytics = $halls->map(function ($h) use ($tenantId) {
+            $views = HallView::where('hall_id', $h->id)->count();
+            $wishlists = HallWishlist::where('hall_id', $h->id)->count();
+            $bookings = Booking::where('hall_id', $h->id)
+                ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+                ->count();
+            $confirmedBookings = Booking::where('hall_id', $h->id)
+                ->where('status', 'CONFIRMED')
+                ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+                ->count();
+            $totalRevenue = (float) Booking::where('hall_id', $h->id)
+                ->whereIn('status', ['CONFIRMED', 'COMPLETED'])
+                ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+                ->sum('grand_total');
+
+            return [
+                'id' => $h->id,
+                'name' => $h->name,
+                'slug' => $h->slug,
+                'views' => $views,
+                'wishlists' => $wishlists,
+                'total_bookings' => $bookings,
+                'confirmed_bookings' => $confirmedBookings,
+                'total_revenue' => $totalRevenue,
+            ];
+        })->sortByDesc('views');
+
+        $totalHallViews = HallView::where('tenant_id', $tenantId)->count();
+        $totalHallWishlists = HallWishlist::where('tenant_id', $tenantId)->count();
+        $totalHallBookings = Booking::where('tenant_id', $tenantId)->count();
+
         return view('livewire.dashboard', [
             'halls' => $halls,
             'periodLabel' => $periodLabel,
@@ -283,6 +317,10 @@ class Dashboard extends Component
             'todayEventsCount' => $todayEventsCount,
             'upcomingEventsCount' => $upcomingEventsCount,
             'pendingInquiriesCount' => $pendingInquiriesCount,
+            'hallAnalytics' => $hallAnalytics,
+            'totalHallViews' => $totalHallViews,
+            'totalHallWishlists' => $totalHallWishlists,
+            'totalHallBookings' => $totalHallBookings,
         ]);
     }
 

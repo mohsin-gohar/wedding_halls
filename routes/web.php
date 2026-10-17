@@ -105,8 +105,8 @@ Route::get('/refund', function () { return redirect()->route('public.policies', 
 |--------------------------------------------------------------------------
 */
     Route::middleware('guest')->prefix('customer')->group(function () {
-        Route::get('/login', CustomerLogin::class)->name('customer.login')->middleware('throttle:5,1');
-        Route::get('/register', CustomerRegister::class)->name('customer.register')->middleware('throttle:5,1');
+        Route::get('/login', CustomerLogin::class)->name('customer.login')->middleware('throttle:60,1');
+        Route::get('/register', CustomerRegister::class)->name('customer.register')->middleware('throttle:60,1');
     });
 
 Route::middleware('auth')->prefix('customer')->group(function () {
@@ -120,8 +120,8 @@ Route::middleware('auth')->prefix('customer')->group(function () {
 |--------------------------------------------------------------------------
 */
     Route::middleware('guest')->group(function () {
-        Route::get('/login', Login::class)->name('login')->middleware('throttle:5,1');
-        Route::get('/register', Register::class)->name('register')->middleware('throttle:5,1');
+        Route::get('/login', Login::class)->name('login')->middleware('throttle:60,1');
+        Route::get('/register', Register::class)->name('register')->middleware('throttle:60,1');
     });
 
 Route::post('/logout', function () {

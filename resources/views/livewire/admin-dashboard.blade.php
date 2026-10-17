@@ -151,6 +151,9 @@
         <button wire:click="setTab('audit')" class="px-4 py-2 transition {{ $activeTab === 'audit' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             Security Audit Log ({{ $auditLogs->count() }})
         </button>
+        <button wire:click="setTab('analytics')" class="px-4 py-2 transition {{ $activeTab === 'analytics' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+            Website Analytics ({{ $totalPageVisits }})
+        </button>
     </div>
 
     <!-- ===================================================================
@@ -601,6 +604,155 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+        </div>
+    @endif
+
+    <!-- ===================================================================
+         TAB 7: WEBSITE ANALYTICS (Super Admin Platform Insights)
+         =================================================================== -->
+    @if($activeTab === 'analytics')
+        <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
+            <div class="border-b border-[#E7E5E4] pb-4 flex items-center justify-between">
+                <div>
+                    <h3 class="font-serif text-2xl text-[#171513] font-normal">
+                        Platform Website Analytics
+                    </h3>
+                    <p class="text-xs text-stone-500 mt-0.5">Track visitor traffic, hall views, wishlists, and user engagement across the marketplace.</p>
+                </div>
+            </div>
+
+            <!-- Analytics Metric Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group hover:border-[#C6A15B] transition">
+                    <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-[#C6A15B] to-transparent absolute top-0 left-0 opacity-0 group-hover:opacity-100 dark:opacity-60 transition duration-300"></div>
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-mono">Total Visitors</span>
+                    <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalPageVisits }}</strong>
+                    <span class="text-[11px] text-stone-400 block font-sans">Page Views Today</span>
+                </div>
+
+                <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group hover:border-[#C6A15B] transition">
+                    <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-[#C6A15B] to-transparent absolute top-0 left-0 opacity-0 group-hover:opacity-100 dark:opacity-60 transition duration-300"></div>
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-mono">Hall Detail Views</span>
+                    <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalHallViews }}</strong>
+                    <span class="text-[11px] text-stone-400 block font-sans">Hall Page Views</span>
+                </div>
+
+                <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group hover:border-[#C6A15B] transition">
+                    <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-[#C6A15B] to-transparent absolute top-0 left-0 opacity-0 group-hover:opacity-100 dark:opacity-60 transition duration-300"></div>
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-mono">Wishlists Saved</span>
+                    <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalWishlists }}</strong>
+                    <span class="text-[11px] text-stone-400 block font-sans">Guest Shortlists</span>
+                </div>
+
+                <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group hover:border-[#C6A15B] transition">
+                    <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-[#C6A15B] to-transparent absolute top-0 left-0 opacity-0 group-hover:opacity-100 dark:opacity-60 transition duration-300"></div>
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-mono">Registered Users</span>
+                    <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalRegisteredUsers }}</strong>
+                    <span class="text-[11px] text-stone-400 block font-sans">Customer Accounts</span>
+                </div>
+
+                <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/50 gold-foil-border p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-[#8F7239] dark:text-[#C6A15B] block font-mono">Today's Visits</span>
+                    <strong class="font-cinzel text-xl text-[#171513] dark:text-[#C6A15B] block font-bold">{{ $todayVisits }}</strong>
+                    <span class="text-[10px] text-stone-500 dark:text-stone-400 block font-mono">Last 24 Hours</span>
+                </div>
+            </div>
+
+            <!-- Top Halls by Views and Wishlists -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-6 shadow-sm dark:shadow-xl space-y-6">
+                    <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-4">
+                        <span class="text-[10px] font-mono uppercase tracking-wider text-[#8F7239] font-bold block">Most Viewed Halls</span>
+                        <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold mt-0.5">Top Venues by Traffic</h3>
+                    </div>
+                    <div class="space-y-4">
+                        @forelse($topHallsByViews as $hall)
+                            <div class="flex items-center justify-between p-3 bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 rounded-lg">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-8 h-8 rounded-full bg-[#C6A15B]/20 flex items-center justify-center text-[#8F7239] text-xs font-bold">{{ $loop->iteration }}</span>
+                                    <div>
+                                        <div class="font-bold text-[#171513] dark:text-white text-sm">{{ $hall->name }}</div>
+                                        <span class="text-[10px] text-stone-500 font-mono">{{ $hall->venue->city ?? 'Pakistan' }}</span>
+                                    </div>
+                                </div>
+                                <span class="font-cinzel text-lg text-[#171513] dark:text-[#C6A15B] font-bold">{{ $hall->total_views }} Views</span>
+                            </div>
+                        @empty
+                            <div class="p-8 text-center text-stone-400 text-xs font-mono">No hall views recorded yet.</div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-6 shadow-sm dark:shadow-xl space-y-6">
+                    <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-4">
+                        <span class="text-[10px] font-mono uppercase tracking-wider text-[#8F7239] font-bold block">Most Wishlisted Halls</span>
+                        <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold mt-0.5">Guest Favorites</h3>
+                    </div>
+                    <div class="space-y-4">
+                        @forelse($topHallsByWishlists as $hall)
+                            <div class="flex items-center justify-between p-3 bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 rounded-lg">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-8 h-8 rounded-full bg-[#C6A15B]/20 flex items-center justify-center text-[#8F7239] text-xs font-bold">{{ $loop->iteration }}</span>
+                                    <div>
+                                        <div class="font-bold text-[#171513] dark:text-white text-sm">{{ $hall->name }}</div>
+                                        <span class="text-[10px] text-stone-500 font-mono">{{ $hall->venue->city ?? 'Pakistan' }}</span>
+                                    </div>
+                                </div>
+                                <span class="font-cinzel text-lg text-[#171513] dark:text-[#C6A15B] font-bold">{{ $hall->total_wishlists }} Saved</span>
+                            </div>
+                        @empty
+                            <div class="p-8 text-center text-stone-400 text-xs font-mono">No wishlists recorded yet.</div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Visitor Activity -->
+            <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-6 shadow-sm dark:shadow-xl">
+                <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-4 flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400 block font-bold">Recent Visitor Activity</span>
+                        <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold mt-0.5">Live Traffic Feed</h3>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
+                        <thead>
+                            <tr class="bg-[#F8F5EF] border-b border-[#E7E5E4] text-[10px] uppercase font-bold tracking-wider text-stone-600 font-mono">
+                                <th class="p-3 border-r border-[#E7E5E4]">Time</th>
+                                <th class="p-3 border-r border-[#E7E5E4]">Page / Path</th>
+                                <th class="p-3 border-r border-[#E7E5E4]">Visitor</th>
+                                <th class="p-3 border-r border-[#E7E5E4]">IP Address</th>
+                                <th class="p-3 text-right">Device</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#E7E5E4] font-mono">
+                            @forelse($recentVisits as $visit)
+                                <tr class="hover:bg-[#F8F5EF] transition">
+                                    <td class="p-3 border-r border-[#E7E5E4] text-stone-500 text-[11px]">{{ $visit->visited_at->format('d M Y H:i:s') }}</td>
+                                    <td class="p-3 border-r border-[#E7E5E4] text-stone-800 font-sans">{{ $visit->path }}</td>
+                                    <td class="p-3 border-r border-[#E7E5E4]">
+                                        @if($visit->user)
+                                            <span class="text-stone-800 font-semibold">{{ $visit->user->name }}</span>
+                                            <div class="text-[10px] text-stone-400 font-mono">{{ $visit->user->email }}</div>
+                                        @else
+                                            <span class="text-stone-500 font-sans">Guest Visitor</span>
+                                        @endif
+                                    </td>
+                                    <td class="p-3 border-r border-[#E7E5E4] text-stone-600 text-[11px]">{{ $visit->ip_address ?? '-' }}</td>
+                                    <td class="p-3 text-right text-stone-500 text-[10px] font-mono">
+                                        {{ str_contains($visit->user_agent ?? '', 'Mobile') ? 'Mobile' : 'Desktop' }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="p-8 text-center text-stone-400 font-sans">No visitor activity recorded yet.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     @endif

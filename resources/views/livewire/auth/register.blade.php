@@ -1,5 +1,5 @@
-<div class="min-h-[85vh] flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8 bg-[#F8F5EF]">
-    <div class="w-full max-w-2xl bg-white border border-[#E7E5E4] p-8 sm:p-12 shadow-sm space-y-8">
+<div class="min-h-[85vh] flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8 bg-[#F8F5EF] dark:bg-[#171513] transition-colors">
+    <div class="w-full max-w-2xl bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-8 sm:p-12 shadow-lg space-y-8">
         
         <!-- Header -->
         <div class="text-center space-y-2">

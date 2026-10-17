@@ -1,5 +1,4 @@
 <div class="bg-[#F8F5EF] dark:bg-[#171513] text-[#171513] dark:text-[#F8F5EF] min-h-screen transition-colors">
-
     <!-- ===================================================================
          SECTION 1: PAGE HERO & ARCHITECTURAL HEADLINE
          =================================================================== -->
@@ -34,29 +33,50 @@
         <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-6 sm:p-8 shadow-xl space-y-4">
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Search Keyword -->
-                <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-stone-700 mb-1.5 font-mono">Keyword Search</label>
-                    <input type="text"
-                           wire:model.live.debounce.300ms="search"
-                           placeholder="Hall name, area, or landmark..."
-                           class="input-luxury text-sm">
+                <!-- ========================================================
+         TWO SEPARATE PROMINENT SEARCH BARS
+         ======================================================== -->
+                <!-- City Search Bar (Full Width Row 1) -->
+                <div class="lg:col-span-4">
+                    <div class="relative">
+                        <label class="block text-[10px] font-mono uppercase tracking-widest text-[#C6A15B] mb-2 font-bold">
+                            🏙️ Search by City
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-[#C6A15B]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
+                            </div>
+                            <select wire:model.live="city" class="input-luxury pl-11 w-full text-sm bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30">
+                                <option value="All">— All Cities (Pakistan) —</option>
+                                <option value="Lahore">Lahore</option>
+                                <option value="Karachi">Karachi</option>
+                                <option value="Islamabad">Islamabad</option>
+                                <option value="Rawalpindi">Rawalpindi</option>
+                                <option value="Faisalabad">Faisalabad</option>
+                                <option value="Multan">Multan</option>
+                                <option value="Peshawar">Peshawar</option>
+                                <option value="Sialkot">Sialkot</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- City -->
-                <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-stone-700 mb-1.5 font-mono">City</label>
-                    <select wire:model.live="city" class="input-luxury text-sm">
-                        <option value="All">All Cities (Pakistan)</option>
-                        <option value="Lahore">Lahore</option>
-                        <option value="Karachi">Karachi</option>
-                        <option value="Islamabad">Islamabad</option>
-                        <option value="Rawalpindi">Rawalpindi</option>
-                        <option value="Faisalabad">Faisalabad</option>
-                        <option value="Multan">Multan</option>
-                        <option value="Peshawar">Peshawar</option>
-                        <option value="Sialkot">Sialkot</option>
-                    </select>
+                <!-- Hall Name / Area Search Bar (Full Width Row 2) -->
+                <div class="lg:col-span-4 mt-4">
+                    <div class="relative">
+                        <label class="block text-[10px] font-mono uppercase tracking-widest text-[#C6A15B] mb-2 font-bold">
+                            🔍 Search Hall Name or Area
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-[#C6A15B]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                            </div>
+                            <input type="text"
+                                   wire:model.live.debounce.300ms="search"
+                                   placeholder="e.g. Royal Marquee, Pearl Hall, Clifton, DHA, Gulberg..."
+                                   class="input-luxury pl-11 w-full text-sm pr-4 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30">
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Event Date -->
@@ -459,4 +479,119 @@
         </div>
     </section>
 
+    <!-- ===================================================================
+         SECTION 8: 14-DAY SHIFT AVAILABILITY CALENDAR
+         =================================================================== -->
+    <section class="py-16 bg-[#F8F5EF] border-t border-b border-[#E7E5E4]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+            <div class="text-center space-y-2 max-w-3xl mx-auto">
+                <div class="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.24em] text-[#8F7239] dark:text-[#C6A15B] font-bold">
+                    <span>Interactive Booking</span>
+                    <span>â€¢</span>
+                    <span>14-Day Shift Availability</span>
+                </div>
+                <h2 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white font-normal">
+                    Check Hall Availability
+                </h2>
+                <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-300 font-sans">
+                    Browse upcoming dates across the next 14 days. Select a date to view all available shifts.
+                </p>
+            </div>
+
+            <div class="max-w-4xl mx-auto bg-white dark:bg-[#171513] rounded-2xl border border-[#E7E5E4] dark:border-white/10 shadow-xl overflow-hidden">
+                <!-- Calendar Header -->
+                <div class="flex flex-wrap items-center justify-between gap-4 p-4 sm:p-6 border-b border-[#E7E5E4] dark:border-white/10">
+                    <div class="flex items-center gap-2">
+                        <button class="btn-calendar sm:btn-calendar w-8 h-8 flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        </button>
+                        <span class="font-serif-luxury text-lg font-medium text-[#171513] dark:text-white">Wedding Hall Availability</span>
+                        <button class="btn-calendar sm:btn-calendar w-8 h-8 flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-3 text-xs font-mono text-stone-600 dark:text-stone-400">
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Available
+                        </span>
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span> Partial
+                        </span>
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-red-600"></span> Booked
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Calendar Grid - Scrollable -->
+                <div id="shift-calendar" class="overflow-x-auto p-4 sm:p-6 space-y-2">
+                    <div class="grid grid-cols-7 gap-px bg-black/5 rounded-lg overflow-hidden">
+
+                        <!-- Day Cells (30 days) -->
+                        @for($d = 1; $d <= 30; $d++)
+                            @php
+                                $day = \Carbon\Carbon::now()->addDays($d);
+                                $booked_shifts = \App\Models\Booking::where('hall_id', $hall->id)
+                                    ->where('booking_date', $day->format('Y-m-d'))
+                                    ->whereIn('shift_type', ['afternoon', 'evening', 'night'])
+                                    ->count();
+
+                                $cell_status = $booked_shifts === 3 ? 'bg-red-500/10' : ($booked_shifts > 0 ? 'bg-amber-500/10' : 'bg-emerald-500/5');
+                            @endphp
+
+                            <div class="bg-white dark:bg-[#171513] p-2 sm:p-3 min-h-[80px] sm:min-h-[100px] border-r border-l border-[#E7E5E4] dark:border-white/5 cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-[#C6A15B]/50 {{ $cell_status }}">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] font-mono font-bold text-[#8F7239] dark:text-[#C6A15B] uppercase">{{ $day->format('D') }}</span>
+                                    <span class="text-[9px] font-mono text-stone-500">{{ $day->format('d M') }}</span>
+                                </div>
+
+                                <div class="space-y-1.5 mt-2">
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <span class="w-2 h-2 rounded-full bg-[#C6A15B]/60 flex-shrink-0"></span>
+                                        <span class="text-xs text-stone-600 dark:text-stone-400 truncate">Afternoon</span>
+                                        @if($booked_shifts >= 3)
+                                            <span class="text-[9px] font-mono bg-red-500/10 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-full font-bold">0 left</span>
+                                        @else
+                                            <span class="text-[9px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">{{ 3 - $booked_shifts }} left</span>
+                                        @endif
+                                    </div>
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <span class="w-2 h-2 rounded-full bg-[#C6A15B] flex-shrink-0"></span>
+                                        <span class="text-xs text-stone-600 dark:text-stone-400 truncate">Evening</span>
+                                        @if($booked_shifts >= 2)
+                                            <span class="text-[9px] font-mono bg-red-500/10 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-full font-bold">0 left</span>
+                                        @else
+                                            <span class="text-[9px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">{{ 3 - $booked_shifts }} left</span>
+                                        @endif
+                                    </div>
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <span class="w-2 h-2 rounded-full bg-[#C6A15B]/30 flex-shrink-0"></span>
+                                        <span class="text-xs text-stone-600 dark:text-stone-400 truncate">Night</span>
+                                        @if($booked_shifts >= 1)
+                                            <span class="text-[9px] font-mono bg-red-500/10 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-full font-bold">0 left</span>
+                                        @else
+                                            <span class="text-[9px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">{{ 3 - $booked_shifts }} left</span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="mt-2 pt-2 border-t border-[#E7E5E4] dark:border-white/5 flex justify-between items-center">
+                                    <span class="text-[8px] font-mono uppercase text-stone-500">{{ $booked_shifts }}/3 booked</span>
+                                    <span class="text-[9px] font-mono uppercase px-2 py-0.5 rounded-full">
+                                        @if($booked_shifts === 3)
+                                            <span class="text-red-600 dark:text-red-400 font-bold">Fully Booked</span>
+                                        @elseif($booked_shifts > 0)
+                                            <span class="text-amber-600 dark:text-amber-400 font-bold">Partial</span>
+                                        @else
+                                            <span class="text-emerald-600 dark:text-emerald-400 font-bold">Available</span>
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+                        @endfor
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>

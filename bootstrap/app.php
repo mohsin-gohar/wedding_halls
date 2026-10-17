@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->validateCsrfTokens(except: [
             'webhooks/*',
+            'logout',
         ]);
 
         // Enforce HTTPS redirects early (production only via FORCE_HTTPS).

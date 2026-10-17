@@ -567,6 +567,88 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- ===================================================================
+             HALL ANALYTICS: Views, Wishlists & Bookings Per Hall
+             =================================================================== -->
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-6 shadow-sm dark:shadow-xl space-y-6 transition-colors duration-200">
+            <div class="flex items-center justify-between border-b border-[#E7E5E4] dark:border-white/10 pb-4">
+                <div>
+                    <span class="text-[10px] font-mono uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B] font-bold block">Hall Performance Insights</span>
+                    <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold mt-0.5">Views, Wishlists &amp; Bookings Per Hall</h3>
+                </div>
+            </div>
+
+            <!-- Analytics KPI Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group hover:border-[#C6A15B] transition">
+                    <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-[#C6A15B] to-transparent absolute top-0 left-0 opacity-0 group-hover:opacity-100 dark:opacity-60 transition duration-300"></div>
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-mono">Total Hall Views</span>
+                    <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalHallViews }}</strong>
+                    <span class="text-[11px] text-stone-400 block font-sans">Guest Page Views</span>
+                </div>
+                <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group hover:border-[#C6A15B] transition">
+                    <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-[#C6A15B] to-transparent absolute top-0 left-0 opacity-0 group-hover:opacity-100 dark:opacity-60 transition duration-300"></div>
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-mono">Wishlists Saved</span>
+                    <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalHallWishlists }}</strong>
+                    <span class="text-[11px] text-stone-400 block font-sans">Guest Shortlists</span>
+                </div>
+                <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group hover:border-[#C6A15B] transition">
+                    <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-[#C6A15B] to-transparent absolute top-0 left-0 opacity-0 group-hover:opacity-100 dark:opacity-60 transition duration-300"></div>
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-mono">Total Bookings</span>
+                    <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalHallBookings }}</strong>
+                    <span class="text-[11px] text-stone-400 block font-sans">Reserved Functions</span>
+                </div>
+                <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/50 gold-foil-border p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-[#8F7239] dark:text-[#C6A15B] block font-mono">Conversion Rate</span>
+                    <strong class="font-cinzel text-xl text-[#171513] dark:text-[#C6A15B] block font-bold">
+                        @php($totalHallViews > 0 ? round(($totalHallBookings / $totalHallViews) * 100, 1) : 0)%</strong>
+                    <span class="text-[10px] text-stone-500 dark:text-stone-400 block font-mono">View to Booking</span>
+                </div>
+            </div>
+
+            <!-- Per-Hall Analytics Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse border border-[#E7E5E4]">
+                    <thead class="bg-[#F8F5EF] dark:bg-[#171513] border-b border-[#E7E5E4] dark:border-white/10 text-[10px] font-mono uppercase tracking-wider text-[#78716C] dark:text-[#C6A15B]">
+                        <tr>
+                            <th class="p-4 font-bold">Hall Name</th>
+                            <th class="p-4 font-bold text-right">Views</th>
+                            <th class="p-4 font-bold text-right">Wishlists</th>
+                            <th class="p-4 font-bold text-right">Total Bookings</th>
+                            <th class="p-4 font-bold text-right">Confirmed</th>
+                            <th class="p-4 font-bold text-right">Revenue (PKR)</th>
+                            <th class="p-4 font-bold text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#E7E5E4] dark:divide-white/10 text-stone-800 dark:text-stone-200">
+                        @forelse($hallAnalytics as $ha)
+                            <tr class="hover:bg-[#F8F5EF] dark:hover:bg-[#171513]/70 transition">
+                                <td class="p-4">
+                                    <div class="font-bold text-[#171513] dark:text-white">{{ $ha['name'] }}</div>
+                                    <span class="text-[10px] text-stone-500 font-mono">{{ $ha['slug'] }}</span>
+                                </td>
+                                <td class="p-4 font-mono font-bold text-[#171513] dark:text-white text-right">{{ $ha['views'] }}</td>
+                                <td class="p-4 font-mono font-bold text-[#8F7239] dark:text-[#C6A15B] text-right">{{ $ha['wishlists'] }}</td>
+                                <td class="p-4 font-mono font-bold text-stone-600 dark:text-stone-300 text-right">{{ $ha['total_bookings'] }}</td>
+                                <td class="p-4 font-mono font-bold text-stone-600 dark:text-stone-300 text-right">{{ $ha['confirmed_bookings'] }}</td>
+                                <td class="p-4 font-mono font-bold text-[#171513] dark:text-white text-right">PKR {{ number_format($ha['total_revenue'], 0) }}</td>
+                                <td class="p-4 text-right">
+                                    <a href="{{ route('hall.showcase', $ha['slug']) }}" target="_blank" class="text-xs font-mono text-[#C6A15B] dark:text-[#8F7239] hover:underline font-bold">
+                                        View Live Page ↗
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="p-8 text-center text-stone-400 font-mono">No halls configured yet.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
 </div>

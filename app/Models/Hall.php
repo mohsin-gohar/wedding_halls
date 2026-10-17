@@ -92,4 +92,14 @@ class Hall extends Model
     {
         return $this->hasMany(FloorPlan::class);
     }
+
+    public function hallViews(): HasMany
+    {
+        return $this->hasMany(HallView::class);
+    }
+
+    public function hallWishlists(): HasMany
+    {
+        return $this->hasMany(HallWishlist::class);
+    }
 }

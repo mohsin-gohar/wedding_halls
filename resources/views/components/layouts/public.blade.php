@@ -107,19 +107,12 @@
                         </a>
                     @else
                         @if(auth()->user()->isSuperAdmin())
-                            <a href="{{ route('register') }}" class="btn-outline-gold !h-9 !px-4 !text-[11px] hidden shadow-[0_0_15px_rgba(198,161,91,0.25)] hover:shadow-[0_0_26px_rgba(198,161,91,0.5)] transition-all duration-300 sm:inline-flex">
-                                List Your Hall
+                            <a href="{{ route('admin.dashboard') }}" class="btn-gold !h-9 !px-3 !py-1 !text-[10px] shadow-[0_0_15px_rgba(198,161,91,0.3)] inline-flex items-center gap-1.5 font-bold whitespace-nowrap">
+                                <span>Owner Dashboard</span>
                             </a>
-                            <a href="{{ route('admin.dashboard') }}" class="btn-gold !h-9 !px-4 !text-[11px] hidden shadow-[0_0_15px_rgba(198,161,91,0.3)] sm:inline-flex">
-                                Super Admin
-                            </a>
-                        @elseif(auth()->user()->isTenantOwner() || auth()->user()->isFrontDesk() || auth()->user()->isChef())
-                            <a href="{{ route('dashboard') }}" class="btn-gold !h-9 !px-4 !text-[11px] hidden shadow-[0_0_15px_rgba(198,161,91,0.3)] sm:inline-flex">
-                                Vendor Console
-                            </a>
-                        @else
-                            <a href="{{ route('customer.dashboard') }}" class="btn-gold !h-9 !px-4 !text-[11px] hidden shadow-[0_0_15px_rgba(198,161,91,0.3)] sm:inline-flex">
-                                My Bookings
+                        @elseif(auth()->user()->isTenantOwner())
+                            <a href="{{ route('dashboard') }}" class="btn-gold !h-9 !px-3 !py-1 !text-[10px] shadow-[0_0_15px_rgba(198,161,91,0.3)] inline-flex items-center gap-1.5 font-bold whitespace-nowrap">
+                                <span>Hall Dashboard</span>
                             </a>
                         @endif
 
@@ -176,11 +169,9 @@
                 @else
                             @if(auth()->user()->isSuperAdmin())
                                 <a href="{{ route('register') }}" class="btn-outline-gold !w-full !justify-center !text-[#F8F5EF] !border-[#C6A15B]/60 hover:!text-[#171513] hover:!border-[#C6A15B] hover:!bg-[#C6A15B] transition-all duration-300">List Your Wedding Hall</a>
-                                <a href="{{ route('admin.dashboard') }}" class="btn-gold !w-full !justify-center">Go to Dashboard</a>
-                            @elseif(auth()->user()->isTenantOwner() || auth()->user()->isFrontDesk() || auth()->user()->isChef())
-                                <a href="{{ route('dashboard') }}" class="btn-gold !w-full !justify-center">Go to Dashboard</a>
-                            @else
-                                <a href="{{ route('customer.dashboard') }}" class="btn-gold !w-full !justify-center">Go to Dashboard</a>
+                                <a href="{{ route('admin.dashboard') }}" class="btn-gold !w-full !justify-center">Owner Dashboard</a>
+                            @elseif(auth()->user()->isTenantOwner())
+                                <a href="{{ route('dashboard') }}" class="btn-gold !w-full !justify-center">Hall Dashboard</a>
                             @endif
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
@@ -271,8 +262,9 @@
     </footer>
 
     <!-- Interactive Walk-in Booking Modal Component (Accessible across public site) -->
-    @livewire('walk-in-booking-modal')
+    <livewire:walk-in-booking-modal />
 
     @livewireScripts
 </body>
 </html>
+
