@@ -1,4 +1,16 @@
-<div class="bg-[#F8F5EF] dark:bg-[#171513] text-[#171513] dark:text-[#F8F5EF] min-h-screen">
+<div class="bg-[#F8F5EF] dark:bg-[#171513] text-[#171513] dark:text-[#F8F5EF] min-h-screen"
+     x-data="{ 
+         bookedAlertOpen: false, 
+         alertShift: '', 
+         alertDate: '', 
+         alertNote: '', 
+         openBookedAlert(shift, date, note = '') { 
+             this.alertShift = shift; 
+             this.alertDate = date; 
+             this.alertNote = note; 
+             this.bookedAlertOpen = true; 
+         } 
+     }">
 
     @php
         $settings = is_array($hall->website_settings) ? $hall->website_settings : [];
@@ -588,102 +600,96 @@
                         @endforeach
                     </div>
 
-                    <!-- Shift Status Legend -->
-                    <div class="flex flex-wrap items-center gap-4 text-xs font-mono font-medium text-stone-600 dark:text-stone-300">
-                        <span class="inline-flex items-center gap-1.5">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Available (Open)
-                        </span>
-                        <span class="inline-flex items-center gap-1.5">
-                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Partial Booked
-                        </span>
-                        <span class="inline-flex items-center gap-1.5">
-                            <span class="w-2.5 h-2.5 rounded-full bg-red-600"></span> Fully Booked (🔒)
-                        </span>
+                    <!-- Shift Status Legend (Matching Reference Button Style) -->
+                    <div class="flex flex-wrap items-center gap-3 sm:gap-5 text-xs font-mono font-medium">
+                        <div class="inline-flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded text-[10px] font-bold bg-gradient-to-r from-[#DFBF7A] via-[#C6A15B] to-[#997A3A] text-[#171513] shadow-xs border border-[#C6A15B]">
+                                FILLED
+                            </span>
+                            <span class="text-stone-700 dark:text-stone-300">= Booked Shift (🔒 Reserved)</span>
+                        </div>
+                        <div class="inline-flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded text-[10px] font-medium bg-transparent border border-[#C6A15B] text-[#C6A15B]">
+                                UNFILLED
+                            </span>
+                            <span class="text-stone-700 dark:text-stone-300">= Available Shift (Open to Book)</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Shift Acronym Key (Explaining L, D, N) -->
-                <div class="bg-amber-500/10 dark:bg-[#C6A15B]/10 border border-[#C6A15B]/30 rounded-lg px-4 py-2 text-center sm:text-left flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-stone-700 dark:text-stone-300">
-                    <span class="font-bold text-[#8F7239] dark:text-[#C6A15B]">📌 Shift Guide:</span>
-                    <div class="flex flex-wrap items-center gap-3 sm:gap-6">
-                        <span><strong class="text-emerald-700 dark:text-emerald-400">Afternoon:</strong> 12:00 PM – 4:00 PM (Lunch)</span>
-                        <span><strong class="text-emerald-700 dark:text-emerald-400">Evening:</strong> 6:30 PM – 10:30 PM (Dinner)</span>
-                        <span><strong class="text-emerald-700 dark:text-emerald-400">Night:</strong> 11:00 PM – 3:00 AM (Late Night)</span>
+                <!-- Shift Timings Schedule Bar -->
+                <div class="bg-white/80 dark:bg-[#1A1816] border border-[#C6A15B]/30 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs font-mono shadow-xs">
+                    <span class="font-bold text-[#8F7239] dark:text-[#C6A15B] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                        <span>🕒</span> Daily 3-Shift Schedule:
+                    </span>
+                    <div class="flex flex-wrap items-center gap-3 sm:gap-6 text-stone-600 dark:text-stone-300">
+                        <span><strong class="text-[#8F7239] dark:text-[#DFBF7A]">Lunch / Afternoon:</strong> 12:00 PM – 4:00 PM</span>
+                        <span><strong class="text-[#8F7239] dark:text-[#DFBF7A]">Dinner / Evening:</strong> 6:30 PM – 10:30 PM</span>
+                        <span><strong class="text-[#8F7239] dark:text-[#DFBF7A]">Late Night / Mehndi:</strong> 11:00 PM – 3:00 AM</span>
                     </div>
                 </div>
             </div>
 
-            <!-- THE AUTHENTIC CALENDAR CARD (Accurately modeled after reference flip-calendar image, full luxury width) -->
-            <div class="max-w-5xl mx-auto w-full relative pt-5">
+            <!-- THE LUXURY EXECUTIVE CALENDAR CARD (Strict Obsidian & Brushed Gold Palette) -->
+            <div class="max-w-5xl mx-auto w-full relative">
                 
-                <!-- Physical Binder Hanging Loops (Tabs protruding above the calendar card) -->
-                <div class="absolute top-0 left-[25%] -translate-x-1/2 w-8 h-12 bg-slate-900 dark:bg-stone-950 rounded-full border-2 border-slate-700 dark:border-stone-600 shadow-xl z-20 flex items-center justify-center">
-                    <div class="w-4 h-4 rounded-full bg-slate-950 border border-slate-600/50"></div>
-                </div>
-                <div class="absolute top-0 right-[25%] translate-x-1/2 w-8 h-12 bg-slate-900 dark:bg-stone-950 rounded-full border-2 border-slate-700 dark:border-stone-600 shadow-xl z-20 flex items-center justify-center">
-                    <div class="w-4 h-4 rounded-full bg-slate-950 border border-slate-600/50"></div>
-                </div>
-
-                <!-- Main Calendar Block with Rounded Corners and Soft Shadow (Like Reference Image) -->
-                <div class="bg-white dark:bg-[#171513] border-2 border-[#C6A15B]/40 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] overflow-hidden">
+                <!-- Main Calendar Block with Rounded Corners and Royal Shadow -->
+                <div class="bg-white dark:bg-[#171513] border-2 border-[#C6A15B]/50 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden">
                     
-                    <!-- Iconic Red Binder Header (Matching Reference Image with Luxury Gold Trim) -->
-                    <div class="relative bg-gradient-to-r from-[#b91c1c] via-[#dc2626] to-[#b91c1c] text-white pt-8 pb-7 px-6 sm:px-12 flex items-center justify-between border-b-2 border-red-800 shadow-inner">
+                    <!-- Luxury Executive Obsidian & Brushed Gold Header (No Red Clash) -->
+                    <div class="relative bg-gradient-to-r from-[#171513] via-[#231F1C] to-[#171513] text-white py-6 px-6 sm:px-10 flex items-center justify-between border-b-2 border-[#C6A15B]/35 shadow-md">
                         
-                        <!-- Left Binder Eyelet Hole (matching image cutout) -->
-                        <div class="absolute top-3 left-[25%] -translate-x-1/2 w-10 h-10 rounded-full bg-white dark:bg-[#171513] border-[3px] border-slate-800 dark:border-stone-700 shadow-inner z-10 flex items-center justify-center pointer-events-none">
-                            <div class="w-5 h-5 rounded-full bg-slate-900"></div>
-                        </div>
-                        <!-- Right Binder Eyelet Hole (matching image cutout) -->
-                        <div class="absolute top-3 right-[25%] translate-x-1/2 w-10 h-10 rounded-full bg-white dark:bg-[#171513] border-[3px] border-slate-800 dark:border-stone-700 shadow-inner z-10 flex items-center justify-center pointer-events-none">
-                            <div class="w-5 h-5 rounded-full bg-slate-900"></div>
-                        </div>
-
-                        <!-- Left: Previous Month Button + Month Name (Bold Uppercase) -->
-                        <div class="flex items-center gap-4 z-10">
+                        <!-- Left: Previous Month Button + Month Name (Bold Serif Luxury) -->
+                        <div class="flex items-center gap-3 sm:gap-4 z-10">
                             <button type="button" 
                                     wire:click="prevMonth"
                                     {{ $monthOffset === 0 ? 'disabled' : '' }}
-                                    class="w-10 h-10 rounded-full border border-white/40 bg-black/25 hover:bg-black/50 flex items-center justify-center text-white disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer shadow-md"
+                                    class="w-10 h-10 rounded-xl border border-[#C6A15B]/40 bg-[#171513] hover:bg-[#C6A15B] hover:text-[#171513] text-[#C6A15B] flex items-center justify-center disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer shadow-md"
                                     title="Previous Month">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
                             </button>
-                            <span class="font-sans font-black text-2xl sm:text-4xl uppercase tracking-wider text-white drop-shadow-md select-none">
+                            <span class="font-serif-luxury font-bold text-2xl sm:text-3xl uppercase tracking-wider text-white drop-shadow-md select-none">
                                 {{ $monthName }}
                             </span>
                         </div>
 
-                        <!-- Right: Year (Extra Large Bold Numbers) + Next Month Button -->
-                        <div class="flex items-center gap-4 z-10">
-                            <span class="font-sans font-black text-2xl sm:text-4xl text-white tracking-wide drop-shadow-md select-none">
+                        <!-- Center: Subtitle / Badge -->
+                        <div class="hidden md:flex flex-col items-center">
+                            <span class="text-[9px] font-mono uppercase tracking-[0.25em] text-[#C6A15B] font-bold">Shift Availability Matrix</span>
+                            <span class="text-xs text-stone-400 font-sans">Barat • Valima • Mehndi Shifts</span>
+                        </div>
+
+                        <!-- Right: Year (Gold Numbers) + Next Month Button -->
+                        <div class="flex items-center gap-3 sm:gap-4 z-10">
+                            <span class="font-serif-luxury font-bold text-2xl sm:text-3xl text-[#DFBF7A] tracking-wide drop-shadow-md select-none">
                                 {{ $year }}
                             </span>
                             <button type="button" 
                                     wire:click="nextMonth"
                                     {{ $monthOffset === 2 ? 'disabled' : '' }}
-                                    class="w-10 h-10 rounded-full border border-white/40 bg-black/25 hover:bg-black/50 flex items-center justify-center text-white disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer shadow-md"
+                                    class="w-10 h-10 rounded-xl border border-[#C6A15B]/40 bg-[#171513] hover:bg-[#C6A15B] hover:text-[#171513] text-[#C6A15B] flex items-center justify-center disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer shadow-md"
                                     title="Next Month">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Weekdays Header (SUN MON TUE WED THU FRI SAT - Sunday in Bold Red as in image) -->
-                    <div class="grid grid-cols-7 border-b border-stone-200 dark:border-white/10 bg-[#FAFAFA] dark:bg-stone-950 text-center py-3.5 text-xs sm:text-sm font-sans font-bold tracking-wider">
-                        <div class="text-red-600 dark:text-red-500 font-extrabold">SUN</div>
-                        <div class="text-[#1e293b] dark:text-stone-300">MON</div>
-                        <div class="text-[#1e293b] dark:text-stone-300">TUE</div>
-                        <div class="text-[#1e293b] dark:text-stone-300">WED</div>
-                        <div class="text-[#1e293b] dark:text-stone-300">THU</div>
-                        <div class="text-[#1e293b] dark:text-stone-300">FRI</div>
-                        <div class="text-[#1e293b] dark:text-stone-300">SAT</div>
+                    <!-- Weekdays Header (SUN MON TUE WED THU FRI SAT - Luxury Gold Accent) -->
+                    <div class="grid grid-cols-7 border-b border-[#C6A15B]/20 bg-[#F8F5EF] dark:bg-[#1A1816] text-center py-3 text-xs sm:text-sm font-sans font-bold tracking-wider">
+                        <div class="text-[#8F7239] dark:text-[#C6A15B] font-extrabold">SUN</div>
+                        <div class="text-[#171513] dark:text-stone-300">MON</div>
+                        <div class="text-[#171513] dark:text-stone-300">TUE</div>
+                        <div class="text-[#171513] dark:text-stone-300">WED</div>
+                        <div class="text-[#171513] dark:text-stone-300">THU</div>
+                        <div class="text-[#171513] dark:text-stone-300">FRI</div>
+                        <div class="text-[#171513] dark:text-stone-300">SAT</div>
                     </div>
 
                     <!-- Days 7-Column Grid (Centered numbers matching calendar sheet aesthetic) -->
-                    <div class="grid grid-cols-7 divide-x divide-y divide-stone-100 dark:divide-white/5 bg-white dark:bg-[#171513]">
+                    <div class="grid grid-cols-7 divide-x divide-y divide-stone-200/70 dark:divide-white/5 bg-white dark:bg-[#171513]">
                         {{-- Leading blank slots for starting weekday offset --}}
                         @for($i = 0; $i < $startDayOfWeek; $i++)
-                            <div class="min-h-[100px] sm:min-h-[120px] bg-stone-50/40 dark:bg-white/[0.01]"></div>
+                            <div class="min-h-[110px] sm:min-h-[135px] bg-stone-50/40 dark:bg-white/[0.01]"></div>
                         @endfor
 
                         {{-- Full Month Calendar Days --}}
@@ -699,78 +705,110 @@
                                 $bNight = $bookings->get($cStr . '_NIGHT');
 
                                 $bookedCount = ($bAfternoon ? 1 : 0) + ($bEvening ? 1 : 0) + ($bNight ? 1 : 0);
-                                $isSelectable = !$isPast && $bookedCount < 3;
+                                $isSelectable = !$isPast;
                             @endphp
-                            <div @if($isSelectable) wire:click="setSelectedDate('{{ $cStr }}')" wire:keydown.enter="setSelectedDate('{{ $cStr }}')" wire:keydown.space.prevent="setSelectedDate('{{ $cStr }}')" role="button" tabindex="0" aria-label="View availability for {{ $cDay->format('F j, Y') }}" @else aria-disabled="true" @endif
-                                 class="min-h-[100px] sm:min-h-[120px] p-1 sm:p-1.5 flex flex-col justify-between transition-all relative group {{ $isSelectable ? 'cursor-pointer' : 'cursor-not-allowed' }} {{ $isPast ? 'opacity-35 bg-stone-50/50 dark:bg-white/[0.01]' : ($bookedCount === 3 ? 'bg-red-50/70 dark:bg-red-950/30' : ($bookedCount > 0 ? 'bg-amber-50/40 dark:bg-amber-950/20 hover:bg-amber-100/50' : 'hover:bg-emerald-50/30 dark:hover:bg-[#C6A15B]/10')) }} {{ $selectedDate === $cStr ? 'ring-2 ring-[#C6A15B] ring-inset bg-[#C6A15B]/20 font-bold border-[#C6A15B]' : '' }}">
+                            <div @if($isSelectable) wire:click="setSelectedDate('{{ $cStr }}')" wire:keydown.enter="setSelectedDate('{{ $cStr }}')" role="button" tabindex="0" aria-label="View availability for {{ $cDay->format('F j, Y') }}" @else aria-disabled="true" @endif
+                                 class="min-h-[110px] sm:min-h-[135px] p-1 sm:p-1.5 flex flex-col justify-between transition-all relative group {{ $isSelectable ? 'cursor-pointer' : 'cursor-not-allowed' }} {{ $isPast ? 'opacity-40 bg-stone-50/60 dark:bg-white/[0.01]' : ($bookedCount === 3 ? 'bg-[#FAF7F2] dark:bg-[#1C1A17]' : ($bookedCount > 0 ? 'bg-[#FAF7F2] dark:bg-[#1E1B18] hover:bg-[#F2ECE0] dark:hover:bg-[#25221E]' : 'hover:bg-[#F8F5EF] dark:hover:bg-[#1E1B18]')) }} {{ $selectedDate === $cStr ? 'ring-2 ring-[#C6A15B] ring-inset bg-[#C6A15B]/15 font-bold border-[#C6A15B]' : '' }}">
                                 
-                                <!-- Large Clean Date Number (Sunday in Red matching reference image) -->
+                                <!-- Clean Date Number + Status Badges -->
                                 <div class="w-full flex items-center justify-between px-0.5 sm:px-1">
-                                    <span class="text-base sm:text-xl font-bold font-sans {{ $isPast ? 'text-stone-400' : ($bookedCount === 3 ? 'text-red-700 dark:text-red-400 font-extrabold line-through' : ($isSunday ? 'text-red-600 dark:text-red-500 font-extrabold' : ($isToday ? 'text-[#8F7239] dark:text-[#C6A15B] font-extrabold' : 'text-[#1e293b] dark:text-stone-200'))) }}">
+                                    <span class="text-sm sm:text-base font-bold font-sans {{ $isPast ? 'text-stone-400' : ($isToday ? 'text-[#8F7239] dark:text-[#C6A15B] font-extrabold' : ($isSunday ? 'text-[#8F7239] dark:text-[#DFBF7A] font-extrabold' : 'text-[#171513] dark:text-stone-200')) }}">
                                         {{ $cDay->format('j') }}
                                     </span>
                                     @if($isToday)
-                                        <span class="text-[8px] font-mono font-bold uppercase px-1 bg-red-600 text-white rounded-xs">Today</span>
+                                        <span class="text-[7.5px] font-mono font-bold uppercase px-1.5 py-0.2 bg-[#C6A15B] text-[#171513] rounded-xs shadow-xs">Today</span>
                                     @elseif($bookedCount === 3 && !$isPast)
-                                        <span class="text-[8px] font-mono font-bold text-red-600 dark:text-red-400" title="All Shifts Booked">🔒</span>
+                                        <span class="text-[8px] font-mono font-bold text-[#8F7239] dark:text-[#C6A15B]" title="All 3 Shifts Reserved">🔒 3/3</span>
                                     @endif
                                 </div>
 
-                                <!-- Explicit Shift Labels: Afternoon Book, Evening Book, Night Book -->
-                                <div class="w-full pt-1">
-                                    @if(!$isPast)
-                                        @if($bookedCount === 0)
-                                            <!-- All Shifts Free -->
-                                            <div class="text-center py-2 space-y-0.5">
-                                                <span class="inline-block w-full text-[7.5px] sm:text-[9px] font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-1 py-0.5 rounded truncate">
-                                                    All Shifts Open
-                                                </span>
-                                                <span class="text-[7.5px] sm:text-[8.5px] font-mono text-stone-500 dark:text-stone-400 block">
-                                                    3 Available
-                                                </span>
-                                            </div>
-                                        @else
-                                            <!-- One or more shifts are booked -->
-                                            <div class="space-y-0.5 sm:space-y-1">
-                                                <!-- Afternoon Shift -->
-                                                @if($bAfternoon)
-                                                    <div class="w-full text-[7.5px] sm:text-[8.5px] font-mono font-bold uppercase px-0.5 sm:px-1 py-0.5 bg-red-600 text-white rounded text-center truncate shadow-2xs" title="Afternoon Lunch Booked">
-                                                        <span class="hidden sm:inline">Afternoon</span><span class="sm:hidden">Aft</span> Book
-                                                    </div>
-                                                @else
-                                                    <div class="w-full text-[7px] sm:text-[8px] font-mono font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 px-0.5 sm:px-1 py-0.2 sm:py-0.5 rounded text-center truncate" title="Afternoon Lunch Available">
-                                                        <span class="hidden sm:inline">Afternoon</span><span class="sm:hidden">Aft</span> Open
-                                                    </div>
-                                                @endif
-
-                                                <!-- Evening Shift -->
-                                                @if($bEvening)
-                                                    <div class="w-full text-[7.5px] sm:text-[8.5px] font-mono font-bold uppercase px-0.5 sm:px-1 py-0.5 bg-red-600 text-white rounded text-center truncate shadow-2xs" title="Evening Dinner Booked">
-                                                        <span class="hidden sm:inline">Evening</span><span class="sm:hidden">Eve</span> Book
-                                                    </div>
-                                                @else
-                                                    <div class="w-full text-[7px] sm:text-[8px] font-mono font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 px-0.5 sm:px-1 py-0.2 sm:py-0.5 rounded text-center truncate" title="Evening Dinner Available">
-                                                        <span class="hidden sm:inline">Evening</span><span class="sm:hidden">Eve</span> Open
-                                                    </div>
-                                                @endif
-
-                                                <!-- Night Shift -->
-                                                @if($bNight)
-                                                    <div class="w-full text-[7.5px] sm:text-[8.5px] font-mono font-bold uppercase px-0.5 sm:px-1 py-0.5 bg-red-600 text-white rounded text-center truncate shadow-2xs" title="Late Night Mehndi Booked">
-                                                        <span class="hidden sm:inline">Night</span><span class="sm:hidden">Ngt</span> Book
-                                                    </div>
-                                                @else
-                                                    <div class="w-full text-[7px] sm:text-[8px] font-mono font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 px-0.5 sm:px-1 py-0.2 sm:py-0.5 rounded text-center truncate" title="Late Night Mehndi Available">
-                                                        <span class="hidden sm:inline">Night</span><span class="sm:hidden">Ngt</span> Open
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        @endif
+                                <!-- 3 SHIFT BUTTONS IN EVERY DATE CELL (Filled if Booked, Unfilled if Available) -->
+                                <div class="w-full pt-1 space-y-1">
+                                    
+                                    <!-- Shift 1: Lunch / Afternoon -->
+                                    @if($bAfternoon)
+                                        {{-- FILLED BUTTON: Booked Shift (Clicking triggers luxury alert) --}}
+                                        <button type="button" 
+                                                @click.stop="openBookedAlert('Lunch / Afternoon (12:00 PM – 4:00 PM)', '{{ $cDay->format('l, d F Y') }}', '{{ addslashes($bAfternoon->event_type ?? 'Private Wedding') }}')"
+                                                title="Afternoon Lunch is Booked — Click to view policy"
+                                                class="w-full py-0.5 sm:py-1 px-1 sm:px-1.5 rounded text-[7.5px] sm:text-[9px] font-sans font-bold leading-tight bg-gradient-to-r from-[#DFBF7A] via-[#C6A15B] to-[#997A3A] text-[#171513] shadow-xs flex items-center justify-between border border-[#C6A15B] cursor-pointer hover:brightness-110 active:scale-95 transition">
+                                            <span class="truncate">Lunch</span>
+                                            <span class="flex items-center gap-0.5 text-[6.5px] sm:text-[7.5px] font-mono uppercase bg-black/20 px-1 py-0.2 rounded shrink-0">
+                                                <svg class="w-2 sm:w-2.5 h-2 sm:h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                                <span>Booked</span>
+                                            </span>
+                                        </button>
+                                    @elseif(!$isPast)
+                                        {{-- UNFILLED BUTTON: Available Shift (Clicking reserves or selects) --}}
+                                        <button type="button" 
+                                                @click.stop="$wire.setSelectedDate('{{ $cStr }}'); Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}', event_date: '{{ $cStr }}', slot_type: 'AFTERNOON' })"
+                                                title="Afternoon Lunch is Available — Click to Reserve"
+                                                class="w-full py-0.5 sm:py-1 px-1 sm:px-1.5 rounded text-[7.5px] sm:text-[9px] font-sans font-medium leading-tight bg-transparent border border-[#C6A15B]/50 hover:border-[#C6A15B] hover:bg-[#C6A15B]/15 text-stone-700 dark:text-[#E7E5E4] hover:text-[#8F7239] dark:hover:text-[#DFBF7A] flex items-center justify-between transition cursor-pointer active:scale-95">
+                                            <span class="truncate">Lunch</span>
+                                            <span class="text-[7px] sm:text-[8px] font-mono text-emerald-600 dark:text-emerald-400 font-bold shrink-0">Open</span>
+                                        </button>
                                     @else
-                                        <div class="text-center py-2">
-                                            <span class="text-[8px] font-mono text-stone-400 block">-</span>
+                                        <div class="w-full py-0.5 px-1 rounded text-[7px] sm:text-[8px] font-mono text-stone-400 dark:text-stone-600 bg-stone-100/50 dark:bg-white/[0.02] text-center select-none">
+                                            Lunch
                                         </div>
                                     @endif
+
+                                    <!-- Shift 2: Dinner / Evening -->
+                                    @if($bEvening)
+                                        {{-- FILLED BUTTON: Booked Shift (Clicking triggers luxury alert) --}}
+                                        <button type="button" 
+                                                @click.stop="openBookedAlert('Dinner / Evening (6:30 PM – 10:30 PM)', '{{ $cDay->format('l, d F Y') }}', '{{ addslashes($bEvening->event_type ?? 'Private Wedding') }}')"
+                                                title="Evening Dinner is Booked — Click to view policy"
+                                                class="w-full py-0.5 sm:py-1 px-1 sm:px-1.5 rounded text-[7.5px] sm:text-[9px] font-sans font-bold leading-tight bg-gradient-to-r from-[#DFBF7A] via-[#C6A15B] to-[#997A3A] text-[#171513] shadow-xs flex items-center justify-between border border-[#C6A15B] cursor-pointer hover:brightness-110 active:scale-95 transition">
+                                            <span class="truncate">Dinner</span>
+                                            <span class="flex items-center gap-0.5 text-[6.5px] sm:text-[7.5px] font-mono uppercase bg-black/20 px-1 py-0.2 rounded shrink-0">
+                                                <svg class="w-2 sm:w-2.5 h-2 sm:h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                                <span>Booked</span>
+                                            </span>
+                                        </button>
+                                    @elseif(!$isPast)
+                                        {{-- UNFILLED BUTTON: Available Shift (Clicking reserves or selects) --}}
+                                        <button type="button" 
+                                                @click.stop="$wire.setSelectedDate('{{ $cStr }}'); Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}', event_date: '{{ $cStr }}', slot_type: 'EVENING' })"
+                                                title="Evening Dinner is Available — Click to Reserve"
+                                                class="w-full py-0.5 sm:py-1 px-1 sm:px-1.5 rounded text-[7.5px] sm:text-[9px] font-sans font-medium leading-tight bg-transparent border border-[#C6A15B]/50 hover:border-[#C6A15B] hover:bg-[#C6A15B]/15 text-stone-700 dark:text-[#E7E5E4] hover:text-[#8F7239] dark:hover:text-[#DFBF7A] flex items-center justify-between transition cursor-pointer active:scale-95">
+                                            <span class="truncate">Dinner</span>
+                                            <span class="text-[7px] sm:text-[8px] font-mono text-emerald-600 dark:text-emerald-400 font-bold shrink-0">Open</span>
+                                        </button>
+                                    @else
+                                        <div class="w-full py-0.5 px-1 rounded text-[7px] sm:text-[8px] font-mono text-stone-400 dark:text-stone-600 bg-stone-100/50 dark:bg-white/[0.02] text-center select-none">
+                                            Dinner
+                                        </div>
+                                    @endif
+
+                                    <!-- Shift 3: Late Night / Mehndi -->
+                                    @if($bNight)
+                                        {{-- FILLED BUTTON: Booked Shift (Clicking triggers luxury alert) --}}
+                                        <button type="button" 
+                                                @click.stop="openBookedAlert('Late Night / Mehndi (11:00 PM – 3:00 AM)', '{{ $cDay->format('l, d F Y') }}', '{{ addslashes($bNight->event_type ?? 'Private Wedding') }}')"
+                                                title="Late Night Mehndi is Booked — Click to view policy"
+                                                class="w-full py-0.5 sm:py-1 px-1 sm:px-1.5 rounded text-[7.5px] sm:text-[9px] font-sans font-bold leading-tight bg-gradient-to-r from-[#DFBF7A] via-[#C6A15B] to-[#997A3A] text-[#171513] shadow-xs flex items-center justify-between border border-[#C6A15B] cursor-pointer hover:brightness-110 active:scale-95 transition">
+                                            <span class="truncate">Night</span>
+                                            <span class="flex items-center gap-0.5 text-[6.5px] sm:text-[7.5px] font-mono uppercase bg-black/20 px-1 py-0.2 rounded shrink-0">
+                                                <svg class="w-2 sm:w-2.5 h-2 sm:h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                                <span>Booked</span>
+                                            </span>
+                                        </button>
+                                    @elseif(!$isPast)
+                                        {{-- UNFILLED BUTTON: Available Shift (Clicking reserves or selects) --}}
+                                        <button type="button" 
+                                                @click.stop="$wire.setSelectedDate('{{ $cStr }}'); Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}', event_date: '{{ $cStr }}', slot_type: 'NIGHT' })"
+                                                title="Late Night Mehndi is Available — Click to Reserve"
+                                                class="w-full py-0.5 sm:py-1 px-1 sm:px-1.5 rounded text-[7.5px] sm:text-[9px] font-sans font-medium leading-tight bg-transparent border border-[#C6A15B]/50 hover:border-[#C6A15B] hover:bg-[#C6A15B]/15 text-stone-700 dark:text-[#E7E5E4] hover:text-[#8F7239] dark:hover:text-[#DFBF7A] flex items-center justify-between transition cursor-pointer active:scale-95">
+                                            <span class="truncate">Night</span>
+                                            <span class="text-[7px] sm:text-[8px] font-mono text-emerald-600 dark:text-emerald-400 font-bold shrink-0">Open</span>
+                                        </button>
+                                    @else
+                                        <div class="w-full py-0.5 px-1 rounded text-[7px] sm:text-[8px] font-mono text-stone-400 dark:text-stone-600 bg-stone-100/50 dark:bg-white/[0.02] text-center select-none">
+                                            Night
+                                        </div>
+                                    @endif
+
                                 </div>
                             </div>
                         @endforeach
@@ -786,7 +824,7 @@
                             <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono text-stone-500 dark:text-stone-400">
                                 <span>Base shift rental: <strong class="text-[#8F7239] dark:text-[#C6A15B]">PKR {{ number_format($hall->base_rent) }}</strong></span>
                                 <span>Capacity: {{ number_format($hall->min_capacity) }}–{{ number_format($hall->max_capacity) }} guests</span>
-                                <span>Green = available | Red = booked</span>
+                                <span>Gold Filled = Booked | Gold Outline = Available</span>
                             </div>
                         </div>
 
@@ -803,22 +841,27 @@
                                     @if($selectedDate === $cardStr)
                                         <div class="contents">
                                         <!-- Afternoon Shift -->
-                                        <div class="p-4 bg-white dark:bg-[#171513] border-2 {{ $cardAfternoon ? 'border-red-400 dark:border-red-900/60 bg-red-50/20' : 'border-emerald-500/40 hover:border-emerald-500' }} rounded-xl space-y-3 flex flex-col justify-between shadow-xs transition-colors">
+                                        <div class="p-4 bg-white dark:bg-[#171513] border-2 {{ $cardAfternoon ? 'border-[#C6A15B]/60 bg-[#1C1A17]' : 'border-[#C6A15B]/40 hover:border-[#C6A15B]' }} rounded-xl space-y-3 flex flex-col justify-between shadow-xs transition-colors">
                                             <div>
                                                 <div class="flex items-center justify-between pb-1 border-b border-stone-200 dark:border-white/10">
                                                     <span class="text-[10px] font-mono uppercase font-bold text-[#8F7239] dark:text-[#C6A15B]">Shift 1 (12:00 PM - 4:00 PM)</span>
                                                     @if($cardAfternoon)
-                                                        <span class="text-[9px] font-mono font-bold text-red-600 bg-red-100 dark:bg-red-950 px-1.5 py-0.5 rounded">🔒 BOOKED</span>
+                                                        <span class="text-[9px] font-mono font-bold text-[#171513] bg-[#C6A15B] px-1.5 py-0.5 rounded shadow-xs">🔒 BOOKED</span>
                                                     @else
                                                         <span class="text-[9px] font-mono font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.5 rounded">✓ AVAILABLE</span>
                                                     @endif
                                                 </div>
-                                                <h5 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-medium pt-2">Afternoon Lunch</h5>
+                                                <h5 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-medium pt-2">Lunch / Afternoon</h5>
                                             </div>
                                             @if($cardAfternoon)
-                                                <div class="py-2.5 px-3 bg-red-100 dark:bg-red-950/60 border border-red-300 dark:border-red-900/60 text-red-700 dark:text-red-400 text-xs font-mono font-bold text-center rounded-lg space-y-0.5">
-                                                    <div>🔒 Already Booked</div>
-                                                    <div class="text-[10px] font-sans font-normal opacity-90">Reserved for {{ $cardAfternoon->event_type ?? 'Event' }}</div>
+                                                <div class="py-2.5 px-3 bg-[#171513] border border-[#C6A15B]/50 text-stone-200 text-xs font-mono font-bold text-center rounded-lg space-y-1">
+                                                    <div class="text-[#DFBF7A]">🔒 Already Booked</div>
+                                                    <div class="text-[10px] font-sans font-normal opacity-80">Reserved for {{ $cardAfternoon->event_type ?? 'Private Wedding' }}</div>
+                                                    <button type="button"
+                                                            @click="openBookedAlert('Lunch / Afternoon', '{{ \Carbon\Carbon::parse($cardStr)->format('l, d F Y') }}', '{{ addslashes($cardAfternoon->event_type ?? 'Private Wedding') }}')"
+                                                            class="mt-1 text-[10px] font-mono uppercase text-[#C6A15B] hover:underline cursor-pointer">
+                                                        View Reservation Policy &rarr;
+                                                    </button>
                                                 </div>
                                             @else
                                                 <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}', event_date: '{{ $cardStr }}', slot_type: 'AFTERNOON' })"
@@ -829,22 +872,27 @@
                                         </div>
 
                                         <!-- Evening Shift -->
-                                        <div class="p-4 bg-white dark:bg-[#171513] border-2 {{ $cardEvening ? 'border-red-400 dark:border-red-900/60 bg-red-50/20' : 'border-emerald-500/40 hover:border-emerald-500' }} rounded-xl space-y-3 flex flex-col justify-between shadow-xs transition-colors">
+                                        <div class="p-4 bg-white dark:bg-[#171513] border-2 {{ $cardEvening ? 'border-[#C6A15B]/60 bg-[#1C1A17]' : 'border-[#C6A15B]/40 hover:border-[#C6A15B]' }} rounded-xl space-y-3 flex flex-col justify-between shadow-xs transition-colors">
                                             <div>
                                                 <div class="flex items-center justify-between pb-1 border-b border-stone-200 dark:border-white/10">
                                                     <span class="text-[10px] font-mono uppercase font-bold text-[#8F7239] dark:text-[#C6A15B]">Shift 2 (6:30 PM - 10:30 PM)</span>
                                                     @if($cardEvening)
-                                                        <span class="text-[9px] font-mono font-bold text-red-600 bg-red-100 dark:bg-red-950 px-1.5 py-0.5 rounded">🔒 BOOKED</span>
+                                                        <span class="text-[9px] font-mono font-bold text-[#171513] bg-[#C6A15B] px-1.5 py-0.5 rounded shadow-xs">🔒 BOOKED</span>
                                                     @else
                                                         <span class="text-[9px] font-mono font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.5 rounded">✓ AVAILABLE</span>
                                                     @endif
                                                 </div>
-                                                <h5 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-medium pt-2">Evening Dinner</h5>
+                                                <h5 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-medium pt-2">Dinner / Evening</h5>
                                             </div>
                                             @if($cardEvening)
-                                                <div class="py-2.5 px-3 bg-red-100 dark:bg-red-950/60 border border-red-300 dark:border-red-900/60 text-red-700 dark:text-red-400 text-xs font-mono font-bold text-center rounded-lg space-y-0.5">
-                                                    <div>🔒 Already Booked</div>
-                                                    <div class="text-[10px] font-sans font-normal opacity-90">Reserved for {{ $cardEvening->event_type ?? 'Event' }}</div>
+                                                <div class="py-2.5 px-3 bg-[#171513] border border-[#C6A15B]/50 text-stone-200 text-xs font-mono font-bold text-center rounded-lg space-y-1">
+                                                    <div class="text-[#DFBF7A]">🔒 Already Booked</div>
+                                                    <div class="text-[10px] font-sans font-normal opacity-80">Reserved for {{ $cardEvening->event_type ?? 'Private Wedding' }}</div>
+                                                    <button type="button"
+                                                            @click="openBookedAlert('Dinner / Evening', '{{ \Carbon\Carbon::parse($cardStr)->format('l, d F Y') }}', '{{ addslashes($cardEvening->event_type ?? 'Private Wedding') }}')"
+                                                            class="mt-1 text-[10px] font-mono uppercase text-[#C6A15B] hover:underline cursor-pointer">
+                                                        View Reservation Policy &rarr;
+                                                    </button>
                                                 </div>
                                             @else
                                                 <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}', event_date: '{{ $cardStr }}', slot_type: 'EVENING' })"
@@ -855,22 +903,27 @@
                                         </div>
 
                                         <!-- Night Shift -->
-                                        <div class="p-4 bg-white dark:bg-[#171513] border-2 {{ $cardNight ? 'border-red-400 dark:border-red-900/60 bg-red-50/20' : 'border-emerald-500/40 hover:border-emerald-500' }} rounded-xl space-y-3 flex flex-col justify-between shadow-xs transition-colors">
+                                        <div class="p-4 bg-white dark:bg-[#171513] border-2 {{ $cardNight ? 'border-[#C6A15B]/60 bg-[#1C1A17]' : 'border-[#C6A15B]/40 hover:border-[#C6A15B]' }} rounded-xl space-y-3 flex flex-col justify-between shadow-xs transition-colors">
                                             <div>
                                                 <div class="flex items-center justify-between pb-1 border-b border-stone-200 dark:border-white/10">
                                                     <span class="text-[10px] font-mono uppercase font-bold text-[#8F7239] dark:text-[#C6A15B]">Shift 3 (11:00 PM - 3:00 AM)</span>
                                                     @if($cardNight)
-                                                        <span class="text-[9px] font-mono font-bold text-red-600 bg-red-100 dark:bg-red-950 px-1.5 py-0.5 rounded">🔒 BOOKED</span>
+                                                        <span class="text-[9px] font-mono font-bold text-[#171513] bg-[#C6A15B] px-1.5 py-0.5 rounded shadow-xs">🔒 BOOKED</span>
                                                     @else
                                                         <span class="text-[9px] font-mono font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.5 rounded">✓ AVAILABLE</span>
                                                     @endif
                                                 </div>
-                                                <h5 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-medium pt-2">Late Night Mehndi</h5>
+                                                <h5 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-medium pt-2">Late Night / Mehndi</h5>
                                             </div>
                                             @if($cardNight)
-                                                <div class="py-2.5 px-3 bg-red-100 dark:bg-red-950/60 border border-red-300 dark:border-red-900/60 text-red-700 dark:text-red-400 text-xs font-mono font-bold text-center rounded-lg space-y-0.5">
-                                                    <div>🔒 Already Booked</div>
-                                                    <div class="text-[10px] font-sans font-normal opacity-90">Reserved for {{ $cardNight->event_type ?? 'Event' }}</div>
+                                                <div class="py-2.5 px-3 bg-[#171513] border border-[#C6A15B]/50 text-stone-200 text-xs font-mono font-bold text-center rounded-lg space-y-1">
+                                                    <div class="text-[#DFBF7A]">🔒 Already Booked</div>
+                                                    <div class="text-[10px] font-sans font-normal opacity-80">Reserved for {{ $cardNight->event_type ?? 'Private Wedding' }}</div>
+                                                    <button type="button"
+                                                            @click="openBookedAlert('Late Night / Mehndi', '{{ \Carbon\Carbon::parse($cardStr)->format('l, d F Y') }}', '{{ addslashes($cardNight->event_type ?? 'Private Wedding') }}')"
+                                                            class="mt-1 text-[10px] font-mono uppercase text-[#C6A15B] hover:underline cursor-pointer">
+                                                        View Reservation Policy &rarr;
+                                                    </button>
                                                 </div>
                                             @else
                                                 <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}', event_date: '{{ $cardStr }}', slot_type: 'NIGHT' })"
@@ -1089,5 +1142,96 @@
             </div>
         </div>
     </section>
+
+    <!-- ===================================================================
+         ROYAL LUXURY ALERT MODAL FOR BOOKED SHIFTS
+         =================================================================== -->
+    <template x-teleport="body">
+        <div x-cloak 
+             x-show="bookedAlertOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+             @keydown.escape.window="bookedAlertOpen = false"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="booked-alert-title">
+
+            <div x-show="bookedAlertOpen"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-95 translate-y-3"
+                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 scale-95 translate-y-3"
+                 class="relative w-full max-w-lg bg-[#171513] border-2 border-[#C6A15B] rounded-2xl shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_50px_rgba(198,161,91,0.35)] text-white overflow-hidden p-6 sm:p-8 space-y-6"
+                 @click.outside="bookedAlertOpen = false">
+                
+                <!-- Royal Corner Accents -->
+                <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#DFBF7A] pointer-events-none"></div>
+                <div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#DFBF7A] pointer-events-none"></div>
+                <div class="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#DFBF7A] pointer-events-none"></div>
+                <div class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#DFBF7A] pointer-events-none"></div>
+
+                <!-- Gold Crest Emblem -->
+                <div class="relative mx-auto w-20 h-20 rounded-full bg-gradient-to-b from-[#DFBF7A]/25 via-[#C6A15B]/15 to-transparent border-2 border-[#C6A15B] flex items-center justify-center shadow-[0_0_35px_rgba(198,161,91,0.4)]">
+                    <svg class="w-10 h-10 text-[#DFBF7A]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                    <span class="absolute -bottom-2 px-2 py-0.5 bg-[#C6A15B] text-[#171513] text-[8.5px] font-mono font-bold tracking-widest uppercase rounded shadow">
+                        LOCKED
+                    </span>
+                </div>
+
+                <!-- Text Content -->
+                <div class="text-center space-y-2">
+                    <span class="text-[9px] font-mono uppercase tracking-[0.25em] text-[#C6A15B] font-bold block">
+                        Exclusive Private Reservation
+                    </span>
+                    <h3 id="booked-alert-title" class="font-serif-luxury text-2xl sm:text-3xl text-white font-medium">
+                        Shift Already Locked &amp; Reserved
+                    </h3>
+                    <p class="text-sm font-sans text-stone-300 leading-relaxed">
+                        The <span class="text-[#DFBF7A] font-bold" x-text="alertShift"></span> on <span class="text-white font-bold" x-text="alertDate"></span> is confirmed for an exclusive celebration.
+                    </p>
+                </div>
+
+                <!-- Royal Policy Box -->
+                <div class="p-4 rounded-xl bg-white/[0.03] border border-[#C6A15B]/40 space-y-2 text-xs text-stone-300 leading-relaxed">
+                    <div class="flex items-center gap-2 text-[#DFBF7A] font-semibold text-xs">
+                        <svg class="w-4 h-4 shrink-0 text-[#C6A15B]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                        <span>Zero Double-Booking Guarantee</span>
+                    </div>
+                    <p>
+                        To uphold our royal luxury hospitality standard, EventHub guarantees absolute private venue occupancy for every confirmed client. No secondary reservations are permitted for this shift.
+                    </p>
+                    <div class="pt-1 flex items-center justify-between text-[10.5px] font-mono text-[#C6A15B] border-t border-white/5">
+                        <span>Status: Token Confirmed</span>
+                        <span>Hall: {{ $hall->name }}</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
+                    <button type="button" 
+                            @click="bookedAlertOpen = false"
+                            class="btn-gold !w-full sm:!w-auto !min-w-[160px] !h-11 font-mono uppercase tracking-wider text-xs font-bold rounded-xl cursor-pointer shadow-lg hover:shadow-[#C6A15B]/40 transition">
+                        Browse Open Shifts
+                    </button>
+                    <button type="button" 
+                            @click="bookedAlertOpen = false"
+                            class="w-full sm:w-auto px-5 h-11 border border-[#C6A15B]/40 hover:border-[#C6A15B] text-stone-300 hover:text-white text-xs font-mono uppercase tracking-wider rounded-xl transition cursor-pointer">
+                        Dismiss Notice
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
 
 </div>

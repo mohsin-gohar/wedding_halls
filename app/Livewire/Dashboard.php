@@ -8,8 +8,11 @@ use App\Models\GuestRsvp;
 use App\Models\Hall;
 use App\Models\HallView;
 use App\Models\HallWishlist;
+use App\Models\InventoryItem;
 use App\Models\KitchenKot;
 use App\Models\Payment;
+use App\Models\StaffAttendance;
+use App\Models\User;
 use App\Models\UtilityLog;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -655,7 +658,36 @@ class Dashboard extends Component
             ->take(15)
             ->get();
 
+        // 15. Real-Time ERP Modular Health Matrix
+        $todayKotsQuery = KitchenKot::where('tenant_id', $tenantId)
+            ->whereHas('booking', fn($q) => $q->whereDate('event_date', $today));
+        $todayKitchenKotsCount = (clone $todayKotsQuery)->count();
+        $todayTotalDiners = (int) (clone $todayKotsQuery)->sum('guest_count');
+        $todayMeatNeeded = (float) (clone $todayKotsQuery)->sum('raw_meat_kg');
+        $todayRiceNeeded = (float) (clone $todayKotsQuery)->sum('raw_rice_kg');
+
+        $totalInventoryItems = InventoryItem::where('tenant_id', $tenantId)->where('is_active', true)->count();
+        $lowStockInventoryCount = InventoryItem::where('tenant_id', $tenantId)->where('is_active', true)->whereColumn('current_stock', '<=', 'min_threshold')->count();
+
+        $todayStaffPresentCount = StaffAttendance::where('tenant_id', $tenantId)->whereDate('date', $today)->whereIn('status', ['PRESENT', 'HALF_DAY'])->count();
+        $todayStaffTotalCount = User::where('tenant_id', $tenantId)->where('is_active', true)->where('role', '!=', 'ROLE_SUPER_ADMIN')->count();
+        $todayOvertimeHours = (float) StaffAttendance::where('tenant_id', $tenantId)->whereDate('date', $today)->sum('overtime_hours');
+
+        $todayGeneratorHours = (float) UtilityLog::where('tenant_id', $tenantId)->whereDate('created_at', $today)->sum('generator_run_hours');
+        $todayWapdaUnits = (float) UtilityLog::where('tenant_id', $tenantId)->whereDate('created_at', $today)->sum('wapda_units_consumed');
+
         return view('livewire.dashboard', [
+            'todayKitchenKotsCount' => $todayKitchenKotsCount,
+            'todayTotalDiners' => $todayTotalDiners,
+            'todayMeatNeeded' => $todayMeatNeeded,
+            'todayRiceNeeded' => $todayRiceNeeded,
+            'totalInventoryItems' => $totalInventoryItems,
+            'lowStockInventoryCount' => $lowStockInventoryCount,
+            'todayStaffPresentCount' => $todayStaffPresentCount,
+            'todayStaffTotalCount' => $todayStaffTotalCount,
+            'todayOvertimeHours' => $todayOvertimeHours,
+            'todayGeneratorHours' => $todayGeneratorHours,
+            'todayWapdaUnits' => $todayWapdaUnits,
             'halls' => $halls,
             'periodLabel' => $periodLabel,
             'allPeriodBookings' => $allPeriodBookings,

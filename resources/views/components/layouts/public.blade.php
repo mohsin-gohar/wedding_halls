@@ -8,6 +8,10 @@
     <title>{{ $title ?? 'EventHub — Luxury Wedding Venues & Banquet Marketplace' }}</title>
     <meta name="description" content="Discover and reserve Pakistan's premier luxury wedding ballrooms, royal marquees, and banquet complexes. Concurrency-safe shift reservations, authentic Mughlai catering, and transparent pricing in PKR.">
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/eventhub-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/eventhub-logo.png') }}">
+
     <!-- Google Fonts: Playfair Display, Cinzel, Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,10 +56,7 @@
                 
                 <!-- Brand Identity -->
                 <a href="{{ route('home') }}" class="group flex shrink-0 items-center gap-3 max-sm:gap-2.5">
-                    <span class="relative flex h-10 w-10 items-center justify-center border border-[#C6A15B]/70 bg-[#171513] transition-all duration-300 group-hover:border-[#C6A15B] group-hover:shadow-[0_0_22px_-6px_rgba(198,161,91,0.6)]">
-                        <span class="absolute inset-[3px] border border-[#C6A15B]/30 transition-colors duration-300 group-hover:border-[#C6A15B]/70"></span>
-                        <span class="font-cinzel relative text-lg font-bold text-[#C6A15B] transition-colors duration-300 group-hover:text-[#F2DE9A]">V</span>
-                    </span>
+                    <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub" class="h-10 sm:h-12 w-auto object-contain rounded border border-[#C6A15B]/50 bg-[#171513] shadow-[0_0_15px_rgba(198,161,91,0.25)] group-hover:border-[#C6A15B] transition-all duration-300">
                     <span class="flex flex-col leading-none">
                         <span class="font-cinzel text-base font-bold tracking-[0.18em] text-white transition-colors duration-300 group-hover:text-[#F2DE9A] sm:text-lg">
                             EventHub
@@ -200,12 +201,13 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 pb-12 border-b border-white/10">
                 <!-- Brand Info -->
                 <div class="lg:col-span-2 space-y-5">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 border border-[#C6A15B] flex items-center justify-center bg-stone-900 text-[#C6A15B]">
-                            <span class="font-cinzel text-base font-bold">V</span>
+                    <a href="{{ route('home') }}" class="flex items-center gap-3 group">
+                        <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub Logo" class="h-12 w-auto object-contain rounded border border-[#C6A15B]/50 bg-[#171513] shadow-[0_0_20px_rgba(198,161,91,0.3)]">
+                        <div>
+                            <span class="font-cinzel text-2xl font-bold tracking-[0.16em] text-white group-hover:text-[#F2DE9A] transition block">EventHub</span>
+                            <span class="block text-[9px] uppercase tracking-[0.25em] text-[#C6A15B] font-mono mt-0.5">Pakistan's Venue Platform</span>
                         </div>
-                        <span class="font-cinzel text-2xl font-bold tracking-[0.16em] text-white">EventHub</span>
-                    </div>
+                    </a>
                     <p class="text-sm text-stone-400 font-light leading-relaxed max-w-sm">
                         Pakistan's premier commercial marketplace and management SaaS for luxury wedding banquets, royal marquees, and convention centres. Dedicated to authentic hospitality, zero double-booking reliability, and transparent pricing.
                     </p>
@@ -269,6 +271,9 @@
 
     <!-- Interactive Walk-in Booking Modal Component (Accessible across public site) -->
     <livewire:walk-in-booking-modal />
+
+    <!-- Universal Royal Luxury Alert & Notification Dialog -->
+    <x-luxury-alert-dialog />
 
     @livewireScripts
 </body>

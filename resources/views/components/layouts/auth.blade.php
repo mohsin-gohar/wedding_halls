@@ -8,6 +8,10 @@
     <title>{{ $title ?? 'EventHub — Secure Sign In' }}</title>
     <meta name="description" content="Secure access to EventHub luxury banqueting and wedding management.">
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/eventhub-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/eventhub-logo.png') }}">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -56,10 +60,8 @@
         </a>
 
         <!-- Center Brand Logo -->
-        <a href="{{ route('home') }}" class="flex items-center gap-2 group">
-            <span class="flex h-8 w-8 items-center justify-center border border-[#C6A15B]/70 bg-[#171513] text-[#C6A15B] font-cinzel text-sm font-bold shadow-sm">
-                V
-            </span>
+        <a href="{{ route('home') }}" class="flex items-center gap-2.5 group">
+            <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub Logo" class="h-9 w-auto object-contain rounded border border-[#C6A15B]/50 bg-[#171513] shadow-sm">
             <span class="font-cinzel text-sm sm:text-base font-bold tracking-[0.16em] text-[#171513] dark:text-white group-hover:text-[#C6A15B] transition-colors">
                 EventHub
             </span>

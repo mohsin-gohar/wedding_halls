@@ -81,7 +81,7 @@
 
             <div class="flex flex-wrap items-center gap-3 pt-2">
                     <button type="button" 
-                            onclick="const text = `Assalamu Alaikum {{ $provisionedCredentials['owner_name'] }}!\nYour EventHub Rent Admin portal for *{{ $provisionedCredentials['business_name'] }}* is ready.\n\nLogin URL: {{ $provisionedCredentials['login_url'] }}\nEmail: {{ $provisionedCredentials['email'] }}\n\nLive Hall Website: {{ $provisionedCredentials['hall_url'] }}\n\nPlease sign in to customize your hall photos, services catalog, and shifts.`; navigator.clipboard.writeText(text); alert('WhatsApp credentials message copied to clipboard!');"
+                            onclick="const text = `Assalamu Alaikum {{ $provisionedCredentials['owner_name'] }}!\nYour EventHub Rent Admin portal for *{{ $provisionedCredentials['business_name'] }}* is ready.\n\nLogin URL: {{ $provisionedCredentials['login_url'] }}\nEmail: {{ $provisionedCredentials['email'] }}\n\nLive Hall Website: {{ $provisionedCredentials['hall_url'] }}\n\nPlease sign in to customize your hall photos, services catalog, and shifts.`; navigator.clipboard.writeText(text); window.luxuryToast('WhatsApp credentials message copied to clipboard!', 'gold');"
                             class="btn-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.55)] transition-all duration-300 group relative overflow-hidden">
                         <span class="relative z-10">Copy WhatsApp Handover Message</span>
                         <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
@@ -497,13 +497,13 @@
          TAB 1: VENDORS & SUBSCRIPTIONS (Full CRUD)
          =================================================================== -->
     @if($activeTab === 'vendors')
-        <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E7E5E4] gap-4">
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-6 space-y-6 shadow-sm dark:shadow-xl">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E7E5E4] dark:border-white/10 gap-4">
                 <div>
-                    <h3 class="font-serif text-2xl text-[#171513] font-normal">
+                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-normal">
                         Wedding Hall Vendors &amp; SaaS Subscriptions
                     </h3>
-                    <p class="text-xs text-stone-500 mt-0.5">Register, update credentials, change subscription plans, and manage vendor active states.</p>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Register, update credentials, change subscription plans, and manage vendor active states.</p>
                 </div>
 
                 <button wire:click="openProvisionModal" class="btn-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-md shrink-0">
@@ -512,30 +512,30 @@
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
+                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4] dark:border-white/10">
                     <thead>
-                        <tr class="bg-[#F8F5EF] border-b border-[#E7E5E4] text-[10px] uppercase font-bold tracking-wider text-stone-600 font-mono">
-                            <th class="p-3 border-r border-[#E7E5E4]">Business / Address</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Owner Contact</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Assigned SaaS Plan</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Capacity</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Status</th>
+                        <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Business / Address</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Owner Contact</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Assigned SaaS Plan</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Capacity</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Status</th>
                             <th class="p-3 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-[#E7E5E4]">
+                    <tbody class="divide-y divide-[#E7E5E4] dark:divide-white/10">
                         @foreach($tenants as $t)
-                            <tr class="hover:bg-[#F8F5EF] transition">
-                                <td class="p-3 border-r border-[#E7E5E4]">
-                                    <div class="font-bold text-[#171513] text-sm">{{ $t->name }}</div>
-                                    <span class="text-[10px] text-stone-500 font-mono block">{{ $t->city ?? 'Lahore' }}, {{ $t->address }}</span>
+                            <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10">
+                                    <div class="font-bold text-[#171513] dark:text-white text-sm">{{ $t->name }}</div>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono block">{{ $t->city ?? 'Lahore' }}, {{ $t->address }}</span>
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-mono">
-                                    <div class="text-stone-800 font-semibold">{{ $t->email }}</div>
-                                    <div class="text-stone-500 text-[11px]">{{ $t->phone }}</div>
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 font-mono">
+                                    <div class="text-stone-800 dark:text-stone-200 font-semibold">{{ $t->email }}</div>
+                                    <div class="text-stone-500 dark:text-stone-400 text-[11px]">{{ $t->phone }}</div>
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
-                                    <div class="font-bold text-[#8F7239]">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10">
+                                    <div class="font-bold text-[#8F7239] dark:text-[#C6A15B]">
                                         {{ $t->subscriptionPlan->name ?? ($t->subscription_plan ?? 'Starter Marquee') }}
                                     </div>
                                     <span class="text-[10px] font-mono text-stone-500">
@@ -545,21 +545,21 @@
                                         <div class="text-[10px] text-stone-400 font-mono">Exp: {{ $t->subscription_expires_at->format('d M Y') }}</div>
                                     @endif
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-mono text-stone-600">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 font-mono text-stone-600 dark:text-stone-300">
                                     <div>{{ $t->halls_count }} Halls</div>
                                     <div>{{ $t->users_count }} Staff</div>
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10">
                                     @if($t->verification_status === 'APPROVED')
-                                        <span class="px-2 py-0.5 bg-[#C6A15B]/15 text-[#8F7239] border border-[#C6A15B]/60 text-[10px] font-mono font-bold uppercase">
+                                        <span class="px-2 py-0.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold uppercase">
                                             ✓ Approved
                                         </span>
                                     @elseif($t->verification_status === 'SUSPENDED')
-                                        <span class="px-2 py-0.5 bg-[#171513]/8 text-[#171513] border border-[#C6A15B]/50 text-[10px] font-mono font-bold uppercase">
+                                        <span class="px-2 py-0.5 bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-[10px] font-mono font-bold uppercase">
                                             ✕ Suspended
                                         </span>
                                     @else
-                                        <span class="px-2 py-0.5 bg-[#C6A15B]/15 text-[#8F7239] border border-[#C6A15B]/60 text-[10px] font-mono font-bold uppercase">
+                                        <span class="px-2 py-0.5 bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-[10px] font-mono font-bold uppercase">
                                             ⏳ Pending
                                         </span>
                                     @endif
@@ -567,30 +567,30 @@
                                 <td class="p-3 text-right">
                                     <div class="flex items-center justify-end gap-1.5 font-mono text-[11px]">
                                         <button wire:click="openEditVendorModal('{{ $t->id }}')" 
-                                                class="px-2.5 py-1 bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300">
+                                                class="px-2.5 py-1 bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300 dark:bg-white/10 dark:text-stone-200 dark:border-white/20 dark:hover:bg-white/20">
                                             Edit
                                         </button>
 
                                         @if($t->verification_status !== 'APPROVED')
                                             <button wire:click="approveVendor('{{ $t->id }}')" 
-                                                    class="px-2.5 py-1 bg-[#C6A15B] hover:bg-[#C6A15B] text-white font-bold">
+                                                    class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold">
                                                 Approve
                                             </button>
                                         @else
                                             <button wire:click="suspendVendor('{{ $t->id }}')" 
-                                                    class="px-2.5 py-1 bg-[#C6A15B] hover:bg-[#C6A15B] text-white">
+                                                    class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white">
                                                 Suspend
                                             </button>
                                         @endif
 
                                         <button wire:click="toggleTenantStatus('{{ $t->id }}')" 
-                                                class="px-2.5 py-1 {{ $t->is_active ? 'bg-stone-800 text-white' : 'bg-[#C6A15B] text-white' }}">
+                                                class="px-2.5 py-1 {{ $t->is_active ? 'bg-stone-700 dark:bg-stone-600 text-white' : 'bg-emerald-600 text-white' }}">
                                             {{ $t->is_active ? 'Disable' : 'Enable' }}
                                         </button>
 
                                         <button wire:click="deleteVendor('{{ $t->id }}')" 
                                                 onclick="return confirm('Are you sure you want to delete this vendor and all its halls?') || event.stopImmediatePropagation()"
-                                                class="px-2 py-1 bg-[#171513] hover:bg-[#171513] text-white">
+                                                class="px-2 py-1 bg-rose-700 hover:bg-rose-600 text-white">
                                             Del
                                         </button>
                                     </div>
@@ -607,13 +607,13 @@
          TAB 2: SAAS PRICING PLANS (Full CRUD)
          =================================================================== -->
     @if($activeTab === 'plans')
-        <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E7E5E4] gap-4">
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-6 space-y-6 shadow-sm dark:shadow-xl">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E7E5E4] dark:border-white/10 gap-4">
                 <div>
-                    <h3 class="font-serif text-2xl text-[#171513] font-normal">
+                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-normal">
                         Commercial SaaS Subscription Plans (PKR)
                     </h3>
-                    <p class="text-xs text-stone-500 mt-0.5">Configure monthly and yearly rates, venue limits, and ERP module privileges.</p>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Configure monthly and yearly rates, venue limits, and ERP module privileges.</p>
                 </div>
 
                 <button wire:click="openCreatePlanModal" class="btn-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-md">
@@ -623,45 +623,45 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 @foreach($plans as $p)
-                    <div class="p-6 border border-[#E7E5E4] bg-[#F8F5EF] flex flex-col justify-between space-y-4">
+                    <div class="p-6 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex flex-col justify-between space-y-4 hover:border-[#C6A15B] transition">
                         <div class="space-y-3">
-                            <div class="flex items-center justify-between border-b border-[#E7E5E4] pb-2">
-                                <span class="text-[10px] font-mono font-bold uppercase text-[#8F7239]">Tier: {{ $p->slug }}</span>
-                                <span class="text-xs font-mono font-semibold text-stone-600">{{ $p->tenants_count }} Subscribers</span>
+                            <div class="flex items-center justify-between border-b border-[#E7E5E4] dark:border-white/10 pb-2">
+                                <span class="text-[10px] font-mono font-bold uppercase text-[#8F7239] dark:text-[#C6A15B]">Tier: {{ $p->slug }}</span>
+                                <span class="text-xs font-mono font-semibold text-stone-600 dark:text-stone-300">{{ $p->tenants_count }} Subscribers</span>
                             </div>
 
-                            <h4 class="font-serif text-2xl text-[#171513] font-medium">{{ $p->name }}</h4>
+                            <h4 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">{{ $p->name }}</h4>
                             
                             <div class="space-y-1">
-                                <div class="text-lg font-cinzel font-bold text-[#171513]">
-                                    PKR {{ number_format($p->price_monthly) }} <span class="text-xs font-normal text-stone-500 font-sans">/ month</span>
+                                <div class="text-lg font-cinzel font-bold text-[#171513] dark:text-white">
+                                    PKR {{ number_format($p->price_monthly) }} <span class="text-xs font-normal text-stone-500 dark:text-stone-400 font-sans">/ month</span>
                                 </div>
-                                <div class="text-[11px] font-mono text-stone-600 flex items-center justify-between">
+                                <div class="text-[11px] font-mono text-stone-600 dark:text-stone-300 flex items-center justify-between">
                                     <span>PKR {{ number_format($p->price_weekly ?? 5000) }} / week</span>
                                     <span>PKR {{ number_format($p->price_yearly) }} / year</span>
                                 </div>
                             </div>
 
-                            <p class="text-xs text-stone-600 leading-relaxed font-normal">
+                            <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
                                 {{ $p->description }}
                             </p>
 
-                            <div class="pt-3 border-t border-[#E7E5E4] space-y-1.5 text-xs font-mono text-stone-700">
-                                <div>• Max Halls: <strong>{{ $p->max_halls === -1 ? 'Unlimited' : $p->max_halls }}</strong></div>
-                                <div>• Staff Accounts: <strong>{{ $p->max_staff === -1 ? 'Unlimited' : $p->max_staff }}</strong></div>
-                                <div>• Monthly Bookings: <strong>{{ $p->max_monthly_bookings === -1 ? 'Unlimited' : $p->max_monthly_bookings }}</strong></div>
-                                <div>• Kitchen KOT: <strong>{{ $p->has_kitchen_kot ? 'Included' : 'No' }}</strong></div>
-                                <div>• WhatsApp Bot: <strong>{{ $p->has_whatsapp_automation ? 'Included' : 'No' }}</strong></div>
+                            <div class="pt-3 border-t border-[#E7E5E4] dark:border-white/10 space-y-1.5 text-xs font-mono text-stone-700 dark:text-stone-300">
+                                <div>• Max Halls: <strong class="text-[#171513] dark:text-white">{{ $p->max_halls === -1 ? 'Unlimited' : $p->max_halls }}</strong></div>
+                                <div>• Staff Accounts: <strong class="text-[#171513] dark:text-white">{{ $p->max_staff === -1 ? 'Unlimited' : $p->max_staff }}</strong></div>
+                                <div>• Monthly Bookings: <strong class="text-[#171513] dark:text-white">{{ $p->max_monthly_bookings === -1 ? 'Unlimited' : $p->max_monthly_bookings }}</strong></div>
+                                <div>• Kitchen KOT: <strong class="text-[#171513] dark:text-white">{{ $p->has_kitchen_kot ? 'Included' : 'No' }}</strong></div>
+                                <div>• WhatsApp Bot: <strong class="text-[#171513] dark:text-white">{{ $p->has_whatsapp_automation ? 'Included' : 'No' }}</strong></div>
                             </div>
                         </div>
 
-                        <div class="pt-4 border-t border-[#E7E5E4] flex items-center justify-between gap-2 font-mono text-xs">
+                        <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 flex items-center justify-between gap-2 font-mono text-xs">
                             <button wire:click="openEditPlanModal({{ $p->id }})" class="px-3 py-1.5 bg-[#171513] text-[#C6A15B] border border-[#C6A15B] font-bold hover:bg-[#C6A15B] hover:text-[#171513] transition">
                                 Edit Plan
                             </button>
                             <button wire:click="deletePlan({{ $p->id }})" 
                                     onclick="return confirm('Delete this subscription plan?') || event.stopImmediatePropagation()"
-                                    class="px-2.5 py-1.5 bg-[#171513] text-white hover:bg-[#171513] transition">
+                                    class="px-2.5 py-1.5 bg-rose-700 text-white hover:bg-rose-600 transition">
                                 Delete
                             </button>
                         </div>
@@ -675,47 +675,47 @@
          TAB 3: SUBSCRIPTION PAYMENT CLEARANCE
          =================================================================== -->
     @if($activeTab === 'payments')
-        <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
-            <div class="border-b border-[#E7E5E4] pb-4">
-                <h3 class="font-serif text-2xl text-[#171513] font-normal">
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-6 space-y-6 shadow-sm dark:shadow-xl">
+            <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-4">
+                <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-normal">
                     Offline Bank Transfer Approvals
                 </h3>
-                <p class="text-xs text-stone-500 mt-0.5">Verify vendor direct deposits and extend SaaS subscription periods.</p>
+                <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Verify vendor direct deposits and extend SaaS subscription periods.</p>
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
+                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4] dark:border-white/10">
                     <thead>
-                        <tr class="bg-[#F8F5EF] border-b border-[#E7E5E4] text-[10px] uppercase font-bold tracking-wider text-stone-600 font-mono">
-                            <th class="p-3 border-r border-[#E7E5E4]">Date</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Vendor Name</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Plan &amp; Cycle</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Amount (PKR)</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Reference / Proof</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Status</th>
+                        <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Date</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Vendor Name</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Plan &amp; Cycle</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Amount (PKR)</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Reference / Proof</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Status</th>
                             <th class="p-3 text-right">Verification</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-[#E7E5E4]">
+                    <tbody class="divide-y divide-[#E7E5E4] dark:divide-white/10">
                         @forelse($subscriptionPayments as $sp)
-                            <tr class="hover:bg-[#F8F5EF] transition font-mono">
-                                <td class="p-3 border-r border-[#E7E5E4] text-stone-500">{{ $sp->created_at->format('d M Y') }}</td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-bold text-stone-800 font-sans">{{ $sp->tenant->name ?? 'N/A' }}</td>
-                                <td class="p-3 border-r border-[#E7E5E4]">{{ $sp->plan->name ?? 'Plan' }} ({{ $sp->billing_cycle }})</td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-bold text-[#171513]">PKR {{ number_format($sp->amount) }}</td>
-                                <td class="p-3 border-r border-[#E7E5E4] text-stone-500">{{ $sp->transaction_reference ?: 'Manual Deposit' }}</td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
-                                    <span class="px-2 py-0.5 text-[10px] font-bold uppercase {{ $sp->status === 'APPROVED' ? 'bg-[#C6A15B]/20 text-[#8F7239]' : ($sp->status === 'REJECTED' ? 'bg-[#171513]/10 text-[#171513]' : 'bg-[#C6A15B]/20 text-[#8F7239]') }}">
+                            <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition font-mono">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 text-stone-500 dark:text-stone-400">{{ $sp->created_at->format('d M Y') }}</td>
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 font-bold text-stone-800 dark:text-stone-200 font-sans">{{ $sp->tenant->name ?? 'N/A' }}</td>
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 text-stone-700 dark:text-stone-300">{{ $sp->plan->name ?? 'Plan' }} ({{ $sp->billing_cycle }})</td>
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 font-bold text-[#171513] dark:text-[#C6A15B]">PKR {{ number_format($sp->amount) }}</td>
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 text-stone-500 dark:text-stone-400">{{ $sp->transaction_reference ?: 'Manual Deposit' }}</td>
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10">
+                                    <span class="px-2 py-0.5 text-[10px] font-bold uppercase {{ $sp->status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : ($sp->status === 'REJECTED' ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400') }}">
                                         {{ $sp->status }}
                                     </span>
                                 </td>
                                 <td class="p-3 text-right">
                                     @if($sp->status === 'PENDING')
                                         <div class="flex items-center justify-end gap-1.5">
-                                            <button wire:click="approveSubscriptionPayment('{{ $sp->id }}')" class="px-2.5 py-1 bg-[#C6A15B] text-white hover:bg-[#C6A15B]">
+                                            <button wire:click="approveSubscriptionPayment('{{ $sp->id }}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold">
                                                 Approve
                                             </button>
-                                            <button wire:click="rejectSubscriptionPayment('{{ $sp->id }}')" class="px-2.5 py-1 bg-[#171513] text-white hover:bg-[#171513]">
+                                            <button wire:click="rejectSubscriptionPayment('{{ $sp->id }}')" class="px-2.5 py-1 bg-rose-700 hover:bg-rose-600 text-white">
                                                 Reject
                                             </button>
                                         </div>
@@ -741,61 +741,61 @@
          TAB 4: HALLS CATALOG (Full CRUD)
          =================================================================== -->
     @if($activeTab === 'halls')
-        <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E7E5E4] gap-4">
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-6 space-y-6 shadow-sm dark:shadow-xl">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E7E5E4] dark:border-white/10 gap-4">
                 <div>
-                    <h3 class="font-serif text-2xl text-[#171513] font-normal">
+                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-normal">
                         Platform Halls &amp; Marquees Directory
                     </h3>
-                    <p class="text-xs text-stone-500 mt-0.5">Manage public visibility, edit shift pricing, and audit all listed banquet spaces.</p>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Manage public visibility, edit shift pricing, and audit all listed banquet spaces.</p>
                 </div>
-                  <button wire:click="openProvisionModal" class="btn-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.55)] transition-all duration-300 group relative overflow-hidden">
-                      <span class="relative z-10">+ Add Hall</span>
-                      <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
-                  </button>
+                <button wire:click="openProvisionModal" class="btn-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.55)] transition-all duration-300 group relative overflow-hidden">
+                    <span class="relative z-10">+ Register Hall</span>
+                    <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                </button>
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
+                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4] dark:border-white/10">
                     <thead>
-                        <tr class="bg-[#F8F5EF] border-b border-[#E7E5E4] text-[10px] uppercase font-bold tracking-wider text-stone-600 font-mono">
-                            <th class="p-3 border-r border-[#E7E5E4]">Hall / Venue Complex</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">City</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Capacity</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Base Rent</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Status</th>
+                        <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Hall / Venue Complex</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">City</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Capacity</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Base Rent</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Status</th>
                             <th class="p-3 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-[#E7E5E4]">
+                    <tbody class="divide-y divide-[#E7E5E4] dark:divide-white/10">
                         @foreach($halls as $hl)
-                            <tr class="hover:bg-[#F8F5EF] transition">
-                                <td class="p-3 border-r border-[#E7E5E4]">
-                                    <div class="font-bold text-[#171513] text-sm">{{ $hl->name }}</div>
-                                    <span class="text-[10px] text-stone-500 font-mono">{{ $hl->tenant->name ?? 'Venue Complex' }}</span>
+                            <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10">
+                                    <div class="font-bold text-[#171513] dark:text-white text-sm">{{ $hl->name }}</div>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">{{ $hl->tenant->name ?? 'Venue Complex' }}</span>
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-mono">{{ $hl->venue->city ?? 'Lahore' }}</td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-mono">{{ $hl->min_capacity }} - {{ $hl->max_capacity }} Heads</td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-mono font-bold text-[#171513]">PKR {{ number_format($hl->base_rent) }}</td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
-                                    <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase {{ $hl->is_active ? 'bg-[#C6A15B]/15 text-[#8F7239] border border-[#C6A15B]/60' : 'bg-stone-200 text-stone-700' }}">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 font-mono text-stone-700 dark:text-stone-300">{{ $hl->venue->city ?? 'Lahore' }}</td>
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 font-mono text-stone-700 dark:text-stone-300">{{ $hl->min_capacity }} - {{ $hl->max_capacity }} Heads</td>
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 font-mono font-bold text-[#171513] dark:text-[#C6A15B]">PKR {{ number_format($hl->base_rent) }}</td>
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10">
+                                    <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase {{ $hl->is_active ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-stone-200 dark:bg-white/10 text-stone-600 dark:text-stone-400' }}">
                                         {{ $hl->is_active ? '● Published' : '○ Hidden' }}
                                     </span>
                                 </td>
                                 <td class="p-3 text-right">
                                     <div class="flex items-center justify-end gap-1.5 font-mono text-[11px]">
-                                        <a href="{{ route('hall.showcase', $hl->slug) }}" target="_blank" class="px-2 py-1 bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300">
+                                        <a href="{{ route('hall.showcase', $hl->slug) }}" target="_blank" class="px-2.5 py-1 bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300 dark:bg-white/10 dark:text-stone-200 dark:border-white/20 dark:hover:bg-white/20">
                                             View ↗
                                         </a>
-                                        <button wire:click="openEditHallModal('{{ $hl->id }}')" class="px-2.5 py-1 bg-stone-800 hover:bg-black text-white">
+                                        <button wire:click="openEditHallModal('{{ $hl->id }}')" class="px-2.5 py-1 bg-stone-800 dark:bg-stone-700 hover:bg-black text-white">
                                             Edit
                                         </button>
-                                        <button wire:click="toggleHallStatus('{{ $hl->id }}')" class="px-2.5 py-1 {{ $hl->is_active ? 'bg-[#C6A15B] text-white' : 'bg-[#C6A15B] text-white' }}">
+                                        <button wire:click="toggleHallStatus('{{ $hl->id }}')" class="px-2.5 py-1 {{ $hl->is_active ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-emerald-600 hover:bg-emerald-500 text-white' }}">
                                             {{ $hl->is_active ? 'Hide' : 'Publish' }}
                                         </button>
                                         <button wire:click="deleteHall('{{ $hl->id }}')" 
                                                 onclick="return confirm('Delete hall {{ $hl->name }}?') || event.stopImmediatePropagation()"
-                                                class="px-2 py-1 bg-[#171513] text-white hover:bg-[#171513]">
+                                                class="px-2 py-1 bg-rose-700 hover:bg-rose-600 text-white">
                                             Del
                                         </button>
                                     </div>
@@ -812,69 +812,69 @@
          TAB 5: ALL PLATFORM BOOKINGS (CRUD & Status)
          =================================================================== -->
     @if($activeTab === 'bookings')
-        <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
-            <div class="border-b border-[#E7E5E4] pb-4 flex items-center justify-between">
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-6 space-y-6 shadow-sm dark:shadow-xl">
+            <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-4 flex items-center justify-between">
                 <div>
-                    <h3 class="font-serif text-2xl text-[#171513] font-normal">
+                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-normal">
                         Recent Functions &amp; Bookings Across Platform
                     </h3>
-                    <p class="text-xs text-stone-500 mt-0.5">Monitor reservations, total turnover, and shift concurrency.</p>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Monitor reservations, total turnover, and shift concurrency.</p>
                 </div>
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
+                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4] dark:border-white/10">
                     <thead>
-                        <tr class="bg-[#F8F5EF] border-b border-[#E7E5E4] text-[10px] uppercase font-bold tracking-wider text-stone-600 font-mono">
-                            <th class="p-3 border-r border-[#E7E5E4]">Ref / Date</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Customer</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Hall / Venue</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Shift &amp; Heads</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Grand Total</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Status</th>
+                        <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Ref / Date</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Customer</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Hall / Venue</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Shift &amp; Heads</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Grand Total</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Status</th>
                             <th class="p-3 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-[#E7E5E4] font-mono">
+                    <tbody class="divide-y divide-[#E7E5E4] dark:divide-white/10 font-mono">
                         @foreach($recentBookings as $b)
-                            <tr class="hover:bg-[#F8F5EF] transition">
-                                <td class="p-3 border-r border-[#E7E5E4]">
-                                    <div class="font-bold text-[#171513]">{{ $b->booking_reference }}</div>
-                                    <span class="text-[10px] text-stone-500">{{ $b->event_date->format('d M Y') }}</span>
+                            <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10">
+                                    <div class="font-bold text-[#171513] dark:text-white">{{ $b->booking_reference }}</div>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400">{{ $b->event_date->format('d M Y') }}</span>
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-sans">
-                                    <strong class="text-stone-800">{{ $b->customer_name }}</strong>
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 font-sans">
+                                    <strong class="text-stone-800 dark:text-stone-200">{{ $b->customer_name }}</strong>
                                     <div class="text-[10px] text-stone-400 font-mono">{{ $b->customer_phone }}</div>
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-sans">
-                                    <div>{{ $b->hall->name ?? 'Hall' }}</div>
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 font-sans">
+                                    <div class="text-[#171513] dark:text-white">{{ $b->hall->name ?? 'Hall' }}</div>
                                     <span class="text-[10px] text-stone-400 font-mono">{{ $b->tenant->name ?? 'Venue' }}</span>
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 text-stone-700 dark:text-stone-300">
                                     <div>{{ $b->slot_type }}</div>
-                                    <span class="text-stone-500">{{ $b->guest_count }} Guests</span>
+                                    <span class="text-stone-500 dark:text-stone-400">{{ $b->guest_count }} Guests</span>
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-bold text-[#171513]">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 font-bold text-[#171513] dark:text-[#C6A15B]">
                                     PKR {{ number_format($b->grand_total) }}
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
-                                    <span class="px-2 py-0.5 text-[10px] font-bold uppercase {{ $b->status === 'CONFIRMED' ? 'bg-[#C6A15B]/20 text-[#8F7239]' : ($b->status === 'COMPLETED' ? 'bg-[#C6A15B]/15 text-[#8F7239]' : 'bg-[#C6A15B]/20 text-[#8F7239]') }}">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10">
+                                    <span class="px-2 py-0.5 text-[10px] font-bold uppercase {{ $b->status === 'CONFIRMED' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : ($b->status === 'COMPLETED' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400') }}">
                                         {{ $b->status }}
                                     </span>
                                 </td>
                                 <td class="p-3 text-right">
                                     <div class="flex items-center justify-end gap-1.5 font-mono text-[10px]">
-                                        <a href="{{ route('documents.agreement', $b->id) }}" target="_blank" class="px-2 py-1 bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-800">
+                                        <a href="{{ route('documents.agreement', $b->id) }}" target="_blank" class="px-2 py-1 bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-800 dark:bg-white/10 dark:text-stone-200 dark:border-white/20 dark:hover:bg-white/20">
                                             A4 Doc
                                         </a>
                                         @if($b->status !== 'CONFIRMED')
-                                            <button wire:click="updateBookingStatus('{{ $b->id }}', 'CONFIRMED')" class="px-2 py-1 bg-[#C6A15B] text-white">
+                                            <button wire:click="updateBookingStatus('{{ $b->id }}', 'CONFIRMED')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white">
                                                 Confirm
                                             </button>
                                         @endif
                                         <button wire:click="deleteBooking('{{ $b->id }}')" 
                                                 onclick="return confirm('Delete booking {{ $b->booking_reference }}?') || event.stopImmediatePropagation()"
-                                                class="px-2 py-1 bg-[#171513] text-white">
+                                                class="px-2 py-1 bg-rose-700 hover:bg-rose-600 text-white">
                                             Del
                                         </button>
                                     </div>
@@ -952,55 +952,55 @@
          TAB: USERS DIRECTORY (Platform Accounts & Access Control)
          =================================================================== -->
     @if($activeTab === 'users')
-        <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E7E5E4] gap-4">
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-6 space-y-6 shadow-sm dark:shadow-xl">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E7E5E4] dark:border-white/10 gap-4">
                 <div>
-                    <h3 class="font-serif text-2xl text-[#171513] font-normal">
+                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-normal">
                         Platform User Directory &amp; Access Control
                     </h3>
-                    <p class="text-xs text-stone-500 mt-0.5">Manage customer accounts, hall vendors, staff permissions, and account status (Active, Pending, Suspended).</p>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Manage customer accounts, hall vendors, staff permissions, and account status (Active, Pending, Suspended).</p>
                 </div>
             </div>
 
             <!-- User Metric Cards -->
             <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
                 <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm space-y-1">
-                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 font-mono block">Total Accounts</span>
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 font-mono block">Total Accounts</span>
                     <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalRegisteredUsers }}</strong>
                     <span class="text-[11px] text-stone-400 block font-sans">All Users</span>
                 </div>
                 <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm space-y-1">
-                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 font-mono block">Customers</span>
-                    <strong class="font-cinzel text-2xl text-[#8F7239]">{{ $totalCustomers }}</strong>
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 font-mono block">Customers</span>
+                    <strong class="font-cinzel text-2xl text-[#8F7239] dark:text-[#C6A15B]">{{ $totalCustomers }}</strong>
                     <span class="text-[11px] text-stone-400 block font-sans">Event Organizers</span>
                 </div>
                 <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm space-y-1">
-                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 font-mono block">Hall Vendors</span>
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 font-mono block">Hall Vendors</span>
                     <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalVendors }}</strong>
                     <span class="text-[11px] text-stone-400 block font-sans">Marquee Owners</span>
                 </div>
                 <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm space-y-1">
-                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 font-mono block">Hall Staff</span>
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 font-mono block">Hall Staff</span>
                     <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalStaff }}</strong>
                     <span class="text-[11px] text-stone-400 block font-sans">Managers &amp; KOT</span>
                 </div>
-                <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/50 p-5 shadow-sm space-y-1">
-                    <span class="text-[10px] uppercase font-bold tracking-wider text-red-600 font-mono block">Suspended</span>
-                    <strong class="font-cinzel text-2xl text-red-600">{{ $totalSuspendedUsers }}</strong>
+                <div class="bg-white dark:bg-[#171513] border border-rose-500/50 p-5 shadow-sm space-y-1">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-rose-600 dark:text-rose-400 font-mono block">Suspended</span>
+                    <strong class="font-cinzel text-2xl text-rose-600 dark:text-rose-400">{{ $totalSuspendedUsers }}</strong>
                     <span class="text-[11px] text-stone-400 block font-sans">Restricted Access</span>
                 </div>
             </div>
 
             <!-- Search & Filters -->
-            <div class="flex flex-col sm:flex-row items-center gap-3 bg-[#F8F5EF] p-4 border border-[#E7E5E4]">
+            <div class="flex flex-col sm:flex-row items-center gap-3 bg-[#F8F5EF] dark:bg-white/5 p-4 border border-[#E7E5E4] dark:border-white/10">
                 <div class="w-full sm:w-1/2">
-                    <label class="block text-[10px] font-mono uppercase tracking-wider text-stone-600 font-bold mb-1">Search User Directory</label>
+                    <label class="block text-[10px] font-mono uppercase tracking-wider text-stone-600 dark:text-stone-300 font-bold mb-1">Search User Directory</label>
                     <input type="text" wire:model.live.debounce.300ms="userSearch" placeholder="Search by name, email, or phone..."
-                           class="w-full bg-white border border-[#E7E5E4] text-xs px-3.5 py-2 font-mono outline-none focus:border-[#C6A15B]">
+                           class="w-full bg-white dark:bg-[#171513] text-[#171513] dark:text-white border border-[#E7E5E4] dark:border-white/20 text-xs px-3.5 py-2 font-mono outline-none focus:border-[#C6A15B]">
                 </div>
                 <div class="w-full sm:w-1/4">
-                    <label class="block text-[10px] font-mono uppercase tracking-wider text-stone-600 font-bold mb-1">Role Filter</label>
-                    <select wire:model.live="userRoleFilter" class="w-full bg-white border border-[#E7E5E4] text-xs px-3 py-2 font-mono outline-none focus:border-[#C6A15B]">
+                    <label class="block text-[10px] font-mono uppercase tracking-wider text-stone-600 dark:text-stone-300 font-bold mb-1">Role Filter</label>
+                    <select wire:model.live="userRoleFilter" class="w-full bg-white dark:bg-[#171513] text-[#171513] dark:text-white border border-[#E7E5E4] dark:border-white/20 text-xs px-3 py-2 font-mono outline-none focus:border-[#C6A15B]">
                         <option value="ALL">All Roles</option>
                         <option value="ROLE_CUSTOMER">Customer / Client</option>
                         <option value="ROLE_TENANT_OWNER">Hall Owner</option>
@@ -1013,8 +1013,8 @@
                     </select>
                 </div>
                 <div class="w-full sm:w-1/4">
-                    <label class="block text-[10px] font-mono uppercase tracking-wider text-stone-600 font-bold mb-1">Account Status</label>
-                    <select wire:model.live="userStatusFilter" class="w-full bg-white border border-[#E7E5E4] text-xs px-3 py-2 font-mono outline-none focus:border-[#C6A15B]">
+                    <label class="block text-[10px] font-mono uppercase tracking-wider text-stone-600 dark:text-stone-300 font-bold mb-1">Account Status</label>
+                    <select wire:model.live="userStatusFilter" class="w-full bg-white dark:bg-[#171513] text-[#171513] dark:text-white border border-[#E7E5E4] dark:border-white/20 text-xs px-3 py-2 font-mono outline-none focus:border-[#C6A15B]">
                         <option value="ALL">All Statuses</option>
                         <option value="ACTIVE">Active</option>
                         <option value="PENDING">Pending</option>
@@ -1025,79 +1025,79 @@
 
             <!-- Users Table -->
             <div class="overflow-x-auto">
-                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
+                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4] dark:border-white/10">
                     <thead>
-                        <tr class="bg-[#F8F5EF] border-b border-[#E7E5E4] text-[10px] uppercase font-bold tracking-wider text-stone-600 font-mono">
-                            <th class="p-3 border-r border-[#E7E5E4]">User Details</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Role</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Business / Venue</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Joined Date</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Last Login</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Status</th>
+                        <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">User Details</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Role</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Business / Venue</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Joined Date</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Last Login</th>
+                            <th class="p-3 border-r border-[#E7E5E4] dark:border-white/10">Status</th>
                             <th class="p-3 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-[#E7E5E4]">
+                    <tbody class="divide-y divide-[#E7E5E4] dark:divide-white/10">
                         @forelse($users as $u)
-                            <tr class="hover:bg-[#F8F5EF] transition {{ $u->status === 'SUSPENDED' ? 'bg-red-50/40' : '' }}">
-                                <td class="p-3 border-r border-[#E7E5E4]">
+                            <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition {{ $u->status === 'SUSPENDED' ? 'bg-red-50/40 dark:bg-red-950/20' : '' }}">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10">
                                     <div class="flex items-center gap-2.5">
-                                        <div class="w-8 h-8 rounded-full bg-[#171513] text-[#C6A15B] flex items-center justify-center font-bold text-xs uppercase font-mono shrink-0">
+                                        <div class="w-8 h-8 rounded-full bg-[#171513] text-[#C6A15B] border border-[#C6A15B]/40 flex items-center justify-center font-bold text-xs uppercase font-mono shrink-0">
                                             {{ substr($u->name, 0, 2) }}
                                         </div>
                                         <div>
-                                            <div class="font-bold text-[#171513] text-sm">{{ $u->name }}</div>
-                                            <span class="text-[11px] text-stone-500 font-mono block select-all">{{ $u->email }}</span>
+                                            <div class="font-bold text-[#171513] dark:text-white text-sm">{{ $u->name }}</div>
+                                            <span class="text-[11px] text-stone-500 dark:text-stone-400 font-mono block select-all">{{ $u->email }}</span>
                                             @if($u->phone)
-                                                <span class="text-[10px] text-stone-400 font-mono block">{{ $u->phone }}</span>
+                                                <span class="text-[10px] text-stone-400 dark:text-stone-500 font-mono block">{{ $u->phone }}</span>
                                             @endif
                                         </div>
                                     </div>
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10">
                                     @if($u->isSuperAdmin())
                                         <span class="px-2 py-0.5 bg-[#171513] text-[#C6A15B] border border-[#C6A15B]/60 text-[10px] font-mono font-bold uppercase">
                                             ★ Super Admin
                                         </span>
                                     @elseif(in_array($u->role, ['VENDOR', 'HALL_OWNER', 'ADMIN']))
-                                        <span class="px-2 py-0.5 bg-[#C6A15B]/15 text-[#8F7239] border border-[#C6A15B]/60 text-[10px] font-mono font-bold uppercase">
+                                        <span class="px-2 py-0.5 bg-[#C6A15B]/15 text-[#8F7239] dark:text-[#C6A15B] border border-[#C6A15B]/60 text-[10px] font-mono font-bold uppercase">
                                             Hall Vendor
                                         </span>
                                     @elseif($u->role === 'CUSTOMER')
-                                        <span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-mono font-bold uppercase">
+                                        <span class="px-2 py-0.5 bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30 text-[10px] font-mono font-bold uppercase">
                                             Customer
                                         </span>
                                     @else
-                                        <span class="px-2 py-0.5 bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-mono font-bold uppercase">
+                                        <span class="px-2 py-0.5 bg-stone-100 dark:bg-white/10 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-white/20 text-[10px] font-mono font-bold uppercase">
                                             {{ $u->role }}
                                         </span>
                                     @endif
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-mono text-stone-700">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 font-mono text-stone-700 dark:text-stone-300">
                                     {{ $u->tenant->name ?? 'Platform Marketplace' }}
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-mono text-stone-500 text-[11px]">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 font-mono text-stone-500 dark:text-stone-400 text-[11px]">
                                     {{ $u->created_at->format('d M Y') }}
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-mono text-[11px]">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10 font-mono text-[11px]">
                                     @if($u->last_login_at)
-                                        <span class="text-stone-800 font-semibold">{{ $u->last_login_at->diffForHumans() }}</span>
-                                        <div class="text-[9px] text-stone-400">{{ $u->last_login_at->format('d M H:i') }}</div>
+                                        <span class="text-stone-800 dark:text-stone-200 font-semibold">{{ $u->last_login_at->diffForHumans() }}</span>
+                                        <div class="text-[9px] text-stone-400 dark:text-stone-500">{{ $u->last_login_at->format('d M H:i') }}</div>
                                     @else
-                                        <span class="text-stone-400 italic">Never</span>
+                                        <span class="text-stone-400 dark:text-stone-500 italic">Never</span>
                                     @endif
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
+                                <td class="p-3 border-r border-[#E7E5E4] dark:border-white/10">
                                     @if($u->status === 'ACTIVE')
-                                        <span class="px-2 py-0.5 bg-[#C6A15B]/15 text-[#8F7239] border border-[#C6A15B]/60 text-[10px] font-mono font-bold uppercase">
+                                        <span class="px-2 py-0.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold uppercase">
                                             Active
                                         </span>
                                     @elseif($u->status === 'SUSPENDED')
-                                        <span class="px-2 py-0.5 bg-red-100 text-red-700 border border-red-300 text-[10px] font-mono font-bold uppercase">
+                                        <span class="px-2 py-0.5 bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-[10px] font-mono font-bold uppercase">
                                             Suspended
                                         </span>
                                     @else
-                                        <span class="px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-mono font-bold uppercase">
+                                        <span class="px-2 py-0.5 bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-[10px] font-mono font-bold uppercase">
                                             Pending
                                         </span>
                                     @endif
@@ -1105,19 +1105,19 @@
                                 <td class="p-3 text-right space-x-2 font-mono">
                                     @if(!$u->isSuperAdmin() || $u->id !== auth()->id())
                                         @if($u->status === 'SUSPENDED')
-                                            <button wire:click="toggleUserStatus({{ $u->id }})" class="px-2.5 py-1 bg-[#171513] text-[#C6A15B] border border-[#C6A15B] text-[10px] font-bold uppercase hover:bg-black transition">
+                                            <button wire:click="toggleUserStatus({{ $u->id }})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase transition">
                                                 Activate
                                             </button>
                                         @else
-                                            <button wire:click="toggleUserStatus({{ $u->id }})" wire:confirm="Are you sure you want to suspend this user account?" class="px-2.5 py-1 bg-red-50 text-red-600 border border-red-300 text-[10px] font-bold uppercase hover:bg-red-100 transition">
+                                            <button wire:click="toggleUserStatus({{ $u->id }})" wire:confirm="Are you sure you want to suspend this user account?" class="px-2.5 py-1 bg-rose-700/80 hover:bg-rose-600 text-white text-[10px] font-bold uppercase transition">
                                                 Suspend
                                             </button>
                                         @endif
-                                        <button wire:click="resetUserPassword({{ $u->id }})" wire:confirm="Reset password for {{ $u->name }} to 'Password123!'?" class="px-2.5 py-1 bg-stone-100 text-stone-700 border border-stone-300 text-[10px] font-bold uppercase hover:bg-stone-200 transition">
+                                        <button wire:click="resetUserPassword({{ $u->id }})" wire:confirm="Reset password for {{ $u->name }} to 'Password123!'?" class="px-2.5 py-1 bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 dark:bg-white/10 dark:text-stone-200 dark:border-white/20 dark:hover:bg-white/20 text-[10px] font-bold uppercase transition">
                                             Reset Pwd
                                         </button>
                                     @else
-                                        <span class="text-[10px] text-stone-400 italic">Self Account</span>
+                                        <span class="text-[10px] text-stone-400 dark:text-stone-500 italic">Self Account</span>
                                     @endif
                                 </td>
                             </tr>

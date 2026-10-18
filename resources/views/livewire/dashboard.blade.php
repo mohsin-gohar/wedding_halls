@@ -215,6 +215,144 @@
     </div>
 
     <!-- ===================================================================
+         ENTERPRISE ERP OPERATIONS COCKPIT (Modular Mission Control)
+         =================================================================== -->
+    <div class="space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E7E5E4] dark:border-white/10 pb-2">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 bg-[#C6A15B] rounded-full animate-pulse"></span>
+                <h3 class="font-cinzel text-lg font-bold text-[#171513] dark:text-white uppercase tracking-wider">
+                    Banquet ERP Modular Mission Control
+                </h3>
+            </div>
+            <span class="text-[11px] font-mono text-stone-500 dark:text-stone-400">
+                Live Interconnected Engine • Real-Time Database Sync
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <!-- 1. Culinary & Kitchen KOT Engine -->
+            <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-4 hover:border-[#C6A15B] transition duration-300 flex flex-col justify-between">
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between border-b border-[#E7E5E4] dark:border-white/10 pb-2">
+                        <span class="text-[10px] font-mono uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B] font-bold flex items-center gap-1.5">
+                            <span>👨‍🍳</span>
+                            <span>Kitchen KOTs</span>
+                        </span>
+                        @if($todayKitchenKotsCount > 0)
+                            <span class="px-2 py-0.5 bg-[#C6A15B]/20 text-[#8F7239] dark:text-[#C6A15B] font-mono text-[10px] font-bold">Active Today</span>
+                        @else
+                            <span class="text-stone-400 font-mono text-[10px]">No Shift Today</span>
+                        @endif
+                    </div>
+                    <div>
+                        <div class="text-2xl font-cinzel font-bold text-[#171513] dark:text-white">
+                            {{ $todayKitchenKotsCount }} <span class="text-xs font-mono font-normal text-stone-500">Orders</span>
+                        </div>
+                        <p class="text-xs text-stone-600 dark:text-stone-300 font-sans mt-1">
+                            @if($todayKitchenKotsCount > 0)
+                                Feeding <strong class="text-[#C6A15B]">{{ number_format($todayTotalDiners) }}</strong> guests today. Req: {{ number_format($todayMeatNeeded, 1) }}kg Meat, {{ number_format($todayRiceNeeded, 1) }}kg Rice.
+                            @else
+                                Bawarchi kitchen ready for upcoming feast batches.
+                            @endif
+                        </p>
+                    </div>
+                </div>
+                <a href="{{ route('kitchen.board') }}" class="w-full py-2 bg-[#F8F5EF] dark:bg-[#1f1c18] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] text-[#171513] dark:text-[#C6A15B] text-center text-xs font-mono font-bold uppercase tracking-wider transition flex items-center justify-center gap-1.5">
+                    <span>Chef KOT Board ↗</span>
+                </a>
+            </div>
+
+            <!-- 2. Bawarchi Pantry & Inventory Health -->
+            <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-4 hover:border-[#C6A15B] transition duration-300 flex flex-col justify-between">
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between border-b border-[#E7E5E4] dark:border-white/10 pb-2">
+                        <span class="text-[10px] font-mono uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B] font-bold flex items-center gap-1.5">
+                            <span>📦</span>
+                            <span>Inventory Vault</span>
+                        </span>
+                        @if($lowStockInventoryCount > 0)
+                            <span class="px-2 py-0.5 bg-red-500/20 text-red-500 font-mono text-[10px] font-bold">⚠️ {{ $lowStockInventoryCount }} Low Stock</span>
+                        @else
+                            <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-500 font-mono text-[10px] font-bold">✓ Stock Healthy</span>
+                        @endif
+                    </div>
+                    <div>
+                        <div class="text-2xl font-cinzel font-bold text-[#171513] dark:text-white">
+                            {{ $totalInventoryItems }} <span class="text-xs font-mono font-normal text-stone-500">Tracked Items</span>
+                        </div>
+                        <p class="text-xs text-stone-600 dark:text-stone-300 font-sans mt-1">
+                            Raw food staples, crockery sets, table linens, and cooking oil reserves.
+                        </p>
+                    </div>
+                </div>
+                <a href="{{ route('inventory') }}" class="w-full py-2 bg-[#F8F5EF] dark:bg-[#1f1c18] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] text-[#171513] dark:text-[#C6A15B] text-center text-xs font-mono font-bold uppercase tracking-wider transition flex items-center justify-center gap-1.5">
+                    <span>Inventory Desk ↗</span>
+                </a>
+            </div>
+
+            <!-- 3. Workforce & Duty Roster -->
+            <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-4 hover:border-[#C6A15B] transition duration-300 flex flex-col justify-between">
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between border-b border-[#E7E5E4] dark:border-white/10 pb-2">
+                        <span class="text-[10px] font-mono uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B] font-bold flex items-center gap-1.5">
+                            <span>👥</span>
+                            <span>Workforce Duty</span>
+                        </span>
+                        <span class="text-stone-500 dark:text-stone-400 font-mono text-[10px] font-bold">
+                            {{ $todayStaffPresentCount }} / {{ $todayStaffTotalCount }} Present
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-cinzel font-bold text-[#171513] dark:text-white">
+                            {{ $todayOvertimeHours }} <span class="text-xs font-mono font-normal text-stone-500">OT Hours Today</span>
+                        </div>
+                        <p class="text-xs text-stone-600 dark:text-stone-300 font-sans mt-1">
+                            Chefs, waitstaff, and cleaners. 1-click filter for individual attendance &amp; salary slips.
+                        </p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <a href="{{ route('staff.attendance') }}" class="py-2 bg-[#F8F5EF] dark:bg-[#1f1c18] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] text-[#171513] dark:text-[#C6A15B] text-center text-[11px] font-mono font-bold uppercase tracking-wider transition">
+                        Attendance
+                    </a>
+                    <a href="{{ route('staff.payroll') }}" class="py-2 bg-[#F8F5EF] dark:bg-[#1f1c18] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] text-[#171513] dark:text-[#C6A15B] text-center text-[11px] font-mono font-bold uppercase tracking-wider transition">
+                        Payroll
+                    </a>
+                </div>
+            </div>
+
+            <!-- 4. Energy Fleet & Daily Kharcha -->
+            <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-4 hover:border-[#C6A15B] transition duration-300 flex flex-col justify-between">
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between border-b border-[#E7E5E4] dark:border-white/10 pb-2">
+                        <span class="text-[10px] font-mono uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B] font-bold flex items-center gap-1.5">
+                            <span>⚡</span>
+                            <span>Utility Fleet</span>
+                        </span>
+                        <span class="text-[#8F7239] dark:text-[#C6A15B] font-mono text-[10px] font-bold">
+                            {{ number_format($todayDieselLiters, 1) }}L Diesel
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-cinzel font-bold text-[#171513] dark:text-white">
+                            {{ $todayGeneratorHours }} <span class="text-xs font-mono font-normal text-stone-500">Gen Hours</span>
+                        </div>
+                        <p class="text-xs text-stone-600 dark:text-stone-300 font-sans mt-1">
+                            Commercial WAPDA units &amp; backup heavy generator fuel logging per wedding function.
+                        </p>
+                    </div>
+                </div>
+                <a href="{{ route('utility.fuel') }}" class="w-full py-2 bg-[#F8F5EF] dark:bg-[#1f1c18] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] text-[#171513] dark:text-[#C6A15B] text-center text-xs font-mono font-bold uppercase tracking-wider transition flex items-center justify-center gap-1.5">
+                    <span>Fuel &amp; Utility Desk ↗</span>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===================================================================
          HALL ADMIN: DAILY OPERATIONAL KHARCHA & GENERATOR FUEL DESK
          =================================================================== -->
     <div class="bg-white dark:bg-[#171513] border-2 border-[#C6A15B] shadow-2xl p-6 relative overflow-hidden space-y-6">
@@ -657,6 +795,95 @@
                 </div>
             </div>
         </div>
+    <!-- ===================================================================
+         TODAY'S LIVE WEDDING FUNCTIONS (IN EXECUTION TODAY)
+         =================================================================== -->
+    <div class="bg-white dark:bg-[#171513] border-2 {{ $todayBookings->count() > 0 ? 'border-[#C6A15B]' : 'border-[#E7E5E4] dark:border-[#C6A15B]/30' }} p-6 shadow-sm dark:shadow-xl space-y-4 transition-colors duration-200 relative overflow-hidden">
+        @if($todayBookings->count() > 0)
+            <div class="w-full h-1 bg-gradient-to-r from-[#C6A15B] via-[#E8DCBE] to-[#C6A15B] absolute top-0 left-0"></div>
+        @endif
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E7E5E4] dark:border-white/10 pb-4">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full {{ $todayBookings->count() > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-stone-400' }}"></span>
+                    <span class="text-[10px] font-mono uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B] font-bold">
+                        Today's Floor Operations • {{ now()->format('l, d F Y') }}
+                    </span>
+                </div>
+                <h3 class="font-serif-luxury text-xl sm:text-2xl text-[#171513] dark:text-white font-bold mt-0.5">
+                    Today's Live Functions ({{ $todayBookings->count() }})
+                </h3>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="Livewire.dispatch('openWalkInModal')" class="btn-gold !h-8 !px-3 text-xs font-mono font-bold uppercase shadow">
+                    + Add New Booking
+                </button>
+                <a href="{{ route('calendar') }}" class="btn-outline-gold !h-8 !px-3 text-xs font-mono font-bold uppercase">
+                    Shift Matrix ↗
+                </a>
+            </div>
+        </div>
+
+        @if($todayBookings->count() > 0)
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($todayBookings as $tb)
+                    <div class="bg-[#F8F5EF] dark:bg-[#1a1714] border border-[#C6A15B]/40 p-4 space-y-3 relative overflow-hidden shadow-md">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2 py-0.5 bg-[#C6A15B]/20 text-[#8F7239] dark:text-[#C6A15B] text-xs font-mono font-bold uppercase">
+                                {{ $tb->slot_type }} Shift
+                            </span>
+                            <span class="text-[10px] font-mono font-bold px-2 py-0.5 border border-emerald-500/40 bg-emerald-500/10 text-emerald-500">
+                                {{ $tb->status }}
+                            </span>
+                        </div>
+                        <div>
+                            <div class="font-serif-luxury text-lg text-[#171513] dark:text-white font-bold">
+                                {{ $tb->event_type }} — {{ $tb->customer_name }}
+                            </div>
+                            <div class="text-xs text-stone-600 dark:text-stone-300 font-mono mt-0.5">
+                                📞 {{ $tb->customer_phone ?? '—' }} • {{ $tb->guest_count }} Guests
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t border-stone-200 dark:border-white/10 flex items-center justify-between text-xs font-mono">
+                            <div>
+                                <span class="text-[10px] text-stone-500 block">Grand Total</span>
+                                <strong class="text-[#171513] dark:text-white">Rs {{ number_format($tb->grand_total) }}</strong>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] text-stone-500 block">Balance Due</span>
+                                <strong class="{{ $tb->balance_due > 0 ? 'text-amber-500' : 'text-emerald-500' }}">
+                                    Rs {{ number_format($tb->balance_due) }}
+                                </strong>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t border-stone-200 dark:border-white/10 flex items-center justify-between gap-2 text-[11px] font-mono font-bold">
+                            <a href="{{ route('kitchen.board') }}" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline flex items-center gap-1">
+                                <span>🍳 KOT Slip</span>
+                            </a>
+                            <a href="{{ route('documents.agreement', $tb->id) }}" target="_blank" class="text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] underline">
+                                📄 Contract
+                            </a>
+                            <a href="{{ route('documents.receipt', $tb->id) }}" target="_blank" class="text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] underline">
+                                🧾 Receipt
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="p-6 text-center bg-[#F8F5EF] dark:bg-white/[0.02] border border-dashed border-stone-300 dark:border-white/10 space-y-2">
+                <span class="text-2xl">✨</span>
+                <p class="text-xs text-stone-600 dark:text-stone-400 font-sans font-medium">
+                    No wedding functions scheduled for today ({{ now()->format('d M Y') }}). Hall floor is prepared for upcoming bookings.
+                </p>
+                <button type="button" onclick="Livewire.dispatch('openWalkInModal')" class="btn-gold !h-8 !px-4 text-xs font-mono uppercase tracking-wider font-bold">
+                    + Book Walk-in Function for Today
+                </button>
+            </div>
+        @endif
     </div>
 
     <!-- ===================================================================

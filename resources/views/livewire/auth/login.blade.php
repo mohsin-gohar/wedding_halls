@@ -5,6 +5,11 @@
         <!-- Top Accent Line -->
         <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#C6A15B] via-[#E8DCBE] to-[#C6A15B]"></div>
 
+        <!-- Brand Logo -->
+        <div class="flex justify-center -mb-1">
+            <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub Logo" class="h-14 w-auto object-contain rounded border border-[#C6A15B]/50 bg-[#171513] shadow-[0_0_20px_rgba(198,161,91,0.25)] p-1">
+        </div>
+
         <!-- Heading Section -->
         <div class="text-center space-y-2">
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#C6A15B]/40 bg-[#C6A15B]/10 text-[#8F7239] dark:text-[#C6A15B] text-[10px] font-bold uppercase tracking-widest font-mono">

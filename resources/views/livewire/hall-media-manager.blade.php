@@ -576,7 +576,7 @@
                     <div class="bg-[#171513] p-2.5 border border-white/15 flex items-center justify-between gap-2">
                         <input type="text" readonly value="{{ route('hall.showcase', $hall->slug) }}" id="hallUrlInput"
                                class="bg-transparent text-xs font-mono text-[#C6A15B] w-full outline-none select-all">
-                        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('hallUrlInput').value); alert('Hall website URL copied to clipboard!');"
+                        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('hallUrlInput').value); window.luxuryToast('Hall website URL copied to clipboard!', 'gold');"
                                 class="px-2.5 py-1 bg-[#C6A15B] text-[#171513] text-[10px] font-mono font-bold uppercase tracking-wider shrink-0">
                             Copy
                         </button>

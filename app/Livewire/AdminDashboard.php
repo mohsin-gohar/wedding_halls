@@ -21,12 +21,15 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
-#[Layout('components.layouts.app', ['title' => 'Super Admin Console — VenueCloud'])]
+#[Layout('components.layouts.app', ['title' => 'Super Admin Console — EventHub'])]
 class AdminDashboard extends Component
 {
-    public string $activeTab = 'vendors'; // vendors, tasks, traffic, plans, payments, halls, bookings, audit
+    #[Url(as: 'tab')]
+    public string $activeTab = 'vendors'; // vendors, tasks, traffic, plans, payments, halls, bookings, users, analytics, audit
     public ?string $feedbackMessage = null;
     public ?string $errorMessage = null;
 
@@ -120,6 +123,7 @@ class AdminDashboard extends Component
         $this->newTaskDueDate = Carbon::now()->addDays(2)->format('Y-m-d');
     }
 
+    #[On('set-admin-tab')]
     public function setTab(string $tab)
     {
         $this->activeTab = $tab;

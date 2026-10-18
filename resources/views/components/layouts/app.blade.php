@@ -7,6 +7,10 @@
 
     <title>{{ $title ?? 'EventHub — Vendor SaaS Management Suite' }}</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/eventhub-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/eventhub-logo.png') }}">
+
     <!-- Google Fonts: Cinzel, Playfair Display, Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -90,30 +94,163 @@
             <div>
                 <!-- Brand Badge -->
                     <div class="p-6 border-b border-[#E7E5E4] dark:border-[#C6A15B]/20 flex items-center justify-between bg-gradient-to-r from-transparent to-[#171513]/5 dark:to-[#C6A15B]/5">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 border border-[#C6A15B] flex items-center justify-center bg-[#171513] text-[#C6A15B] shadow-[0_0_18px_rgba(198,161,91,0.25)]">
-                                <span class="font-cinzel text-base font-bold">V</span>
-                            </div>
+                        <a href="{{ route('home') }}" class="flex items-center gap-3 group">
+                            <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub Logo" class="h-10 w-auto object-contain rounded border border-[#C6A15B] bg-[#171513] shadow-[0_0_18px_rgba(198,161,91,0.25)]">
                             <div>
-                                <span class="font-cinzel text-lg font-bold tracking-[0.15em] text-[#171513] dark:text-white block">EventHub</span>
+                                <span class="font-cinzel text-lg font-bold tracking-[0.15em] text-[#171513] dark:text-white block group-hover:text-[#C6A15B] transition">EventHub</span>
                                 @if(auth()->user()->isSuperAdmin())
                                     <span class="text-[9px] uppercase tracking-[0.18em] text-[#C6A15B] font-bold block -mt-1 font-mono">Platform Super Admin</span>
                                 @else
                                     <span class="text-[9px] uppercase tracking-[0.18em] text-[#C6A15B] font-medium block -mt-1 font-mono">Rent Admin Suite</span>
                                 @endif
                             </div>
-                        </div>
+                        </a>
                     </div>
 
                 <!-- Navigation Menu -->
                 <nav class="p-4 space-y-1 text-xs font-semibold uppercase tracking-wider">
                     @if(auth()->user()->isSuperAdmin())
-                        <div class="mb-3">
-                            <a href="{{ route('admin.dashboard') }}" 
-                               class="flex items-center gap-2.5 px-3 py-2 border border-[#C6A15B] bg-[#C6A15B]/15 text-[#C6A15B] font-mono font-bold text-xs hover:bg-[#C6A15B] hover:text-[#171513] transition">
-                                <span>★</span>
-                                <span>Super Admin Console</span>
-                            </a>
+                        <div class="space-y-4">
+                            <!-- Section: Overview & Operations -->
+                            <div>
+                                <div class="text-[10px] text-[#C6A15B] font-bold px-3 py-1 uppercase tracking-[0.2em] font-mono">Platform Governance</div>
+                                <div class="mt-1 space-y-1">
+                                    <a href="{{ route('admin.dashboard', ['tab' => 'vendors']) }}" 
+                                       @click="$dispatch('set-admin-tab', { tab: 'vendors' })"
+                                       class="flex items-center justify-between px-3 py-2 border text-xs transition {{ (request('tab') === 'vendors' || (!request('tab') && request()->routeIs('admin.dashboard'))) ? 'bg-[#C6A15B]/20 text-[#171513] dark:text-[#C6A15B] border-[#C6A15B]' : 'border-transparent text-stone-600 dark:text-stone-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#C6A15B]' }}">
+                                        <div class="flex items-center gap-2.5">
+                                            <span>🏢</span>
+                                            <span>Vendors &amp; Subscriptions</span>
+                                        </div>
+                                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 text-stone-600 dark:text-stone-300">
+                                            {{ \App\Models\Tenant::count() }}
+                                        </span>
+                                    </a>
+
+                                    <a href="{{ route('admin.dashboard', ['tab' => 'halls']) }}" 
+                                       @click="$dispatch('set-admin-tab', { tab: 'halls' })"
+                                       class="flex items-center justify-between px-3 py-2 border text-xs transition {{ request('tab') === 'halls' ? 'bg-[#C6A15B]/20 text-[#171513] dark:text-[#C6A15B] border-[#C6A15B]' : 'border-transparent text-stone-600 dark:text-stone-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#C6A15B]' }}">
+                                        <div class="flex items-center gap-2.5">
+                                            <span>🏛️</span>
+                                            <span>Halls Catalog</span>
+                                        </div>
+                                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 text-stone-600 dark:text-stone-300">
+                                            {{ \App\Models\Hall::count() }}
+                                        </span>
+                                    </a>
+
+                                    <a href="{{ route('admin.dashboard', ['tab' => 'bookings']) }}" 
+                                       @click="$dispatch('set-admin-tab', { tab: 'bookings' })"
+                                       class="flex items-center justify-between px-3 py-2 border text-xs transition {{ request('tab') === 'bookings' ? 'bg-[#C6A15B]/20 text-[#171513] dark:text-[#C6A15B] border-[#C6A15B]' : 'border-transparent text-stone-600 dark:text-stone-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#C6A15B]' }}">
+                                        <div class="flex items-center gap-2.5">
+                                            <span>📅</span>
+                                            <span>All Bookings</span>
+                                        </div>
+                                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 text-stone-600 dark:text-stone-300">
+                                            {{ \App\Models\Booking::count() }}
+                                        </span>
+                                    </a>
+
+                                    <a href="{{ route('admin.dashboard', ['tab' => 'users']) }}" 
+                                       @click="$dispatch('set-admin-tab', { tab: 'users' })"
+                                       class="flex items-center justify-between px-3 py-2 border text-xs transition {{ request('tab') === 'users' ? 'bg-[#C6A15B]/20 text-[#171513] dark:text-[#C6A15B] border-[#C6A15B]' : 'border-transparent text-stone-600 dark:text-stone-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#C6A15B]' }}">
+                                        <div class="flex items-center gap-2.5">
+                                            <span>👥</span>
+                                            <span>Users &amp; Staff</span>
+                                        </div>
+                                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 text-stone-600 dark:text-stone-300">
+                                            {{ \App\Models\User::count() }}
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Section: Commercial SaaS & Pricing -->
+                            <div>
+                                <div class="text-[10px] text-[#C6A15B] font-bold px-3 py-1 uppercase tracking-[0.2em] font-mono">Commercial &amp; SaaS</div>
+                                <div class="mt-1 space-y-1">
+                                    <a href="{{ route('admin.dashboard', ['tab' => 'plans']) }}" 
+                                       @click="$dispatch('set-admin-tab', { tab: 'plans' })"
+                                       class="flex items-center justify-between px-3 py-2 border text-xs transition {{ request('tab') === 'plans' ? 'bg-[#C6A15B]/20 text-[#171513] dark:text-[#C6A15B] border-[#C6A15B]' : 'border-transparent text-stone-600 dark:text-stone-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#C6A15B]' }}">
+                                        <div class="flex items-center gap-2.5">
+                                            <span>💎</span>
+                                            <span>SaaS Plans &amp; Pricing</span>
+                                        </div>
+                                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 text-stone-600 dark:text-stone-300">
+                                            {{ \App\Models\SubscriptionPlan::count() }}
+                                        </span>
+                                    </a>
+
+                                    <a href="{{ route('admin.dashboard', ['tab' => 'payments']) }}" 
+                                       @click="$dispatch('set-admin-tab', { tab: 'payments' })"
+                                       class="flex items-center justify-between px-3 py-2 border text-xs transition {{ request('tab') === 'payments' ? 'bg-[#C6A15B]/20 text-[#171513] dark:text-[#C6A15B] border-[#C6A15B]' : 'border-transparent text-stone-600 dark:text-stone-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#C6A15B]' }}">
+                                        <div class="flex items-center gap-2.5">
+                                            <span>💳</span>
+                                            <span>Payment Approvals</span>
+                                        </div>
+                                        @php $pendingSubs = \App\Models\SubscriptionPayment::where('status', 'PENDING')->count(); @endphp
+                                        @if($pendingSubs > 0)
+                                            <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-500">
+                                                {{ $pendingSubs }} new
+                                            </span>
+                                        @else
+                                            <span class="text-[10px] font-mono text-stone-500">0</span>
+                                        @endif
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Section: Operations & Security -->
+                            <div>
+                                <div class="text-[10px] text-[#C6A15B] font-bold px-3 py-1 uppercase tracking-[0.2em] font-mono">Operations &amp; Security</div>
+                                <div class="mt-1 space-y-1">
+                                    <a href="{{ route('admin.dashboard', ['tab' => 'tasks']) }}" 
+                                       @click="$dispatch('set-admin-tab', { tab: 'tasks' })"
+                                       class="flex items-center justify-between px-3 py-2 border text-xs transition {{ request('tab') === 'tasks' ? 'bg-[#C6A15B]/20 text-[#171513] dark:text-[#C6A15B] border-[#C6A15B]' : 'border-transparent text-stone-600 dark:text-stone-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#C6A15B]' }}">
+                                        <div class="flex items-center gap-2.5">
+                                            <span>📋</span>
+                                            <span>Platform Tasks</span>
+                                        </div>
+                                        @php $openTasks = \App\Models\PlatformTask::where('is_completed', false)->count(); @endphp
+                                        @if($openTasks > 0)
+                                            <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500">
+                                                {{ $openTasks }} open
+                                            </span>
+                                        @endif
+                                    </a>
+
+                                    <a href="{{ route('admin.dashboard', ['tab' => 'traffic']) }}" 
+                                       @click="$dispatch('set-admin-tab', { tab: 'traffic' })"
+                                       class="flex items-center justify-between px-3 py-2 border text-xs transition {{ request('tab') === 'traffic' ? 'bg-[#C6A15B]/20 text-[#171513] dark:text-[#C6A15B] border-[#C6A15B]' : 'border-transparent text-stone-600 dark:text-stone-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#C6A15B]' }}">
+                                        <div class="flex items-center gap-2.5">
+                                            <span>🚦</span>
+                                            <span>Traffic &amp; Controls</span>
+                                        </div>
+                                        <span class="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-500 font-bold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            Live
+                                        </span>
+                                    </a>
+
+                                    <a href="{{ route('admin.dashboard', ['tab' => 'analytics']) }}" 
+                                       @click="$dispatch('set-admin-tab', { tab: 'analytics' })"
+                                       class="flex items-center justify-between px-3 py-2 border text-xs transition {{ request('tab') === 'analytics' ? 'bg-[#C6A15B]/20 text-[#171513] dark:text-[#C6A15B] border-[#C6A15B]' : 'border-transparent text-stone-600 dark:text-stone-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#C6A15B]' }}">
+                                        <div class="flex items-center gap-2.5">
+                                            <span>📊</span>
+                                            <span>Visitor Analytics</span>
+                                        </div>
+                                    </a>
+
+                                    <a href="{{ route('admin.dashboard', ['tab' => 'audit']) }}" 
+                                       @click="$dispatch('set-admin-tab', { tab: 'audit' })"
+                                       class="flex items-center justify-between px-3 py-2 border text-xs transition {{ request('tab') === 'audit' ? 'bg-[#C6A15B]/20 text-[#171513] dark:text-[#C6A15B] border-[#C6A15B]' : 'border-transparent text-stone-600 dark:text-stone-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#C6A15B]' }}">
+                                        <div class="flex items-center gap-2.5">
+                                            <span>🛡️</span>
+                                            <span>Security Audit Log</span>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     @endif
 
@@ -306,6 +443,74 @@
                         </span>
                     </button>
 
+                    <!-- ERP Quick Action Dropdown -->
+                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isFrontDesk() || auth()->user()->isAccountant())
+                        <div class="relative" x-data="{ quickMenuOpen: false }">
+                            <button type="button" 
+                                    @click="quickMenuOpen = !quickMenuOpen" 
+                                    class="h-9 px-3 bg-[#F8F5EF] dark:bg-[#1f1c18] border border-[#E7E5E4] dark:border-[#C6A15B]/50 hover:border-[#C6A15B] text-[#171513] dark:text-[#C6A15B] text-xs font-mono font-bold uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer">
+                                <span>⚡</span>
+                                <span class="hidden sm:inline">ERP Quick Actions</span>
+                                <svg class="w-3.5 h-3.5 transition-transform" :class="quickMenuOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+
+                            <div x-show="quickMenuOpen" 
+                                 @click.outside="quickMenuOpen = false" 
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 scale-95"
+                                 x-transition:enter-end="opacity-100 scale-100"
+                                 class="absolute right-0 mt-2 w-56 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/50 shadow-2xl py-2 z-50 text-xs font-sans"
+                                 style="display: none;">
+                                <div class="px-3 py-1.5 text-[9px] uppercase tracking-widest font-mono text-[#8F7239] dark:text-[#C6A15B] font-bold border-b border-[#E7E5E4] dark:border-white/10">
+                                    Quick ERP Commands
+                                </div>
+                                <button type="button" 
+                                        onclick="Livewire.dispatch('openWalkInModal')" 
+                                        @click="quickMenuOpen = false"
+                                        class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">
+                                    <span>📅</span>
+                                    <span>New Event Reservation</span>
+                                </button>
+                                <a href="{{ route('dashboard') }}" 
+                                   @click="quickMenuOpen = false"
+                                   class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">
+                                    <span>⛽</span>
+                                    <span>Log Daily Kharcha / Fuel</span>
+                                </a>
+                                <a href="{{ route('staff.attendance') }}" 
+                                   @click="quickMenuOpen = false"
+                                   class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">
+                                    <span>🕒</span>
+                                    <span>Staff Attendance Roster</span>
+                                </a>
+                                <a href="{{ route('staff.payroll') }}" 
+                                   @click="quickMenuOpen = false"
+                                   class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">
+                                    <span>💰</span>
+                                    <span>Generate Payroll Slip</span>
+                                </a>
+                                <a href="{{ route('inventory') }}" 
+                                   @click="quickMenuOpen = false"
+                                   class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">
+                                    <span>📦</span>
+                                    <span>Add Stock / Inventory</span>
+                                </a>
+                                <a href="{{ route('kitchen.board') }}" 
+                                   @click="quickMenuOpen = false"
+                                   class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">
+                                    <span>🍳</span>
+                                    <span>Live Kitchen KOTs</span>
+                                </a>
+                                <a href="{{ route('seating.planner') }}" 
+                                   @click="quickMenuOpen = false"
+                                   class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">
+                                    <span>🪑</span>
+                                    <span>Floor Seating Designer</span>
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+
                     @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isFrontDesk())
                         <button onclick="Livewire.dispatch('openWalkInModal')" class="btn-gold !h-9 !px-4 text-xs font-bold uppercase shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.55)] transition-all duration-300 group relative overflow-hidden">
                             <span class="relative z-10">+ Walk-In Reservation</span>
@@ -326,7 +531,14 @@
                 <div class="text-[10px] uppercase font-bold tracking-widest text-[#C6A15B]">{{ auth()->user()->isSuperAdmin() ? 'Platform Administration' : 'Management Menu' }}</div>
                 <div class="grid grid-cols-2 gap-2 text-xs font-semibold text-stone-300">
                     @if(auth()->user()->isSuperAdmin())
-                        <a href="{{ route('admin.dashboard') }}" class="py-2 hover:text-[#C6A15B]">Super Admin Console</a>
+                        <a href="{{ route('admin.dashboard', ['tab' => 'vendors']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'vendors' })" class="py-2 hover:text-[#C6A15B]">🏢 Vendors</a>
+                        <a href="{{ route('admin.dashboard', ['tab' => 'halls']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'halls' })" class="py-2 hover:text-[#C6A15B]">🏛️ Halls</a>
+                        <a href="{{ route('admin.dashboard', ['tab' => 'plans']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'plans' })" class="py-2 hover:text-[#C6A15B]">💎 SaaS Plans</a>
+                        <a href="{{ route('admin.dashboard', ['tab' => 'payments']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'payments' })" class="py-2 hover:text-[#C6A15B]">💳 Payments</a>
+                        <a href="{{ route('admin.dashboard', ['tab' => 'bookings']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'bookings' })" class="py-2 hover:text-[#C6A15B]">📅 Bookings</a>
+                        <a href="{{ route('admin.dashboard', ['tab' => 'users']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'users' })" class="py-2 hover:text-[#C6A15B]">👥 Users</a>
+                        <a href="{{ route('admin.dashboard', ['tab' => 'tasks']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'tasks' })" class="py-2 hover:text-[#C6A15B]">📋 Tasks</a>
+                        <a href="{{ route('admin.dashboard', ['tab' => 'traffic']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'traffic' })" class="py-2 hover:text-[#C6A15B]">🚦 Traffic</a>
                     @else
                         @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isAccountant())
                             <a href="{{ route('dashboard') }}" class="py-2 hover:text-[#C6A15B]">Analytics</a>
@@ -378,6 +590,9 @@
 
     <!-- Interactive Walk-in Booking Modal Component -->
     @livewire('walk-in-booking-modal')
+
+    <!-- Universal Royal Luxury Alert & Notification Dialog -->
+    <x-luxury-alert-dialog />
 
     @livewireScripts
 </body>
