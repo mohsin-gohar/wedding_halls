@@ -45,7 +45,8 @@ use Illuminate\Support\Facades\Route;
 */
 // Cinematic Homepage
 Route::get('/', function () {
-    $halls = Hall::where('is_active', true)
+    $halls = Hall::with(['venue', 'tenant'])
+        ->where('is_active', true)
         ->whereHas('tenant', function ($q) {
             $q->where('is_active', true)
               ->where('verification_status', 'APPROVED');
@@ -68,7 +69,7 @@ Route::get('/', function () {
 })->name('home');
 
 // Vendor Hall Media (defined before /hall/{id} wildcard)
-Route::middleware('auth')->get('/hall/media', HallMediaManager::class)->name('hall.media');
+Route::middleware(['auth', 'tenant.staff'])->get('/hall/media', HallMediaManager::class)->name('hall.media');
 
 // Venue Exploration & Showcase
 Route::get('/venues', PublicVenues::class)->name('public.venues');
@@ -133,10 +134,10 @@ Route::post('/logout', function () {
 
 /*
 |--------------------------------------------------------------------------
-| 4. Vendor ERP Management Suite (Protected by Auth)
+| 4. Vendor ERP Management Suite (Protected by Auth & Tenant Staff Guard)
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'tenant.staff'])->group(function () {
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
     Route::get('/vendor/dashboard', Dashboard::class)->name('vendor.dashboard');
     Route::get('/calendar', CalendarShiftGrid::class)->name('calendar');
@@ -181,5 +182,5 @@ Route::prefix('documents')->name('documents.')->group(function () {
 | 7. Meta WhatsApp Cloud API 2-Way Webhook
 |--------------------------------------------------------------------------
 */
-Route::get('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'verify']);
-Route::post('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'handle']);
+Route::get('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'verify'])->middleware('throttle:120,1');
+Route::post('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'handle'])->middleware('throttle:120,1');

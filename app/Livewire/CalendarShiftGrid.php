@@ -27,10 +27,13 @@ class CalendarShiftGrid extends Component
 
     public function mount()
     {
-        $this->currentMonth = Carbon::now()->format('Y-m');
-
         $user = Auth::user();
-        $tenantId = $user ? $user->tenant_id : null;
+        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+            abort(403, 'Unauthorized. Tenant staff access required.');
+        }
+
+        $this->currentMonth = Carbon::now()->format('Y-m');
+        $tenantId = $user->tenant_id;
 
         $hallsQuery = Hall::where('is_active', true);
         if ($tenantId) {

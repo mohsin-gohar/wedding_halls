@@ -17,8 +17,14 @@ class FloorPlanDesigner extends Component
     public function mount()
     {
         $user = Auth::user();
-        if ($user && $user->tenant_id) {
+        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+            abort(403, 'Unauthorized. Tenant staff access required.');
+        }
+
+        if ($user->tenant_id) {
             $firstHall = Hall::where('tenant_id', $user->tenant_id)->where('is_active', true)->first();
+        } elseif ($user->isSuperAdmin()) {
+            $firstHall = Hall::where('is_active', true)->first();
         } else {
             $firstHall = null;
         }
@@ -88,9 +94,15 @@ class FloorPlanDesigner extends Component
     public function saveFloorPlan()
     {
         $user = Auth::user();
-        $hall = Hall::where('id', $this->selectedHallId)
-            ->when($user && $user->tenant_id, fn($q) => $q->where('tenant_id', $user->tenant_id))
-            ->first();
+        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+            abort(403, 'Unauthorized hall access.');
+        }
+
+        $query = Hall::where('id', $this->selectedHallId);
+        if ($user->tenant_id) {
+            $query->where('tenant_id', $user->tenant_id);
+        }
+        $hall = $query->first();
 
         if (!$hall) {
             abort(403, 'Unauthorized hall access.');
@@ -119,6 +131,8 @@ class FloorPlanDesigner extends Component
         $user = Auth::user();
         if ($user && $user->tenant_id) {
             $halls = Hall::where('tenant_id', $user->tenant_id)->where('is_active', true)->get();
+        } elseif ($user && $user->isSuperAdmin()) {
+            $halls = Hall::where('is_active', true)->get();
         } else {
             $halls = collect([]);
         }

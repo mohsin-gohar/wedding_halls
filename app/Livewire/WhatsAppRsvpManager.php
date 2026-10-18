@@ -24,8 +24,12 @@ class WhatsAppRsvpManager extends Component
     public function mount()
     {
         $user = Auth::user();
+        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+            abort(403, 'Unauthorized. Tenant staff access required.');
+        }
+
         $query = Booking::whereIn('status', ['CONFIRMED', 'HOLD'])->latest();
-        if ($user && $user->tenant_id) {
+        if (!$user->isSuperAdmin()) {
             $query->where('tenant_id', $user->tenant_id);
         }
         $firstBooking = $query->first();
@@ -56,8 +60,12 @@ class WhatsAppRsvpManager extends Component
         ]);
 
         $user = Auth::user();
+        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+            abort(403, 'Unauthorized.');
+        }
+
         $query = Booking::query();
-        if ($user && $user->tenant_id) {
+        if (!$user->isSuperAdmin()) {
             $query->where('tenant_id', $user->tenant_id);
         }
         $booking = $query->findOrFail($this->selectedBookingId);

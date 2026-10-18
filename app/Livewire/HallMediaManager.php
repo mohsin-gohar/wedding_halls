@@ -112,6 +112,10 @@ class HallMediaManager extends Component
             return redirect()->route('login');
         }
 
+        if (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer())) {
+            abort(403, 'Unauthorized. Tenant staff access required.');
+        }
+
         // Retrieve halls strictly scoped to the user's tenant
         $firstHall = Hall::where('tenant_id', $user->tenant_id)->first();
 
@@ -253,6 +257,9 @@ class HallMediaManager extends Component
         ]);
 
         $user = Auth::user();
+        if (!$user || (!$user->isSuperAdmin() && !$user->tenant_id)) {
+            abort(403, 'Tenant required to create hall.');
+        }
         $venue = Venue::where('tenant_id', $user->tenant_id)->first();
         if (!$venue) {
             $venue = Venue::create([

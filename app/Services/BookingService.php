@@ -7,10 +7,11 @@ use App\Exceptions\SlotAlreadyBookedException;
 use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\Payment;
+use Carbon\Carbon;
 use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class BookingService
 {
@@ -26,28 +27,23 @@ class BookingService
      */
     public function checkSlotAvailability(string $hallId, string $eventDate, string $slotType): bool
     {
-        return !Booking::where('hall_id', $hallId)
-            ->where('event_date', $eventDate)
-            ->where('slot_type', $slotType)
-            ->whereIn('status', ['HOLD', 'CONFIRMED'])
-            ->exists();
+        return ! $this->slotConflictQuery($hallId, $eventDate, $slotType)->exists();
     }
 
     /**
      * Create an atomic, concurrency-safe reservation with Redis/Cache lock and DB transaction row lock.
      *
-     * @param array $data
-     * @return Booking
      * @throws SlotAlreadyBookedException
      */
     public function createReservation(array $data): Booking
     {
         $hallId = $data['hall_id'];
-        $eventDate = \Carbon\Carbon::parse($data['event_date'])->format('Y-m-d');
+        $eventDate = Carbon::parse($data['event_date'])->format('Y-m-d');
         $slotType = strtoupper($data['slot_type']);
 
-        // Redis / Cache distributed mutex lock key (TTL: 600s / 10 mins)
-        $lockKey = "lock:hall:{$hallId}:date:{$eventDate}:slot:{$slotType}";
+        // Serialize every reservation decision for this hall/date. A date-level lock is
+        // required because FULL_DAY conflicts with all three individual shifts.
+        $lockKey = "lock:hall:{$hallId}:date:{$eventDate}";
         $lock = Cache::lock($lockKey, 600);
 
         try {
@@ -55,7 +51,7 @@ class BookingService
             $lock->block(5);
         } catch (LockTimeoutException $e) {
             throw new SlotAlreadyBookedException(
-                "A concurrent reservation is currently in progress for this slot. Please try again momentarily.",
+                'A concurrent reservation is currently in progress for this slot. Please try again momentarily.',
                 423,
                 $hallId,
                 $eventDate,
@@ -66,10 +62,7 @@ class BookingService
         try {
             $booking = DB::transaction(function () use ($data, $hallId, $eventDate, $slotType) {
                 // Strict row-level lock check: Verify no active booking exists in DB
-                $existing = Booking::where('hall_id', $hallId)
-                    ->whereDate('event_date', $eventDate)
-                    ->where('slot_type', $slotType)
-                    ->whereIn('status', ['HOLD', 'CONFIRMED'])
+                $existing = $this->slotConflictQuery($hallId, $eventDate, $slotType)
                     ->lockForUpdate()
                     ->first();
 
@@ -159,7 +152,7 @@ class BookingService
             });
 
             return $booking;
-        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+        } catch (UniqueConstraintViolationException $e) {
             throw new SlotAlreadyBookedException(
                 "The slot [{$slotType}] on [{$eventDate}] for this hall is already booked in the database.",
                 409,
@@ -172,6 +165,24 @@ class BookingService
             // Safely release the distributed lock
             optional($lock)->release();
         }
+    }
+
+    /**
+     * Build the authoritative overlap query for public and staff reservations.
+     * A FULL_DAY booking occupies every shift, while a new FULL_DAY booking
+     * conflicts with any active individual shift on that date.
+     */
+    private function slotConflictQuery(string $hallId, string $eventDate, string $slotType)
+    {
+        $normalizedSlot = strtoupper($slotType);
+        $conflictingSlots = $normalizedSlot === 'FULL_DAY'
+            ? ['AFTERNOON', 'EVENING', 'NIGHT', 'FULL_DAY']
+            : [$normalizedSlot, 'FULL_DAY'];
+
+        return Booking::where('hall_id', $hallId)
+            ->whereDate('event_date', $eventDate)
+            ->whereIn('slot_type', $conflictingSlots)
+            ->whereIn('status', ['HOLD', 'CONFIRMED']);
     }
 
     /**

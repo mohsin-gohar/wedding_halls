@@ -28,7 +28,29 @@ class PublicContact extends Component
     {
         $this->validate();
 
-        // In a production environment, send notification to concierge desk
+        \App\Models\ContactInquiry::create([
+            'name' => trim($this->name),
+            'email' => trim($this->email),
+            'phone' => trim($this->phone),
+            'city' => trim($this->city),
+            'event_date' => !empty($this->eventDate) ? $this->eventDate : null,
+            'message' => trim($this->message),
+            'status' => 'NEW',
+        ]);
+
+        // Auto-create task for Super Admin follow-up
+        try {
+            \App\Models\PlatformTask::create([
+                'title' => "Customer Inquiry: {$this->name} ({$this->city})",
+                'category' => 'GENERAL',
+                'priority' => 'HIGH',
+                'due_date' => now()->addDay(),
+                'notes' => "Phone: {$this->phone} | Email: {$this->email} | Message: " . \Illuminate\Support\Str::limit($this->message, 120),
+            ]);
+        } catch (\Throwable $e) {
+            // Task creation failure should not block user inquiry
+        }
+
         $this->isSubmitted = true;
     }
 

@@ -21,8 +21,12 @@ class UtilityFuelTracker extends Component
     public function mount()
     {
         $user = Auth::user();
+        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+            abort(403, 'Unauthorized. Tenant staff access required.');
+        }
+
         $query = Booking::whereIn('status', ['CONFIRMED', 'COMPLETED']);
-        if ($user && $user->tenant_id) {
+        if (!$user->isSuperAdmin()) {
             $query->where('tenant_id', $user->tenant_id);
         }
         $firstBooking = $query->latest()->first();
@@ -35,11 +39,15 @@ class UtilityFuelTracker extends Component
     public function selectBooking(string $bookingId)
     {
         $user = Auth::user();
+        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+            abort(403, 'Unauthorized.');
+        }
+
         $this->selectedBookingId = $bookingId;
         $this->successMessage = null;
 
         $logQuery = UtilityLog::where('booking_id', $bookingId);
-        if ($user && $user->tenant_id) {
+        if (!$user->isSuperAdmin()) {
             $logQuery->where('tenant_id', $user->tenant_id);
         }
         $existingLog = $logQuery->first();
@@ -65,8 +73,12 @@ class UtilityFuelTracker extends Component
         ]);
 
         $user = Auth::user();
+        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+            abort(403, 'Unauthorized.');
+        }
+
         $bQuery = Booking::query();
-        if ($user && $user->tenant_id) {
+        if (!$user->isSuperAdmin()) {
             $bQuery->where('tenant_id', $user->tenant_id);
         }
         $booking = $bQuery->findOrFail($this->selectedBookingId);
@@ -100,6 +112,8 @@ class UtilityFuelTracker extends Component
         
         if ($user && $user->tenant_id) {
             $query->where('tenant_id', $user->tenant_id);
+        } elseif (!$user || !$user->isSuperAdmin()) {
+            $query->whereRaw('1 = 0');
         }
 
         $bookings = $query->latest()->take(20)->get();

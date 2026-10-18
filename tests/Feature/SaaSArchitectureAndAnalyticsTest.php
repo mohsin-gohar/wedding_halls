@@ -15,6 +15,7 @@ use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Venue;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
@@ -25,12 +26,19 @@ class SaaSArchitectureAndAnalyticsTest extends TestCase
     use RefreshDatabase;
 
     protected Tenant $tenantA;
+
     protected Tenant $tenantB;
+
     protected Hall $hallA;
+
     protected Hall $hallB;
+
     protected User $vendorA;
+
     protected User $vendorB;
+
     protected User $superAdmin;
+
     protected User $customer;
 
     protected function setUp(): void
@@ -184,6 +192,61 @@ class SaaSArchitectureAndAnalyticsTest extends TestCase
         $this->actingAs($this->vendorB);
         Livewire::test(Dashboard::class)
             ->assertSee('Wishlists Saved');
+    }
+
+    public function test_public_calendar_only_selects_dates_with_an_open_shift_and_expands_full_day_bookings(): void
+    {
+        Carbon::setTestNow('2026-10-18 10:00:00');
+
+        try {
+            $partiallyBookedDate = Carbon::today()->addDays(3)->format('Y-m-d');
+            $fullyBookedDate = Carbon::today()->addDays(4)->format('Y-m-d');
+            $fullDayBookedDate = Carbon::today()->addDays(5)->format('Y-m-d');
+
+            $createBooking = function (string $date, string $slot): void {
+                Booking::create([
+                    'tenant_id' => $this->tenantA->id,
+                    'hall_id' => $this->hallA->id,
+                    'customer_name' => 'Calendar Availability Test',
+                    'customer_phone' => '+92 300 1234567',
+                    'event_type' => 'Barat',
+                    'event_date' => $date,
+                    'slot_type' => $slot,
+                    'guest_count' => 250,
+                    'per_head_rate' => 2000,
+                    'hall_rent' => 250000,
+                    'status' => 'CONFIRMED',
+                ]);
+            };
+
+            $createBooking($partiallyBookedDate, 'EVENING');
+            $createBooking($fullyBookedDate, 'AFTERNOON');
+            $createBooking($fullyBookedDate, 'EVENING');
+            $createBooking($fullyBookedDate, 'NIGHT');
+            $createBooking($fullDayBookedDate, 'FULL_DAY');
+
+            $calendar = Livewire::test(PublicHallDetails::class, ['slug' => $this->hallA->slug])
+                ->call('setSelectedDate', $partiallyBookedDate)
+                ->assertSet('selectedDate', $partiallyBookedDate)
+                ->call('setSelectedDate', Carbon::today()->subDay()->format('Y-m-d'))
+                ->assertSet('selectedDate', $partiallyBookedDate)
+                ->call('setSelectedDate', $fullyBookedDate)
+                ->assertSet('selectedDate', $partiallyBookedDate)
+                ->call('setSelectedDate', $fullDayBookedDate)
+                ->assertSet('selectedDate', $partiallyBookedDate);
+
+            $calendar
+                ->set('selectedDate', $fullDayBookedDate)
+                ->assertSee('Already Booked')
+                ->assertDontSee('Reserve Lunch Slot')
+                ->assertDontSee('Reserve Dinner Slot')
+                ->assertDontSee('Reserve Night Slot')
+                ->call('setMonth', 1)
+                ->assertSet('monthOffset', 1)
+                ->assertSet('selectedDate', '2026-11-01');
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_super_admin_platform_analytics_and_user_directory(): void

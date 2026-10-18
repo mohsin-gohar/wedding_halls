@@ -4,9 +4,13 @@ namespace Tests\Feature;
 
 use App\Exceptions\SlotAlreadyBookedException;
 use App\Models\Booking;
+use App\Models\GuestRsvp;
 use App\Models\Hall;
+use App\Models\User;
 use App\Services\BookingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class BookingConcurrencyTest extends TestCase
@@ -110,6 +114,58 @@ class BookingConcurrencyTest extends TestCase
         $bookingService->createReservation($duplicateData);
     }
 
+    public function test_full_day_and_individual_shift_reservations_cannot_overlap(): void
+    {
+        $hall = Hall::first();
+        $bookingService = app(BookingService::class);
+        $testDate = '2026-11-26';
+
+        $fullDayReservation = [
+            'hall_id' => $hall->id,
+            'event_date' => $testDate,
+            'slot_type' => 'FULL_DAY',
+            'customer_name' => 'Full Day Client',
+            'customer_phone' => '+92 300 3333333',
+            'guest_count' => 300,
+            'per_head_rate' => 1800,
+        ];
+
+        $bookingService->createReservation($fullDayReservation);
+
+        $this->assertFalse($bookingService->checkSlotAvailability($hall->id, $testDate, 'EVENING'));
+
+        try {
+            $bookingService->createReservation([
+                ...$fullDayReservation,
+                'slot_type' => 'EVENING',
+                'customer_name' => 'Conflicting Evening Client',
+                'customer_phone' => '+92 300 4444444',
+            ]);
+            $this->fail('An individual shift must not overlap an active full-day reservation.');
+        } catch (SlotAlreadyBookedException) {
+            $this->assertTrue(true);
+        }
+
+        $individualShiftDate = '2026-11-27';
+        $bookingService->createReservation([
+            ...$fullDayReservation,
+            'event_date' => $individualShiftDate,
+            'slot_type' => 'AFTERNOON',
+            'customer_name' => 'Afternoon Client',
+            'customer_phone' => '+92 300 5555555',
+        ]);
+
+        $this->assertFalse($bookingService->checkSlotAvailability($hall->id, $individualShiftDate, 'FULL_DAY'));
+
+        $this->expectException(SlotAlreadyBookedException::class);
+        $bookingService->createReservation([
+            ...$fullDayReservation,
+            'event_date' => $individualShiftDate,
+            'customer_name' => 'Conflicting Full Day Client',
+            'customer_phone' => '+92 300 6666666',
+        ]);
+    }
+
     public function test_document_routes_return_ok()
     {
         $booking = Booking::with('payments', 'kitchenKot')->first();
@@ -118,7 +174,7 @@ class BookingConcurrencyTest extends TestCase
         $this->get(route('documents.agreement', $booking->id))->assertStatus(403);
 
         // 2. Authenticated tenant owner can download legal agreement
-        $owner = \App\Models\User::where('tenant_id', $booking->tenant_id)->first();
+        $owner = User::where('tenant_id', $booking->tenant_id)->first();
         $res = $this->actingAs($owner)->get(route('documents.agreement', $booking->id));
         $res->assertStatus(200);
 
@@ -138,7 +194,7 @@ class BookingConcurrencyTest extends TestCase
     public function test_whatsapp_webhook_verification_and_rsvp_processing()
     {
         // 1. Verification handshake
-        \Illuminate\Support\Facades\Http::fake();
+        Http::fake();
         config(['services.whatsapp.verify_token' => 'test-verify-token']);
         config(['services.whatsapp.app_secret' => 'test-app-secret']);
         config(['services.whatsapp.access_token' => 'test-access-token']);
@@ -150,7 +206,7 @@ class BookingConcurrencyTest extends TestCase
         $this->assertEquals('CHALLENGE_CODE_99', $verifyRes->getContent());
 
         // 2. Incoming message parsing for guest RSVP
-        $guestRsvp = \App\Models\GuestRsvp::first();
+        $guestRsvp = GuestRsvp::first();
         $this->assertNotNull($guestRsvp);
 
         $payload = [
@@ -181,8 +237,8 @@ class BookingConcurrencyTest extends TestCase
             'HTTP_X_HUB_SIGNATURE_256' => $signature,
         ], $body);
         $postRes->assertStatus(200);
-        \Illuminate\Support\Facades\Http::assertSent(
-            fn (\Illuminate\Http\Client\Request $request) => $request->url() === 'https://graph.facebook.com/v21.0/test-phone-id/messages'
+        Http::assertSent(
+            fn (Request $request) => $request->url() === 'https://graph.facebook.com/v21.0/test-phone-id/messages'
         );
 
         $guestRsvp->refresh();
@@ -200,4 +256,3 @@ class BookingConcurrencyTest extends TestCase
         $this->assertSame(5, $guestRsvp->fresh()->attending_count);
     }
 }
-

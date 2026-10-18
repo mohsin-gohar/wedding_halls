@@ -75,7 +75,7 @@ class SaaSTenantIsolationAndWorkflowTest extends TestCase
         // Tenant A
         $tenantA = Tenant::first();
         $hallA = Hall::where('tenant_id', $tenantA->id)->first();
-        $userA = User::where('tenant_id', $tenantA->id)->first();
+        $userA = User::where('tenant_id', $tenantA->id)->where('role', 'ROLE_TENANT_OWNER')->first() ?? User::where('tenant_id', $tenantA->id)->first();
 
         // Tenant B
         $tenantB = Tenant::create([

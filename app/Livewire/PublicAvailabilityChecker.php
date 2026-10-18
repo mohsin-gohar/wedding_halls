@@ -25,7 +25,8 @@ class PublicAvailabilityChecker extends Component
 
     public function render()
     {
-        $halls = Hall::where('is_active', true)
+        $halls = Hall::with(['venue', 'tenant'])
+            ->where('is_active', true)
             ->whereHas('tenant', function ($q) {
                 $q->where('is_active', true)
                   ->where('verification_status', 'APPROVED');

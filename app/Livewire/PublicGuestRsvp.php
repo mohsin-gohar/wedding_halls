@@ -19,12 +19,20 @@ class PublicGuestRsvp extends Component
     public function searchInvitation()
     {
         $this->feedbackMessage = null;
+        $this->foundRsvp = null;
         $cleanPhone = preg_replace('/[^0-9]/', '', $this->phone);
 
+        if (strlen($cleanPhone) < 10) {
+            $this->feedbackMessage = 'Please enter a valid complete mobile number (minimum 10 digits) to locate your invitation.';
+            return;
+        }
+
+        $last10 = substr($cleanPhone, -10);
+
         $this->foundRsvp = GuestRsvp::with('booking.hall.venue')
-            ->where(function ($q) use ($cleanPhone) {
-                $q->where('phone', 'like', '%' . $this->phone . '%')
-                  ->orWhere('phone', 'like', '%' . $cleanPhone . '%');
+            ->where(function ($q) use ($last10, $cleanPhone) {
+                $q->where('phone', 'like', "%{$last10}")
+                  ->orWhere('phone', $cleanPhone);
             })
             ->first();
 

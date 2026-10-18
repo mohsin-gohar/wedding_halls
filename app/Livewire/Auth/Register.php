@@ -35,8 +35,22 @@ class Register extends Component
         'password' => 'required|string|min:6|confirmed',
     ];
 
+    public function mount()
+    {
+        $isOpen = \Illuminate\Support\Facades\Cache::get('platform_vendor_registration_open', true);
+        if (!$isOpen) {
+            session()->flash('error', 'Vendor self-registration is currently paused by platform administrators.');
+        }
+    }
+
     public function register()
     {
+        $isOpen = \Illuminate\Support\Facades\Cache::get('platform_vendor_registration_open', true);
+        if (!$isOpen) {
+            $this->addError('hallName', 'Vendor self-registration is currently paused. Please contact platform concierge.');
+            return;
+        }
+
         $this->validate();
 
         $user = DB::transaction(function () {

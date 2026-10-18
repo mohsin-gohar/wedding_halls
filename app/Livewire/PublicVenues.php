@@ -133,9 +133,12 @@ class PublicVenues extends Component
                 ->whereIn('status', ['HOLD', 'CONFIRMED']);
 
             if ($this->shift !== 'ALL') {
-                $bookingQuery->where('slot_type', $this->shift);
+                $bookingQuery->whereIn('slot_type', [strtoupper($this->shift), 'FULL_DAY']);
                 $bookedHallIds = $bookingQuery->pluck('hall_id');
                 $query->whereNotIn('id', $bookedHallIds);
+            } else {
+                $fullDayBookedHallIds = (clone $bookingQuery)->where('slot_type', 'FULL_DAY')->pluck('hall_id');
+                $query->whereNotIn('id', $fullDayBookedHallIds);
             }
         }
 
@@ -180,10 +183,11 @@ class PublicVenues extends Component
             $dayBookings = $bookingCounts->filter(function ($item) use ($date) {
                 return \Carbon\Carbon::parse($item->event_date)->format('Y-m-d') === $date;
             });
+            $fullDayCount = (int) ($dayBookings->firstWhere('slot_type', 'FULL_DAY')->booked_count ?? 0);
             $availability[$date] = [
-                'afternoon' => (int) ($dayBookings->firstWhere('slot_type', 'afternoon')->booked_count ?? 0),
-                'evening'   => (int) ($dayBookings->firstWhere('slot_type', 'evening')->booked_count ?? 0),
-                'night'     => (int) ($dayBookings->firstWhere('slot_type', 'night')->booked_count ?? 0),
+                'afternoon' => (int) ($dayBookings->firstWhere('slot_type', 'AFTERNOON')->booked_count ?? 0) + $fullDayCount,
+                'evening'   => (int) ($dayBookings->firstWhere('slot_type', 'EVENING')->booked_count ?? 0) + $fullDayCount,
+                'night'     => (int) ($dayBookings->firstWhere('slot_type', 'NIGHT')->booked_count ?? 0) + $fullDayCount,
             ];
         }
 

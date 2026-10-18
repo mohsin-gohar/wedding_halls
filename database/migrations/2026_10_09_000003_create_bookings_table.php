@@ -49,8 +49,8 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->timestamps();
 
-            // Absolute Database Constraint Preventing Double-Booking
-            $table->unique(['hall_id', 'event_date', 'slot_type'], 'uq_hall_event_slot');
+            // Composite Index for Slot Overlap Queries (Concurrency safely enforced by BookingService mutex & row locks)
+            $table->index(['hall_id', 'event_date', 'slot_type'], 'idx_hall_event_slot');
             $table->index(['tenant_id', 'event_date']);
             $table->index(['customer_phone', 'customer_cnic']);
         });

@@ -13,7 +13,6 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->validateCsrfTokens(except: [
             'webhooks/*',
-            'logout',
         ]);
 
         // Enforce HTTPS redirects early (production only via FORCE_HTTPS).
@@ -24,6 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Append baseline security headers to every web response.
         $middleware->web(append: [
             \App\Http\Middleware\SecurityHeaders::class,
+        ]);
+
+        $middleware->alias([
+            'tenant.staff' => \App\Http\Middleware\EnsureTenantStaff::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
