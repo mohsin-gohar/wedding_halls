@@ -40,6 +40,10 @@ class Dashboard extends Component
     public string $expenseReceiptNumber = '';
     public string $expenseNotes = '';
 
+    // Historical daily operations ledger month and pagination.
+    public string $operationsMonth = '';
+    public int $operationsPage = 1;
+
     // Generator Fuel specific inputs
     public float $fuelDieselLiters = 50.0;
     public float $fuelRatePerLiter = 285.0;
@@ -60,6 +64,39 @@ class Dashboard extends Component
             return $this->redirect(route('customer.dashboard'));
         }
         $this->expenseDate = Carbon::now()->format('Y-m-d');
+        $this->operationsMonth = Carbon::now()->format('Y-m');
+    }
+
+    public function updatedOperationsMonth(): void
+    {
+        $this->operationsPage = 1;
+    }
+
+    public function previousOperationsMonth(): void
+    {
+        $this->operationsMonth = $this->normalizedOperationsMonth()->subMonth()->format('Y-m');
+        $this->operationsPage = 1;
+    }
+
+    public function nextOperationsMonth(): void
+    {
+        $this->operationsMonth = $this->normalizedOperationsMonth()->addMonth()->format('Y-m');
+        $this->operationsPage = 1;
+    }
+
+    private function normalizedOperationsMonth(): Carbon
+    {
+        try {
+            $month = Carbon::createFromFormat('!Y-m', $this->operationsMonth);
+            if (!$month || $month->format('Y-m') !== $this->operationsMonth || $month->year < 2000 || $month->year > 2100) {
+                throw new \InvalidArgumentException();
+            }
+        } catch (\Throwable) {
+            $this->operationsMonth = Carbon::now()->format('Y-m');
+            $month = Carbon::now()->startOfMonth();
+        }
+
+        return $month->startOfMonth();
     }
 
     public function openDailyExpenseModal(string $category = 'GENERATOR_DIESEL'): void
@@ -584,11 +621,38 @@ class Dashboard extends Component
 
         $todayNetBalance = $todayCashInflow - $todayExpensesSum;
 
-        $recentExpenses = Expense::with('hall')
-            ->where('tenant_id', $tenantId)
-            ->latest('expense_date')
-            ->latest('created_at')
-            ->take(8)
+        $operationsMonthStart = $this->normalizedOperationsMonth();
+        $operationsMonthEnd = $operationsMonthStart->copy()->endOfMonth();
+        $operationsStart = $operationsMonthStart->format('Y-m-d');
+        $operationsEnd = $operationsMonthEnd->format('Y-m-d');
+
+        $monthExpensesQuery = Expense::where('tenant_id', $tenantId)
+            ->whereBetween('expense_date', [$operationsStart, $operationsEnd]);
+        if ($this->selectedHallId !== 'ALL' && in_array($this->selectedHallId, $tenantHallIds, true)) {
+            $monthExpensesQuery->where('hall_id', $this->selectedHallId);
+        }
+        $operationsExpensesTotal = (float) (clone $monthExpensesQuery)->sum('amount');
+        $operationsExpenseCount = (clone $monthExpensesQuery)->count();
+        $operationsDieselCost = (float) (clone $monthExpensesQuery)->where('category', 'GENERATOR_DIESEL')->sum('amount');
+        $operationsWagesCost = (float) (clone $monthExpensesQuery)->whereIn('category', ['STAFF_DAILY_WAGES', 'STAFF_WAGES'])->sum('amount');
+        $operationsCleaningCost = (float) (clone $monthExpensesQuery)->where('category', 'CLEANING_HYGIENE')->sum('amount');
+
+        $operationsPaymentsQuery = Payment::where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$operationsMonthStart->copy()->startOfDay(), $operationsMonthEnd->copy()->endOfDay()]);
+        if ($this->selectedHallId !== 'ALL' && in_array($this->selectedHallId, $tenantHallIds, true)) {
+            $operationsPaymentsQuery->whereHas('booking', fn ($query) => $query->where('hall_id', $this->selectedHallId));
+        }
+        $operationsCashInflow = (float) $operationsPaymentsQuery->sum('amount');
+        $operationsNetBalance = $operationsCashInflow - $operationsExpensesTotal;
+
+        $operationsExpensePages = max(1, (int) ceil($operationsExpenseCount / 15));
+        $this->operationsPage = min(max(1, $this->operationsPage), $operationsExpensePages);
+        $recentExpenses = (clone $monthExpensesQuery)
+            ->with('hall')
+            ->orderByDesc('expense_date')
+            ->orderByDesc('created_at')
+            ->skip(($this->operationsPage - 1) * 15)
+            ->take(15)
             ->get();
 
         return view('livewire.dashboard', [
@@ -635,6 +699,15 @@ class Dashboard extends Component
             'todayCashInflow' => $todayCashInflow,
             'todayNetBalance' => $todayNetBalance,
             'recentExpenses' => $recentExpenses,
+            'operationsMonthTitle' => $operationsMonthStart->format('F Y'),
+            'operationsExpensesTotal' => $operationsExpensesTotal,
+            'operationsExpenseCount' => $operationsExpenseCount,
+            'operationsDieselCost' => $operationsDieselCost,
+            'operationsWagesCost' => $operationsWagesCost,
+            'operationsCleaningCost' => $operationsCleaningCost,
+            'operationsCashInflow' => $operationsCashInflow,
+            'operationsNetBalance' => $operationsNetBalance,
+            'operationsExpensePages' => $operationsExpensePages,
         ]);
     }
 

@@ -3,11 +3,14 @@
 namespace Tests\Feature;
 
 use App\Livewire\InventoryTracker;
+use App\Livewire\Dashboard;
 use App\Livewire\StaffAttendance;
+use App\Livewire\StaffManager;
 use App\Livewire\StaffPayroll;
 use App\Models\Expense;
 use App\Models\InventoryItem;
 use App\Models\StaffPayroll as PayrollModel;
+use App\Models\StaffAttendance as AttendanceModel;
 use App\Models\Tenant;
 use App\Models\User;
 use Carbon\Carbon;
@@ -83,6 +86,212 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
             'user_id' => $chef->id,
             'status' => 'PENDING',
         ]);
+    }
+
+    public function test_dashboard_daily_operations_ledger_can_browse_months_and_shows_full_month_totals(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'Monthly Ledger Banquets',
+            'slug' => 'monthly-ledger-banquets',
+            'subscription_status' => 'ACTIVE',
+            'verification_status' => 'APPROVED',
+            'is_active' => true,
+        ]);
+        $owner = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Ledger Owner',
+            'email' => 'ledger-owner@example.test',
+            'password' => bcrypt('password'),
+            'role' => 'ROLE_TENANT_OWNER',
+        ]);
+
+        $month = Carbon::today()->format('Y-m');
+        $monthStart = Carbon::today()->startOfMonth();
+        $makeExpense = function (string $date, string $title, string $category, float $amount) use ($tenant, $owner): void {
+            Expense::create([
+                'tenant_id' => $tenant->id,
+                'category' => $category,
+                'title' => $title,
+                'amount' => $amount,
+                'expense_date' => $date,
+                'payee' => 'Local Supplier',
+                'payment_method' => 'CASH',
+                'created_by_user_id' => $owner->id,
+            ]);
+        };
+
+        $makeExpense($monthStart->copy()->addDays(2)->format('Y-m-d'), 'Monthly generator diesel', 'GENERATOR_DIESEL', 12000);
+        $makeExpense($monthStart->copy()->addDays(3)->format('Y-m-d'), 'Monthly staff wages', 'STAFF_DAILY_WAGES', 8000);
+        $makeExpense($monthStart->copy()->subMonth()->startOfMonth()->format('Y-m-d'), 'Previous month only', 'GENERATOR_DIESEL', 50000);
+
+        $ledger = Livewire::actingAs($owner)->test(Dashboard::class)
+            ->set('operationsMonth', $month)
+            ->assertViewHas('operationsExpensesTotal', 20000.0)
+            ->assertViewHas('operationsDieselCost', 12000.0)
+            ->assertViewHas('operationsExpenseCount', 2)
+            ->assertViewHas('recentExpenses', fn ($records) => $records->count() === 2
+                && $records->contains('title', 'Monthly generator diesel')
+                && !$records->contains('title', 'Previous month only'));
+
+        $ledger->call('previousOperationsMonth')
+            ->assertSet('operationsMonth', Carbon::today()->subMonth()->format('Y-m'))
+            ->assertViewHas('operationsExpensesTotal', 50000.0)
+            ->assertViewHas('recentExpenses', fn ($records) => $records->contains('title', 'Previous month only'));
+    }
+
+    public function test_staff_attendance_monthly_summary_respects_selected_month(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'Attendance Month Banquets',
+            'slug' => 'attendance-month-banquets',
+            'subscription_status' => 'ACTIVE',
+            'verification_status' => 'APPROVED',
+            'is_active' => true,
+        ]);
+        $manager = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Attendance Manager',
+            'email' => 'attendance-manager@example.test',
+            'password' => bcrypt('password'),
+            'role' => 'ROLE_MANAGER',
+        ]);
+        $staff = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Monthly Staff Member',
+            'email' => 'monthly-staff@example.test',
+            'password' => bcrypt('password'),
+            'role' => 'ROLE_CHEF',
+        ]);
+
+        $currentMonth = Carbon::today()->startOfMonth();
+        AttendanceModel::create([
+            'tenant_id' => $tenant->id,
+            'user_id' => $staff->id,
+            'date' => $currentMonth->copy()->addDays(2)->format('Y-m-d'),
+            'status' => 'PRESENT',
+            'overtime_hours' => 2.5,
+        ]);
+        AttendanceModel::create([
+            'tenant_id' => $tenant->id,
+            'user_id' => $staff->id,
+            'date' => $currentMonth->copy()->subMonth()->startOfMonth()->format('Y-m-d'),
+            'status' => 'ABSENT',
+            'overtime_hours' => 0,
+        ]);
+
+        Livewire::actingAs($manager)->test(StaffAttendance::class)
+            ->call('setTab', 'monthly')
+            ->set('selectedMonth', $currentMonth->format('Y-m'))
+            ->assertViewHas('summary', function ($summary) use ($staff) {
+                return $summary[$staff->id]['present'] === 1
+                    && $summary[$staff->id]['absent'] === 0
+                    && (float) $summary[$staff->id]['overtime_hours'] === 2.5;
+            })
+            ->call('previousMonth')
+            ->assertSet('selectedMonth', Carbon::today()->subMonth()->format('Y-m'))
+            ->assertViewHas('summary', fn ($summary) => $summary[$staff->id]['absent'] === 1
+                && $summary[$staff->id]['present'] === 0);
+    }
+
+    public function test_staff_profiles_filters_salary_and_archiving_preserve_payroll_history(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'Staff Lifecycle Banquets',
+            'slug' => 'staff-lifecycle-banquets',
+            'subscription_status' => 'ACTIVE',
+            'verification_status' => 'APPROVED',
+            'is_active' => true,
+        ]);
+        $owner = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Lifecycle Owner',
+            'email' => 'lifecycle-owner@example.test',
+            'password' => bcrypt('password'),
+            'role' => 'ROLE_TENANT_OWNER',
+        ]);
+        $staff = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Lifecycle Chef',
+            'email' => 'lifecycle-chef@example.test',
+            'password' => bcrypt('password'),
+            'role' => 'ROLE_CHEF',
+            'base_salary' => 55000,
+        ]);
+        $otherStaff = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Other Receptionist',
+            'email' => 'lifecycle-reception@example.test',
+            'password' => bcrypt('password'),
+            'role' => 'ROLE_FRONT_DESK',
+        ]);
+
+        $date = Carbon::today()->format('Y-m-d');
+        AttendanceModel::create([
+            'tenant_id' => $tenant->id,
+            'user_id' => $staff->id,
+            'date' => $date,
+            'status' => 'PRESENT',
+            'overtime_hours' => 1,
+        ]);
+        AttendanceModel::create([
+            'tenant_id' => $tenant->id,
+            'user_id' => $otherStaff->id,
+            'date' => $date,
+            'status' => 'ABSENT',
+            'overtime_hours' => 0,
+        ]);
+
+        $month = Carbon::today()->format('Y-m');
+        $payroll = PayrollModel::create([
+            'tenant_id' => $tenant->id,
+            'user_id' => $staff->id,
+            'month_year' => $month,
+            'basic_salary' => 55000,
+            'overtime_hours' => 1,
+            'overtime_rate' => 250,
+            'allowances' => 0,
+            'deductions' => 0,
+            'net_salary' => 55250,
+            'status' => 'DRAFT',
+            'payment_method' => 'CASH',
+        ]);
+
+        Livewire::actingAs($owner)->test(StaffAttendance::class)
+            ->set('selectedStaffId', (string) $staff->id)
+            ->call('setTab', 'monthly')
+            ->assertViewHas('summary', fn ($summary) => array_keys($summary) === [$staff->id]);
+
+        Livewire::actingAs($owner)->test(StaffPayroll::class)
+            ->set('selectedMonth', $month)
+            ->set('selectedStaffId', (string) $staff->id)
+            ->assertViewHas('payrolls', fn ($payrolls) => $payrolls->count() === 1 && $payrolls->first()->id === $payroll->id)
+            ->call('generateMonthlyPayroll');
+        $this->assertDatabaseHas('staff_payrolls', [
+            'tenant_id' => $tenant->id,
+            'user_id' => $staff->id,
+            'basic_salary' => 55000,
+        ]);
+
+        Livewire::actingAs($owner)->test(StaffManager::class)
+            ->call('openEditModal', $staff->id)
+            ->set('editBaseSalary', '62000')
+            ->call('updateStaffMember')
+            ->assertHasNoErrors();
+        $this->assertSame(62000.0, (float) $staff->fresh()->base_salary);
+
+        Livewire::actingAs($owner)->test(StaffManager::class)
+            ->call('removeStaffMember', $staff->id)
+            ->assertViewHas('staffMembers', fn ($members) => !$members->contains('id', $staff->id));
+
+        $this->assertSoftDeleted('users', ['id' => $staff->id]);
+        $this->assertDatabaseHas('staff_payrolls', ['id' => $payroll->id, 'user_id' => $staff->id]);
+        $this->assertDatabaseHas('staff_attendances', ['tenant_id' => $tenant->id, 'user_id' => $staff->id]);
+
+        Livewire::actingAs($owner)->test(StaffManager::class)
+            ->set('showFormerStaff', true)
+            ->assertViewHas('staffMembers', fn ($members) => $members->contains('id', $staff->id))
+            ->call('restoreStaffMember', $staff->id);
+        $this->assertNotSoftDeleted('users', ['id' => $staff->id]);
     }
 
     public function test_payroll_generation_and_auto_expense_posting(): void
@@ -233,5 +442,197 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
             'payee' => 'Al-Noor Poultry Traders',
             'amount' => 85000.0,
         ]);
+    }
+
+    public function test_staff_manager_profile_toggle_status_and_purge(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'Royal Horizon Banquets',
+            'slug' => 'royal-horizon-banquets',
+            'subscription_status' => 'ACTIVE',
+            'verification_status' => 'APPROVED',
+            'is_active' => true,
+        ]);
+
+        $owner = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Malik Salman',
+            'email' => 'salman@horizon.pk',
+            'password' => bcrypt('password'),
+            'role' => 'ROLE_TENANT_OWNER',
+        ]);
+
+        $staff = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Bilal Waiter',
+            'email' => 'bilal@horizon.pk',
+            'password' => bcrypt('password'),
+            'role' => 'ROLE_FLOOR_STAFF',
+            'base_salary' => 30000,
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($owner);
+
+        // 1. Open Profile Modal & verify stats
+        Livewire::test(StaffManager::class)
+            ->call('openProfileModal', $staff->id)
+            ->assertSet('showProfileModal', true)
+            ->assertSet('profileStaffId', $staff->id)
+            ->assertSee('Bilal Waiter')
+            ->assertSee('PKR 30,000');
+
+        // 2. Toggle Status (Active -> Suspended -> Active)
+        Livewire::test(StaffManager::class)
+            ->call('toggleStaffStatus', $staff->id);
+
+        $staff->refresh();
+        $this->assertEquals('SUSPENDED', $staff->status);
+
+        Livewire::test(StaffManager::class)
+            ->call('toggleStaffStatus', $staff->id);
+
+        $staff->refresh();
+        $this->assertEquals('ACTIVE', $staff->status);
+
+        // 3. Purge Staff Member permanently
+        Livewire::test(StaffManager::class)
+            ->call('purgeStaffMember', $staff->id);
+
+        $this->assertDatabaseMissing('users', [
+            'id' => $staff->id,
+        ]);
+    }
+
+    public function test_one_click_attendance_filtering_and_quick_edit_modal(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'Imperial Heights Palace',
+            'slug' => 'imperial-heights-palace',
+            'subscription_status' => 'ACTIVE',
+            'verification_status' => 'APPROVED',
+            'is_active' => true,
+        ]);
+
+        $owner = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Sardar Aurangzeb',
+            'email' => 'aurangzeb@imperial.pk',
+            'password' => bcrypt('password'),
+            'role' => 'ROLE_TENANT_OWNER',
+        ]);
+
+        $staff1 = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Ustad Bawarchi Tariq',
+            'email' => 'tariq@imperial.pk',
+            'password' => bcrypt('password'),
+            'role' => 'ROLE_CHEF',
+        ]);
+
+        $staff2 = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Farhan Receptionist',
+            'email' => 'farhan@imperial.pk',
+            'password' => bcrypt('password'),
+            'role' => 'ROLE_FRONT_DESK',
+        ]);
+
+        $this->actingAs($owner);
+        $today = Carbon::today()->format('Y-m-d');
+
+        // 1. 1-click selectStaff filters to only staff1
+        Livewire::test(StaffAttendance::class)
+            ->call('selectStaff', (string) $staff1->id)
+            ->assertSet('selectedStaffId', (string) $staff1->id)
+            ->assertSee('Ustad Bawarchi Tariq');
+
+        // 2. Quick Edit Attendance Record Modal
+        Livewire::test(StaffAttendance::class)
+            ->call('openEditRecordModal', $staff1->id, $today)
+            ->assertSet('showEditRecordModal', true)
+            ->assertSet('editingUserId', $staff1->id)
+            ->set('editingStatus', 'PRESENT')
+            ->set('editingCheckIn', '09:30')
+            ->set('editingCheckOut', '23:00')
+            ->set('editingOvertime', 4.5)
+            ->set('editingNotes', 'Handled massive bridal feast')
+            ->call('saveEditedRecord')
+            ->assertSet('showEditRecordModal', false);
+
+        $this->assertDatabaseHas('staff_attendances', [
+            'tenant_id' => $tenant->id,
+            'user_id' => $staff1->id,
+            'status' => 'PRESENT',
+            'overtime_hours' => 4.5,
+            'check_in' => '09:30',
+        ]);
+    }
+
+    public function test_one_click_payroll_filtering_and_base_salary_sync(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'Crown Grand Banquets',
+            'slug' => 'crown-grand-banquets',
+            'subscription_status' => 'ACTIVE',
+            'verification_status' => 'APPROVED',
+            'is_active' => true,
+        ]);
+
+        $owner = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Chaudhry Nisar',
+            'email' => 'nisar@crown.pk',
+            'password' => bcrypt('password'),
+            'role' => 'ROLE_TENANT_OWNER',
+        ]);
+
+        $employee = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Waqas Floor Manager',
+            'email' => 'waqas@crown.pk',
+            'password' => bcrypt('password'),
+            'role' => 'ROLE_MANAGER',
+            'base_salary' => 60000,
+        ]);
+
+        $this->actingAs($owner);
+        $month = Carbon::today()->format('Y-m');
+
+        // 1. Compile monthly payroll
+        Livewire::test(StaffPayroll::class)
+            ->set('selectedMonth', $month)
+            ->call('generateMonthlyPayroll');
+
+        $record = PayrollModel::where('tenant_id', $tenant->id)
+            ->where('user_id', $employee->id)
+            ->where('month_year', $month)
+            ->first();
+
+        $this->assertNotNull($record);
+
+        // 2. Select staff with 1-click
+        Livewire::test(StaffPayroll::class)
+            ->call('selectStaff', (string) $employee->id)
+            ->assertSet('selectedStaffId', (string) $employee->id)
+            ->assertSee('Waqas Floor Manager');
+
+        // 3. Edit salary and check sync to user master profile
+        Livewire::test(StaffPayroll::class)
+            ->call('openEditModal', $record->id)
+            ->assertSet('showEditModal', true)
+            ->set('editBasicSalary', 72000)
+            ->set('editOvertimeHours', 10)
+            ->set('editOvertimeRate', 300)
+            ->set('updateBaseSalaryOnProfile', true)
+            ->call('updatePayroll')
+            ->assertSet('showEditModal', false);
+
+        $record->refresh();
+        $this->assertEquals(72000, (float) $record->basic_salary);
+
+        // Verify base salary was synced to user master record!
+        $employee->refresh();
+        $this->assertEquals(72000, (float) $employee->base_salary);
     }
 }

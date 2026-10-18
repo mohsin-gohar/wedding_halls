@@ -189,7 +189,7 @@
     </header>
 
     <!-- Page Content Slot -->
-    <main class="flex-1">
+    <main class="public-page-content flex-1">
         {{ $slot }}
     </main>
 

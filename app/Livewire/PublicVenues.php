@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\PageVisit;
+use App\Models\Venue;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -21,25 +22,6 @@ class PublicVenues extends Component
     #[Url]
     public string $search = '';
 
-    #[Url]
-    public string $date = '';
-
-    #[Url]
-    public string $shift = 'ALL';
-
-    #[Url]
-    public int $minCapacity = 0;
-
-    #[Url]
-    public float $maxBudget = 0;
-
-    #[Url]
-    public string $sort = 'popular'; // popular, price_asc, price_desc, capacity_desc
-
-    public bool $hasAc = false;
-    public bool $hasGenerator = false;
-    public bool $hasBridal = false;
-
     public function updatingSearch()
     {
         $this->resetPage();
@@ -50,40 +32,41 @@ class PublicVenues extends Component
         $this->resetPage();
     }
 
-    public function updatingDate()
-    {
-        $this->resetPage();
-    }
-
-    public function updatingShift()
-    {
-        $this->resetPage();
-    }
-
     public function resetFilters()
     {
         $this->city = 'All';
         $this->search = '';
-        $this->date = '';
-        $this->shift = 'ALL';
-        $this->minCapacity = 0;
-        $this->maxBudget = 0;
-        $this->sort = 'popular';
-        $this->hasAc = false;
-        $this->hasGenerator = false;
-        $this->hasBridal = false;
         $this->resetPage();
     }
 
     public function render()
     {
         // 1. Strict SaaS Visibility: Only show active halls belonging to active, verified/approved tenants
-        $query = Hall::with(['venue', 'tenant'])
+        $publicHalls = Hall::with(['venue', 'tenant'])
             ->where('is_active', true)
+            ->whereHas('venue', fn ($venueQuery) => $venueQuery->where('is_active', true))
             ->whereHas('tenant', function ($t) {
                 $t->where('is_active', true)
                   ->where('verification_status', 'APPROVED');
             });
+
+        $hasPublicHalls = (clone $publicHalls)->exists();
+        $cities = Venue::query()
+            ->where('is_active', true)
+            ->whereHas('halls', function ($hallQuery) {
+                $hallQuery->where('is_active', true)
+                    ->whereHas('tenant', function ($tenantQuery) {
+                        $tenantQuery->where('is_active', true)
+                            ->where('verification_status', 'APPROVED');
+                    });
+            })
+            ->whereNotNull('city')
+            ->where('city', '!=', '')
+            ->orderBy('city')
+            ->distinct()
+            ->pluck('city');
+
+        $query = clone $publicHalls;
 
         // 2. Filter by city
         if ($this->city !== 'All' && !empty($this->city)) {
@@ -92,102 +75,44 @@ class PublicVenues extends Component
             });
         }
 
-        // 3. Search term (Hall name, description, venue complex name, area, city)
+        // Keep the directory search focused on venue names.
         if (!empty($this->search)) {
             $searchTerm = '%' . trim($this->search) . '%';
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'like', $searchTerm)
-                  ->orWhere('description', 'like', $searchTerm)
-                  ->orWhereHas('venue', function ($v) use ($searchTerm) {
-                      $v->where('name', 'like', $searchTerm)
-                        ->orWhere('area', 'like', $searchTerm)
-                        ->orWhere('city', 'like', $searchTerm);
-                  });
-            });
+            $query->where('name', 'like', $searchTerm);
         }
 
-        // 4. Capacity filter
-        if ($this->minCapacity > 0) {
-            $query->where('max_capacity', '>=', $this->minCapacity);
-        }
-
-        // 5. Budget filter
-        if ($this->maxBudget > 0) {
-            $query->where('base_rent', '<=', $this->maxBudget);
-        }
-
-        // 6. Facilities & Amenities
-        if ($this->hasAc) {
-            $query->where('has_air_conditioning', true);
-        }
-        if ($this->hasGenerator) {
-            $query->where('has_generator_backup', true);
-        }
-        if ($this->hasBridal) {
-            $query->where('has_bridal_room', true);
-        }
-
-        // 7. Date and Shift Availability Filters
-        if (!empty($this->date)) {
-            $bookingQuery = Booking::whereDate('event_date', $this->date)
-                ->whereIn('status', ['HOLD', 'CONFIRMED']);
-
-            if ($this->shift !== 'ALL') {
-                $bookingQuery->whereIn('slot_type', [strtoupper($this->shift), 'FULL_DAY']);
-                $bookedHallIds = $bookingQuery->pluck('hall_id');
-                $query->whereNotIn('id', $bookedHallIds);
-            } else {
-                $fullDayBookedHallIds = (clone $bookingQuery)->where('slot_type', 'FULL_DAY')->pluck('hall_id');
-                $query->whereNotIn('id', $fullDayBookedHallIds);
-            }
-        }
-
-        // 8. Sorting
-        switch ($this->sort) {
-            case 'price_asc':
-                $query->orderBy('base_rent', 'asc');
-                break;
-            case 'price_desc':
-                $query->orderBy('base_rent', 'desc');
-                break;
-            case 'capacity_desc':
-                $query->orderBy('max_capacity', 'desc');
-                break;
-            case 'popular':
-            default:
-                $query->latest();
-                break;
-        }
+        $query->orderBy('name');
 
         // Count BEFORE pagination (pagination mutates the query)
         $totalHalls = (clone $query)->count();
 
         $halls = $query->paginate(9);
 
-        // Precompute 30-day shift availability aggregated across ALL active halls
         $startDate = now()->toDateString();
         $endDate = now()->addDays(30)->toDateString();
-
         $bookingCounts = Booking::whereIn('status', ['HOLD', 'CONFIRMED'])
             ->whereBetween('event_date', [$startDate, $endDate])
-            ->whereHas('hall', function ($q) {
-                $q->where('is_active', true);
+            ->whereHas('hall', function ($hallQuery) {
+                $hallQuery->where('is_active', true)
+                    ->whereHas('tenant', function ($tenantQuery) {
+                        $tenantQuery->where('is_active', true)
+                            ->where('verification_status', 'APPROVED');
+                    });
             })
             ->groupBy('event_date', 'slot_type')
             ->selectRaw('event_date, slot_type, COUNT(DISTINCT hall_id) as booked_count')
             ->get();
 
         $availability = [];
-        for ($d = 1; $d <= 30; $d++) {
-            $date = \Carbon\Carbon::now()->addDays($d)->format('Y-m-d');
-            $dayBookings = $bookingCounts->filter(function ($item) use ($date) {
-                return \Carbon\Carbon::parse($item->event_date)->format('Y-m-d') === $date;
-            });
+        for ($dayOffset = 1; $dayOffset <= 30; $dayOffset++) {
+            $date = now()->addDays($dayOffset)->format('Y-m-d');
+            $dayBookings = $bookingCounts->filter(fn ($booking) => $booking->event_date->format('Y-m-d') === $date);
             $fullDayCount = (int) ($dayBookings->firstWhere('slot_type', 'FULL_DAY')->booked_count ?? 0);
+
             $availability[$date] = [
                 'afternoon' => (int) ($dayBookings->firstWhere('slot_type', 'AFTERNOON')->booked_count ?? 0) + $fullDayCount,
-                'evening'   => (int) ($dayBookings->firstWhere('slot_type', 'EVENING')->booked_count ?? 0) + $fullDayCount,
-                'night'     => (int) ($dayBookings->firstWhere('slot_type', 'NIGHT')->booked_count ?? 0) + $fullDayCount,
+                'evening' => (int) ($dayBookings->firstWhere('slot_type', 'EVENING')->booked_count ?? 0) + $fullDayCount,
+                'night' => (int) ($dayBookings->firstWhere('slot_type', 'NIGHT')->booked_count ?? 0) + $fullDayCount,
             ];
         }
 
@@ -204,6 +129,8 @@ class PublicVenues extends Component
             'halls' => $halls,
             'availability' => $availability,
             'totalHalls' => $totalHalls,
+            'cities' => $cities,
+            'hasPublicHalls' => $hasPublicHalls,
         ]);
     }
 }

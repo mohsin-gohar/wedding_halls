@@ -23,10 +23,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // Append baseline security headers to every web response.
         $middleware->web(append: [
             \App\Http\Middleware\SecurityHeaders::class,
+            \App\Http\Middleware\EnsureActiveAccount::class,
         ]);
 
         $middleware->alias([
             'tenant.staff' => \App\Http\Middleware\EnsureTenantStaff::class,
+            'portal.role' => \App\Http\Middleware\EnsurePortalRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

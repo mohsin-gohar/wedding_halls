@@ -37,6 +37,68 @@
         </div>
     @endif
 
+    <!-- 1-Click Payroll Employee Switcher Pill Bar -->
+    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-4 space-y-2.5 shadow-sm transition-colors">
+        <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400 font-bold flex items-center gap-1.5">
+                <span>⚡ 1-Click Employee Payroll Selector</span>
+                <span class="text-stone-400">•</span>
+                <span class="text-[#8F7239] dark:text-[#C6A15B]">Instant Salary &amp; Slip Filter</span>
+            </span>
+            @if($selectedStaffId !== 'ALL')
+                <button type="button" wire:click="selectStaff('ALL')" class="text-[11px] font-mono text-[#8F7239] dark:text-[#C6A15B] hover:underline font-bold cursor-pointer">
+                    ✕ Reset to All Employees
+                </button>
+            @endif
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" wire:click="selectStaff('ALL')" 
+                    class="px-3.5 py-1.5 text-xs font-mono font-bold uppercase transition border cursor-pointer {{ $selectedStaffId === 'ALL' ? 'bg-[#C6A15B] text-[#171513] border-[#C6A15B] shadow-md' : 'bg-[#F8F5EF] dark:bg-white/5 text-stone-700 dark:text-stone-300 border-[#E7E5E4] dark:border-white/15 hover:border-[#C6A15B]' }}">
+                👥 All Staff Payroll
+            </button>
+            @foreach($staffMembers as $sm)
+                <button type="button" wire:click="selectStaff('{{ $sm->id }}')" 
+                        class="px-3 py-1.5 text-xs font-mono transition border flex items-center gap-1.5 cursor-pointer {{ $selectedStaffId == $sm->id ? 'bg-[#171513] text-[#C6A15B] border-[#C6A15B] shadow-[0_0_15px_rgba(198,161,91,0.35)] font-bold dark:bg-[#C6A15B]/20' : 'bg-[#F8F5EF] dark:bg-white/5 text-stone-700 dark:text-stone-300 border-[#E7E5E4] dark:border-white/15 hover:border-[#C6A15B]' }}">
+                    <span class="w-2 h-2 rounded-full {{ $selectedStaffId == $sm->id ? 'bg-[#C6A15B]' : 'bg-stone-400' }}"></span>
+                    <span>{{ $sm->name }}</span>
+                    <span class="text-[10px] text-stone-400 dark:text-stone-500">({{ str_replace('ROLE_', '', $sm->role) }})</span>
+                </button>
+            @endforeach
+        </div>
+    </div>
+
+    <!-- Employee Payroll Spotlight Banner -->
+    @if($selectedStaffId !== 'ALL' && ($spotlightEmployee = $staffMembers->firstWhere('id', (int) $selectedStaffId)))
+        <div class="bg-[#C6A15B]/10 border border-[#C6A15B]/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 border border-[#C6A15B] bg-[#171513] text-[#C6A15B] flex items-center justify-center font-cinzel font-bold text-lg">
+                    {{ substr($spotlightEmployee->name, 0, 1) }}
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-sm text-[#171513] dark:text-white">{{ $spotlightEmployee->name }}</span>
+                        <span class="text-[10px] font-mono uppercase bg-[#C6A15B]/20 text-[#8F7239] dark:text-[#C6A15B] px-1.5 py-0.5 font-bold">
+                            {{ str_replace('ROLE_', '', $spotlightEmployee->role) }}
+                        </span>
+                    </div>
+                    <span class="text-xs font-mono text-stone-500 dark:text-stone-400">
+                        Default Base Salary: {{ $spotlightEmployee->base_salary ? 'PKR ' . number_format((float) $spotlightEmployee->base_salary) : 'Role default' }} • {{ $spotlightEmployee->email }}
+                    </span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 font-mono text-xs">
+                <a href="{{ route('staff.attendance', ['staff_id' => $spotlightEmployee->id]) }}" 
+                   class="btn-outline-gold !h-8 !px-3 font-bold uppercase inline-flex items-center gap-1">
+                    <span>📅 Attendance &amp; OT Logs &rarr;</span>
+                </a>
+                <a href="{{ route('staff') }}" 
+                   class="btn-gold !h-8 !px-3 font-bold uppercase inline-flex items-center gap-1 shadow-sm">
+                    <span>👤 Master Profile &rarr;</span>
+                </a>
+            </div>
+        </div>
+    @endif
+
     <!-- Month Filter & Metric Cards -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-4 transition-colors">
         <div class="flex items-center gap-3">
@@ -46,6 +108,13 @@
             <span class="text-xs font-serif italic text-stone-500 dark:text-stone-400">
                 Period: {{ \Carbon\Carbon::parse($selectedMonth . '-01')->format('F Y') }}
             </span>
+            <label for="payroll-staff-filter" class="sr-only">Filter payroll by employee</label>
+            <select id="payroll-staff-filter" wire:model.live="selectedStaffId" class="bg-[#171513] border border-[#C6A15B]/40 px-3 py-1.5 text-xs text-white">
+                <option value="ALL">All current staff</option>
+                @foreach($staffMembers as $staffMember)
+                    <option value="{{ $staffMember->id }}">{{ $staffMember->name }}</option>
+                @endforeach
+            </select>
         </div>
 
         <div class="flex items-center gap-2">
@@ -239,6 +308,13 @@
                     <div>
                         <label class="block text-[10px] font-mono uppercase text-[#C6A15B] mb-1 font-semibold">Remarks / Pay Notes</label>
                         <input type="text" wire:model="editNotes" placeholder="e.g. Ramadan bonus included" class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
+                    </div>
+
+                    <div class="p-2.5 bg-black/40 border border-[#C6A15B]/30 rounded-none">
+                        <label class="inline-flex items-center gap-2 text-xs font-mono text-[#C6A15B] cursor-pointer">
+                            <input type="checkbox" wire:model="updateBaseSalaryOnProfile" class="accent-[#C6A15B] w-4 h-4">
+                            <span>Also permanently update {{ $editingEmployeeName }}'s default base salary on their master profile</span>
+                        </label>
                     </div>
                 </div>
 

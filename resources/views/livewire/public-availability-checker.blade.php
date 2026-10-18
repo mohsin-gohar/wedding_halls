@@ -119,6 +119,7 @@
                                     </button>
                                 @endif
                             </div>
+
                         </div>
                     </div>
 
@@ -131,6 +132,8 @@
                 </div>
             @endforeach
         </div>
+
+        <div class="pt-2">{{ $halls->links() }}</div>
 
     </div>
 </div>

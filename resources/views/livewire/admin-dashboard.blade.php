@@ -1002,10 +1002,14 @@
                     <label class="block text-[10px] font-mono uppercase tracking-wider text-stone-600 font-bold mb-1">Role Filter</label>
                     <select wire:model.live="userRoleFilter" class="w-full bg-white border border-[#E7E5E4] text-xs px-3 py-2 font-mono outline-none focus:border-[#C6A15B]">
                         <option value="ALL">All Roles</option>
-                        <option value="CUSTOMER">Customer / Client</option>
-                        <option value="VENDOR">Vendor / Hall Owner</option>
-                        <option value="ADMIN">Venue Admin</option>
-                        <option value="SUPER_ADMIN">Super Admin</option>
+                        <option value="ROLE_CUSTOMER">Customer / Client</option>
+                        <option value="ROLE_TENANT_OWNER">Hall Owner</option>
+                        <option value="ROLE_MANAGER">Hall Manager</option>
+                        <option value="ROLE_ACCOUNTANT">Accountant</option>
+                        <option value="ROLE_FRONT_DESK">Front Desk</option>
+                        <option value="ROLE_CHEF">Chef</option>
+                        <option value="ROLE_FLOOR_STAFF">Floor Staff</option>
+                        <option value="ROLE_SUPER_ADMIN">Super Admin</option>
                     </select>
                 </div>
                 <div class="w-full sm:w-1/4">

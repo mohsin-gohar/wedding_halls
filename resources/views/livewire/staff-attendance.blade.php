@@ -47,6 +47,68 @@
         </div>
     @endif
 
+    <!-- 1-Click Workforce Switcher Pill Bar -->
+    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-4 space-y-2.5 shadow-sm transition-colors">
+        <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400 font-bold flex items-center gap-1.5">
+                <span>⚡ 1-Click Employee Attendance Selector</span>
+                <span class="text-stone-400">•</span>
+                <span class="text-[#8F7239] dark:text-[#C6A15B]">Instant View &amp; Edit Filter</span>
+            </span>
+            @if($selectedStaffId !== 'ALL')
+                <button type="button" wire:click="selectStaff('ALL')" class="text-[11px] font-mono text-[#8F7239] dark:text-[#C6A15B] hover:underline font-bold cursor-pointer">
+                    ✕ Reset to All Staff
+                </button>
+            @endif
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" wire:click="selectStaff('ALL')" 
+                    class="px-3.5 py-1.5 text-xs font-mono font-bold uppercase transition border cursor-pointer {{ $selectedStaffId === 'ALL' ? 'bg-[#C6A15B] text-[#171513] border-[#C6A15B] shadow-md' : 'bg-[#F8F5EF] dark:bg-white/5 text-stone-700 dark:text-stone-300 border-[#E7E5E4] dark:border-white/15 hover:border-[#C6A15B]' }}">
+                👥 All Staff (Whole Team)
+            </button>
+            @foreach($staffOptions as $opt)
+                <button type="button" wire:click="selectStaff('{{ $opt->id }}')" 
+                        class="px-3 py-1.5 text-xs font-mono transition border flex items-center gap-1.5 cursor-pointer {{ $selectedStaffId == $opt->id ? 'bg-[#171513] text-[#C6A15B] border-[#C6A15B] shadow-[0_0_15px_rgba(198,161,91,0.35)] font-bold dark:bg-[#C6A15B]/20' : 'bg-[#F8F5EF] dark:bg-white/5 text-stone-700 dark:text-stone-300 border-[#E7E5E4] dark:border-white/15 hover:border-[#C6A15B]' }}">
+                    <span class="w-2 h-2 rounded-full {{ $selectedStaffId == $opt->id ? 'bg-[#C6A15B]' : 'bg-stone-400' }}"></span>
+                    <span>{{ $opt->name }}</span>
+                    <span class="text-[10px] text-stone-400 dark:text-stone-500">({{ str_replace('ROLE_', '', $opt->role) }})</span>
+                </button>
+            @endforeach
+        </div>
+    </div>
+
+    <!-- Employee Spotlight Banner -->
+    @if($selectedStaffId !== 'ALL' && ($spotlightStaff = $staffOptions->firstWhere('id', (int) $selectedStaffId)))
+        <div class="bg-[#C6A15B]/10 border border-[#C6A15B]/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 border border-[#C6A15B] bg-[#171513] text-[#C6A15B] flex items-center justify-center font-cinzel font-bold text-lg">
+                    {{ substr($spotlightStaff->name, 0, 1) }}
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-sm text-[#171513] dark:text-white">{{ $spotlightStaff->name }}</span>
+                        <span class="text-[10px] font-mono uppercase bg-[#C6A15B]/20 text-[#8F7239] dark:text-[#C6A15B] px-1.5 py-0.5 font-bold">
+                            {{ str_replace('ROLE_', '', $spotlightStaff->role) }}
+                        </span>
+                    </div>
+                    <span class="text-xs font-mono text-stone-500 dark:text-stone-400">
+                        Base: {{ $spotlightStaff->base_salary ? 'PKR ' . number_format((float) $spotlightStaff->base_salary) : 'Role default' }} • {{ $spotlightStaff->email }}
+                    </span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 font-mono text-xs">
+                <a href="{{ route('staff.payroll', ['staff_id' => $spotlightStaff->id]) }}" 
+                   class="btn-gold !h-8 !px-3 font-bold uppercase inline-flex items-center gap-1 shadow-sm">
+                    <span>💰 View Salary Slips &rarr;</span>
+                </a>
+                <a href="{{ route('staff') }}" 
+                   class="btn-outline-gold !h-8 !px-3 font-bold uppercase inline-flex items-center gap-1">
+                    <span>👤 Staff Profile &rarr;</span>
+                </a>
+            </div>
+        </div>
+    @endif
+
     <!-- Tab Strip -->
     <div class="flex border-b border-[#E7E5E4] dark:border-white/10 bg-white dark:bg-[#171513] text-xs font-mono uppercase overflow-x-auto">
         <button wire:click="setTab('daily')" 
@@ -76,6 +138,13 @@
                     <span class="text-xs font-serif italic text-stone-500">
                         {{ \Carbon\Carbon::parse($selectedDate)->format('l, d F Y') }}
                     </span>
+                    <label for="attendance-staff-filter" class="sr-only">Filter attendance by staff member</label>
+                    <select id="attendance-staff-filter" wire:model.live="selectedStaffId" class="bg-[#171513] border border-[#C6A15B]/40 px-3 py-1.5 text-xs text-white">
+                        <option value="ALL">All active staff</option>
+                        @foreach($staffOptions as $staffOption)
+                            <option value="{{ $staffOption->id }}">{{ $staffOption->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="flex items-center gap-2">
@@ -98,7 +167,8 @@
                             <th class="p-3 border-r border-[#E7E5E4]">Shift In</th>
                             <th class="p-3 border-r border-[#E7E5E4]">Shift Out</th>
                             <th class="p-3 border-r border-[#E7E5E4]">Overtime (Hours)</th>
-                            <th class="p-3">Shift Notes</th>
+                            <th class="p-3 border-r border-[#E7E5E4]">Shift Notes</th>
+                            <th class="p-3 text-right">Quick Edit</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#E7E5E4]">
@@ -135,14 +205,20 @@
                                     <input type="number" step="0.5" min="0" max="12" wire:model="attendanceData.{{ $m->id }}.overtime_hours" 
                                            class="w-20 bg-[#F8F5EF] border border-[#E7E5E4] text-xs font-mono px-2 py-1 text-center outline-none focus:border-[#C6A15B]">
                                 </td>
-                                <td class="p-3">
+                                <td class="p-3 border-r border-[#E7E5E4]">
                                     <input type="text" placeholder="e.g. Covered evening walima shift" wire:model="attendanceData.{{ $m->id }}.notes" 
                                            class="w-full bg-[#F8F5EF] border border-[#E7E5E4] text-xs px-2 py-1 outline-none focus:border-[#C6A15B]">
+                                </td>
+                                <td class="p-3 text-right whitespace-nowrap">
+                                    <button wire:click="openEditRecordModal({{ $m->id }})" type="button" 
+                                            class="border border-[#C6A15B]/50 hover:border-[#C6A15B] text-[#8F7239] hover:bg-[#C6A15B]/10 px-2.5 py-1 text-[11px] font-mono font-bold uppercase transition cursor-pointer">
+                                        ✏️ Edit
+                                    </button>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="p-8 text-center text-stone-400 font-sans">
+                                <td colspan="8" class="p-8 text-center text-stone-400 font-sans">
                                     No staff members registered for this venue yet. Add team members in Staff Roles.
                                 </td>
                             </tr>
@@ -256,13 +332,22 @@
     @if($activeTab === 'monthly')
         <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
             <div class="flex items-center justify-between border-b border-[#E7E5E4] pb-4">
-                <div class="flex items-center gap-3">
+                <div class="flex flex-wrap items-center gap-3">
                     <label class="text-xs font-mono uppercase text-stone-600 font-bold">Select Month:</label>
+                    <button type="button" wire:click="previousMonth" aria-label="Previous month" class="h-8 w-8 border border-[#C6A15B]/40 text-[#8F7239]">&larr;</button>
                     <input type="month" wire:model.live="selectedMonth" 
                            class="bg-[#F8F5EF] border border-[#E7E5E4] text-xs font-mono px-3 py-1.5 text-stone-900 outline-none focus:border-[#C6A15B]">
+                    <button type="button" wire:click="nextMonth" aria-label="Next month" class="h-8 w-8 border border-[#C6A15B]/40 text-[#8F7239]">&rarr;</button>
+                    <label for="monthly-attendance-staff-filter" class="sr-only">Filter monthly attendance by staff member</label>
+                    <select id="monthly-attendance-staff-filter" wire:model.live="selectedStaffId" class="bg-[#171513] border border-[#C6A15B]/40 px-3 py-1.5 text-xs text-white">
+                        <option value="ALL">All active staff</option>
+                        @foreach($staffOptions as $staffOption)
+                            <option value="{{ $staffOption->id }}">{{ $staffOption->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="text-xs font-mono text-stone-500">
-                    Calculated for {{ \Carbon\Carbon::parse($selectedMonth . '-01')->format('F Y') }}
+                    Calculated for {{ \Carbon\Carbon::createFromFormat('!Y-m', $selectedMonth)->format('F Y') }}
                 </div>
             </div>
 
@@ -362,8 +447,69 @@
                 </div>
 
                 <div class="border-t border-white/10 pt-3 flex items-center justify-end gap-2 font-mono text-xs">
-                    <button wire:click="closeLeaveModal" class="px-4 py-2 border border-white/20 text-white">Cancel</button>
-                    <button wire:click="submitLeave" class="btn-gold !h-9 !px-4 text-xs font-bold uppercase">Submit Leave &rarr;</button>
+                    <button wire:click="closeLeaveModal" class="px-4 py-2 border border-white/20 text-white cursor-pointer">Cancel</button>
+                    <button wire:click="submitLeave" class="btn-gold !h-9 !px-4 text-xs font-bold uppercase cursor-pointer">Submit Leave &rarr;</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Quick Edit Attendance Record Modal -->
+    @if($showEditRecordModal)
+        <div class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div class="bg-[#171513] border-2 border-[#C6A15B] max-w-md w-full p-6 space-y-5 text-white shadow-2xl">
+                <div class="border-b border-white/10 pb-3 flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-mono uppercase text-[#C6A15B] tracking-widest font-bold block">Quick Shift Correction</span>
+                        <h3 class="font-serif text-xl text-white font-medium mt-0.5">{{ $editingStaffName }}</h3>
+                    </div>
+                    <button wire:click="closeEditRecordModal" class="text-white/60 hover:text-white text-2xl font-mono leading-none cursor-pointer">&times;</button>
+                </div>
+
+                <div class="space-y-4 font-sans text-xs">
+                    <div>
+                        <label class="block text-[10px] font-mono uppercase text-[#C6A15B] mb-1 font-semibold">Attendance Date *</label>
+                        <input type="date" wire:model="editingRecordDate" class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
+                        @error('editingRecordDate') <span class="text-rose-400 text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-mono uppercase text-[#C6A15B] mb-1 font-semibold">Status *</label>
+                        <select wire:model="editingStatus" class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
+                            <option value="PRESENT">PRESENT (HAZIR)</option>
+                            <option value="HALF_DAY">HALF DAY</option>
+                            <option value="ABSENT">ABSENT (GHAIR HAZIR)</option>
+                            <option value="LATE">LATE ARRIVAL</option>
+                            <option value="ON_LEAVE">ON LEAVE (RUKHSAT)</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 font-mono">
+                        <div>
+                            <label class="block text-[10px] uppercase text-[#C6A15B] mb-1 font-semibold">Shift In Time</label>
+                            <input type="time" wire:model="editingCheckIn" class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase text-[#C6A15B] mb-1 font-semibold">Shift Out Time</label>
+                            <input type="time" wire:model="editingCheckOut" class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-mono uppercase text-[#C6A15B] mb-1 font-semibold">Overtime Hours (Hours)</label>
+                        <input type="number" step="0.5" min="0" max="24" wire:model="editingOvertime" class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B] font-mono">
+                        @error('editingOvertime') <span class="text-rose-400 text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-mono uppercase text-[#C6A15B] mb-1 font-semibold">Operational Shift Notes</label>
+                        <textarea wire:model="editingNotes" rows="2" placeholder="e.g. Covered evening walima banquet shift" class="w-full bg-[#171513] border border-white/20 text-white text-xs p-2.5 outline-none focus:border-[#C6A15B]"></textarea>
+                    </div>
+                </div>
+
+                <div class="border-t border-white/10 pt-3 flex items-center justify-end gap-2 font-mono text-xs">
+                    <button wire:click="closeEditRecordModal" class="px-4 py-2 border border-white/20 text-white hover:bg-white/10 cursor-pointer">Cancel</button>
+                    <button wire:click="saveEditedRecord" class="btn-gold !h-9 !px-5 text-xs font-bold uppercase cursor-pointer">Save Correction &rarr;</button>
                 </div>
             </div>
         </div>

@@ -17,6 +17,7 @@ class StaffAttendance extends Component
     public string $activeTab = 'daily'; // daily, leaves, monthly
     public string $selectedDate = '';
     public string $selectedMonth = '';
+    public string $selectedStaffId = 'ALL';
 
     // Daily attendance rows: [user_id => ['status' => 'PRESENT', 'check_in' => '10:00', 'check_out' => '22:00', 'overtime_hours' => 0, 'notes' => '']]
     public array $attendanceData = [];
@@ -29,26 +30,46 @@ class StaffAttendance extends Component
     public string $leaveEndDate = '';
     public string $leaveReason = '';
 
+    // Quick Edit Attendance Record Modal
+    public bool $showEditRecordModal = false;
+    public ?int $editingUserId = null;
+    public string $editingStaffName = '';
+    public string $editingRecordDate = '';
+    public string $editingStatus = 'PRESENT';
+    public string $editingCheckIn = '10:00';
+    public string $editingCheckOut = '22:00';
+    public float $editingOvertime = 0.0;
+    public string $editingNotes = '';
+
     public ?string $feedbackMessage = null;
     public ?string $errorMessage = null;
 
     public function mount()
     {
-        $user = Auth::user();
-        if (!$user || (!$user->isTenantOwner() && !$user->isManager() && !$user->isSuperAdmin() && !$user->isAccountant())) {
-            abort(403, 'Unauthorized. Only Venue Owners or Managers have access to Attendance ERP.');
-        }
-
+        $this->authorizeAttendanceManager();
         $this->selectedDate = Carbon::today()->format('Y-m-d');
         $this->selectedMonth = Carbon::today()->format('Y-m');
         $this->leaveStartDate = Carbon::today()->format('Y-m-d');
         $this->leaveEndDate = Carbon::today()->format('Y-m-d');
 
+        if (request()->has('staff_id')) {
+            $this->selectedStaffId = (string) request()->query('staff_id');
+        }
+
         $this->loadAttendanceForDate();
+    }
+
+    private function authorizeAttendanceManager(): void
+    {
+        $user = Auth::user();
+        if (!$user || (!$user->isTenantOwner() && !$user->isManager() && !$user->isAccountant()) || !$user->tenant_id) {
+            abort(403, 'Unauthorized. Only Venue Owners or Managers have access to Attendance ERP.');
+        }
     }
 
     public function setTab(string $tab)
     {
+        $this->authorizeAttendanceManager();
         $this->activeTab = $tab;
         $this->feedbackMessage = null;
         $this->errorMessage = null;
@@ -59,12 +80,47 @@ class StaffAttendance extends Component
         $this->loadAttendanceForDate();
     }
 
+    public function updatedSelectedStaffId(): void
+    {
+        $this->loadAttendanceForDate();
+    }
+
+    public function previousMonth(): void
+    {
+        $this->selectedMonth = $this->normalizedSelectedMonth()->subMonth()->format('Y-m');
+    }
+
+    public function nextMonth(): void
+    {
+        $this->selectedMonth = $this->normalizedSelectedMonth()->addMonth()->format('Y-m');
+    }
+
+    private function normalizedSelectedMonth(): Carbon
+    {
+        try {
+            $month = Carbon::createFromFormat('!Y-m', $this->selectedMonth);
+            if (!$month || $month->format('Y-m') !== $this->selectedMonth || $month->year < 2000 || $month->year > 2100) {
+                throw new \InvalidArgumentException();
+            }
+        } catch (\Throwable) {
+            $this->selectedMonth = Carbon::today()->format('Y-m');
+            $month = Carbon::today()->startOfMonth();
+        }
+
+        return $month->startOfMonth();
+    }
+
     public function loadAttendanceForDate()
     {
+        $this->authorizeAttendanceManager();
         $tenantId = Auth::user()->tenant_id;
-        $staff = User::where('tenant_id', $tenantId)
+        $staffQuery = User::where('tenant_id', $tenantId)
             ->where('role', '!=', 'ROLE_CUSTOMER')
-            ->get();
+            ->where('status', '!=', 'SUSPENDED');
+        if ($this->selectedStaffId !== 'ALL') {
+            $staffQuery->whereKey($this->selectedStaffId);
+        }
+        $staff = $staffQuery->get();
 
         $existing = AttendanceRecord::where('tenant_id', $tenantId)
             ->where('date', $this->selectedDate)
@@ -98,6 +154,7 @@ class StaffAttendance extends Component
 
     public function markAllPresent()
     {
+        $this->authorizeAttendanceManager();
         foreach ($this->attendanceData as $userId => $val) {
             $this->attendanceData[$userId]['status'] = 'PRESENT';
         }
@@ -106,9 +163,33 @@ class StaffAttendance extends Component
 
     public function saveDailyAttendance()
     {
+        $this->authorizeAttendanceManager();
         $tenantId = Auth::user()->tenant_id;
+        $staffIds = User::where('tenant_id', $tenantId)
+            ->where('role', '!=', 'ROLE_CUSTOMER')
+            ->where('status', '!=', 'SUSPENDED')
+            ->when($this->selectedStaffId !== 'ALL', fn ($query) => $query->whereKey($this->selectedStaffId))
+            ->pluck('id')
+            ->all();
+
+        $this->validate([
+            'selectedDate' => 'required|date_format:Y-m-d',
+            'attendanceData' => 'array',
+        ]);
 
         foreach ($this->attendanceData as $userId => $data) {
+            if (!in_array((int) $userId, $staffIds, true)) {
+                continue;
+            }
+
+            validator($data, [
+                'status' => 'required|in:PRESENT,ABSENT,HALF_DAY,LATE,ON_LEAVE',
+                'check_in' => 'nullable|date_format:H:i',
+                'check_out' => 'nullable|date_format:H:i',
+                'overtime_hours' => 'nullable|numeric|min:0|max:24',
+                'notes' => 'nullable|string|max:1000',
+            ])->validate();
+
             AttendanceRecord::updateOrCreate(
                 [
                     'tenant_id' => $tenantId,
@@ -137,11 +218,80 @@ class StaffAttendance extends Component
         $this->feedbackMessage = "Daily attendance recorded successfully for " . Carbon::parse($this->selectedDate)->format('d M Y') . ".";
     }
 
+    public function selectStaff(string $staffId): void
+    {
+        $this->selectedStaffId = $staffId;
+        $this->loadAttendanceForDate();
+    }
+
+    public function openEditRecordModal(int $userId, ?string $recordDate = null): void
+    {
+        $this->authorizeAttendanceManager();
+        $date = $recordDate ?? $this->selectedDate;
+        $user = User::where('tenant_id', Auth::user()->tenant_id)->findOrFail($userId);
+
+        $rec = AttendanceRecord::where('tenant_id', Auth::user()->tenant_id)
+            ->where('user_id', $userId)
+            ->where('date', $date)
+            ->first();
+
+        $this->editingUserId = $userId;
+        $this->editingStaffName = $user->name;
+        $this->editingRecordDate = $date;
+        $this->editingStatus = $rec?->status ?? 'PRESENT';
+        $this->editingCheckIn = $rec?->check_in ? substr($rec->check_in, 0, 5) : '10:00';
+        $this->editingCheckOut = $rec?->check_out ? substr($rec->check_out, 0, 5) : '22:00';
+        $this->editingOvertime = $rec ? (float) $rec->overtime_hours : 0.0;
+        $this->editingNotes = $rec?->notes ?? '';
+        $this->showEditRecordModal = true;
+    }
+
+    public function closeEditRecordModal(): void
+    {
+        $this->showEditRecordModal = false;
+        $this->editingUserId = null;
+    }
+
+    public function saveEditedRecord(): void
+    {
+        $this->authorizeAttendanceManager();
+        $this->validate([
+            'editingUserId' => 'required|exists:users,id',
+            'editingRecordDate' => 'required|date_format:Y-m-d',
+            'editingStatus' => 'required|in:PRESENT,ABSENT,HALF_DAY,LATE,ON_LEAVE',
+            'editingCheckIn' => 'nullable|date_format:H:i',
+            'editingCheckOut' => 'nullable|date_format:H:i',
+            'editingOvertime' => 'nullable|numeric|min:0|max:24',
+            'editingNotes' => 'nullable|string|max:1000',
+        ]);
+
+        AttendanceRecord::updateOrCreate(
+            [
+                'tenant_id' => Auth::user()->tenant_id,
+                'user_id' => $this->editingUserId,
+                'date' => $this->editingRecordDate,
+            ],
+            [
+                'status' => $this->editingStatus,
+                'check_in' => !empty($this->editingCheckIn) ? $this->editingCheckIn : null,
+                'check_out' => !empty($this->editingCheckOut) ? $this->editingCheckOut : null,
+                'overtime_hours' => $this->editingOvertime,
+                'notes' => $this->editingNotes ?: null,
+                'created_by' => Auth::id(),
+            ]
+        );
+
+        $this->loadAttendanceForDate();
+        $this->showEditRecordModal = false;
+        $this->feedbackMessage = "Attendance record for {$this->editingStaffName} ({$this->editingRecordDate}) updated successfully!";
+    }
+
     // ==========================================
     // LEAVE MANAGEMENT
     // ==========================================
     public function openLeaveModal()
     {
+        $this->authorizeAttendanceManager();
         $firstStaff = User::where('tenant_id', Auth::user()->tenant_id)->first();
         $this->leaveUserId = $firstStaff ? $firstStaff->id : null;
         $this->leaveType = 'CASUAL';
@@ -153,11 +303,13 @@ class StaffAttendance extends Component
 
     public function closeLeaveModal()
     {
+        $this->authorizeAttendanceManager();
         $this->showLeaveModal = false;
     }
 
     public function submitLeave()
     {
+        $this->authorizeAttendanceManager();
         $this->validate([
             'leaveUserId' => 'required|exists:users,id',
             'leaveType' => 'required|in:CASUAL,SICK,ANNUAL,EMERGENCY',
@@ -187,6 +339,7 @@ class StaffAttendance extends Component
 
     public function approveLeave(string $leaveId)
     {
+        $this->authorizeAttendanceManager();
         $leave = StaffLeave::where('tenant_id', Auth::user()->tenant_id)->findOrFail($leaveId);
         $leave->update([
             'status' => 'APPROVED',
@@ -198,6 +351,7 @@ class StaffAttendance extends Component
 
     public function rejectLeave(string $leaveId)
     {
+        $this->authorizeAttendanceManager();
         $leave = StaffLeave::where('tenant_id', Auth::user()->tenant_id)->findOrFail($leaveId);
         $leave->update([
             'status' => 'REJECTED',
@@ -209,12 +363,22 @@ class StaffAttendance extends Component
 
     public function render()
     {
+        $this->authorizeAttendanceManager();
         $tenantId = Auth::user()->tenant_id;
 
-        $staff = User::where('tenant_id', $tenantId)
+        $staffOptions = User::where('tenant_id', $tenantId)
             ->where('role', '!=', 'ROLE_CUSTOMER')
+            ->where('status', '!=', 'SUSPENDED')
             ->orderBy('name')
             ->get();
+
+        $staffQuery = User::where('tenant_id', $tenantId)
+            ->where('role', '!=', 'ROLE_CUSTOMER')
+            ->where('status', '!=', 'SUSPENDED');
+        if ($this->selectedStaffId !== 'ALL') {
+            $staffQuery->whereKey($this->selectedStaffId);
+        }
+        $staff = $staffQuery->orderBy('name')->get();
 
         $leaves = StaffLeave::where('tenant_id', $tenantId)
             ->with(['user', 'actionBy'])
@@ -222,7 +386,7 @@ class StaffAttendance extends Component
             ->paginate(15);
 
         // Monthly summary calculations
-        $monthStart = Carbon::parse($this->selectedMonth . '-01')->startOfMonth();
+        $monthStart = $this->normalizedSelectedMonth();
         $monthEnd = $monthStart->copy()->endOfMonth();
 
         $monthlyRecords = AttendanceRecord::where('tenant_id', $tenantId)
@@ -251,6 +415,7 @@ class StaffAttendance extends Component
 
         return view('livewire.staff-attendance', [
             'staff' => $staff,
+            'staffOptions' => $staffOptions,
             'leaves' => $leaves,
             'summary' => $summary,
         ]);

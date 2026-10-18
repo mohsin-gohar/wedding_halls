@@ -309,15 +309,42 @@
             </div>
         </div>
 
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3" aria-label="Monthly operations summary">
+            <div class="p-4 bg-[#211e1a] border border-[#C6A15B]/25">
+                <div class="text-[10px] uppercase tracking-wider text-stone-400">Kharcha · {{ $operationsMonthTitle }}</div>
+                <div class="mt-1 text-xl font-cinzel font-bold text-white">Rs {{ number_format($operationsExpensesTotal) }}</div>
+                <div class="mt-1 text-[10px] text-stone-400">{{ $operationsExpenseCount }} recorded entries</div>
+            </div>
+            <div class="p-4 bg-[#211e1a] border border-[#C6A15B]/25">
+                <div class="text-[10px] uppercase tracking-wider text-stone-400">Generator fuel expenses</div>
+                <div class="mt-1 text-xl font-cinzel font-bold text-[#C6A15B]">Rs {{ number_format($operationsDieselCost) }}</div>
+                <div class="mt-1 text-[10px] text-stone-400">From dated expense records</div>
+            </div>
+            <div class="p-4 bg-[#211e1a] border border-[#C6A15B]/25">
+                <div class="text-[10px] uppercase tracking-wider text-stone-400">Staff wages · cleaning</div>
+                <div class="mt-1 text-xl font-cinzel font-bold text-white">Rs {{ number_format($operationsWagesCost + $operationsCleaningCost) }}</div>
+                <div class="mt-1 text-[10px] text-stone-400">Wages Rs {{ number_format($operationsWagesCost) }} · Cleaning Rs {{ number_format($operationsCleaningCost) }}</div>
+            </div>
+            <div class="p-4 bg-[#211e1a] border border-[#C6A15B]/25">
+                <div class="text-[10px] uppercase tracking-wider text-stone-400">Monthly cash movement</div>
+                <div class="mt-1 text-xl font-cinzel font-bold {{ $operationsNetBalance >= 0 ? 'text-emerald-400' : 'text-rose-400' }}">Rs {{ number_format($operationsNetBalance) }}</div>
+                <div class="mt-1 text-[10px] text-stone-400">Received Rs {{ number_format($operationsCashInflow) }} · spent Rs {{ number_format($operationsExpensesTotal) }}</div>
+            </div>
+        </div>
+
         <!-- Recent Daily Expenses Table -->
         <div class="space-y-3 pt-2">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <span class="text-xs font-mono font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B]">
-                    Recent Daily Expenses &amp; Fuel Entries
+                    Daily Expenses &amp; Fuel Entries · {{ $operationsMonthTitle }}
                 </span>
-                <a href="{{ route('expenses') }}" class="text-xs text-[#8F7239] dark:text-[#C6A15B] hover:underline font-mono">
-                    View Full Financial Register &rarr;
-                </a>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" wire:click="previousOperationsMonth" aria-label="Previous month" class="h-9 w-9 border border-[#C6A15B]/40 text-[#C6A15B] hover:bg-[#C6A15B]/10">&larr;</button>
+                    <label for="operations-month" class="sr-only">Choose expense month</label>
+                    <input id="operations-month" type="month" wire:model.live="operationsMonth" class="h-9 border border-[#C6A15B]/40 bg-[#171513] px-3 text-xs text-white">
+                    <button type="button" wire:click="nextOperationsMonth" aria-label="Next month" class="h-9 w-9 border border-[#C6A15B]/40 text-[#C6A15B] hover:bg-[#C6A15B]/10">&rarr;</button>
+                    <a href="{{ route('expenses') }}" class="ml-1 text-xs text-[#8F7239] dark:text-[#C6A15B] hover:underline font-mono">Full Financial Register &rarr;</a>
+                </div>
             </div>
 
             <div class="overflow-x-auto border border-[#E7E5E4] dark:border-white/10">
@@ -381,13 +408,22 @@
                         @empty
                             <tr>
                                 <td colspan="7" class="p-8 text-center text-xs text-stone-500 dark:text-stone-400 font-sans">
-                                    No daily expenses logged today yet. Click <strong>+ Log Generator Fuel</strong> or <strong>+ Add Daily Kharcha</strong> to record operational costs.
+                                    No expenses recorded for {{ $operationsMonthTitle }}. Select another month or log an expense to start this ledger.
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
+            @if($operationsExpensePages > 1)
+                <div class="flex items-center justify-between text-xs text-stone-400">
+                    <span>Page {{ $operationsPage }} of {{ $operationsExpensePages }} · {{ $operationsExpenseCount }} records</span>
+                    <div class="flex gap-2">
+                        <button type="button" wire:click="$set('operationsPage', {{ max(1, $operationsPage - 1) }})" @disabled($operationsPage <= 1) class="border border-white/15 px-3 py-1.5 disabled:opacity-40">Previous</button>
+                        <button type="button" wire:click="$set('operationsPage', {{ min($operationsExpensePages, $operationsPage + 1) }})" @disabled($operationsPage >= $operationsExpensePages) class="border border-white/15 px-3 py-1.5 disabled:opacity-40">Next</button>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 

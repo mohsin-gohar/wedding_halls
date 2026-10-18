@@ -1719,3 +1719,59 @@ button {
     0 0 0 1px rgba(198, 161, 91, 0.08);
 }
 
+/* Keep dark-mode surfaces and contrast consistent across every page module. */
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) [class~="bg-white"],
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) [class~="bg-stone-50"],
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) [class~="bg-stone-100"] {
+  background-color: #211e1a;
+}
+
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) [class~="bg-[#F8F5EF]"],
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) [class*="bg-[#F8F5EF]/"] {
+  background-color: #1b1916;
+}
+
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) [class~="text-[#171513]"],
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) [class~="text-stone-900"],
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) [class~="text-stone-800"] {
+  color: #f8f5ef;
+}
+
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) [class~="text-stone-700"],
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) [class~="text-stone-600"] {
+  color: #d6d1c7;
+}
+
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) [class~="text-stone-500"] {
+  color: #aaa397;
+}
+
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) [class*="border-[#E7E5E4]"] {
+  border-color: rgba(232, 220, 190, 0.14);
+}
+
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) [class~="text-[#8F7239]"] {
+  color: #dcc796;
+}
+
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) [class*="hover:bg-[#F8F5EF]"]:hover {
+  background-color: #2a261f;
+}
+
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) :is(input, select, textarea).input-luxury,
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) :is(input, select, textarea)[class*="bg-white"] {
+  background-color: #171513 !important;
+  border-color: rgba(232, 220, 190, 0.2) !important;
+  color: #f8f5ef !important;
+  color-scheme: dark;
+}
+
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) :is(input, textarea)::placeholder {
+  color: #aaa397;
+}
+
+html.dark :is(.public-page-content, .app-page-content, .auth-page-content) select option {
+  background-color: #211e1a;
+  color: #f8f5ef;
+}
+

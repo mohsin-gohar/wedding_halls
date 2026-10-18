@@ -164,14 +164,17 @@ class SaaSSubscriptionAndErpTest extends TestCase
         $chef = User::where('role', 'ROLE_CHEF')->first();
         $this->assertNotNull($chef);
 
-        // Chef attempts to access StaffManager -> 403 Forbidden
+        // Chef is returned to the dashboard they are allowed to use.
         $this->actingAs($chef);
-        $this->get(route('staff'))->assertStatus(403);
+        $this->get(route('staff'))->assertRedirect(route('kitchen.board'));
 
         // Owner accesses StaffManager -> 200 OK
-        $owner = User::where('role', 'ROLE_SUPER_ADMIN')->first();
+        $owner = User::where('tenant_id', $chef->tenant_id)->where('role', 'ROLE_TENANT_OWNER')->firstOrFail();
         $this->actingAs($owner);
         $this->get(route('staff'))->assertStatus(200);
+
+        $superAdmin = User::where('role', 'ROLE_SUPER_ADMIN')->firstOrFail();
+        $this->actingAs($superAdmin)->get(route('staff'))->assertRedirect(route('admin.dashboard'));
     }
 
     public function test_quotation_and_invoice_routes_render_authorized(): void

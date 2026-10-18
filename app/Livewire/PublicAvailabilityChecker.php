@@ -7,10 +7,13 @@ use App\Models\Hall;
 use Carbon\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('components.layouts.public')]
 class PublicAvailabilityChecker extends Component
 {
+    use WithPagination;
+
     public string $selectedDate = '';
 
     public function mount()
@@ -20,7 +23,17 @@ class PublicAvailabilityChecker extends Component
 
     public function setDate(string $dateStr)
     {
+        if (! Carbon::hasFormat($dateStr, 'Y-m-d')) {
+            return;
+        }
+
         $this->selectedDate = $dateStr;
+        $this->resetPage();
+    }
+
+    public function updatedSelectedDate(): void
+    {
+        $this->resetPage();
     }
 
     public function render()
@@ -31,16 +44,25 @@ class PublicAvailabilityChecker extends Component
                 $q->where('is_active', true)
                   ->where('verification_status', 'APPROVED');
             })
-            ->get();
+            ->orderBy('name')
+            ->paginate(12);
         $date = Carbon::parse($this->selectedDate);
 
         // Fetch bookings for the selected date
-        $bookings = Booking::whereDate('event_date', $this->selectedDate)
+        $bookingRows = Booking::whereDate('event_date', $this->selectedDate)
             ->whereIn('status', ['CONFIRMED', 'HOLD'])
-            ->get()
-            ->keyBy(function ($b) {
-                return $b->hall_id . '_' . $b->slot_type;
-            });
+            ->get(['id', 'hall_id', 'event_date', 'slot_type', 'status']);
+
+        $bookings = collect();
+        foreach ($bookingRows as $booking) {
+            $slots = $booking->slot_type === 'FULL_DAY'
+                ? ['AFTERNOON', 'EVENING', 'NIGHT']
+                : [$booking->slot_type];
+
+            foreach ($slots as $slot) {
+                $bookings->put($booking->hall_id . '_' . $slot, $booking);
+            }
+        }
 
         // Quick date shortcuts (This Friday, This Saturday, This Sunday, Next Saturday)
         $shortcuts = [

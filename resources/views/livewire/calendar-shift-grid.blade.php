@@ -10,23 +10,26 @@
                 <span class="text-stone-400 dark:text-stone-600">/</span>
                 <span>Operational Calendar</span>
                 <span class="text-stone-400 dark:text-stone-600">•</span>
-                <span class="text-[#8F7239] dark:text-[#C6A15B] font-mono">ACID Distributed Mutex Active</span>
+                <span class="text-[#8F7239] dark:text-[#C6A15B] font-mono">Bookings &amp; Availability</span>
             </div>
             <h1 class="font-serif-luxury text-2xl sm:text-4xl text-[#171513] dark:text-white font-bold tracking-tight">
                 Shift Concurrency Matrix
             </h1>
             <p class="text-xs text-stone-600 dark:text-stone-300 font-sans max-w-2xl leading-relaxed">
-                Real-time booking shifts across Afternoon, Evening, and Night slots. Guaranteed zero double-bookings with instant status lookup.
+                Review confirmed bookings, holds, and open shifts for the selected hall.
             </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
             <div>
                 <label class="block text-[10px] uppercase font-mono tracking-wider text-[#8F7239] dark:text-[#C6A15B] mb-1 font-bold">Banquet Hall</label>
-                <select wire:model.live="selectedHallId" class="bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/50 text-[#171513] dark:text-stone-200 text-xs px-3.5 py-2 font-mono focus:border-[#C6A15B] outline-none">
+                <select wire:model.live="selectedHallId" aria-label="Select banquet hall" class="max-w-[min(18rem,70vw)] bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/50 text-[#171513] dark:text-stone-200 text-xs px-3.5 py-2 font-mono focus:border-[#C6A15B] outline-none">
                     @foreach($halls as $hall)
                         <option value="{{ $hall->id }}">{{ $hall->name }} (Cap: {{ $hall->max_capacity }})</option>
                     @endforeach
+                    @if($halls->isEmpty())
+                        <option value="">No active halls available</option>
+                    @endif
                 </select>
             </div>
 
@@ -38,6 +41,12 @@
         </div>
     </div>
 
+    @if(!$selectedHall)
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-10 text-center shadow-sm">
+            <h2 class="font-serif-luxury text-xl text-[#171513] dark:text-white">No active hall to display</h2>
+            <p class="mt-2 text-sm text-stone-600 dark:text-stone-300">Add or activate a hall for this venue account to start managing its calendar.</p>
+        </div>
+    @else
     <!-- ===================================================================
          2. MONTH NAVIGATION & RESTRAINED LEGEND TOOLBAR
          =================================================================== -->
@@ -78,7 +87,8 @@
     <!-- ===================================================================
          3. CALENDAR MONTH SHIFT GRID (Refined Editorial Design)
          =================================================================== -->
-    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 shadow-sm overflow-hidden">
+    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 shadow-sm overflow-x-auto">
+      <div class="min-w-[980px]">
         <!-- Day Names Header -->
         <div class="grid grid-cols-7 bg-[#F8F5EF] dark:bg-[#171513] border-b border-[#E7E5E4] dark:border-white/10 text-center text-xs tracking-wider uppercase text-stone-600 dark:text-stone-400 py-3 font-mono font-bold">
             <div>Mon</div>
@@ -153,7 +163,9 @@
                 </div>
             @endforeach
         </div>
+      </div>
     </div>
+    @endif
 
     <!-- ===================================================================
          4. BOOKING DETAILS MODAL (Executive Clean Business Card)

@@ -33,14 +33,7 @@ class CalendarShiftGrid extends Component
         }
 
         $this->currentMonth = Carbon::now()->format('Y-m');
-        $tenantId = $user->tenant_id;
-
-        $hallsQuery = Hall::where('is_active', true);
-        if ($tenantId) {
-            $hallsQuery->where('tenant_id', $tenantId);
-        } else {
-            $hallsQuery->whereRaw('1 = 0');
-        }
+        $hallsQuery = $this->accessibleHalls();
         $firstHall = $hallsQuery->first();
 
         if ($firstHall) {
@@ -51,27 +44,45 @@ class CalendarShiftGrid extends Component
 
     public function updatedSelectedVenueId($venueId)
     {
-        $user = Auth::user();
-        $tenantId = $user ? $user->tenant_id : null;
-
-        $query = Hall::where('venue_id', $venueId)->where('is_active', true);
-        if ($tenantId) {
-            $query->where('tenant_id', $tenantId);
-        } else {
-            $query->whereRaw('1 = 0');
-        }
-        $firstHall = $query->first();
+        $firstHall = $this->accessibleHalls()->where('venue_id', $venueId)->first();
         $this->selectedHallId = $firstHall ? $firstHall->id : null;
+    }
+
+    private function accessibleHalls()
+    {
+        $user = Auth::user();
+        $query = Hall::query()->where('is_active', true);
+
+        if (! $user?->isSuperAdmin()) {
+            $query->where('tenant_id', $user?->tenant_id ?? '');
+        }
+
+        return $query;
+    }
+
+    private function normalizedMonth(): Carbon
+    {
+        try {
+            $month = Carbon::createFromFormat('!Y-m', $this->currentMonth);
+            if (! $month || $month->format('Y-m') !== $this->currentMonth || $month->year < 2000 || $month->year > 2100) {
+                throw new \InvalidArgumentException();
+            }
+        } catch (\Throwable) {
+            $this->currentMonth = Carbon::now()->format('Y-m');
+            $month = Carbon::now()->startOfMonth();
+        }
+
+        return $month->startOfMonth();
     }
 
     public function prevMonth()
     {
-        $this->currentMonth = Carbon::parse($this->currentMonth . '-01')->subMonth()->format('Y-m');
+        $this->currentMonth = $this->normalizedMonth()->subMonth()->format('Y-m');
     }
 
     public function nextMonth()
     {
-        $this->currentMonth = Carbon::parse($this->currentMonth . '-01')->addMonth()->format('Y-m');
+        $this->currentMonth = $this->normalizedMonth()->addMonth()->format('Y-m');
     }
 
     public function goToToday()
@@ -81,6 +92,10 @@ class CalendarShiftGrid extends Component
 
     public function openWalkInModal(?string $date = null, ?string $slot = null)
     {
+        if (! $this->selectedHallId || ! $this->accessibleHalls()->whereKey($this->selectedHallId)->exists()) {
+            return;
+        }
+
         $this->dispatch('openWalkInModal', [
             'hall_id' => $this->selectedHallId,
             'event_date' => $date,
@@ -90,17 +105,15 @@ class CalendarShiftGrid extends Component
 
     public function viewBookingDetails(string $bookingId)
     {
-        $user = Auth::user();
-        $tenantId = $user ? $user->tenant_id : null;
-
-        $query = Booking::with(['hall.venue', 'package', 'payments', 'kitchenKot']);
-        if ($tenantId) {
-            $query->where('tenant_id', $tenantId);
-        } else {
-            $query->whereRaw('1 = 0');
-        }
-        $this->viewingBooking = $query->find($bookingId);
-        $this->showDetailsModal = true;
+        $hall = $this->selectedHallId
+            ? $this->accessibleHalls()->whereKey($this->selectedHallId)->first()
+            : null;
+        $this->viewingBooking = $hall
+            ? Booking::with(['hall.venue', 'package', 'payments', 'kitchenKot'])
+                ->where('hall_id', $hall->id)
+                ->find($bookingId)
+            : null;
+        $this->showDetailsModal = (bool) $this->viewingBooking;
     }
 
     public function closeDetailsModal()
@@ -112,17 +125,10 @@ class CalendarShiftGrid extends Component
     public function render()
     {
         $user = Auth::user();
-        $tenantId = $user ? $user->tenant_id : null;
-
-        $venuesQuery = Venue::where('is_active', true);
-        $hallsQuery = Hall::where('is_active', true);
-
-        if ($tenantId) {
-            $venuesQuery->where('tenant_id', $tenantId);
-            $hallsQuery->where('tenant_id', $tenantId);
-        } else {
-            $venuesQuery->whereRaw('1 = 0');
-            $hallsQuery->whereRaw('1 = 0');
+        $hallsQuery = $this->accessibleHalls();
+        $venuesQuery = Venue::query()->where('is_active', true);
+        if (! $user?->isSuperAdmin()) {
+            $venuesQuery->where('tenant_id', $user?->tenant_id ?? '');
         }
 
         $venues = $venuesQuery->get();
@@ -132,26 +138,30 @@ class CalendarShiftGrid extends Component
         }
         $halls = $hallsQuery->get();
 
-        if (empty($this->currentMonth)) {
-            $this->currentMonth = Carbon::now()->format('Y-m');
-        }
-
-        $startOfMonth = Carbon::parse($this->currentMonth . '-01')->startOfMonth();
+        $startOfMonth = $this->normalizedMonth();
         $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
-        $selectedHall = $tenantId && $this->selectedHallId ? Hall::where('tenant_id', $tenantId)->find($this->selectedHallId) : null;
+        $selectedHall = $this->selectedHallId
+            ? $this->accessibleHalls()->whereKey($this->selectedHallId)->first()
+            : null;
 
         // Fetch bookings strictly scoped to this tenant and hall
         $bookings = [];
-        if ($this->selectedHallId && $tenantId) {
-            $bookingsList = Booking::where('tenant_id', $tenantId)
-                ->where('hall_id', $this->selectedHallId)
+        if ($selectedHall) {
+            $bookingsList = Booking::where('tenant_id', $selectedHall->tenant_id)
+                ->where('hall_id', $selectedHall->id)
                 ->whereBetween('event_date', [$startOfMonth->format('Y-m-d'), $endOfMonth->format('Y-m-d')])
                 ->whereIn('status', ['CONFIRMED', 'HOLD', 'INQUIRY'])
                 ->get();
 
             foreach ($bookingsList as $b) {
-                $bookings[$b->event_date . '_' . $b->slot_type] = $b;
+                $date = $b->event_date->format('Y-m-d');
+                $slots = strtoupper($b->slot_type) === 'FULL_DAY'
+                    ? ['AFTERNOON', 'EVENING', 'NIGHT']
+                    : [strtoupper($b->slot_type)];
+                foreach ($slots as $slot) {
+                    $bookings[$date . '_' . $slot] ??= $b;
+                }
             }
         }
 

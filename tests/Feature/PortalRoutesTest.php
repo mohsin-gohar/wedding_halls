@@ -6,8 +6,10 @@ use App\Models\Hall;
 use App\Models\Package;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Models\Booking;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class PortalRoutesTest extends TestCase
@@ -125,5 +127,37 @@ class PortalRoutesTest extends TestCase
         ]);
 
         $this->actingAs($admin)->get('/admin')->assertStatus(200);
+        $this->actingAs($admin)->get('/dashboard')->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_super_admin_calendar_can_select_global_halls_and_expands_full_day_bookings(): void
+    {
+        $admin = User::where('role', 'ROLE_SUPER_ADMIN')->first() ?: User::create([
+            'name' => 'Calendar Admin',
+            'email' => 'calendar-admin@example.com',
+            'role' => 'ROLE_SUPER_ADMIN',
+            'password' => Hash::make('secret123'),
+        ]);
+        $hall = Hall::where('is_active', true)->firstOrFail();
+        $date = now()->addDays(10)->format('Y-m-d');
+
+        Booking::create([
+            'tenant_id' => $hall->tenant_id,
+            'hall_id' => $hall->id,
+            'customer_name' => 'Full Day Calendar Host',
+            'customer_phone' => '03001112233',
+            'event_type' => 'Wedding',
+            'event_date' => $date,
+            'slot_type' => 'FULL_DAY',
+            'status' => 'CONFIRMED',
+            'guest_count' => 200,
+            'grand_total' => 150000,
+        ]);
+
+        Livewire::actingAs($admin)->test(\App\Livewire\CalendarShiftGrid::class)
+            ->assertViewHas('halls', fn ($halls) => $halls->contains('id', $hall->id))
+            ->assertViewHas('bookings', function ($bookings) use ($date) {
+                return isset($bookings[$date.'_AFTERNOON'], $bookings[$date.'_EVENING'], $bookings[$date.'_NIGHT']);
+            });
     }
 }

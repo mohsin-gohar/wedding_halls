@@ -8,6 +8,7 @@ use App\Livewire\HallMediaManager;
 use App\Livewire\KitchenKotBoard;
 use App\Livewire\PublicContact;
 use App\Livewire\PublicGuestRsvp;
+use App\Livewire\PublicAvailabilityChecker;
 use App\Livewire\PublicVenues;
 use App\Livewire\UtilityFuelTracker;
 use App\Livewire\WhatsAppRsvpManager;
@@ -170,27 +171,48 @@ class EnterpriseRemediationAuditTest extends TestCase
     /**
      * Test UI-01: Uppercase slot_type bookings accurately populate the 30-day availability heatmap.
      */
-    public function test_availability_heatmap_accurately_counts_uppercase_slots(): void
+    public function test_venue_directory_uses_only_city_and_hall_name_filters(): void
     {
         $hall = Hall::where('is_active', true)->first();
-        $targetDate = Carbon::now()->addDays(2)->format('Y-m-d');
+        $directory = Livewire::test(PublicVenues::class)
+            ->assertSee('id="venue-city"', false)
+            ->assertSee('id="venue-search"', false)
+            ->assertDontSee('Event Date')
+            ->assertDontSee('Min Guests');
 
-        // Create an uppercase AFTERNOON booking
+        $directory
+            ->set('city', $hall->venue->city)
+            ->set('search', $hall->name)
+            ->assertSee($hall->name);
+
+        $directory
+            ->set('search', 'definitely-no-such-wedding-hall')
+            ->assertSee('No venues match these filters');
+    }
+
+    public function test_full_day_booking_blocks_every_shift_in_public_availability_checker(): void
+    {
+        $hall = Hall::where('is_active', true)->first();
+        $eventDate = Carbon::tomorrow()->addDays(8)->format('Y-m-d');
+
         Booking::create([
             'tenant_id' => $hall->tenant_id,
             'hall_id' => $hall->id,
-            'customer_name' => 'Heatmap Test Client',
+            'customer_name' => 'Full Day Availability Test',
             'customer_phone' => '03008887766',
-            'event_date' => $targetDate,
-            'slot_type' => 'AFTERNOON',
+            'event_date' => $eventDate,
+            'slot_type' => 'FULL_DAY',
             'status' => 'CONFIRMED',
             'guest_count' => 200,
             'grand_total' => 150000,
         ]);
 
-        Livewire::test(PublicVenues::class)
-            ->assertViewHas('availability', function ($avail) use ($targetDate) {
-                return isset($avail[$targetDate]) && $avail[$targetDate]['afternoon'] >= 1;
+        Livewire::test(PublicAvailabilityChecker::class)
+            ->set('selectedDate', $eventDate)
+            ->assertViewHas('bookings', function ($bookings) use ($hall) {
+                return $bookings->has($hall->id . '_AFTERNOON')
+                    && $bookings->has($hall->id . '_EVENING')
+                    && $bookings->has($hall->id . '_NIGHT');
             });
     }
 

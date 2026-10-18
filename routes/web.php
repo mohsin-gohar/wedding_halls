@@ -69,7 +69,7 @@ Route::get('/', function () {
 })->name('home');
 
 // Vendor Hall Media (defined before /hall/{id} wildcard)
-Route::middleware(['auth', 'tenant.staff'])->get('/hall/media', HallMediaManager::class)->name('hall.media');
+Route::middleware(['auth', 'tenant.staff', 'portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER'])->get('/hall/media', HallMediaManager::class)->name('hall.media');
 
 // Venue Exploration & Showcase
 Route::get('/venues', PublicVenues::class)->name('public.venues');
@@ -138,19 +138,22 @@ Route::post('/logout', function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'tenant.staff'])->group(function () {
-    Route::get('/dashboard', Dashboard::class)->name('dashboard');
-    Route::get('/vendor/dashboard', Dashboard::class)->name('vendor.dashboard');
-    Route::get('/calendar', CalendarShiftGrid::class)->name('calendar');
-    Route::get('/kitchen-kots', KitchenKotBoard::class)->name('kitchen.board');
-    Route::get('/utility-fuel', UtilityFuelTracker::class)->name('utility.fuel');
-    Route::get('/seating-planner', FloorPlanDesigner::class)->name('seating.planner');
-    Route::get('/whatsapp-rsvps', WhatsAppRsvpManager::class)->name('whatsapp.rsvp');
-    Route::get('/staff', StaffManager::class)->name('staff');
-    Route::get('/staff/attendance', StaffAttendance::class)->name('staff.attendance');
-    Route::get('/staff/payroll', StaffPayroll::class)->name('staff.payroll');
-    Route::get('/inventory', InventoryTracker::class)->name('inventory');
-    Route::get('/catering-packages', PackageManager::class)->name('packages.manager');
-    Route::get('/expenses', ExpenseTracker::class)->name('expenses');
+    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_ACCOUNTANT')->group(function () {
+        Route::get('/dashboard', Dashboard::class)->name('dashboard');
+        Route::get('/vendor/dashboard', Dashboard::class)->name('vendor.dashboard');
+    });
+
+    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_FRONT_DESK,ROLE_FLOOR_STAFF')->get('/calendar', CalendarShiftGrid::class)->name('calendar');
+    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_CHEF,ROLE_FLOOR_STAFF')->get('/kitchen-kots', KitchenKotBoard::class)->name('kitchen.board');
+    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER')->get('/utility-fuel', UtilityFuelTracker::class)->name('utility.fuel');
+    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_FLOOR_STAFF')->get('/seating-planner', FloorPlanDesigner::class)->name('seating.planner');
+    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_FRONT_DESK')->get('/whatsapp-rsvps', WhatsAppRsvpManager::class)->name('whatsapp.rsvp');
+    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER')->get('/staff', StaffManager::class)->name('staff');
+    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_ACCOUNTANT')->get('/staff/attendance', StaffAttendance::class)->name('staff.attendance');
+    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_ACCOUNTANT')->get('/staff/payroll', StaffPayroll::class)->name('staff.payroll');
+    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_CHEF')->get('/inventory', InventoryTracker::class)->name('inventory');
+    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_CHEF')->get('/catering-packages', PackageManager::class)->name('packages.manager');
+    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_ACCOUNTANT')->get('/expenses', ExpenseTracker::class)->name('expenses');
 });
 
 /*

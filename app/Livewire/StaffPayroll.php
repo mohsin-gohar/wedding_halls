@@ -16,6 +16,7 @@ use Livewire\Component;
 class StaffPayroll extends Component
 {
     public string $selectedMonth = '';
+    public string $selectedStaffId = 'ALL';
     public ?string $feedbackMessage = null;
     public ?string $errorMessage = null;
 
@@ -32,6 +33,8 @@ class StaffPayroll extends Component
     public string $editPaymentMethod = 'CASH';
     public string $editNotes = '';
 
+    public bool $updateBaseSalaryOnProfile = false;
+
     // Mark as Paid Modal
     public bool $showPayModal = false;
     public ?string $payingPayrollId = null;
@@ -40,21 +43,40 @@ class StaffPayroll extends Component
 
     public function mount()
     {
-        $user = Auth::user();
-        if (!$user || (!$user->isTenantOwner() && !$user->isManager() && !$user->isSuperAdmin() && !$user->isAccountant())) {
-            abort(403, 'Unauthorized. Only Venue Owners or Accountants have access to Payroll ERP.');
-        }
-
+        $this->authorizePayrollManager();
         $this->selectedMonth = Carbon::today()->format('Y-m');
         $this->payDate = Carbon::today()->format('Y-m-d');
+
+        if (request()->has('staff_id')) {
+            $this->selectedStaffId = (string) request()->query('staff_id');
+        }
+    }
+
+    public function selectStaff(string $staffId): void
+    {
+        $this->selectedStaffId = $staffId;
+    }
+
+    private function authorizePayrollManager(): void
+    {
+        $user = Auth::user();
+        if (!$user || (!$user->isTenantOwner() && !$user->isManager() && !$user->isAccountant()) || !$user->tenant_id) {
+            abort(403, 'Unauthorized. Only Venue Owners or Accountants have access to Payroll ERP.');
+        }
     }
 
     public function generateMonthlyPayroll()
     {
+        $this->authorizePayrollManager();
+        validator(['selectedMonth' => $this->selectedMonth], ['selectedMonth' => 'required|date_format:Y-m'])->validate();
         $tenantId = Auth::user()->tenant_id;
-        $staff = User::where('tenant_id', $tenantId)
+        $staffQuery = User::where('tenant_id', $tenantId)
             ->where('role', '!=', 'ROLE_CUSTOMER')
-            ->get();
+            ->where('status', '!=', 'SUSPENDED');
+        if ($this->selectedStaffId !== 'ALL') {
+            $staffQuery->whereKey($this->selectedStaffId);
+        }
+        $staff = $staffQuery->get();
 
         $monthStart = Carbon::parse($this->selectedMonth . '-01')->startOfMonth();
         $monthEnd = $monthStart->copy()->endOfMonth();
@@ -68,7 +90,7 @@ class StaffPayroll extends Component
                 ->sum('overtime_hours');
 
             // Default basic salary based on role
-            $defaultBasic = match ($m->role) {
+            $defaultBasic = $m->base_salary !== null ? (float) $m->base_salary : match ($m->role) {
                 'ROLE_MANAGER' => 75000.00,
                 'ROLE_CHEF' => 60000.00,
                 'ROLE_ACCOUNTANT' => 50000.00,
@@ -112,6 +134,7 @@ class StaffPayroll extends Component
 
     public function openEditModal(string $payrollId)
     {
+        $this->authorizePayrollManager();
         $record = PayrollModel::where('tenant_id', Auth::user()->tenant_id)->with('user')->findOrFail($payrollId);
         $this->editingPayrollId = $record->id;
         $this->editingEmployeeName = $record->user->name ?? 'Staff';
@@ -123,11 +146,13 @@ class StaffPayroll extends Component
         $this->editNetSalary = (float) $record->net_salary;
         $this->editPaymentMethod = $record->payment_method ?? 'CASH';
         $this->editNotes = $record->notes ?? '';
+        $this->updateBaseSalaryOnProfile = false;
         $this->showEditModal = true;
     }
 
     public function recalculateEditNet()
     {
+        $this->authorizePayrollManager();
         $this->editNetSalary = PayrollModel::calculateNet(
             $this->editBasicSalary,
             $this->editOvertimeHours,
@@ -139,6 +164,7 @@ class StaffPayroll extends Component
 
     public function updatePayroll()
     {
+        $this->authorizePayrollManager();
         $this->validate([
             'editBasicSalary' => 'required|numeric|min:0',
             'editOvertimeHours' => 'required|numeric|min:0',
@@ -147,7 +173,7 @@ class StaffPayroll extends Component
             'editDeductions' => 'required|numeric|min:0',
         ]);
 
-        $record = PayrollModel::where('tenant_id', Auth::user()->tenant_id)->findOrFail($this->editingPayrollId);
+        $record = PayrollModel::where('tenant_id', Auth::user()->tenant_id)->with('user')->findOrFail($this->editingPayrollId);
         $net = PayrollModel::calculateNet(
             $this->editBasicSalary,
             $this->editOvertimeHours,
@@ -167,13 +193,23 @@ class StaffPayroll extends Component
             'notes' => $this->editNotes,
         ]);
 
+        if ($this->updateBaseSalaryOnProfile && $record->user) {
+            $record->user->update(['base_salary' => $this->editBasicSalary]);
+        }
+
         $this->showEditModal = false;
         $this->feedbackMessage = "Salary details updated for [{$this->editingEmployeeName}].";
     }
 
     public function openPayModal(string $payrollId)
     {
-        $this->payingPayrollId = $payrollId;
+        $this->authorizePayrollManager();
+        $record = PayrollModel::where('tenant_id', Auth::user()->tenant_id)->findOrFail($payrollId);
+        if ($record->status === 'PAID') {
+            $this->errorMessage = 'This payroll entry has already been paid.';
+            return;
+        }
+        $this->payingPayrollId = $record->id;
         $this->payMethod = 'BANK_TRANSFER';
         $this->payDate = Carbon::today()->format('Y-m-d');
         $this->showPayModal = true;
@@ -181,7 +217,17 @@ class StaffPayroll extends Component
 
     public function markAsPaid()
     {
+        $this->authorizePayrollManager();
         $record = PayrollModel::where('tenant_id', Auth::user()->tenant_id)->with('user')->findOrFail($this->payingPayrollId);
+        $this->validate([
+            'payDate' => 'required|date',
+            'payMethod' => 'required|in:CASH,BANK_TRANSFER,CHEQUE',
+        ]);
+        if ($record->status === 'PAID') {
+            $this->showPayModal = false;
+            $this->errorMessage = 'This payroll entry has already been paid.';
+            return;
+        }
         
         $record->update([
             'status' => 'PAID',
@@ -217,11 +263,20 @@ class StaffPayroll extends Component
 
     public function render()
     {
+        $this->authorizePayrollManager();
         $tenantId = Auth::user()->tenant_id;
 
-        $payrolls = PayrollModel::where('tenant_id', $tenantId)
+        $payrollQuery = PayrollModel::where('tenant_id', $tenantId)
             ->where('month_year', $this->selectedMonth)
-            ->with('user')
+            ->with(['user' => fn ($query) => $query->withTrashed()]);
+        if ($this->selectedStaffId !== 'ALL') {
+            $payrollQuery->where('user_id', $this->selectedStaffId);
+        }
+        $payrolls = $payrollQuery->get();
+        $staffMembers = User::where('tenant_id', $tenantId)
+            ->where('role', '!=', 'ROLE_CUSTOMER')
+            ->where('status', '!=', 'SUSPENDED')
+            ->orderBy('name')
             ->get();
 
         $totalBasic = $payrolls->sum('basic_salary');
@@ -241,6 +296,7 @@ class StaffPayroll extends Component
             'totalNetPayroll' => $totalNetPayroll,
             'totalPaid' => $totalPaid,
             'totalPending' => $totalPending,
+            'staffMembers' => $staffMembers,
         ]);
     }
 }

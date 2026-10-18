@@ -20,131 +20,29 @@
             </h1>
 
             <p class="text-sm sm:text-base text-stone-300 max-w-2xl mx-auto font-light leading-relaxed">
-                Filter by Pakistani city, guest capacity, event date, shift availability, and budget. Every hall is backed by atomic concurrency protection and real persistent database records.
+                Browse verified wedding halls by city or search directly by hall name.
             </p>
         </div>
     </section>
 
 
-    <!-- ===================================================================
-         SECTION 2: COMPREHENSIVE MULTI-FILTER BAR
-         =================================================================== -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
-        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-6 sm:p-8 shadow-xl space-y-4">
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- ========================================================
-         TWO SEPARATE PROMINENT SEARCH BARS
-         ======================================================== -->
-                <!-- City Search Bar (Full Width Row 1) -->
-                <div class="lg:col-span-4">
-                    <div class="relative">
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-[#C6A15B] mb-2 font-bold">
-                            🏙️ Search by City
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-[#C6A15B]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
-                            </div>
-                            <select wire:model.live="city" class="input-luxury pl-11 w-full text-sm bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30">
-                                <option value="All">— All Cities (Pakistan) —</option>
-                                <option value="Lahore">Lahore</option>
-                                <option value="Karachi">Karachi</option>
-                                <option value="Islamabad">Islamabad</option>
-                                <option value="Rawalpindi">Rawalpindi</option>
-                                <option value="Faisalabad">Faisalabad</option>
-                                <option value="Multan">Multan</option>
-                                <option value="Peshawar">Peshawar</option>
-                                <option value="Sialkot">Sialkot</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Hall Name / Area Search Bar (Full Width Row 2) -->
-                <div class="lg:col-span-4 mt-4">
-                    <div class="relative">
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-[#C6A15B] mb-2 font-bold">
-                            🔍 Search Hall Name or Area
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-[#C6A15B]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                            </div>
-                            <input type="text"
-                                   wire:model.live.debounce.300ms="search"
-                                   placeholder="e.g. Royal Marquee, Pearl Hall, Clifton, DHA, Gulberg..."
-                                   class="input-luxury pl-11 w-full text-sm pr-4 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Event Date -->
-                <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-stone-700 mb-1.5 font-mono">Event Date</label>
-                    <input type="date" wire:model.live="date" class="input-luxury text-sm">
-                </div>
-
-                <!-- Shift -->
-                <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-stone-700 mb-1.5 font-mono">Shift</label>
-                    <select wire:model.live="shift" class="input-luxury text-sm">
-                        <option value="ALL">Any Shift</option>
-                        <option value="AFTERNOON">Afternoon Lunch (12:00 PM - 4:00 PM)</option>
-                        <option value="EVENING">Evening Dinner (6:30 PM - 10:30 PM)</option>
-                        <option value="NIGHT">Late Night Mehndi (11:00 PM - 3:00 AM)</option>
-                    </select>
-                </div>
+    <!-- Focused search: city and hall name -->
+    <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
+        <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)_auto] gap-4 items-end bg-white dark:bg-[#211e1a] border border-[#C6A15B]/35 p-4 sm:p-6 shadow-xl">
+            <div>
+                <label for="venue-city" class="block text-[10px] font-bold uppercase tracking-[0.16em] text-stone-600 dark:text-stone-300 mb-2">City</label>
+                <select id="venue-city" wire:model.live="city" class="input-luxury w-full text-sm dark:bg-[#171513] dark:text-white dark:border-white/15">
+                    <option value="All">All cities</option>
+                    @foreach($cities as $availableCity)
+                        <option value="{{ $availableCity }}">{{ $availableCity }}</option>
+                    @endforeach
+                </select>
             </div>
-
-            <!-- Secondary Filters: Capacity, Facilities & Reset -->
-            <div class="pt-4 border-t border-[#E7E5E4] flex flex-wrap items-center justify-between gap-4">
-                <div class="flex flex-wrap items-center gap-6">
-                    <!-- Min Capacity -->
-                    <div class="flex items-center gap-2 text-xs font-mono">
-                        <span class="font-bold text-stone-700 uppercase tracking-wider text-[11px]">Min Guests:</span>
-                        <select wire:model.live="minCapacity" class="border border-[#E7E5E4] bg-[#F8F5EF] px-2.5 py-1 text-xs font-semibold">
-                            <option value="0">Any Capacity</option>
-                            <option value="150">150+ Guests</option>
-                            <option value="300">300+ Guests</option>
-                            <option value="500">500+ Guests</option>
-                            <option value="800">800+ Guests</option>
-                            <option value="1000">1,000+ Guests</option>
-                        </select>
-                    </div>
-
-                    <!-- Facilities Switches -->
-                    <label class="flex items-center gap-2 text-xs text-stone-700 cursor-pointer font-mono">
-                        <input type="checkbox" wire:model.live="hasAc" class="accent-[#C6A15B]">
-                        <span>Central AC</span>
-                    </label>
-
-                    <label class="flex items-center gap-2 text-xs text-stone-700 cursor-pointer font-mono">
-                        <input type="checkbox" wire:model.live="hasGenerator" class="accent-[#C6A15B]">
-                        <span>100% Generator</span>
-                    </label>
-
-                    <label class="flex items-center gap-2 text-xs text-stone-700 cursor-pointer font-mono">
-                        <input type="checkbox" wire:model.live="hasBridal" class="accent-[#C6A15B]">
-                        <span>Bridal Room</span>
-                    </label>
-                </div>
-
-                <!-- Sort & Clear -->
-                <div class="flex items-center gap-3">
-                    <select wire:model.live="sort" class="border border-[#E7E5E4] bg-[#F8F5EF] px-3 py-1.5 text-xs font-semibold font-mono">
-                        <option value="popular">Sort: Featured</option>
-                        <option value="price_asc">Price: Low to High</option>
-                        <option value="price_desc">Price: High to Low</option>
-                        <option value="capacity_desc">Capacity: Highest First</option>
-                    </select>
-
-                    <button wire:click="resetFilters" class="text-xs text-stone-500 hover:text-stone-900 underline font-semibold font-mono cursor-pointer">
-                        Reset Filters
-                    </button>
-                </div>
+            <div>
+                <label for="venue-search" class="block text-[10px] font-bold uppercase tracking-[0.16em] text-stone-600 dark:text-stone-300 mb-2">Hall name</label>
+                <input id="venue-search" type="search" wire:model.live.debounce.300ms="search" placeholder="Search by hall name" class="input-luxury w-full text-sm dark:bg-[#171513] dark:text-white dark:border-white/15 dark:placeholder:text-stone-500">
             </div>
-
+            <button type="button" wire:click="resetFilters" class="h-11 px-5 border border-[#C6A15B]/60 text-xs font-bold uppercase tracking-wider text-[#6f572b] hover:bg-[#171513] hover:text-white dark:text-[#E8DCBE] dark:hover:bg-[#C6A15B] dark:hover:text-[#171513] transition">Clear filters</button>
         </div>
     </section>
 
@@ -155,11 +53,7 @@
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-6">
         <div class="flex items-center justify-between text-xs text-stone-500 border-b border-[#E7E5E4] pb-3">
             <span>Showing <strong>{{ $halls->total() }}</strong> verified banquet halls</span>
-            @if(!empty($date) && $shift !== 'ALL')
-                <span class="text-[#8F7239] font-semibold font-mono">
-                    ✓ Filtered for available slots on {{ \Carbon\Carbon::parse($date)->format('d M Y') }} ({{ $shift }})
-                </span>
-            @endif
+
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -246,15 +140,20 @@
                         </div>
                     </a>
             @empty
-                <div class="col-span-3 text-center py-16 bg-white border border-[#E7E5E4] space-y-3">
-                    <p class="font-serif-luxury text-2xl text-stone-800">No Venues Match Your Exact Criteria</p>
-                    <p class="text-xs text-stone-500 max-w-md mx-auto">
-                        Try broadening your city selection, adjusting capacity requirements, or resetting filters to explore more banquet halls.
-                    </p>
-                    <div class="pt-2">
-                        <button wire:click="resetFilters" class="btn-gold !h-9 text-xs font-mono">
-                            Clear All Filters
-                        </button>
+                <div class="col-span-1 md:col-span-2 lg:col-span-3 mx-auto w-full max-w-2xl text-center py-14 px-6 bg-white dark:bg-[#211e1a] border border-[#C6A15B]/30 space-y-3">
+                    @if($hasPublicHalls)
+                        <p class="font-serif-luxury text-2xl text-stone-800 dark:text-white">No venues match these filters</p>
+                        <p class="text-sm text-stone-600 dark:text-stone-300 max-w-md mx-auto">Try another city or a shorter hall name to see more verified venues.</p>
+                    @else
+                        <p class="font-serif-luxury text-2xl text-stone-800 dark:text-white">New venues are on their way</p>
+                        <p class="text-sm text-stone-600 dark:text-stone-300 max-w-md mx-auto">Our team is reviewing venue listings. Verified halls will appear here as soon as they are approved.</p>
+                    @endif
+                    <div class="pt-3">
+                        @if($hasPublicHalls)
+                            <button wire:click="resetFilters" class="btn-gold !h-10 !px-5 text-xs">Show all venues</button>
+                        @else
+                            <a href="{{ route('public.contact') }}" class="btn-gold !h-10 !px-5 text-xs">Contact our team</a>
+                        @endif
                     </div>
                 </div>
             @endforelse
