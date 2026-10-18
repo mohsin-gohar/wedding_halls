@@ -215,6 +215,183 @@
     </div>
 
     <!-- ===================================================================
+         HALL ADMIN: DAILY OPERATIONAL KHARCHA & GENERATOR FUEL DESK
+         =================================================================== -->
+    <div class="bg-white dark:bg-[#171513] border-2 border-[#C6A15B] shadow-2xl p-6 relative overflow-hidden space-y-6">
+        <div class="w-full h-1 bg-gradient-to-r from-[#C6A15B] via-[#E8DCBE] to-[#C6A15B] absolute top-0 left-0"></div>
+
+        @if($expenseFeedback)
+            <div class="p-3 bg-[#171513]/90 border border-[#C6A15B]/60 text-[#C6A15B] text-xs font-semibold shadow-md flex justify-between items-center">
+                <span>✓ {{ $expenseFeedback }}</span>
+                <button wire:click="$set('expenseFeedback', null)" class="text-[#C6A15B] font-bold text-sm">&times;</button>
+            </div>
+        @endif
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E7E5E4] dark:border-white/10">
+            <div>
+                <div class="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B] font-bold">
+                    <span class="w-2 h-2 rounded-full bg-[#C6A15B] animate-pulse"></span>
+                    <span>Daily Hall Operations Ledger</span>
+                    <span>•</span>
+                    <span>{{ now()->format('d M Y') }}</span>
+                </div>
+                <h2 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-normal mt-0.5">
+                    Daily Kharcha &amp; Generator Fuel Manager
+                </h2>
+                <p class="text-xs text-stone-500 dark:text-stone-400 font-sans mt-0.5">
+                    Log generator diesel liters, daily staff dihaari, cleaning chemicals, and commercial utility bills in real-time.
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+                <button wire:click="openDailyExpenseModal('GENERATOR_DIESEL')" 
+                        class="btn-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-[0_0_15px_rgba(198,161,91,0.35)] hover:shadow-[0_0_25px_rgba(198,161,91,0.5)] transition flex items-center gap-2">
+                    <span>⛽</span>
+                    <span>+ Log Generator Fuel</span>
+                </button>
+                <button wire:click="openDailyExpenseModal('STAFF_DAILY_WAGES')" 
+                        class="btn-outline-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-sm hover:bg-[#C6A15B]/10 transition flex items-center gap-2">
+                    <span>💸</span>
+                    <span>+ Add Daily Kharcha</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 4 Daily Operational Pillars -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- 1. Generator Fuel -->
+            <div class="p-4 bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-1">
+                <div class="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400 font-bold">
+                    <span>⛽ Generator Fuel Today</span>
+                    <span class="text-[#8F7239] dark:text-[#C6A15B]">{{ $todayDieselLiters > 0 ? $todayDieselLiters . ' L' : '0 L' }}</span>
+                </div>
+                <div class="text-2xl font-cinzel font-bold text-[#171513] dark:text-white">
+                    Rs {{ number_format($todayDieselCost) }}
+                </div>
+                <span class="text-[10px] text-stone-500 font-mono block">Diesel refill &amp; standby gen-set</span>
+            </div>
+
+            <!-- 2. Total Kharcha Today -->
+            <div class="p-4 bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-1">
+                <div class="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400 font-bold">
+                    <span>💸 Total Daily Kharcha</span>
+                    <span class="text-rose-500 font-bold">Outflow</span>
+                </div>
+                <div class="text-2xl font-cinzel font-bold text-rose-600 dark:text-rose-400">
+                    Rs {{ number_format($todayExpensesSum) }}
+                </div>
+                <span class="text-[10px] text-stone-500 font-mono block">Staff wages: Rs {{ number_format($todayWagesCost) }}</span>
+            </div>
+
+            <!-- 3. Cash Inflow Today -->
+            <div class="p-4 bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-1">
+                <div class="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400 font-bold">
+                    <span>💵 Token Advance Inflow</span>
+                    <span class="text-emerald-500 font-bold">Inflow</span>
+                </div>
+                <div class="text-2xl font-cinzel font-bold text-emerald-600 dark:text-emerald-400">
+                    Rs {{ number_format($todayCashInflow) }}
+                </div>
+                <span class="text-[10px] text-stone-500 font-mono block">Shift booking deposits</span>
+            </div>
+
+            <!-- 4. Net Daily Balance -->
+            <div class="p-4 bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-1">
+                <div class="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400 font-bold">
+                    <span>⚖️ Net Daily Drawer Balance</span>
+                    <span class="font-mono">{{ $todayNetBalance >= 0 ? '+' : '' }}</span>
+                </div>
+                <div class="text-2xl font-cinzel font-bold {{ $todayNetBalance >= 0 ? 'text-[#8F7239] dark:text-[#C6A15B]' : 'text-rose-500' }}">
+                    Rs {{ number_format($todayNetBalance) }}
+                </div>
+                <span class="text-[10px] text-stone-500 font-mono block">Cash in drawer minus kharcha</span>
+            </div>
+        </div>
+
+        <!-- Recent Daily Expenses Table -->
+        <div class="space-y-3 pt-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-mono font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B]">
+                    Recent Daily Expenses &amp; Fuel Entries
+                </span>
+                <a href="{{ route('expenses') }}" class="text-xs text-[#8F7239] dark:text-[#C6A15B] hover:underline font-mono">
+                    View Full Financial Register &rarr;
+                </a>
+            </div>
+
+            <div class="overflow-x-auto border border-[#E7E5E4] dark:border-white/10">
+                <table class="w-full text-xs text-left border-collapse">
+                    <thead>
+                        <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] font-mono uppercase tracking-wider text-stone-600 dark:text-stone-400">
+                            <th class="p-3">Date</th>
+                            <th class="p-3">Category</th>
+                            <th class="p-3">Description / Hall</th>
+                            <th class="p-3">Payee / Vendor</th>
+                            <th class="p-3">Payment Mode</th>
+                            <th class="p-3 text-right">Amount (PKR)</th>
+                            <th class="p-3 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#E7E5E4] dark:divide-white/10 font-sans">
+                        @forelse($recentExpenses as $exp)
+                            <tr class="hover:bg-stone-50 dark:hover:bg-white/5 transition">
+                                <td class="p-3 font-mono text-[11px] text-stone-600 dark:text-stone-400 whitespace-nowrap">
+                                    {{ $exp->expense_date ? $exp->expense_date->format('d M Y') : '—' }}
+                                </td>
+                                <td class="p-3 whitespace-nowrap">
+                                    @php
+                                        $catBadge = match($exp->category) {
+                                            'GENERATOR_DIESEL' => 'bg-amber-500/15 text-amber-600 border-amber-500/30',
+                                            'STAFF_DAILY_WAGES' => 'bg-blue-500/15 text-blue-600 border-blue-500/30',
+                                            'CLEANING_HYGIENE' => 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30',
+                                            'WAPDA_ELECTRICITY' => 'bg-yellow-500/15 text-yellow-600 border-yellow-500/30',
+                                            'CHILLER_AC' => 'bg-cyan-500/15 text-cyan-600 border-cyan-500/30',
+                                            'KITCHEN_GAS' => 'bg-rose-500/15 text-rose-600 border-rose-500/30',
+                                            default => 'bg-stone-500/15 text-stone-600 border-stone-500/30',
+                                        };
+                                    @endphp
+                                    <span class="px-2 py-0.5 text-[9px] font-mono uppercase font-bold border {{ $catBadge }}">
+                                        {{ str_replace('_', ' ', $exp->category) }}
+                                    </span>
+                                </td>
+                                <td class="p-3">
+                                    <div class="font-bold text-[#171513] dark:text-white">{{ $exp->title }}</div>
+                                    @if($exp->hall)
+                                        <span class="text-[10px] text-[#8F7239] dark:text-[#C6A15B] font-mono block">{{ $exp->hall->name }}</span>
+                                    @endif
+                                </td>
+                                <td class="p-3 text-stone-600 dark:text-stone-300 font-mono text-[11px]">
+                                    {{ $exp->payee ?? '—' }}
+                                </td>
+                                <td class="p-3 text-stone-600 dark:text-stone-400 font-mono text-[11px]">
+                                    {{ $exp->payment_method ?? 'CASH' }}
+                                </td>
+                                <td class="p-3 text-right font-mono font-bold text-sm text-[#171513] dark:text-white whitespace-nowrap">
+                                    Rs {{ number_format($exp->amount) }}
+                                </td>
+                                <td class="p-3 text-right">
+                                    <button wire:click="deleteDailyExpense('{{ $exp->id }}')" 
+                                            onclick="return confirm('Delete this expense record?')"
+                                            class="text-rose-500 hover:text-rose-700 font-mono text-[11px] hover:underline">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="p-8 text-center text-xs text-stone-500 dark:text-stone-400 font-sans">
+                                    No daily expenses logged today yet. Click <strong>+ Log Generator Fuel</strong> or <strong>+ Add Daily Kharcha</strong> to record operational costs.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================
          FINANCIAL & PERFORMANCE KPI CARDS
          =================================================================== -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -979,6 +1156,195 @@
                         Close
                     </button>
                 </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- ===================================================================
+         MODAL: QUICK DAILY KHARCHA & GENERATOR FUEL ENTRY
+         =================================================================== -->
+    @if($showDailyExpenseModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+            <div class="bg-white dark:bg-[#171513] border-2 border-[#C6A15B] max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative my-8">
+                <button wire:click="closeDailyExpenseModal" class="absolute top-4 right-4 text-stone-400 hover:text-stone-700 dark:hover:text-white text-xl font-mono">&times;</button>
+
+                <div class="space-y-1">
+                    <span class="text-[10px] font-mono uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B] font-bold block">
+                        Operational Kharcha Desk
+                    </span>
+                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-normal">
+                        Record Daily Expense / Generator Fuel
+                    </h3>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 font-sans">
+                        Logged amounts automatically sync with P&amp;L reports, cash drawers, and generator logs.
+                    </p>
+                </div>
+
+                @if($expenseError)
+                    <div class="p-3 bg-red-950/40 border border-red-700/60 text-red-300 text-xs font-mono font-medium">
+                        ⚠️ {{ $expenseError }}
+                    </div>
+                @endif
+
+                <form wire:submit="saveDailyExpense" class="space-y-4">
+                    <!-- Category Selector (Interactive Quick Pills) -->
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-mono font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
+                            Expense Category *
+                        </label>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-mono">
+                            @foreach([
+                                'GENERATOR_DIESEL' => '⛽ Gen Fuel',
+                                'STAFF_DAILY_WAGES' => '👥 Staff Wages',
+                                'CLEANING_HYGIENE' => '🧹 Cleaning',
+                                'WAPDA_ELECTRICITY' => '💡 WAPDA/Power',
+                                'CHILLER_AC' => '❄️ AC/Chiller',
+                                'KITCHEN_GAS' => '🍽️ Kitchen Gas',
+                                'MISC_OPERATIONAL' => '🏷️ Misc Other'
+                            ] as $catKey => $catLabel)
+                                <button type="button" 
+                                        wire:click="$set('expenseCategory', '{{ $catKey }}'); syncCategoryAmounts();"
+                                        class="px-2.5 py-2 text-xs font-mono font-bold uppercase border transition text-left truncate {{ $expenseCategory === $catKey ? 'bg-[#C6A15B] text-[#171513] border-[#C6A15B]' : 'bg-stone-50 dark:bg-white/5 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-white/10 hover:border-[#C6A15B]' }}">
+                                    {{ $catLabel }}
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Category Specific: Generator Fuel Inputs -->
+                    @if($expenseCategory === 'GENERATOR_DIESEL')
+                        <div class="p-4 bg-[#C6A15B]/10 border border-[#C6A15B]/40 space-y-3 font-mono">
+                            <span class="text-[10px] uppercase font-bold text-[#8F7239] dark:text-[#C6A15B] block">
+                                ⛽ Standby Generator Consumption Calculator:
+                            </span>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-[10px] text-stone-600 dark:text-stone-400 uppercase">Diesel Liters</label>
+                                    <input type="number" step="0.5" min="1" wire:model.live="fuelDieselLiters" 
+                                           class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] text-stone-600 dark:text-stone-400 uppercase">Rate/Liter (PKR)</label>
+                                    <input type="number" step="1" min="1" wire:model.live="fuelRatePerLiter" 
+                                           class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] text-stone-600 dark:text-stone-400 uppercase">Run Hours</label>
+                                    <input type="number" step="0.5" min="0" wire:model="fuelRunHours" 
+                                           class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
+                                </div>
+                            </div>
+                            <div class="text-[11px] text-stone-600 dark:text-stone-300 font-sans">
+                                Calculated Fuel Cost: <strong class="text-[#8F7239] dark:text-[#C6A15B] font-mono">Rs {{ number_format($fuelDieselLiters * $fuelRatePerLiter) }}</strong> ({{ $fuelDieselLiters }}L × Rs {{ $fuelRatePerLiter }})
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Category Specific: WAPDA Inputs -->
+                    @if($expenseCategory === 'WAPDA_ELECTRICITY')
+                        <div class="p-4 bg-[#C6A15B]/10 border border-[#C6A15B]/40 space-y-3 font-mono">
+                            <span class="text-[10px] uppercase font-bold text-[#8F7239] dark:text-[#C6A15B] block">
+                                💡 Commercial Electricity Calculator:
+                            </span>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[10px] text-stone-600 dark:text-stone-400 uppercase">Units Consumed</label>
+                                    <input type="number" step="1" min="1" wire:model.live="electricityUnits" 
+                                           class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] text-stone-600 dark:text-stone-400 uppercase">Unit Tariff (PKR)</label>
+                                    <input type="number" step="1" min="1" wire:model.live="electricityUnitRate" 
+                                           class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
+                                </div>
+                            </div>
+                            <div class="text-[11px] text-stone-600 dark:text-stone-300 font-sans">
+                                Calculated Power Cost: <strong class="text-[#8F7239] dark:text-[#C6A15B] font-mono">Rs {{ number_format($electricityUnits * $electricityUnitRate) }}</strong>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- General Inputs: Title & Amount -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="sm:col-span-2">
+                            <label class="block text-[11px] font-mono font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1">
+                                Expense Description / Item Title *
+                            </label>
+                            <input type="text" wire:model="expenseTitle" required placeholder="e.g. Generator Diesel Refill, 10 Waiters Barat Shift Dihaari..." 
+                                   class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
+                            @error('expenseTitle') <span class="text-rose-500 text-xs font-mono">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-mono font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1">
+                                Total Amount (PKR) *
+                            </label>
+                            <input type="number" step="1" min="1" wire:model="expenseAmount" required 
+                                   class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs font-bold w-full">
+                            @error('expenseAmount') <span class="text-rose-500 text-xs font-mono">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-mono font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1">
+                                Expense Date *
+                            </label>
+                            <input type="date" wire:model="expenseDate" required 
+                                   class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
+                            @error('expenseDate') <span class="text-rose-500 text-xs font-mono">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-mono font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1">
+                                Hall / Space
+                            </label>
+                            <select wire:model="expenseHallId" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
+                                <option value="">General Hall Expense</option>
+                                @foreach($halls as $hall)
+                                    <option value="{{ $hall->id }}">{{ $hall->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-mono font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1">
+                                Payment Mode *
+                            </label>
+                            <select wire:model="expensePaymentMethod" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
+                                <option value="CASH">Cash from Drawer</option>
+                                <option value="BANK_TRANSFER">Bank Transfer</option>
+                                <option value="CHEQUE">Bank Cheque</option>
+                                <option value="CREDIT_LEDGER">Vendor Credit / Udhaar</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-mono font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1">
+                                Payee / Supplier Name
+                            </label>
+                            <input type="text" wire:model="expensePayee" placeholder="e.g. PSO Petrol Pump, Ustad Aslam Bawarchi, Staff..." 
+                                   class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-mono font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1">
+                                Bill / Receipt #
+                            </label>
+                            <input type="text" wire:model="expenseReceiptNumber" placeholder="e.g. PSO-8891, CASH-04" 
+                                   class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 flex justify-end gap-3">
+                        <button type="button" wire:click="closeDailyExpenseModal" 
+                                class="px-4 py-2 border border-stone-300 dark:border-white/20 text-xs font-mono uppercase font-bold text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-white/5">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="btn-gold !h-10 !px-6 text-xs font-bold uppercase font-mono shadow-[0_0_15px_rgba(198,161,91,0.35)] hover:shadow-[0_0_25px_rgba(198,161,91,0.5)] transition">
+                            Save Daily Kharcha Record &rarr;
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     @endif

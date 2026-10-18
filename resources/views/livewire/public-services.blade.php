@@ -1,7 +1,7 @@
 <div class="bg-[#F8F5EF] dark:bg-[#171513] text-[#171513] dark:text-[#F8F5EF] min-h-screen">
 
     <!-- ===================================================================
-         SECTION 1: HERO & HOSPITALITY EXCELLENCE HEADLINE
+         SECTION 1: HERO — SERVICES EVENTHUB PROVIDES TO HALL OWNERS
          =================================================================== -->
     <section class="parallax-window relative bg-[#171513] text-white py-20 border-b border-[#C6A15B]/30 overflow-hidden">
         <div class="parallax-bg opacity-75" data-parallax="0.25"
@@ -13,78 +13,87 @@
         <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 text-center">
             <div class="inline-flex items-center gap-2.5 px-4 py-1.5 border border-[#C6A15B]/50 bg-[#171513]/90 text-[#C6A15B] text-[11px] font-semibold tracking-[0.22em] uppercase font-mono">
                 <span class="w-1.5 h-1.5 bg-[#C6A15B]"></span>
-                <span>Hospitality Excellence &amp; Turnkey Banqueting</span>
+                <span>Services We Provide to Wedding Hall Owners</span>
             </div>
 
             <h1 class="font-serif-luxury text-4xl sm:text-6xl text-white font-normal max-w-4xl mx-auto leading-tight">
-                Bespoke Event &amp; Venue Services
+                Everything Your Hall Needs to Run Digitally
             </h1>
 
             <p class="text-sm sm:text-base text-stone-300 max-w-2xl mx-auto font-light leading-relaxed">
-                EventHub partners with premier wedding halls equipped with enterprise-grade operational facilities, guaranteed continuous power, VIP bridal lounges, and culinary excellence.
+                EventHub gives every wedding hall, marquee, and banquet owner a dedicated public website, a private Rent&nbsp;Admin dashboard, an atomic zero double-booking calendar, kitchen KOT slips, staff &amp; payroll tools, expense tracking, and printable legal documents — all in one SaaS platform.
             </p>
+
+            <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
+                <a href="{{ route('register') }}" class="btn-gold !h-11 !px-6 text-xs font-bold uppercase font-mono">
+                    List Your Hall on EventHub &rarr;
+                </a>
+                <a href="{{ route('public.contact') }}" class="btn-outline-gold !h-11 !px-6 text-xs font-bold uppercase font-mono">
+                    Talk to Our Onboarding Team
+                </a>
+            </div>
         </div>
     </section>
 
 
     <!-- ===================================================================
-         SECTION 2: CORE OPERATIONAL PILLARS (3 Pillar Cards)
+         SECTION 2: CORE PLATFORM SERVICES (3 Pillar Cards)
          =================================================================== -->
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-10">
         <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-4 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
                 <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8F7239] font-bold block">
-                    Infrastructure Grade
+                    What Every Hall Owner Gets
                 </span>
                 <h2 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white font-normal">
-                    Core Operational Facilities
+                    Core Platform Services
                 </h2>
             </div>
             <p class="text-xs text-stone-500 dark:text-stone-400 font-mono">
-                Engineered for flawless wedding execution without unexpected interruptions
+                A complete digital operating system for your banquet business
             </p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- 1. Generator Backup -->
+            <!-- 1. Dedicated Public Website -->
             <div class="editorial-card p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-4 shadow-sm hover:shadow-md transition">
                 <div class="w-12 h-12 bg-[#171513] text-[#C6A15B] border border-[#C6A15B] flex items-center justify-center font-cinzel text-xl font-bold">
                     01
                 </div>
-                <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">100% Generator Backup</h3>
+                <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Dedicated Public Website</h3>
                 <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
-                    Heavy-duty Caterpillar &amp; Cummins 500kVA automated diesel generators ensuring uninterrupted air conditioning, crystal chandeliers, and sound systems through any WAPDA grid load-shedding.
+                    Every registered hall gets its own shareable website page — with your photo gallery, 4K video tour, capacity &amp; rent details, services catalog, catering menus, live shift calendar, and WhatsApp concierge button. Share one link with clients and start receiving bookings.
                 </p>
                 <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 text-[11px] font-bold uppercase tracking-wider text-[#8F7239] font-mono">
-                    Zero-Flicker Synchronization Guaranteed
+                    Free With Every Subscription
                 </div>
             </div>
 
-            <!-- 2. VIP Bridal Suites -->
+            <!-- 2. Rent Admin Dashboard -->
             <div class="editorial-card p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-4 shadow-sm hover:shadow-md transition">
                 <div class="w-12 h-12 bg-[#171513] text-[#C6A15B] border border-[#C6A15B] flex items-center justify-center font-cinzel text-xl font-bold">
                     02
                 </div>
-                <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">VIP Bridal Dressing Suites</h3>
+                <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Private Rent Admin Dashboard</h3>
                 <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
-                    Private air-conditioned bridal sanctuaries featuring full-length Hollywood vanity mirrors, luxury attached washrooms, secure dress vaults, and discrete stage entrances.
+                    A fully isolated back-office for your hall only: bookings &amp; CRM pipeline, sales charts, customer records, payments, printable A4 agreements, quotations, invoices and thermal receipts — with strict multi-tenant data privacy.
                 </p>
                 <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 text-[11px] font-bold uppercase tracking-wider text-[#8F7239] font-mono">
-                    Private Family Lounge Included
+                    Role-Based Staff Access
                 </div>
             </div>
 
-            <!-- 3. Mughlai Catering -->
+            <!-- 3. Atomic Booking Calendar -->
             <div class="editorial-card p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-4 shadow-sm hover:shadow-md transition">
                 <div class="w-12 h-12 bg-[#171513] text-[#C6A15B] border border-[#C6A15B] flex items-center justify-center font-cinzel text-xl font-bold">
                     03
                 </div>
-                <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Five-Star Culinary Banquets</h3>
+                <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Zero Double-Booking Calendar</h3>
                 <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
-                    Authentic Pakistani wedding catering by master Bawarchis. Live charcoal Seekh Kababs, slow-simmered Mutton Qorma Mughlai, and Dum Pukht aromatic Basmati Pulao.
+                    Your hall's 3-shift matrix (Afternoon, Evening, Night) is protected by distributed locks and ACID row-level locking. Once a date-shift is confirmed — online, on phone, or walk-in — no second customer can ever overlap it.
                 </p>
                 <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 text-[11px] font-bold uppercase tracking-wider text-[#8F7239] font-mono">
-                    Standardized KOT Recipe Portions
+                    Concurrency Safe by Design
                 </div>
             </div>
         </div>
@@ -92,62 +101,104 @@
 
 
     <!-- ===================================================================
-         SECTION 3: SPECIALIZED EVENT ENHANCEMENTS
+         SECTION 3: DAILY OPERATIONS ERP SUITE
          =================================================================== -->
     <section class="py-16 bg-[#F8F5EF]/50 dark:bg-[#171513]/60 border-t border-b border-[#E7E5E4] dark:border-white/10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
             <div class="text-center space-y-2 max-w-2xl mx-auto">
                 <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8F7239] font-bold block">
-                    Bespoke Additions
+                    Daily Operations Suite
                 </span>
                 <h2 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white font-normal">
-                    Specialized Event Enhancements
+                    Run Every Department From One Panel
                 </h2>
                 <p class="text-xs text-stone-600 dark:text-stone-300 font-sans">
-                    Premium hospitality logistics managed by certified venue coordinators.
+                    Kitchen, inventory, staff, money, and guest communication — the full ERP modules included with your EventHub subscription.
                 </p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- 4. Valet Parking -->
+                <!-- 4. Kitchen KOT Board -->
                 <div class="editorial-card p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-4">
                     <div class="w-12 h-12 bg-[#171513] text-[#C6A15B] border border-[#C6A15B] flex items-center justify-center font-cinzel text-xl font-bold">
                         04
                     </div>
-                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Valet &amp; Paved Parking</h3>
+                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Kitchen KOT Order Slips</h3>
                     <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
-                        Dedicated uniform valet chauffeurs, paved parking courts for 400+ vehicles, armed security guards, and red-carpet drop-off porch under covered weather porticos.
+                        Every confirmed booking auto-generates a Kitchen Order Ticket with exact meat, rice, and oil ratios from the guest count. Head chefs track PENDING &rarr; PREPARING &rarr; SERVED status live on the KOT board.
                     </p>
                     <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 text-[11px] font-bold uppercase tracking-wider text-[#8F7239] font-mono">
-                        Surveillance Monitored Lots
+                        Auto Bawarchi Ratios
                     </div>
                 </div>
 
-                <!-- 5. Sound & Lighting -->
+                <!-- 5. Inventory Tracker -->
                 <div class="editorial-card p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-4">
                     <div class="w-12 h-12 bg-[#171513] text-[#C6A15B] border border-[#C6A15B] flex items-center justify-center font-cinzel text-xl font-bold">
                         05
                     </div>
-                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Concert-Grade Sound &amp; Audio</h3>
+                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Raw Ingredient Inventory</h3>
                     <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
-                        Acoustically calibrated line-array sound systems for Qawwali nights and Dholak performances. Dynamic stage pin-spot lighting and high-definition P3 LED backdrops.
+                        Track mutton, chicken, basmati rice, ghee, and grocery stock with unit costs, low-stock alerts, consumption logs against bookings, and purchase orders for your suppliers.
                     </p>
                     <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 text-[11px] font-bold uppercase tracking-wider text-[#8F7239] font-mono">
-                        Sound Engineer on Duty
+                        Stock Depletion Per Event
                     </div>
                 </div>
 
-                <!-- 6. Floral Stage Styling -->
+                <!-- 6. Staff, Attendance & Payroll -->
                 <div class="editorial-card p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-4">
                     <div class="w-12 h-12 bg-[#171513] text-[#C6A15B] border border-[#C6A15B] flex items-center justify-center font-cinzel text-xl font-bold">
                         06
                     </div>
-                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Bespoke Floral Stage Decor</h3>
+                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Staff, Attendance &amp; Payroll</h3>
                     <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
-                        Fresh floral backdrops featuring imported gladiolus, roses, and baby's breath. Royal carved velvet lounges, candlelit walkways, and indoor cold-fire sparkle fireworks.
+                        Register waiters, chefs, and security with roles &amp; permissions. Mark daily attendance with overtime, manage leaves, and generate monthly salary slips as printable PDFs.
                     </p>
                     <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 text-[11px] font-bold uppercase tracking-wider text-[#8F7239] font-mono">
-                        Custom Color Themes Available
+                        Printable Salary Slips
+                    </div>
+                </div>
+
+                <!-- 7. Expense & Fuel Register -->
+                <div class="editorial-card p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-4">
+                    <div class="w-12 h-12 bg-[#171513] text-[#C6A15B] border border-[#C6A15B] flex items-center justify-center font-cinzel text-xl font-bold">
+                        07
+                    </div>
+                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Expense &amp; Generator Fuel Register</h3>
+                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
+                        Log diesel refuels with run-hours and per-litre rates, WAPDA electricity units, decor, salaries, and miscellaneous kharcha — then see category-wise expense reports for your hall.
+                    </p>
+                    <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 text-[11px] font-bold uppercase tracking-wider text-[#8F7239] font-mono">
+                        Per-Event Utility Costing
+                    </div>
+                </div>
+
+                <!-- 8. WhatsApp RSVP Manager -->
+                <div class="editorial-card p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-4">
+                    <div class="w-12 h-12 bg-[#171513] text-[#C6A15B] border border-[#C6A15B] flex items-center justify-center font-cinzel text-xl font-bold">
+                        08
+                    </div>
+                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">WhatsApp RSVP Manager</h3>
+                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
+                        Send wedding invitations over WhatsApp, collect RSVP replies automatically through the Meta Cloud API webhook, and monitor guest headcounts per booking from a single board.
+                    </p>
+                    <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 text-[11px] font-bold uppercase tracking-wider text-[#8F7239] font-mono">
+                        Two-Way Automated Replies
+                    </div>
+                </div>
+
+                <!-- 9. Seating & Floor Plan Designer -->
+                <div class="editorial-card p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-4">
+                    <div class="w-12 h-12 bg-[#171513] text-[#C6A15B] border border-[#C6A15B] flex items-center justify-center font-cinzel text-xl font-bold">
+                        09
+                    </div>
+                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Seating &amp; Floor Plan Designer</h3>
+                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
+                        Design table layouts for each function — stage, dance floor, VIP sofas, and round tables — so your floor staff knows exactly where every family sits before the Barat walk-in.
+                    </p>
+                    <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 text-[11px] font-bold uppercase tracking-wider text-[#8F7239] font-mono">
+                        Saved Per Booking
                     </div>
                 </div>
             </div>
@@ -156,45 +207,45 @@
 
 
     <!-- ===================================================================
-         SECTION 4: DIGITAL SAAS SAFEGUARDS (Behind the Scenes)
+         SECTION 4: DOCUMENTS, EXPOSURE & SECURITY
          =================================================================== -->
     <section class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-4 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
                 <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8F7239] font-bold block">
-                    Software Integrity
+                    Business Growth &amp; Compliance
                 </span>
                 <h2 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white font-normal">
-                    Technological Guarantees
+                    Documents, Exposure &amp; Security
                 </h2>
             </div>
             <p class="text-xs text-stone-500 dark:text-stone-400 font-mono">
-                Advanced software mechanisms protecting your event booking
+                Everything around the booking — paperwork, marketing, and data protection
             </p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div class="p-6 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-2">
-                <span class="text-xs font-mono font-bold text-[#8F7239] uppercase">Zero Overlap</span>
-                <h4 class="font-serif-luxury text-xl text-[#171513] dark:text-white">Atomic Shift Lock</h4>
+                <span class="text-xs font-mono font-bold text-[#8F7239] uppercase">Printable Documents</span>
+                <h4 class="font-serif-luxury text-xl text-[#171513] dark:text-white">A4 Contracts, Invoices &amp; Receipts</h4>
                 <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
-                    Database isolation ensures that once your date and shift are confirmed, it cannot be overridden or double-booked by any other customer.
+                    Generate official booking agreements, quotations, tax invoices, thermal payment receipts, chef KOT slips, and staff salary slips — printable or downloadable as PDF, always on your letterhead.
                 </p>
             </div>
 
             <div class="p-6 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-2">
-                <span class="text-xs font-mono font-bold text-[#8F7239] uppercase">Instant Accountability</span>
-                <h4 class="font-serif-luxury text-xl text-[#171513] dark:text-white">Automated WhatsApp Receipts</h4>
+                <span class="text-xs font-mono font-bold text-[#8F7239] uppercase">Free Marketplace Exposure</span>
+                <h4 class="font-serif-luxury text-xl text-[#171513] dark:text-white">Listed on the Public Marketplace</h4>
                 <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
-                    Token deposits and milestone payments generate an instant PDF receipt dispatched directly to your mobile phone via WhatsApp.
+                    Your hall appears in EventHub's public venue discovery, live availability checker, gallery, and search — in front of every couple actively comparing verified banquets in your city.
                 </p>
             </div>
 
             <div class="p-6 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-2">
-                <span class="text-xs font-mono font-bold text-[#8F7239] uppercase">Culinary Precision</span>
-                <h4 class="font-serif-luxury text-xl text-[#171513] dark:text-white">Chef Kitchen KOT Slips</h4>
+                <span class="text-xs font-mono font-bold text-[#8F7239] uppercase">Multi-Tenant Security</span>
+                <h4 class="font-serif-luxury text-xl text-[#171513] dark:text-white">Your Data Stays Yours</h4>
                 <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
-                    Head chefs receive precise meat and rice ratios calculated automatically from your confirmed guest headcount.
+                    Strict tenant isolation keeps one hall's bookings, payments, and customers invisible to every other hall. Role-based access lets owners decide exactly what managers, accountants, and chefs can see.
                 </p>
             </div>
         </div>
@@ -202,53 +253,53 @@
 
 
     <!-- ===================================================================
-         SECTION 5: HOSPITALITY QUALITY SLA & SAFETY STANDARDS
+         SECTION 5: ONBOARDING, SUPPORT & SUBSCRIPTION INCLUDED
          =================================================================== -->
     <section class="py-16 bg-[#F8F5EF] dark:bg-[#171513] border-t border-[#E7E5E4] dark:border-white/10">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 text-center">
             <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8F7239] font-bold block">
-                Quality Assurance
+                Onboarding &amp; Support
             </span>
             <h3 class="font-serif-luxury text-3xl text-[#171513] dark:text-white font-normal">
-                Our Hospitality Service Level Agreement
+                From Registration to First Online Booking
             </h3>
             <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed max-w-2xl mx-auto">
-                Every EventHub certified banquet is inspected for fire safety clearance, HVAC chiller temperature stability, commercial water filtration, and professional staff uniforms.
+                Our team verifies your business credentials, builds your hall profile, uploads your gallery, and hands you the Rent Admin login — usually within 48 hours. Every plan starts with a free trial.
             </p>
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-xs font-mono text-stone-700 dark:text-stone-300">
-                <div class="p-3 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10">✓ 1:15 Waiter Ratio</div>
-                <div class="p-3 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10">✓ Emergency Medical Box</div>
-                <div class="p-3 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10">✓ 100% CCTV Security</div>
-                <div class="p-3 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10">✓ Clean Restroom Attendant</div>
+                <div class="p-3 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10">✓ Free 14-Day Trial</div>
+                <div class="p-3 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10">✓ Free Gallery Upload</div>
+                <div class="p-3 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10">✓ WhatsApp Support Desk</div>
+                <div class="p-3 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10">✓ Cancel Anytime</div>
             </div>
         </div>
     </section>
 
 
     <!-- ===================================================================
-         SECTION 6: CONCIERGE CONSULTATION CTA
+         SECTION 6: HALL OWNER CTA
          =================================================================== -->
     <section class="py-16 bg-[#171513] text-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-8">
             <div class="space-y-2">
                 <span class="text-[10px] font-mono uppercase tracking-widest text-[#C6A15B] block font-bold">
-                    Need Customized Arrangements?
+                    Ready to Go Digital?
                 </span>
                 <h3 class="font-serif-luxury text-2xl sm:text-3xl font-normal text-white">
-                    Speak Directly with Our Banquet Concierge
+                    Put Your Hall on EventHub Today
                 </h3>
                 <p class="text-xs text-stone-300 font-light max-w-xl">
-                    Our wedding managers can coordinate with verified venue owners to customize catering, stage decor, and VIP seating layouts.
+                    Join the platform where couples check availability, book shifts, and pay advances online — while you manage everything from one dashboard.
                 </p>
             </div>
 
             <div class="flex flex-wrap items-center gap-4 shrink-0">
-                <button type="button" onclick="Livewire.dispatch('openWalkInModal')" class="btn-gold !h-11 !px-6 text-xs font-bold uppercase font-mono">
-                    Reserve Your Date
-                </button>
+                <a href="{{ route('register') }}" class="btn-gold !h-11 !px-6 text-xs font-bold uppercase font-mono">
+                    Register Your Hall &rarr;
+                </a>
                 <a href="{{ route('public.contact') }}" class="btn-outline-gold !h-11 !px-6 text-xs font-bold uppercase font-mono">
-                    Speak with Concierge &rarr;
+                    Speak with Sales &rarr;
                 </a>
             </div>
         </div>

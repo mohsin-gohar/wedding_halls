@@ -127,6 +127,26 @@ class DatabaseSeeder extends Seeder
         ]);
         $adminUser->assignRole('ROLE_SUPER_ADMIN');
 
+        $ownerUser = User::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Chaudhry Tariq (Hall Owner)',
+            'email' => 'owner@venuecloud.pk',
+            'phone' => '+92 300 7654321',
+            'role' => 'ROLE_TENANT_OWNER',
+            'password' => Hash::make('password'),
+        ]);
+        $ownerUser->assignRole('ROLE_TENANT_OWNER');
+
+        $customerUser = User::create([
+            'tenant_id' => null,
+            'name' => 'Hamza Ali (Client)',
+            'email' => 'customer@example.com',
+            'phone' => '+92 301 1122334',
+            'role' => 'ROLE_CUSTOMER',
+            'password' => Hash::make('password'),
+        ]);
+        $customerUser->assignRole('ROLE_CUSTOMER');
+
         $frontDeskUser = User::create([
             'tenant_id' => $tenant->id,
             'name' => 'Usman Tariq (Front Desk)',

@@ -110,7 +110,11 @@
                             <a href="{{ route('admin.dashboard') }}" class="btn-gold !h-9 !px-3 !py-1 !text-[10px] shadow-[0_0_15px_rgba(198,161,91,0.3)] inline-flex items-center gap-1.5 font-bold whitespace-nowrap">
                                 <span>Owner Dashboard</span>
                             </a>
-                        @elseif(auth()->user()->isTenantOwner())
+                        @elseif(auth()->user()->isCustomer())
+                            <a href="{{ route('customer.dashboard') }}" class="btn-gold !h-9 !px-3 !py-1 !text-[10px] shadow-[0_0_15px_rgba(198,161,91,0.3)] inline-flex items-center gap-1.5 font-bold whitespace-nowrap">
+                                <span>My Bookings</span>
+                            </a>
+                        @else
                             <a href="{{ route('dashboard') }}" class="btn-gold !h-9 !px-3 !py-1 !text-[10px] shadow-[0_0_15px_rgba(198,161,91,0.3)] inline-flex items-center gap-1.5 font-bold whitespace-nowrap">
                                 <span>Hall Dashboard</span>
                             </a>
@@ -165,14 +169,16 @@
 
             <div class="flex flex-col gap-2.5">
                 @guest
-                            <a href="{{ route('login') }}" class="btn-outline-gold !w-full !justify-center !text-[#F8F5EF] !border-[#C6A15B]/60 hover:!text-[#171513] hover:!border-[#C6A15B] hover:!bg-[#C6A15B] transition-all duration-300">Sign In</a>
+                    <a href="{{ route('login') }}" class="btn-outline-gold !w-full !justify-center !text-[#F8F5EF] !border-[#C6A15B]/60 hover:!text-[#171513] hover:!border-[#C6A15B] hover:!bg-[#C6A15B] transition-all duration-300">Sign In</a>
+                    <a href="{{ route('register') }}" class="btn-gold !w-full !justify-center">List Your Wedding Hall</a>
                 @else
-                            @if(auth()->user()->isSuperAdmin())
-                                <a href="{{ route('register') }}" class="btn-outline-gold !w-full !justify-center !text-[#F8F5EF] !border-[#C6A15B]/60 hover:!text-[#171513] hover:!border-[#C6A15B] hover:!bg-[#C6A15B] transition-all duration-300">List Your Wedding Hall</a>
-                                <a href="{{ route('admin.dashboard') }}" class="btn-gold !w-full !justify-center">Owner Dashboard</a>
-                            @elseif(auth()->user()->isTenantOwner())
-                                <a href="{{ route('dashboard') }}" class="btn-gold !w-full !justify-center">Hall Dashboard</a>
-                            @endif
+                    @if(auth()->user()->isSuperAdmin())
+                        <a href="{{ route('admin.dashboard') }}" class="btn-gold !w-full !justify-center">Owner Dashboard</a>
+                    @elseif(auth()->user()->isCustomer())
+                        <a href="{{ route('customer.dashboard') }}" class="btn-gold !w-full !justify-center">My Bookings</a>
+                    @else
+                        <a href="{{ route('dashboard') }}" class="btn-gold !w-full !justify-center">Hall Dashboard</a>
+                    @endif
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="w-full text-center py-2 text-xs font-semibold text-[#F8F5EF] hover:text-[#C6A15B]">Sign Out</button>

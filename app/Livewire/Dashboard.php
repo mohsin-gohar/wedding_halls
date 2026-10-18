@@ -28,6 +28,189 @@ class Dashboard extends Component
     public string $leadNoteText = '';
     public ?string $crmFeedback = null;
 
+    // Daily Operational Kharcha & Generator Fuel Register (Hall Admin Operations)
+    public bool $showDailyExpenseModal = false;
+    public ?string $expenseHallId = null;
+    public string $expenseCategory = 'GENERATOR_DIESEL'; // GENERATOR_DIESEL, STAFF_DAILY_WAGES, CLEANING_HYGIENE, WAPDA_ELECTRICITY, CHILLER_AC, DECOR_STAGE, SOUND_LIGHTS, KITCHEN_GAS, MISC_OPERATIONAL
+    public string $expenseTitle = '';
+    public float $expenseAmount = 14250.0;
+    public string $expenseDate = '';
+    public string $expensePayee = '';
+    public string $expensePaymentMethod = 'CASH';
+    public string $expenseReceiptNumber = '';
+    public string $expenseNotes = '';
+
+    // Generator Fuel specific inputs
+    public float $fuelDieselLiters = 50.0;
+    public float $fuelRatePerLiter = 285.0;
+    public float $fuelRunHours = 4.0;
+    public ?string $fuelBookingId = null;
+
+    // Wapda / Electricity specific inputs
+    public float $electricityUnits = 120.0;
+    public float $electricityUnitRate = 65.0;
+
+    public ?string $expenseFeedback = null;
+    public ?string $expenseError = null;
+
+    public function mount()
+    {
+        $user = Auth::user();
+        if ($user && $user->isCustomer()) {
+            return $this->redirect(route('customer.dashboard'));
+        }
+        $this->expenseDate = Carbon::now()->format('Y-m-d');
+    }
+
+    public function openDailyExpenseModal(string $category = 'GENERATOR_DIESEL'): void
+    {
+        $user = Auth::user();
+        $this->expenseDate = Carbon::now()->format('Y-m-d');
+        $this->expenseCategory = $category;
+        $this->expenseFeedback = null;
+        $this->expenseError = null;
+
+        // Auto-select first hall of tenant if not chosen
+        if (!$this->expenseHallId && $user && $user->tenant_id) {
+            $firstHall = Hall::where('tenant_id', $user->tenant_id)->where('is_active', true)->first();
+            $this->expenseHallId = $firstHall?->id;
+        }
+
+        $this->syncCategoryAmounts();
+        $this->showDailyExpenseModal = true;
+    }
+
+    public function closeDailyExpenseModal(): void
+    {
+        $this->showDailyExpenseModal = false;
+        $this->expenseFeedback = null;
+        $this->expenseError = null;
+    }
+
+    public function updatedFuelDieselLiters(): void
+    {
+        $this->syncCategoryAmounts();
+    }
+
+    public function updatedFuelRatePerLiter(): void
+    {
+        $this->syncCategoryAmounts();
+    }
+
+    public function updatedElectricityUnits(): void
+    {
+        $this->syncCategoryAmounts();
+    }
+
+    public function updatedElectricityUnitRate(): void
+    {
+        $this->syncCategoryAmounts();
+    }
+
+    public function updatedExpenseCategory(): void
+    {
+        $this->syncCategoryAmounts();
+    }
+
+    private function syncCategoryAmounts(): void
+    {
+        if ($this->expenseCategory === 'GENERATOR_DIESEL') {
+            $this->expenseAmount = round($this->fuelDieselLiters * $this->fuelRatePerLiter, 2);
+            if (empty($this->expenseTitle) || str_starts_with($this->expenseTitle, 'Generator Diesel Refill')) {
+                $this->expenseTitle = "Generator Diesel Refill ({$this->fuelDieselLiters}L @ Rs {$this->fuelRatePerLiter})";
+            }
+        } elseif ($this->expenseCategory === 'WAPDA_ELECTRICITY') {
+            $this->expenseAmount = round($this->electricityUnits * $this->electricityUnitRate, 2);
+            if (empty($this->expenseTitle) || str_starts_with($this->expenseTitle, 'Commercial Electricity / WAPDA')) {
+                $this->expenseTitle = "Commercial Electricity / WAPDA Units ({$this->electricityUnits} Units)";
+            }
+        } elseif ($this->expenseCategory === 'STAFF_DAILY_WAGES') {
+            if (empty($this->expenseTitle) || str_starts_with($this->expenseTitle, 'Staff Daily Dihaari')) {
+                $this->expenseTitle = "Staff Daily Dihaari / Waiters & Cleaning Duty";
+            }
+        } elseif ($this->expenseCategory === 'CLEANING_HYGIENE') {
+            if (empty($this->expenseTitle) || str_starts_with($this->expenseTitle, 'Hall Cleaning')) {
+                $this->expenseTitle = "Hall Cleaning, Washroom Hygiene & Disinfectants";
+            }
+        } elseif ($this->expenseCategory === 'KITCHEN_GAS') {
+            if (empty($this->expenseTitle) || str_starts_with($this->expenseTitle, 'LPG Commercial Gas')) {
+                $this->expenseTitle = "LPG Commercial Gas Cylinder Refill for Bawarchi";
+            }
+        }
+    }
+
+    public function saveDailyExpense(): void
+    {
+        $user = Auth::user();
+        $tenantId = $user?->tenant_id;
+
+        if (!$tenantId) {
+            $this->expenseError = 'Session tenant not found. Please log in again.';
+            return;
+        }
+
+        $this->syncCategoryAmounts();
+
+        $this->validate([
+            'expenseCategory' => 'required|string',
+            'expenseTitle' => 'required|string|max:160',
+            'expenseAmount' => 'required|numeric|min:1',
+            'expenseDate' => 'required|date',
+            'expensePaymentMethod' => 'required|in:CASH,BANK_TRANSFER,CHEQUE,CREDIT_LEDGER',
+            'expenseHallId' => 'nullable|exists:halls,id',
+        ]);
+
+        // 1. Create Expense record
+        $expense = Expense::create([
+            'tenant_id' => $tenantId,
+            'hall_id' => $this->expenseHallId,
+            'category' => $this->expenseCategory,
+            'title' => trim($this->expenseTitle),
+            'amount' => (float) $this->expenseAmount,
+            'expense_date' => $this->expenseDate,
+            'payee' => !empty($this->expensePayee) ? trim($this->expensePayee) : 'Cash Drawer / Vendor',
+            'payment_method' => $this->expensePaymentMethod,
+            'receipt_number' => $this->expenseReceiptNumber,
+            'notes' => $this->expenseNotes,
+            'created_by_user_id' => $user->id,
+        ]);
+
+        // 2. If Generator Fuel or Wapda, log into utility_logs for shift tracking
+        if ($this->expenseCategory === 'GENERATOR_DIESEL' || $this->expenseCategory === 'WAPDA_ELECTRICITY') {
+            UtilityLog::create([
+                'tenant_id' => $tenantId,
+                'booking_id' => !empty($this->fuelBookingId) ? $this->fuelBookingId : null,
+                'generator_run_hours' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelRunHours : 0,
+                'diesel_liters_consumed' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelDieselLiters : 0,
+                'diesel_rate_per_liter' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelRatePerLiter : 0,
+                'wapda_units_consumed' => $this->expenseCategory === 'WAPDA_ELECTRICITY' ? $this->electricityUnits : 0,
+                'wapda_unit_rate' => $this->expenseCategory === 'WAPDA_ELECTRICITY' ? $this->electricityUnitRate : 0,
+                'total_utility_cost' => (float) $this->expenseAmount,
+                'logged_by' => $user->name,
+                'notes' => "Logged from Daily Kharcha Desk. Ref: {$expense->title}",
+            ]);
+        }
+
+        $this->showDailyExpenseModal = false;
+        $this->expenseFeedback = "Daily Kharcha [Rs " . number_format($this->expenseAmount) . "] recorded successfully.";
+        
+        // Reset form
+        $this->expenseTitle = '';
+        $this->expensePayee = '';
+        $this->expenseReceiptNumber = '';
+        $this->expenseNotes = '';
+    }
+
+    public function deleteDailyExpense(string $expenseId): void
+    {
+        $tenantId = Auth::user()?->tenant_id;
+        $expense = Expense::where('tenant_id', $tenantId)->findOrFail($expenseId);
+        $amount = $expense->amount;
+        $expense->delete();
+
+        $this->expenseFeedback = "Expense record [Rs " . number_format($amount) . "] deleted.";
+    }
+
     public function setTimeframe(string $tf): void
     {
         if (in_array($tf, ['WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY'])) {
@@ -372,6 +555,42 @@ class Dashboard extends Component
                 ->find($this->selectedBookingId);
         }
 
+        // 14. Daily Operational Kharcha & Generator Fuel Tracking (Hall Admin Daily Operations)
+        $todayExpensesQuery = Expense::where('tenant_id', $tenantId)->whereDate('expense_date', $today);
+        $todayExpensesSum = (float) $todayExpensesQuery->sum('amount');
+        
+        $todayDieselLiters = (float) UtilityLog::where('tenant_id', $tenantId)
+            ->whereDate('created_at', $today)
+            ->sum('diesel_liters_consumed');
+            
+        $todayDieselCost = (float) Expense::where('tenant_id', $tenantId)
+            ->whereDate('expense_date', $today)
+            ->where('category', 'GENERATOR_DIESEL')
+            ->sum('amount');
+            
+        $todayWagesCost = (float) Expense::where('tenant_id', $tenantId)
+            ->whereDate('expense_date', $today)
+            ->where('category', 'STAFF_DAILY_WAGES')
+            ->sum('amount');
+
+        $todayCleaningCost = (float) Expense::where('tenant_id', $tenantId)
+            ->whereDate('expense_date', $today)
+            ->where('category', 'CLEANING_HYGIENE')
+            ->sum('amount');
+
+        $todayCashInflow = (float) Payment::where('tenant_id', $tenantId)
+            ->whereDate('created_at', $today)
+            ->sum('amount');
+
+        $todayNetBalance = $todayCashInflow - $todayExpensesSum;
+
+        $recentExpenses = Expense::with('hall')
+            ->where('tenant_id', $tenantId)
+            ->latest('expense_date')
+            ->latest('created_at')
+            ->take(8)
+            ->get();
+
         return view('livewire.dashboard', [
             'halls' => $halls,
             'periodLabel' => $periodLabel,
@@ -408,6 +627,14 @@ class Dashboard extends Component
             'kanbanColumns' => $kanbanColumns,
             'allLeads' => $allLeads,
             'selectedLead' => $selectedLead,
+            'todayExpensesSum' => $todayExpensesSum,
+            'todayDieselLiters' => $todayDieselLiters,
+            'todayDieselCost' => $todayDieselCost,
+            'todayWagesCost' => $todayWagesCost,
+            'todayCleaningCost' => $todayCleaningCost,
+            'todayCashInflow' => $todayCashInflow,
+            'todayNetBalance' => $todayNetBalance,
+            'recentExpenses' => $recentExpenses,
         ]);
     }
 

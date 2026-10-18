@@ -133,31 +133,365 @@
 
     <!-- Navigation Tabs (Zero-Pill Minimalist) -->
     <div class="flex items-center gap-2 border-b border-[#E7E5E4] dark:border-white/10 pb-3 text-xs font-bold uppercase tracking-wider overflow-x-auto font-mono">
-        <button wire:click="setTab('vendors')" class="px-4 py-2 transition {{ $activeTab === 'vendors' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+        <button wire:click="setTab('vendors')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'vendors' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             Vendors &amp; Subscriptions ({{ $tenants->count() }})
         </button>
-        <button wire:click="setTab('plans')" class="px-4 py-2 transition {{ $activeTab === 'plans' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+        <button wire:click="setTab('tasks')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'tasks' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+            📋 Platform Tasks ({{ $pendingTasksCount }})
+        </button>
+        <button wire:click="setTab('traffic')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'traffic' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+            🚦 Traffic &amp; Controls ({{ $activeSessionsCount }} Live)
+        </button>
+        <button wire:click="setTab('plans')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'plans' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             SaaS Plans ({{ $plans->count() }})
         </button>
-        <button wire:click="setTab('payments')" class="px-4 py-2 transition {{ $activeTab === 'payments' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+        <button wire:click="setTab('payments')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'payments' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             Payment Approvals ({{ $subscriptionPayments->count() }})
         </button>
-        <button wire:click="setTab('halls')" class="px-4 py-2 transition {{ $activeTab === 'halls' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+        <button wire:click="setTab('halls')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'halls' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             Halls Catalog ({{ $halls->count() }})
         </button>
-        <button wire:click="setTab('bookings')" class="px-4 py-2 transition {{ $activeTab === 'bookings' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+        <button wire:click="setTab('bookings')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'bookings' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             All Bookings ({{ $recentBookings->count() }})
         </button>
-        <button wire:click="setTab('users')" class="px-4 py-2 transition {{ $activeTab === 'users' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+        <button wire:click="setTab('users')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'users' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             Users Directory ({{ $totalRegisteredUsers }})
         </button>
-        <button wire:click="setTab('audit')" class="px-4 py-2 transition {{ $activeTab === 'audit' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+        <button wire:click="setTab('audit')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'audit' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             Security Audit Log ({{ $auditLogs->count() }})
         </button>
-        <button wire:click="setTab('analytics')" class="px-4 py-2 transition {{ $activeTab === 'analytics' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
-            Website Analytics ({{ $totalPageVisits }})
-        </button>
     </div>
+
+    <!-- ===================================================================
+         TAB: PLATFORM TASKS & SUPER ADMIN TO-DO HUB
+         =================================================================== -->
+    @if($activeTab === 'tasks')
+        <div class="space-y-6">
+            <!-- Automated Alert Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- Alert 1: Pending Approvals -->
+                <div class="bg-white dark:bg-[#171513] border {{ $pendingApprovalsCount > 0 ? 'border-amber-500/60' : 'border-[#E7E5E4] dark:border-white/10' }} p-5 shadow-sm space-y-2">
+                    <div class="flex items-center justify-between text-xs font-mono uppercase font-bold text-stone-600 dark:text-stone-400">
+                        <span>🏛️ Pending Hall Verifications</span>
+                        <span class="px-2 py-0.5 rounded font-bold text-[10px] {{ $pendingApprovalsCount > 0 ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400' : 'bg-stone-100 dark:bg-white/5 text-stone-500' }}">
+                            {{ $pendingApprovalsCount }} Action Needed
+                        </span>
+                    </div>
+                    <div class="text-2xl font-cinzel font-bold text-[#171513] dark:text-white">
+                        {{ $pendingApprovalsCount }} Marquees
+                    </div>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 font-sans">
+                        Halls awaiting Super Admin background verification &amp; commercial KYC.
+                    </p>
+                    @if($pendingApprovalsCount > 0)
+                        <button wire:click="setTab('vendors')" class="text-xs text-[#8F7239] dark:text-[#C6A15B] font-mono font-bold hover:underline block pt-1">
+                            Review &amp; Approve Now &rarr;
+                        </button>
+                    @endif
+                </div>
+
+                <!-- Alert 2: Pending Subscription Payments -->
+                <div class="bg-white dark:bg-[#171513] border {{ $pendingSubscriptionPaymentsCount > 0 ? 'border-emerald-500/60' : 'border-[#E7E5E4] dark:border-white/10' }} p-5 shadow-sm space-y-2">
+                    <div class="flex items-center justify-between text-xs font-mono uppercase font-bold text-stone-600 dark:text-stone-400">
+                        <span>💳 Subscription Receipts</span>
+                        <span class="px-2 py-0.5 rounded font-bold text-[10px] {{ $pendingSubscriptionPaymentsCount > 0 ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-stone-100 dark:bg-white/5 text-stone-500' }}">
+                            {{ $pendingSubscriptionPaymentsCount }} Pending
+                        </span>
+                    </div>
+                    <div class="text-2xl font-cinzel font-bold text-[#171513] dark:text-white">
+                        {{ $pendingSubscriptionPaymentsCount }} Payments
+                    </div>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 font-sans">
+                        Manual bank transfer receipts submitted by hall owners for tier activation.
+                    </p>
+                    @if($pendingSubscriptionPaymentsCount > 0)
+                        <button wire:click="setTab('payments')" class="text-xs text-[#8F7239] dark:text-[#C6A15B] font-mono font-bold hover:underline block pt-1">
+                            Verify Bank Transfers &rarr;
+                        </button>
+                    @endif
+                </div>
+
+                <!-- Alert 3: Task Completion Rate -->
+                <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-5 shadow-sm space-y-2">
+                    <div class="flex items-center justify-between text-xs font-mono uppercase font-bold text-stone-600 dark:text-stone-400">
+                        <span>📋 Super Admin Tasks</span>
+                        <span class="px-2 py-0.5 rounded font-bold text-[10px] bg-[#C6A15B]/20 text-[#8F7239] dark:text-[#C6A15B]">
+                            {{ $pendingTasksCount }} Open / {{ $completedTasksCount }} Done
+                        </span>
+                    </div>
+                    <div class="text-2xl font-cinzel font-bold text-[#171513] dark:text-white">
+                        {{ $platformTasks->count() }} Total Tasks
+                    </div>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 font-sans">
+                        Operational to-do items and custom reminders for the platform owner.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Task Creator & Register -->
+            <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-6 shadow-sm">
+                <div class="pb-4 border-b border-[#E7E5E4] dark:border-white/10">
+                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-normal">
+                        Super Admin Platform To-Do &amp; Task Desk
+                    </h3>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+                        Assign yourself platform tasks such as vendor phone calls, marketing campaigns, server maintenance, or legal contract audits.
+                    </p>
+                </div>
+
+                <!-- Add Task Form -->
+                <form wire:submit="addTask" class="p-4 bg-[#F8F5EF] dark:bg-white/5 border border-[#E7E5E4] dark:border-white/10 space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                        <div class="sm:col-span-5">
+                            <label class="block text-[11px] font-mono font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1">
+                                Task Title / Action Item *
+                            </label>
+                            <input type="text" wire:model="newTaskTitle" required placeholder="e.g. Call Margalla Marquee owner for onboarding, Verify SSL renewal..."
+                                   class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
+                            @error('newTaskTitle') <span class="text-rose-500 text-xs font-mono">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label class="block text-[11px] font-mono font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1">
+                                Category
+                            </label>
+                            <select wire:model="newTaskCategory" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
+                                <option value="GENERAL">General Platform</option>
+                                <option value="VENDOR_ONBOARDING">Vendor Onboarding</option>
+                                <option value="TRAFFIC_MONITOR">Traffic &amp; SEO</option>
+                                <option value="PAYMENT_REVIEW">Payment Review</option>
+                            </select>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label class="block text-[11px] font-mono font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1">
+                                Priority
+                            </label>
+                            <select wire:model="newTaskPriority" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
+                                <option value="HIGH">🔥 High</option>
+                                <option value="MEDIUM">⚡ Medium</option>
+                                <option value="LOW">🌱 Low</option>
+                            </select>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label class="block text-[11px] font-mono font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1">
+                                Due Date
+                            </label>
+                            <input type="date" wire:model="newTaskDueDate" 
+                                   class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
+                        </div>
+
+                        <div class="sm:col-span-1">
+                            <button type="submit" 
+                                    class="btn-gold !h-10 !w-full text-xs font-bold uppercase font-mono shadow">
+                                + Add
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Tasks List -->
+                <div class="space-y-2">
+                    @forelse($platformTasks as $task)
+                        <div class="p-3.5 border {{ $task->is_completed ? 'bg-stone-50 dark:bg-white/[0.02] border-stone-200 dark:border-white/5 opacity-60' : 'bg-white dark:bg-[#171513] border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B]' }} transition flex items-center justify-between gap-4 font-mono text-xs">
+                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                                <button type="button" wire:click="toggleTask('{{ $task->id }}')" 
+                                        class="w-5 h-5 rounded border flex items-center justify-center transition shrink-0 {{ $task->is_completed ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-stone-400 dark:border-white/30 hover:border-[#C6A15B]' }}">
+                                    @if($task->is_completed)
+                                        ✓
+                                    @endif
+                                </button>
+
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-bold text-sm {{ $task->is_completed ? 'line-through text-stone-500' : 'text-[#171513] dark:text-white' }} truncate">
+                                        {{ $task->title }}
+                                    </div>
+                                    <div class="flex items-center gap-2 text-[10px] text-stone-500 dark:text-stone-400 mt-0.5">
+                                        <span>Category: {{ str_replace('_', ' ', $task->category) }}</span>
+                                        <span>•</span>
+                                        @if($task->due_date)
+                                            <span>Due: {{ $task->due_date->format('d M Y') }}</span>
+                                            <span>•</span>
+                                        @endif
+                                        <span>Created: {{ $task->created_at->diffForHumans() }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3 shrink-0">
+                                @php
+                                    $prioBadge = match($task->priority) {
+                                        'HIGH' => 'bg-rose-500/15 text-rose-600 border-rose-500/30',
+                                        'MEDIUM' => 'bg-amber-500/15 text-amber-600 border-amber-500/30',
+                                        default => 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30',
+                                    };
+                                @endphp
+                                <span class="px-2 py-0.5 text-[9px] uppercase font-bold border {{ $prioBadge }}">
+                                    {{ $task->priority }}
+                                </span>
+
+                                <button wire:click="deleteTask('{{ $task->id }}')" 
+                                        onclick="return confirm('Delete this task?')"
+                                        class="text-stone-400 hover:text-rose-500 text-base font-bold">
+                                    &times;
+                                </button>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="p-8 text-center text-xs text-stone-500 font-sans">
+                            No custom tasks created yet. Use the form above to add your first administrative task.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- ===================================================================
+         TAB: WEBSITE TRAFFIC & PLATFORM CONTROL CENTER
+         =================================================================== -->
+    @if($activeTab === 'traffic')
+        <div class="space-y-6">
+            <!-- Platform Master Switches & Controls -->
+            <div class="bg-white dark:bg-[#171513] border-2 border-[#C6A15B] p-6 shadow-2xl relative space-y-6">
+                <div class="w-full h-1 bg-gradient-to-r from-[#C6A15B] via-[#E8DCBE] to-[#C6A15B] absolute top-0 left-0"></div>
+
+                <div class="pb-4 border-b border-[#E7E5E4] dark:border-white/10">
+                    <span class="text-[10px] font-mono uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B] font-bold block">
+                        Platform Traffic &amp; System Gates
+                    </span>
+                    <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-normal mt-0.5">
+                        Website Traffic Control &amp; Ingestion Switches
+                    </h3>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 font-sans mt-0.5">
+                        Control public search discovery, vendor onboarding portals, and live platform banners.
+                    </p>
+                </div>
+
+                <!-- Switches Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <!-- Switch 1: Public Marketplace Status -->
+                    <div class="p-5 bg-[#F8F5EF] dark:bg-white/5 border border-[#E7E5E4] dark:border-white/10 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-mono font-bold uppercase text-stone-800 dark:text-stone-200">
+                                🌐 Public Marketplace Catalog
+                            </span>
+                            <span class="px-2 py-0.5 text-[9px] font-mono uppercase font-bold border {{ $marketplaceEnabled ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30' : 'bg-rose-500/15 text-rose-600 border-rose-500/30' }}">
+                                {{ $marketplaceEnabled ? 'ACTIVE / DISCOVERABLE' : 'PAUSED' }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-stone-500 dark:text-stone-400 font-sans">
+                            Controls whether guests can browse, search, and view wedding halls on the public marketplace (`/venues`).
+                        </p>
+                        <button wire:click="toggleMarketplaceStatus" 
+                                class="px-4 py-2 text-xs font-mono font-bold uppercase border transition {{ $marketplaceEnabled ? 'bg-stone-200 dark:bg-white/10 text-stone-800 dark:text-stone-200 hover:bg-stone-300' : 'bg-emerald-600 text-white border-emerald-600' }}">
+                            {{ $marketplaceEnabled ? 'Pause Marketplace Access' : 'Activate Marketplace Catalog' }}
+                        </button>
+                    </div>
+
+                    <!-- Switch 2: Vendor Self-Registration -->
+                    <div class="p-5 bg-[#F8F5EF] dark:bg-white/5 border border-[#E7E5E4] dark:border-white/10 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-mono font-bold uppercase text-stone-800 dark:text-stone-200">
+                                🏛️ Vendor Self-Registration Portal
+                            </span>
+                            <span class="px-2 py-0.5 text-[9px] font-mono uppercase font-bold border {{ $vendorRegistrationOpen ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30' : 'bg-amber-500/15 text-amber-600 border-amber-500/30' }}">
+                                {{ $vendorRegistrationOpen ? 'OPEN FOR NEW HALLS' : 'INVITE ONLY' }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-stone-500 dark:text-stone-400 font-sans">
+                            Allows or pauses public wedding hall owner registration from `/register`. When paused, only Super Admin can provision new venues.
+                        </p>
+                        <button wire:click="toggleRegistrationStatus" 
+                                class="px-4 py-2 text-xs font-mono font-bold uppercase border transition {{ $vendorRegistrationOpen ? 'bg-stone-200 dark:bg-white/10 text-stone-800 dark:text-stone-200 hover:bg-stone-300' : 'bg-emerald-600 text-white border-emerald-600' }}">
+                            {{ $vendorRegistrationOpen ? 'Close Public Registration' : 'Open Public Registration' }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Platform Announcement Banner -->
+                <div class="p-5 bg-[#F8F5EF] dark:bg-white/5 border border-[#E7E5E4] dark:border-white/10 space-y-3">
+                    <span class="text-xs font-mono font-bold uppercase text-stone-800 dark:text-stone-200 block">
+                        📢 Global Platform Announcement Banner (Public Header)
+                    </span>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 font-sans">
+                        Broadcast system updates, peak wedding season notices, or maintenance schedules across all public pages.
+                    </p>
+                    <div class="flex gap-2">
+                        <input type="text" wire:model="announcementBanner" placeholder="e.g. Wedding Season 2026 Inquiries Open • Guaranteed Shift Locking with Zero Double-Booking"
+                               class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs flex-1">
+                        <button wire:click="saveAnnouncement" class="btn-gold !h-10 !px-5 text-xs font-mono font-bold uppercase shadow">
+                            Save Banner
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-Time Traffic & Visitor Analytics -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="p-5 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-1">
+                    <span class="text-[10px] font-mono uppercase tracking-wider text-stone-500 font-bold block">Live Visitors (15m)</span>
+                    <div class="text-3xl font-cinzel font-bold text-emerald-600 dark:text-emerald-400">{{ $activeSessionsCount }}</div>
+                    <span class="text-[10px] text-stone-400 font-mono">Active browsing sessions</span>
+                </div>
+                <div class="p-5 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-1">
+                    <span class="text-[10px] font-mono uppercase tracking-wider text-stone-500 font-bold block">Today's Page Views</span>
+                    <div class="text-3xl font-cinzel font-bold text-[#8F7239] dark:text-[#C6A15B]">{{ $todayVisits }}</div>
+                    <span class="text-[10px] text-stone-400 font-mono">Page hits in last 24h</span>
+                </div>
+                <div class="p-5 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-1">
+                    <span class="text-[10px] font-mono uppercase tracking-wider text-stone-500 font-bold block">Unique Visitors</span>
+                    <div class="text-3xl font-cinzel font-bold text-[#171513] dark:text-white">{{ $uniqueVisitorsCount }}</div>
+                    <span class="text-[10px] text-stone-400 font-mono">Unique IP addresses</span>
+                </div>
+                <div class="p-5 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-1">
+                    <span class="text-[10px] font-mono uppercase tracking-wider text-stone-500 font-bold block">Total Page Views</span>
+                    <div class="text-3xl font-cinzel font-bold text-[#171513] dark:text-white">{{ $totalPageVisits }}</div>
+                    <span class="text-[10px] text-stone-400 font-mono">All-time recorded visits</span>
+                </div>
+            </div>
+
+            <!-- Top Performing Halls by Views -->
+            <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-4 shadow-sm">
+                <h4 class="text-sm font-mono font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B]">
+                    Top 10 Most Visited Wedding Marquees &amp; Halls
+                </h4>
+                <div class="overflow-x-auto border border-[#E7E5E4] dark:border-white/10">
+                    <table class="w-full text-xs text-left border-collapse">
+                        <thead>
+                            <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] font-mono uppercase tracking-wider text-stone-600 dark:text-stone-400">
+                                <th class="p-3">Hall Name &amp; Venue</th>
+                                <th class="p-3">City</th>
+                                <th class="p-3 text-right">Showcase Views</th>
+                                <th class="p-3 text-right">Wishlists</th>
+                                <th class="p-3 text-right">Public Link</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#E7E5E4] dark:divide-white/10 font-sans">
+                            @foreach($topHallsByViews as $th)
+                                <tr class="hover:bg-stone-50 dark:hover:bg-white/5 transition">
+                                    <td class="p-3">
+                                        <div class="font-bold text-[#171513] dark:text-white">{{ $th->name }}</div>
+                                        <span class="text-[10px] text-stone-500 font-mono">{{ $th->venue?->name ?? 'Venue' }}</span>
+                                    </td>
+                                    <td class="p-3 font-mono text-stone-600 dark:text-stone-400">{{ $th->venue?->city ?? '—' }}</td>
+                                    <td class="p-3 text-right font-mono font-bold text-sm text-[#8F7239] dark:text-[#C6A15B]">{{ $th->total_views }}</td>
+                                    <td class="p-3 text-right font-mono text-stone-600 dark:text-stone-300">{{ $th->hall_wishlists_count ?? 0 }}</td>
+                                    <td class="p-3 text-right">
+                                        <a href="{{ route('hall.showcase', $th->slug ?? $th->id) }}" target="_blank" 
+                                           class="text-[#8F7239] dark:text-[#C6A15B] hover:underline font-mono text-[11px]">
+                                            View Showcase &rarr;
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- ===================================================================
          TAB 1: VENDORS & SUBSCRIPTIONS (Full CRUD)

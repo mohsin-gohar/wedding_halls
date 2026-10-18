@@ -700,9 +700,8 @@
 
                                 $bookedCount = ($bAfternoon ? 1 : 0) + ($bEvening ? 1 : 0) + ($bNight ? 1 : 0);
                             @endphp
-                            <div @click="selectedDate = '{{ $cStr }}'"
-                                 class="min-h-[100px] sm:min-h-[120px] p-1 sm:p-1.5 flex flex-col justify-between transition-all cursor-pointer relative group {{ $isPast ? 'opacity-35 bg-stone-50/50 dark:bg-white/[0.01]' : ($bookedCount === 3 ? 'bg-red-50/70 dark:bg-red-950/30 hover:bg-red-100/70' : ($bookedCount > 0 ? 'bg-amber-50/40 dark:bg-amber-950/20 hover:bg-amber-100/50' : 'hover:bg-emerald-50/30 dark:hover:bg-[#C6A15B]/10')) }}"
-                                 :class="selectedDate === '{{ $cStr }}' ? 'ring-2 ring-red-600 dark:ring-[#C6A15B] ring-inset bg-red-50/50 dark:bg-[#C6A15B]/20 font-bold' : ''">
+                            <div wire:click="setSelectedDate('{{ $cStr }}')"
+                                 class="min-h-[100px] sm:min-h-[120px] p-1 sm:p-1.5 flex flex-col justify-between transition-all cursor-pointer relative group {{ $isPast ? 'opacity-35 bg-stone-50/50 dark:bg-white/[0.01]' : ($bookedCount === 3 ? 'bg-red-50/70 dark:bg-red-950/30 hover:bg-red-100/70' : ($bookedCount > 0 ? 'bg-amber-50/40 dark:bg-amber-950/20 hover:bg-amber-100/50' : 'hover:bg-emerald-50/30 dark:hover:bg-[#C6A15B]/10')) }} {{ $selectedDate === $cStr ? 'ring-2 ring-[#C6A15B] ring-inset bg-[#C6A15B]/20 font-bold border-[#C6A15B]' : '' }}">
                                 
                                 <!-- Large Clean Date Number (Sunday in Red matching reference image) -->
                                 <div class="w-full flex items-center justify-between px-0.5 sm:px-1">
@@ -781,7 +780,7 @@
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div>
                                 <span class="text-[10px] uppercase font-bold tracking-[0.2em] text-[#8F7239] dark:text-[#C6A15B] font-mono block">Selected Event Date Status</span>
-                                <h4 class="font-serif-luxury text-2xl text-[#171513] dark:text-white" x-text="new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })"></h4>
+                                <h4 class="font-serif-luxury text-2xl text-[#171513] dark:text-white">{{ $selectedDate ? \Carbon\Carbon::parse($selectedDate)->format('l, d F Y') : 'Select a date on the calendar' }}</h4>
                             </div>
                             <span class="text-xs font-mono text-stone-500 dark:text-stone-400">Green = Available to book | Red = Already Booked</span>
                         </div>
@@ -795,7 +794,7 @@
                                     $cardEvening = $bookings->get($cardStr . '_EVENING');
                                     $cardNight = $bookings->get($cardStr . '_NIGHT');
                                 @endphp
-                                <template x-if="selectedDate === '{{ $cardStr }}'">
+                                @if($selectedDate === $cardStr)
                                     <div class="contents">
                                         <!-- Afternoon Shift -->
                                         <div class="p-4 bg-white dark:bg-[#171513] border-2 {{ $cardAfternoon ? 'border-red-400 dark:border-red-900/60 bg-red-50/20' : 'border-emerald-500/40 hover:border-emerald-500' }} rounded-xl space-y-3 flex flex-col justify-between shadow-xs transition-colors">
@@ -875,7 +874,7 @@
                                             @endif
                                         </div>
                                     </div>
-                                </template>
+                                @endif
                             @endforeach
                         </div>
                     </div>

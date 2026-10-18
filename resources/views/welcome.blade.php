@@ -3,9 +3,9 @@
     <!-- ===================================================================
          1. CINEMATIC LUXURY HERO SECTION (With Smooth Visual Depth)
          =================================================================== -->
-    <section class="relative text-white min-h-[92vh] flex items-center justify-center overflow-hidden border-b border-[#C6A15B]/30">
+    <section class="relative text-white min-h-[92vh] flex items-center justify-center overflow-hidden border-b border-[#C6A15B]/30 bg-[#171513]">
         <!-- Cinematic Wedding Hall Background Image Slideshow -->
-        <div class="hero-slideshow absolute inset-0 z-[-1] overflow-hidden" id="heroSlideshow">
+        <div class="hero-slideshow absolute inset-0 z-0 overflow-hidden" id="heroSlideshow">
             <!-- Slide 1: Elegant Wedding Venue -->
             <div class="slideshow-slide absolute inset-0 w-full h-full">
                 <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2000&auto=format&fit=crop" alt="Luxury Wedding Venue" class="w-full h-full object-cover slideshow-image transition-opacity duration-750">
@@ -37,7 +37,7 @@
             </div>
 
             <!-- Subtle overlay for text readability -->
-            <div class="absolute inset-0 bg-black/20"></div>
+            <div class="absolute inset-0 bg-black/20 z-1"></div>
         </div>
 
         <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">

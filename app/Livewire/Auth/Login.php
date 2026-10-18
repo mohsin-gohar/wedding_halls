@@ -46,14 +46,6 @@ class Login extends Component
 
             $user->recordLogin();
 
-            // Only hall admins (tenant owners) and website owners (super admins) can use this login portal.
-            // Customers must use the separate customer login.
-            if ($user->isCustomer()) {
-                Auth::logout();
-                $this->addError('email', 'Customers must use the customer login portal. Please visit the booking website instead.');
-                return;
-            }
-
             session()->flash('message', "Welcome back, {$user->name}!");
 
             // Website Owner / Super Admin → Platform Admin Dashboard
@@ -61,12 +53,12 @@ class Login extends Component
                 return redirect()->intended(route('admin.dashboard'));
             }
 
-            // Hall Admin / Tenant Owner → Hall Admin Dashboard
-            if ($user->role === 'ROLE_TENANT_OWNER' || $user->isTenantOwner()) {
-                return redirect()->intended(route('dashboard'));
+            // Customer / Guest Client → Customer Booking Dashboard
+            if ($user->isCustomer()) {
+                return redirect()->intended(route('customer.dashboard'));
             }
 
-            // Fallback for any other staff role → Hall Admin Dashboard
+            // Hall Admin / Tenant Owner / Staff → Hall Operations Dashboard
             return redirect()->intended(route('dashboard'));
         }
 
@@ -78,6 +70,6 @@ class Login extends Component
     public function render()
     {
         return view('livewire.auth.login')
-            ->layout('components.layouts.public', ['title' => 'Hall Owner Login — Wedding_Hall']);
+            ->layout('components.layouts.auth', ['title' => 'Sign In — EventHub']);
     }
 }

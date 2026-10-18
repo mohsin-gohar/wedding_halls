@@ -108,6 +108,13 @@ class PublicHallDetails extends Component
         }
     }
 
+    public string $selectedDate = '';
+
+    public function setSelectedDate(string $date): void
+    {
+        $this->selectedDate = $date;
+    }
+
     public function toggleWishlist()
     {
         $sessionId = session()->getId();
@@ -133,6 +140,10 @@ class PublicHallDetails extends Component
         // Target month calculated by offset (0 = current, 1 = +1 month, 2 = +2 month)
         $targetDate = $today->copy()->addMonths($this->monthOffset);
         $monthTitle = $targetDate->format('F Y');
+
+        if (empty($this->selectedDate) && $today->year === $targetDate->year && $today->month === $targetDate->month) {
+            $this->selectedDate = $today->format('Y-m-d');
+        }
         $monthName = strtoupper($targetDate->format('F'));
         $year = $targetDate->format('Y');
 

@@ -8,6 +8,7 @@ use App\Models\Hall;
 use App\Models\HallView;
 use App\Models\HallWishlist;
 use App\Models\PageVisit;
+use App\Models\PlatformTask;
 use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
@@ -15,6 +16,7 @@ use App\Models\User;
 use App\Models\Venue;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -24,9 +26,21 @@ use Livewire\Component;
 #[Layout('components.layouts.app', ['title' => 'Super Admin Console — VenueCloud'])]
 class AdminDashboard extends Component
 {
-    public string $activeTab = 'vendors'; // vendors, plans, payments, halls, bookings, audit
+    public string $activeTab = 'vendors'; // vendors, tasks, traffic, plans, payments, halls, bookings, audit
     public ?string $feedbackMessage = null;
     public ?string $errorMessage = null;
+
+    // Platform Tasks Management (Super Admin Tasks & Action Items)
+    public string $newTaskTitle = '';
+    public string $newTaskCategory = 'GENERAL'; // VENDOR_ONBOARDING, TRAFFIC_MONITOR, PAYMENT_REVIEW, GENERAL
+    public string $newTaskPriority = 'MEDIUM'; // HIGH, MEDIUM, LOW
+    public string $newTaskDueDate = '';
+    public string $newTaskNotes = '';
+
+    // Platform Traffic & Operations Control Center
+    public bool $vendorRegistrationOpen = true;
+    public bool $marketplaceEnabled = true;
+    public string $announcementBanner = '';
 
     // SaaS Plan Form (CRUD)
     public bool $showPlanModal = false;
@@ -99,6 +113,11 @@ class AdminDashboard extends Component
         if (request()->has('tab')) {
             $this->activeTab = request()->query('tab');
         }
+
+        $this->vendorRegistrationOpen = Cache::get('platform_vendor_registration_open', true);
+        $this->marketplaceEnabled = Cache::get('platform_marketplace_enabled', true);
+        $this->announcementBanner = Cache::get('platform_announcement', '');
+        $this->newTaskDueDate = Carbon::now()->addDays(2)->format('Y-m-d');
     }
 
     public function setTab(string $tab)
@@ -106,6 +125,78 @@ class AdminDashboard extends Component
         $this->activeTab = $tab;
         $this->feedbackMessage = null;
         $this->errorMessage = null;
+    }
+
+    // ==========================================
+    // 0. PLATFORM TASKS & TO-DO MANAGEMENT
+    // ==========================================
+    public function addTask(): void
+    {
+        $this->validate([
+            'newTaskTitle' => 'required|string|min:3|max:180',
+            'newTaskCategory' => 'required|string',
+            'newTaskPriority' => 'required|in:HIGH,MEDIUM,LOW',
+        ]);
+
+        PlatformTask::create([
+            'title' => trim($this->newTaskTitle),
+            'category' => $this->newTaskCategory,
+            'priority' => $this->newTaskPriority,
+            'due_date' => !empty($this->newTaskDueDate) ? $this->newTaskDueDate : null,
+            'notes' => $this->newTaskNotes,
+            'created_by_user_id' => Auth::id(),
+            'is_completed' => false,
+        ]);
+
+        AuditLog::log('CREATE_PLATFORM_TASK', "Created administrative task: {$this->newTaskTitle}");
+
+        $this->newTaskTitle = '';
+        $this->newTaskNotes = '';
+        $this->feedbackMessage = 'Super Admin task added successfully.';
+    }
+
+    public function toggleTask(string $taskId): void
+    {
+        $task = PlatformTask::findOrFail($taskId);
+        $task->is_completed = !$task->is_completed;
+        $task->completed_at = $task->is_completed ? now() : null;
+        $task->save();
+
+        AuditLog::log('TOGGLE_PLATFORM_TASK', "Updated status of task [{$task->title}] to " . ($task->is_completed ? 'COMPLETED' : 'PENDING'));
+        $this->feedbackMessage = "Task updated.";
+    }
+
+    public function deleteTask(string $taskId): void
+    {
+        $task = PlatformTask::findOrFail($taskId);
+        $title = $task->title;
+        $task->delete();
+
+        AuditLog::log('DELETE_PLATFORM_TASK', "Deleted task [{$title}]");
+        $this->feedbackMessage = "Task removed.";
+    }
+
+    public function toggleRegistrationStatus(): void
+    {
+        $this->vendorRegistrationOpen = !$this->vendorRegistrationOpen;
+        Cache::put('platform_vendor_registration_open', $this->vendorRegistrationOpen);
+        AuditLog::log('TOGGLE_REGISTRATION_STATUS', "Vendor public registration set to " . ($this->vendorRegistrationOpen ? 'OPEN' : 'CLOSED'));
+        $this->feedbackMessage = "Vendor Registration is now " . ($this->vendorRegistrationOpen ? 'OPEN for all new marquees' : 'CLOSED temporarily');
+    }
+
+    public function toggleMarketplaceStatus(): void
+    {
+        $this->marketplaceEnabled = !$this->marketplaceEnabled;
+        Cache::put('platform_marketplace_enabled', $this->marketplaceEnabled);
+        AuditLog::log('TOGGLE_MARKETPLACE_STATUS', "Public marketplace visibility set to " . ($this->marketplaceEnabled ? 'ACTIVE' : 'PAUSED'));
+        $this->feedbackMessage = "Public Marketplace visibility is now " . ($this->marketplaceEnabled ? 'ACTIVE' : 'PAUSED (Maintenance)');
+    }
+
+    public function saveAnnouncement(): void
+    {
+        Cache::put('platform_announcement', trim($this->announcementBanner));
+        AuditLog::log('UPDATE_ANNOUNCEMENT', "Updated platform announcement banner: {$this->announcementBanner}");
+        $this->feedbackMessage = "Platform announcement updated.";
     }
 
     // ==========================================
@@ -753,9 +844,9 @@ class AdminDashboard extends Component
         }
         $users = $usersQuery->latest()->take(100)->get();
 
-        $totalCustomers = User::where('role', 'CUSTOMER')->count();
-        $totalVendors = User::whereIn('role', ['VENDOR', 'HALL_OWNER', 'ADMIN'])->count();
-        $totalStaff = User::whereNotIn('role', ['CUSTOMER', 'VENDOR', 'HALL_OWNER', 'ADMIN', 'SUPER_ADMIN'])->count();
+        $totalCustomers = User::whereIn('role', ['CUSTOMER', 'ROLE_CUSTOMER'])->count();
+        $totalVendors = User::whereIn('role', ['VENDOR', 'HALL_OWNER', 'ADMIN', 'ROLE_TENANT_OWNER'])->count();
+        $totalStaff = User::whereNotIn('role', ['CUSTOMER', 'ROLE_CUSTOMER', 'VENDOR', 'HALL_OWNER', 'ADMIN', 'ROLE_TENANT_OWNER', 'SUPER_ADMIN', 'ROLE_SUPER_ADMIN'])->count();
         $totalSuspendedUsers = User::where('status', 'SUSPENDED')->count();
 
         $topHallsByViews = Hall::with(['venue', 'tenant'])
@@ -781,6 +872,13 @@ class AdminDashboard extends Component
         $halls = Hall::with(['venue', 'tenant'])->latest()->get();
         $recentBookings = Booking::with(['hall.venue', 'tenant'])->latest()->take(30)->get();
         $auditLogs = AuditLog::with(['tenant', 'user'])->latest()->take(30)->get();
+
+        // Platform Tasks & Action Items
+        $platformTasks = PlatformTask::with('creator')->latest()->get();
+        $pendingTasksCount = PlatformTask::where('is_completed', false)->count();
+        $completedTasksCount = PlatformTask::where('is_completed', true)->count();
+        $pendingApprovalsCount = Tenant::where('verification_status', 'PENDING')->count();
+        $pendingSubscriptionPaymentsCount = SubscriptionPayment::where('status', 'PENDING')->count();
 
         return view('livewire.admin-dashboard', [
             'totalTenants' => $totalTenants,
@@ -810,6 +908,11 @@ class AdminDashboard extends Component
             'halls' => $halls,
             'recentBookings' => $recentBookings,
             'auditLogs' => $auditLogs,
+            'platformTasks' => $platformTasks,
+            'pendingTasksCount' => $pendingTasksCount,
+            'completedTasksCount' => $completedTasksCount,
+            'pendingApprovalsCount' => $pendingApprovalsCount,
+            'pendingSubscriptionPaymentsCount' => $pendingSubscriptionPaymentsCount,
         ]);
     }
 }

@@ -125,6 +125,6 @@ class Register extends Component
     public function render()
     {
         return view('livewire.auth.register')
-            ->layout('components.layouts.public', ['title' => 'Register Your Wedding Hall — Wedding_Hall']);
+            ->layout('components.layouts.auth', ['title' => 'Register Your Venue — EventHub']);
     }
 }

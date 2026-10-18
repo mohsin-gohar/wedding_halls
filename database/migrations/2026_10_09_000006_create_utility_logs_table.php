@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('utility_logs', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
-            $table->foreignUuid('booking_id')->constrained('bookings')->cascadeOnDelete();
+            $table->foreignUuid('booking_id')->nullable()->constrained('bookings')->nullOnDelete();
 
             // Generator Run & Fuel Metrics
             $table->decimal('generator_run_hours', 6, 2)->default(0.00);
