@@ -85,10 +85,10 @@ Route::get('/services', PublicServices::class)->name('public.services');
 
 // Company & Customer Assistance
 Route::get('/about', PublicAbout::class)->name('public.about');
-Route::get('/contact', PublicContact::class)->name('public.contact');
+Route::get('/contact', PublicContact::class)->name('public.contact')->middleware('throttle:30,1');
 Route::get('/faqs', PublicFaqs::class)->name('public.faqs');
 Route::get('/check-availability', PublicAvailabilityChecker::class)->name('public.availability');
-Route::get('/rsvp', PublicGuestRsvp::class)->name('public.rsvp');
+Route::get('/rsvp', PublicGuestRsvp::class)->name('public.rsvp')->middleware('throttle:30,1');
 
 // Legal Policies
 Route::get('/policies/{policy?}', PublicPolicies::class)->name('public.policies');

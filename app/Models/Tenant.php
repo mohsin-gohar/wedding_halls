@@ -65,6 +65,11 @@ class Tenant extends Model
         return false;
     }
 
+    public function isLocked(): bool
+    {
+        return app(\App\Services\SubscriptionService::class)->isLocked($this);
+    }
+
     public function canAddHall(): bool
     {
         if (!$this->subscriptionPlan) {

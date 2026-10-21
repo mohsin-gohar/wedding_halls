@@ -102,6 +102,7 @@ class BookingService
                     'tenant_id' => $tenantId,
                     'hall_id' => $hallId,
                     'package_id' => $data['package_id'] ?? null,
+                    'booking_reference' => $data['booking_reference'] ?? Booking::generateReference(),
                     'created_by_user_id' => $data['created_by_user_id'] ?? auth()->id(),
                     'customer_id' => $data['customer_id'] ?? null,
                     'customer_name' => $data['customer_name'],

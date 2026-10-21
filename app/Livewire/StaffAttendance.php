@@ -8,6 +8,7 @@ use App\Models\StaffLeave;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -255,8 +256,9 @@ class StaffAttendance extends Component
     public function saveEditedRecord(): void
     {
         $this->authorizeAttendanceManager();
+        $tenantId = Auth::user()->tenant_id;
         $this->validate([
-            'editingUserId' => 'required|exists:users,id',
+            'editingUserId' => ['required', Rule::exists('users', 'id')->where('tenant_id', $tenantId)],
             'editingRecordDate' => 'required|date_format:Y-m-d',
             'editingStatus' => 'required|in:PRESENT,ABSENT,HALF_DAY,LATE,ON_LEAVE',
             'editingCheckIn' => 'nullable|date_format:H:i',
@@ -310,8 +312,9 @@ class StaffAttendance extends Component
     public function submitLeave()
     {
         $this->authorizeAttendanceManager();
+        $tenantId = Auth::user()->tenant_id;
         $this->validate([
-            'leaveUserId' => 'required|exists:users,id',
+            'leaveUserId' => ['required', Rule::exists('users', 'id')->where('tenant_id', $tenantId)],
             'leaveType' => 'required|in:CASUAL,SICK,ANNUAL,EMERGENCY',
             'leaveStartDate' => 'required|date',
             'leaveEndDate' => 'required|date|after_or_equal:leaveStartDate',

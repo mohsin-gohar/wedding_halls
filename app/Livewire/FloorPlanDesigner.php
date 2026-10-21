@@ -93,6 +93,11 @@ class FloorPlanDesigner extends Component
 
     public function saveFloorPlan()
     {
+        $this->validate([
+            'selectedHallId' => 'required|string|exists:halls,id',
+            'planName' => 'required|string|min:2|max:120',
+        ]);
+
         $user = Auth::user();
         if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized hall access.');

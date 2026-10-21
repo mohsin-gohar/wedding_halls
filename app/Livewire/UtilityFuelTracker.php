@@ -43,7 +43,17 @@ class UtilityFuelTracker extends Component
             abort(403, 'Unauthorized.');
         }
 
-        $this->selectedBookingId = $bookingId;
+        $bookingQuery = Booking::where('id', $bookingId);
+        if (!$user->isSuperAdmin()) {
+            $bookingQuery->where('tenant_id', $user->tenant_id);
+        }
+        $targetBooking = $bookingQuery->first();
+        if (!$targetBooking) {
+            $this->selectedBookingId = null;
+            return;
+        }
+
+        $this->selectedBookingId = $targetBooking->id;
         $this->successMessage = null;
 
         $logQuery = UtilityLog::where('booking_id', $bookingId);
@@ -118,7 +128,13 @@ class UtilityFuelTracker extends Component
 
         $bookings = $query->latest()->take(20)->get();
 
-        $currentBooking = $this->selectedBookingId ? Booking::with('hall')->find($this->selectedBookingId) : null;
+        $currentBookingQuery = Booking::with('hall');
+        if ($user && $user->tenant_id && !$user->isSuperAdmin()) {
+            $currentBookingQuery->where('tenant_id', $user->tenant_id);
+        } elseif (!$user || !$user->isSuperAdmin()) {
+            $currentBookingQuery->whereRaw('1 = 0');
+        }
+        $currentBooking = $this->selectedBookingId ? $currentBookingQuery->find($this->selectedBookingId) : null;
 
         $dieselCost = $this->diesel_liters_consumed * $this->diesel_rate_per_liter;
         $wapdaCost = $this->wapda_units_consumed * $this->wapda_unit_rate;

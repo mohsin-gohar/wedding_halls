@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Models\UtilityLog;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class Dashboard extends Component
@@ -197,7 +198,7 @@ class Dashboard extends Component
             'expenseAmount' => 'required|numeric|min:1',
             'expenseDate' => 'required|date',
             'expensePaymentMethod' => 'required|in:CASH,BANK_TRANSFER,CHEQUE,CREDIT_LEDGER',
-            'expenseHallId' => 'nullable|exists:halls,id',
+            'expenseHallId' => ['nullable', Rule::exists('halls', 'id')->where('tenant_id', $tenantId)],
         ]);
 
         // 1. Create Expense record
@@ -670,7 +671,7 @@ class Dashboard extends Component
         $lowStockInventoryCount = InventoryItem::where('tenant_id', $tenantId)->where('is_active', true)->whereColumn('current_stock', '<=', 'min_threshold')->count();
 
         $todayStaffPresentCount = StaffAttendance::where('tenant_id', $tenantId)->whereDate('date', $today)->whereIn('status', ['PRESENT', 'HALF_DAY'])->count();
-        $todayStaffTotalCount = User::where('tenant_id', $tenantId)->where('is_active', true)->where('role', '!=', 'ROLE_SUPER_ADMIN')->count();
+        $todayStaffTotalCount = User::where('tenant_id', $tenantId)->where('status', 'ACTIVE')->where('role', '!=', 'ROLE_SUPER_ADMIN')->count();
         $todayOvertimeHours = (float) StaffAttendance::where('tenant_id', $tenantId)->whereDate('date', $today)->sum('overtime_hours');
 
         $todayGeneratorHours = (float) UtilityLog::where('tenant_id', $tenantId)->whereDate('created_at', $today)->sum('generator_run_hours');

@@ -373,9 +373,9 @@ class StaffManager extends Component
 
         $staffName = $staff->name;
 
-        // Clean up linked attendance, payroll, and leaves
-        StaffAttendance::where('user_id', $userId)->delete();
-        StaffPayroll::where('user_id', $userId)->delete();
+        // Clean up linked attendance, payroll, and leaves strictly scoped to current tenant
+        StaffAttendance::where('tenant_id', $currentUser->tenant_id)->where('user_id', $userId)->delete();
+        StaffPayroll::where('tenant_id', $currentUser->tenant_id)->where('user_id', $userId)->delete();
 
         $staff->forceDelete();
 

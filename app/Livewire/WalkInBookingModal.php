@@ -413,12 +413,24 @@ class WalkInBookingModal extends Component
             'guest_count' => 'required|integer|min:20',
         ]);
 
-        $hall = Hall::findOrFail($this->hall_id);
+        $hall = Hall::with('tenant')->findOrFail($this->hall_id);
         $user = Auth::user();
 
         // Server-Side Authorization & Tenant Isolation Checks
         if ($this->isStaff && ! $user->isSuperAdmin() && $hall->tenant_id !== $user->tenant_id) {
             abort(403, 'Unauthorized venue space for the current tenant context.');
+        }
+
+        if (! $this->isStaff) {
+            if (! $hall->is_active || ! $hall->tenant || ! $hall->tenant->is_active || $hall->tenant->verification_status !== 'APPROVED') {
+                $this->errorMessage = 'This venue space is currently not accepting online reservations.';
+                return;
+            }
+        }
+
+        if ($hall->max_capacity && $this->guest_count > $hall->max_capacity) {
+            $this->errorMessage = "The guest count ({$this->guest_count}) exceeds the maximum hall capacity of {$hall->max_capacity}.";
+            return;
         }
 
         // Authoritative Server-Side Base Rent Check
@@ -511,6 +523,10 @@ class WalkInBookingModal extends Component
                 ->where(function ($q) use ($user) {
                     $q->whereNull('tenant_id')->orWhere('tenant_id', $user->tenant_id);
                 })->get();
+            $menuItems = MenuItem::where('is_active', true)
+                ->where(function ($q) use ($user) {
+                    $q->whereNull('tenant_id')->orWhere('tenant_id', $user->tenant_id);
+                })->get();
         } elseif ($this->hall_id) {
             $selectedHall = Hall::find($this->hall_id);
             $tenantId = $selectedHall ? $selectedHall->tenant_id : null;
@@ -524,14 +540,20 @@ class WalkInBookingModal extends Component
                         $q->orWhere('tenant_id', $tenantId);
                     }
                 })->get();
+            $menuItems = MenuItem::where('is_active', true)
+                ->where(function ($q) use ($tenantId) {
+                    $q->whereNull('tenant_id');
+                    if ($tenantId) {
+                        $q->orWhere('tenant_id', $tenantId);
+                    }
+                })->get();
         } else {
             $halls = Hall::where('is_active', true)
                 ->whereHas('tenant', fn ($t) => $t->where('is_active', true)->where('verification_status', 'APPROVED'))
                 ->get();
-            $packages = Package::where('is_active', true)->get();
+            $packages = Package::where('is_active', true)->whereNull('tenant_id')->get();
+            $menuItems = MenuItem::where('is_active', true)->whereNull('tenant_id')->get();
         }
-
-        $menuItems = MenuItem::where('is_active', true)->get();
 
         return view('livewire.walk-in-booking-modal', [
             'halls' => $halls,

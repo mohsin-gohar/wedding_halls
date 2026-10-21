@@ -49,24 +49,24 @@
       }">
 
     <!-- Top Command Strip -->
-    <div class="bg-[#171513] text-white text-[11px] font-mono py-1.5 px-4 border-b border-[#C6A15B]/30 flex items-center justify-between">
+    <div class="bg-[#171513] text-white text-[11px] font-sans py-1.5 px-4 border-b border-[#C6A15B]/25 flex items-center justify-between">
         <div class="flex items-center gap-3">
-            <span class="inline-block w-2 h-2 rounded-full bg-[#C6A15B] animate-pulse"></span>
+            <span class="inline-block w-2 h-2 rounded-full bg-[#C6A15B]"></span>
             <span class="text-stone-300">
-                TENANT SUITE: <strong class="text-white">{{ auth()->user()->tenant->name ?? 'EventHub Host' }}</strong>
+                VENUE: <strong class="text-white">{{ auth()->user()->tenant->name ?? 'EventHub Host' }}</strong>
             </span>
             <span class="text-stone-600 hidden sm:inline">|</span>
-            <span class="text-stone-400 hidden sm:inline">LOCK: ACID &amp; DISTRIBUTED MUTEX</span>
+            <span class="text-stone-400 hidden sm:inline">CONCURRENCY SAFEGUARD: ACTIVE</span>
         </div>
         <div class="flex items-center gap-4 text-stone-400 text-[11px]">
-            <button type="button" @click="toggleTheme()" class="hover:text-[#C6A15B] transition flex items-center gap-1.5 font-mono cursor-pointer" title="Toggle Light / Dark Mode">
+            <button type="button" @click="toggleTheme()" class="hover:text-[#C6A15B] transition flex items-center gap-1.5 font-sans cursor-pointer" title="Toggle Light / Dark Mode">
                 <span x-show="darkMode">☀️ Light Mode</span>
                 <span x-show="!darkMode">🌙 Dark Mode</span>
             </button>
             <span>•</span>
             <span>CURRENCY: <strong>PKR</strong></span>
             <span>•</span>
-            <a href="{{ route('home') }}" target="_blank" class="text-[#C6A15B] hover:underline flex items-center gap-1">
+            <a href="{{ route('home') }}" target="_blank" class="text-[#C6A15B] hover:underline flex items-center gap-1 font-medium">
                 <span>Public Marketplace ↗</span>
             </a>
         </div>
@@ -90,18 +90,18 @@
     <div class="flex-1 flex">
         
         <!-- Desktop Luxury Obsidian Sidebar (Strict Zero-Pill) -->
-        <aside class="hidden lg:flex lg:flex-col lg:w-64 bg-gradient-to-b from-[#F8F5EF] to-[#E7E5E4] dark:from-[#15130F] dark:to-[#0F0D0A] text-[#171513] dark:text-white border-r border-[#E7E5E4] dark:border-[#C6A15B]/25 justify-between shrink-0 shadow-[8px_0_40px_-12px_rgba(0,0,0,0.85)]">
+        <aside class="hidden lg:flex lg:flex-col lg:w-64 bg-gradient-to-b from-[#F8F5EF] to-[#E7E5E4] dark:from-[#15130F] dark:to-[#0F0D0A] text-[#171513] dark:text-white border-r border-[#E7E5E4] dark:border-[#C6A15B]/25 justify-between shrink-0 shadow-md">
             <div>
                 <!-- Brand Badge -->
                     <div class="p-6 border-b border-[#E7E5E4] dark:border-[#C6A15B]/20 flex items-center justify-between bg-gradient-to-r from-transparent to-[#171513]/5 dark:to-[#C6A15B]/5">
                         <a href="{{ route('home') }}" class="flex items-center gap-3 group">
-                            <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub Logo" class="h-10 w-auto object-contain rounded border border-[#C6A15B] bg-[#171513] shadow-[0_0_18px_rgba(198,161,91,0.25)]">
+                            <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub Logo" class="h-10 w-auto object-contain rounded-lg border border-[#C6A15B]/40 bg-[#171513] shadow-sm">
                             <div>
                                 <span class="font-cinzel text-lg font-bold tracking-[0.15em] text-[#171513] dark:text-white block group-hover:text-[#C6A15B] transition">EventHub</span>
                                 @if(auth()->user()->isSuperAdmin())
-                                    <span class="text-[9px] uppercase tracking-[0.18em] text-[#C6A15B] font-bold block -mt-1 font-mono">Platform Super Admin</span>
+                                    <span class="text-[9px] uppercase tracking-[0.16em] text-[#C6A15B] font-semibold block -mt-0.5 font-sans">Platform Super Admin</span>
                                 @else
-                                    <span class="text-[9px] uppercase tracking-[0.18em] text-[#C6A15B] font-medium block -mt-1 font-mono">Rent Admin Suite</span>
+                                    <span class="text-[9px] uppercase tracking-[0.16em] text-[#C6A15B] font-medium block -mt-0.5 font-sans">Rent Admin Suite</span>
                                 @endif
                             </div>
                         </a>
@@ -512,9 +512,8 @@
                     @endif
 
                     @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isFrontDesk())
-                        <button onclick="Livewire.dispatch('openWalkInModal')" class="btn-gold !h-9 !px-4 text-xs font-bold uppercase shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.55)] transition-all duration-300 group relative overflow-hidden">
-                            <span class="relative z-10">+ Walk-In Reservation</span>
-                            <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                        <button onclick="Livewire.dispatch('openWalkInModal')" class="btn-gold !h-9 !px-4 text-xs font-bold font-sans tracking-wide rounded-lg shadow-sm transition-all duration-200">
+                            <span>+ Walk-In Reservation</span>
                         </button>
                     @endif
                     <a href="{{ route('home') }}" target="_blank" class="btn-secondary !h-9 !px-3 text-xs hidden sm:inline-flex">

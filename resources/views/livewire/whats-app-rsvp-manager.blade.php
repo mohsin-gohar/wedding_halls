@@ -124,13 +124,13 @@
                                 <td class="text-center font-bold text-[#171513] dark:text-white font-mono">{{ $rsvp->attending_count }}</td>
                                 <td>
                                     <span class="badge-clean
-                                        {{ $rsvp->status === 'ATTENDING' ? 'badge-confirmed' : 
-                                          ($rsvp->status === 'DECLINED' ? 'badge-cancelled' : 'badge-hold') }}">
-                                        {{ $rsvp->status }}
+                                        {{ $rsvp->rsvp_status === 'ATTENDING' ? 'badge-confirmed' : 
+                                          ($rsvp->rsvp_status === 'DECLINED' ? 'badge-cancelled' : 'badge-hold') }}">
+                                        {{ $rsvp->rsvp_status }}
                                     </span>
                                 </td>
                                 <td class="text-stone-500 dark:text-stone-400 italic truncate max-w-xs text-xs font-mono">
-                                    {{ $rsvp->last_message_text ?? 'Awaiting Reply' }}
+                                    {{ $rsvp->last_reply_message ?? 'Awaiting Reply' }}
                                 </td>
                             </tr>
                         @empty

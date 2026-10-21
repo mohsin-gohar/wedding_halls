@@ -101,13 +101,31 @@ class StaffPayroll extends Component
             $otRate = 250.00;
             $net = PayrollModel::calculateNet($defaultBasic, $otHours, $otRate, 0, 0);
 
-            PayrollModel::firstOrCreate(
-                [
+            $existing = PayrollModel::where('tenant_id', $tenantId)
+                ->where('user_id', $m->id)
+                ->where('month_year', $this->selectedMonth)
+                ->first();
+
+            if ($existing) {
+                // If still draft, sync latest overtime hours and recalculated net salary while preserving existing allowances/deductions
+                if ($existing->status === 'DRAFT') {
+                    $newNet = PayrollModel::calculateNet(
+                        (float) $existing->basic_salary,
+                        $otHours,
+                        (float) $existing->overtime_rate,
+                        (float) $existing->allowances,
+                        (float) $existing->deductions
+                    );
+                    $existing->update([
+                        'overtime_hours' => $otHours,
+                        'net_salary' => $newNet,
+                    ]);
+                }
+            } else {
+                PayrollModel::create([
                     'tenant_id' => $tenantId,
                     'user_id' => $m->id,
                     'month_year' => $this->selectedMonth,
-                ],
-                [
                     'basic_salary' => $defaultBasic,
                     'overtime_hours' => $otHours,
                     'overtime_rate' => $otRate,
@@ -116,8 +134,8 @@ class StaffPayroll extends Component
                     'net_salary' => $net,
                     'status' => 'DRAFT',
                     'payment_method' => 'CASH',
-                ]
-            );
+                ]);
+            }
             $generatedCount++;
         }
 

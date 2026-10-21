@@ -56,12 +56,12 @@
                 
                 <!-- Brand Identity -->
                 <a href="{{ route('home') }}" class="group flex shrink-0 items-center gap-3 max-sm:gap-2.5">
-                    <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub" class="h-10 sm:h-12 w-auto object-contain rounded border border-[#C6A15B]/50 bg-[#171513] shadow-[0_0_15px_rgba(198,161,91,0.25)] group-hover:border-[#C6A15B] transition-all duration-300">
+                    <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub" class="h-10 sm:h-12 w-auto object-contain rounded-lg border border-[#C6A15B]/35 bg-[#171513] shadow-sm group-hover:border-[#C6A15B] transition-all duration-300">
                     <span class="flex flex-col leading-none">
-                        <span class="font-cinzel text-base font-bold tracking-[0.18em] text-white transition-colors duration-300 group-hover:text-[#F2DE9A] sm:text-lg">
+                        <span class="font-cinzel text-base font-bold tracking-[0.16em] text-white transition-colors duration-300 group-hover:text-[#F2DE9A] sm:text-lg">
                             EventHub
                         </span>
-                        <span class="mt-1.5 hidden text-[9px] font-medium uppercase tracking-[0.28em] text-[#C6A15B]/75 sm:block">
+                        <span class="mt-1 hidden text-[9px] font-sans font-medium uppercase tracking-[0.22em] text-[#C6A15B]/80 sm:block">
                             Luxury Banquets &amp; Marquees
                         </span>
                     </span>
@@ -91,7 +91,7 @@
                     <!-- Theme Toggle (icon-only) -->
                     <button type="button"
                             @click="toggleTheme()"
-                            class="flex h-9 w-9 items-center justify-center border border-[#C6A15B]/40 bg-[#171513] text-[#C6A15B] transition-colors duration-300 hover:border-[#C6A15B] hover:bg-[#C6A15B] hover:text-[#171513] cursor-pointer"
+                            class="flex h-9 w-9 items-center justify-center rounded-lg border border-[#C6A15B]/30 bg-[#171513] text-[#C6A15B] transition-colors duration-200 hover:border-[#C6A15B] hover:bg-[#C6A15B] hover:text-[#171513] cursor-pointer"
                             title="Toggle Light / Dark Mode"
                             aria-label="Toggle Light / Dark Mode">
                         <svg x-show="darkMode" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
@@ -108,29 +108,29 @@
                         </a>
                     @else
                         @if(auth()->user()->isSuperAdmin())
-                            <a href="{{ route('admin.dashboard') }}" class="btn-gold !h-9 !px-3 !py-1 !text-[10px] shadow-[0_0_15px_rgba(198,161,91,0.3)] inline-flex items-center gap-1.5 font-bold whitespace-nowrap">
+                            <a href="{{ route('admin.dashboard') }}" class="btn-gold !h-9 !px-3 !py-1 !text-[11px] inline-flex items-center gap-1.5 font-bold whitespace-nowrap">
                                 <span>Owner Dashboard</span>
                             </a>
                         @elseif(auth()->user()->isCustomer())
-                            <a href="{{ route('customer.dashboard') }}" class="btn-gold !h-9 !px-3 !py-1 !text-[10px] shadow-[0_0_15px_rgba(198,161,91,0.3)] inline-flex items-center gap-1.5 font-bold whitespace-nowrap">
+                            <a href="{{ route('customer.dashboard') }}" class="btn-gold !h-9 !px-3 !py-1 !text-[11px] inline-flex items-center gap-1.5 font-bold whitespace-nowrap">
                                 <span>My Bookings</span>
                             </a>
                         @else
-                            <a href="{{ route('dashboard') }}" class="btn-gold !h-9 !px-3 !py-1 !text-[10px] shadow-[0_0_15px_rgba(198,161,91,0.3)] inline-flex items-center gap-1.5 font-bold whitespace-nowrap">
+                            <a href="{{ route('dashboard') }}" class="btn-gold !h-9 !px-3 !py-1 !text-[11px] inline-flex items-center gap-1.5 font-bold whitespace-nowrap">
                                 <span>Hall Dashboard</span>
                             </a>
                         @endif
 
                         <form method="POST" action="{{ route('logout') }}" class="hidden sm:inline">
                             @csrf
-                            <button type="submit" title="Sign Out" class="h-9 px-3 border border-white/20 bg-[#171513] text-stone-300 hover:text-[#F2DE9A] hover:border-[#C6A15B]/60 text-xs font-semibold transition-colors duration-300 cursor-pointer">
+                            <button type="submit" title="Sign Out" class="h-9 px-3 rounded-lg border border-white/20 bg-[#171513] text-stone-300 hover:text-[#F2DE9A] hover:border-[#C6A15B]/60 text-xs font-semibold transition-colors duration-300 cursor-pointer">
                                 Exit
                             </button>
                         </form>
                     @endguest
 
                     <!-- Mobile Menu Hamburger -->
-                    <button type="button" @click="mobileNav = !mobileNav" class="xl:hidden flex h-9 w-9 items-center justify-center border border-[#C6A15B]/40 bg-[#171513] text-white transition-colors duration-300 hover:border-[#C6A15B] hover:text-[#C6A15B] cursor-pointer" aria-label="Toggle Navigation" :aria-expanded="mobileNav ? 'true' : 'false'">
+                    <button type="button" @click="mobileNav = !mobileNav" class="xl:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-[#C6A15B]/30 bg-[#171513] text-white transition-colors duration-300 hover:border-[#C6A15B] hover:text-[#C6A15B] cursor-pointer" aria-label="Toggle Navigation" :aria-expanded="mobileNav ? 'true' : 'false'">
                         <svg x-show="!mobileNav" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M4 7h16M4 12h16M4 17h16"/>
                         </svg>
@@ -154,7 +154,7 @@
              class="xl:hidden bg-[#171513] border-b border-[#C6A15B]/30 px-5 py-5 space-y-5 shadow-2xl text-white"
              style="display: none;"
              @click.outside="mobileNav = false">
-            <div class="text-[10px] uppercase font-bold tracking-[0.24em] text-[#C6A15B] font-mono">Navigation</div>
+            <div class="text-[10px] uppercase font-bold tracking-[0.2em] text-[#C6A15B] font-sans">Navigation</div>
             <nav class="flex flex-col" aria-label="Mobile">
                 @foreach ($mobileNavLinks as $mobileLink)
                     @php $mobileActive = request()->routeIs(...$mobileLink['patterns']); @endphp
@@ -202,10 +202,10 @@
                 <!-- Brand Info -->
                 <div class="lg:col-span-2 space-y-5">
                     <a href="{{ route('home') }}" class="flex items-center gap-3 group">
-                        <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub Logo" class="h-12 w-auto object-contain rounded border border-[#C6A15B]/50 bg-[#171513] shadow-[0_0_20px_rgba(198,161,91,0.3)]">
+                        <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub Logo" class="h-12 w-auto object-contain rounded-lg border border-[#C6A15B]/35 bg-[#171513] shadow-sm">
                         <div>
                             <span class="font-cinzel text-2xl font-bold tracking-[0.16em] text-white group-hover:text-[#F2DE9A] transition block">EventHub</span>
-                            <span class="block text-[9px] uppercase tracking-[0.25em] text-[#C6A15B] font-mono mt-0.5">Pakistan's Venue Platform</span>
+                            <span class="block text-[9px] uppercase tracking-[0.22em] text-[#C6A15B]/80 font-sans font-medium mt-0.5">Pakistan's Venue Platform</span>
                         </div>
                     </a>
                     <p class="text-sm text-stone-400 font-light leading-relaxed max-w-sm">

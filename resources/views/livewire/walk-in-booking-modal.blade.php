@@ -1,49 +1,48 @@
 <div>
     @if($isOpen)
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md overflow-y-auto">
-        <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/60 gold-foil-border max-w-2xl w-full shadow-[0_25px_70px_rgba(0,0,0,0.6)] overflow-hidden my-8 p-6 sm:p-8 space-y-6 relative transform transition-all text-[#171513] dark:text-[#F8F5EF]">
+        <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/40 max-w-2xl w-full shadow-[0_25px_70px_rgba(0,0,0,0.6)] rounded-3xl overflow-hidden my-8 p-6 sm:p-8 space-y-6 relative transform transition-all text-[#171513] dark:text-[#F8F5EF]">
             
             <!-- Modal Header (Editorial Luxury Style Matching Home Hero) -->
             <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-5 flex items-start justify-between">
                 <div>
-
-                    <h2 class="font-serif-luxury text-2xl sm:text-3xl text-[#171513] dark:text-white font-normal tracking-wide mt-1">
+                    <h2 class="font-serif-luxury text-2xl sm:text-3xl text-[#171513] dark:text-white font-normal tracking-wide mt-1" style="text-wrap: balance;">
                         Walk-in Reservation Wizard
                     </h2>
-                    <p class="text-xs text-stone-600 dark:text-stone-300 font-sans mt-1">
+                    <p class="text-xs text-stone-600 dark:text-stone-300 font-sans mt-1" style="text-wrap: pretty;">
                         Select wedding space, event date, operational shift slot, and catering package.
                     </p>
                 </div>
-                <button wire:click="closeModal" class="w-9 h-9 border border-[#E7E5E4] dark:border-white/20 hover:border-[#C6A15B] text-stone-600 dark:text-white/70 hover:text-[#171513] dark:hover:text-white hover:bg-[#F8F5EF] dark:hover:bg-[#C6A15B]/10 flex items-center justify-center transition text-xl font-bold leading-none">&times;</button>
+                <button wire:click="closeModal" class="w-9 h-9 rounded-full border border-[#E7E5E4] dark:border-white/20 hover:border-[#C6A15B] text-stone-600 dark:text-white/70 hover:text-[#171513] dark:hover:text-white hover:bg-[#F8F5EF] dark:hover:bg-[#C6A15B]/10 flex items-center justify-center transition text-xl font-bold leading-none">&times;</button>
             </div>
 
             <!-- Wizard Progress Steps (Minimalist Editorial Tabs) -->
             @if($step < 5)
             <div class="grid grid-cols-4 gap-2 border-b border-[#E7E5E4] dark:border-white/10 pb-4">
                 <div class="text-center">
-                    <div class="h-1 transition {{ $step >= 1 ? 'bg-[#C6A15B]' : 'bg-stone-200 dark:bg-stone-800' }}"></div>
-                    <span class="text-[11px] uppercase tracking-wider block mt-2 font-mono {{ $step >= 1 ? 'text-[#8F7239] dark:text-[#C6A15B] font-bold' : 'text-stone-400 dark:text-stone-500' }}">1. Shift</span>
+                    <div class="h-1 rounded-full transition {{ $step >= 1 ? 'bg-[#C6A15B]' : 'bg-stone-200 dark:bg-stone-800' }}"></div>
+                    <span class="text-[11px] uppercase tracking-wider block mt-2 font-sans font-medium {{ $step >= 1 ? 'text-[#8F7239] dark:text-[#D4AF67]' : 'text-stone-400 dark:text-stone-500' }}">1. Shift</span>
                 </div>
                 <div class="text-center">
-                    <div class="h-1 transition {{ $step >= 2 ? 'bg-[#C6A15B]' : 'bg-stone-200 dark:bg-stone-800' }}"></div>
-                    <span class="text-[11px] uppercase tracking-wider block mt-2 font-mono {{ $step >= 2 ? 'text-[#8F7239] dark:text-[#C6A15B] font-bold' : 'text-stone-400 dark:text-stone-500' }}">2. Host</span>
+                    <div class="h-1 rounded-full transition {{ $step >= 2 ? 'bg-[#C6A15B]' : 'bg-stone-200 dark:bg-stone-800' }}"></div>
+                    <span class="text-[11px] uppercase tracking-wider block mt-2 font-sans font-medium {{ $step >= 2 ? 'text-[#8F7239] dark:text-[#D4AF67]' : 'text-stone-400 dark:text-stone-500' }}">2. Host</span>
                 </div>
                 <div class="text-center">
-                    <div class="h-1 transition {{ $step >= 3 ? 'bg-[#C6A15B]' : 'bg-stone-200 dark:bg-stone-800' }}"></div>
-                    <span class="text-[11px] uppercase tracking-wider block mt-2 font-mono {{ $step >= 3 ? 'text-[#8F7239] dark:text-[#C6A15B] font-bold' : 'text-stone-400 dark:text-stone-500' }}">3. Menu</span>
+                    <div class="h-1 rounded-full transition {{ $step >= 3 ? 'bg-[#C6A15B]' : 'bg-stone-200 dark:bg-stone-800' }}"></div>
+                    <span class="text-[11px] uppercase tracking-wider block mt-2 font-sans font-medium {{ $step >= 3 ? 'text-[#8F7239] dark:text-[#D4AF67]' : 'text-stone-400 dark:text-stone-500' }}">3. Menu</span>
                 </div>
                 <div class="text-center">
-                    <div class="h-1 transition {{ $step >= 4 ? 'bg-[#C6A15B]' : 'bg-stone-200 dark:bg-stone-800' }}"></div>
-                    <span class="text-[11px] uppercase tracking-wider block mt-2 font-mono {{ $step >= 4 ? 'text-[#8F7239] dark:text-[#C6A15B] font-bold' : 'text-stone-400 dark:text-stone-500' }}">{{ $isStaff ? '4. Advance' : '4. Review' }}</span>
+                    <div class="h-1 rounded-full transition {{ $step >= 4 ? 'bg-[#C6A15B]' : 'bg-stone-200 dark:bg-stone-800' }}"></div>
+                    <span class="text-[11px] uppercase tracking-wider block mt-2 font-sans font-medium {{ $step >= 4 ? 'text-[#8F7239] dark:text-[#D4AF67]' : 'text-stone-400 dark:text-stone-500' }}">{{ $isStaff ? '4. Advance' : '4. Review' }}</span>
                 </div>
             </div>
             @endif
 
             <!-- Error Banner -->
             @if($errorMessage)
-            <div class="p-3.5 bg-[#171513]/8 dark:bg-[#171513]/90 border border-[#C6A15B]/50 dark:border-[#C6A15B]/60 text-xs text-[#171513] dark:text-[#F8F5EF] font-medium flex items-center justify-between shadow-sm">
+            <div class="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-600 dark:text-red-300 font-medium flex items-center justify-between shadow-sm">
                 <span>{{ $errorMessage }}</span>
-                <button wire:click="$set('errorMessage', null)" class="text-[#171513] dark:text-[#F8F5EF] font-bold text-base">&times;</button>
+                <button wire:click="$set('errorMessage', null)" class="text-red-600 dark:text-red-300 font-bold text-base">&times;</button>
             </div>
             @endif
 
@@ -52,8 +51,8 @@
             <div class="space-y-5">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-[11px] uppercase tracking-[0.1em] text-[#8F7239] dark:text-[#C6A15B] mb-1.5 font-mono font-bold">Select Banquet Hall</label>
-                        <select wire:model.live="hall_id" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 text-sm font-medium">
+                        <label class="block text-[11px] uppercase tracking-[0.1em] text-[#8F7239] dark:text-[#D4AF67] mb-1.5 font-sans font-semibold">Select Banquet Hall</label>
+                        <select wire:model.live="hall_id" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B] rounded-xl text-[#171513] dark:text-white py-2.5 px-3.5 text-sm font-medium">
                             @foreach($halls as $hall)
                                 <option value="{{ $hall->id }}">{{ $hall->name }} (Rent: PKR {{ number_format($hall->base_rent) }})</option>
                             @endforeach
@@ -61,14 +60,14 @@
                     </div>
 
                     <div>
-                        <label class="block text-[11px] uppercase tracking-[0.1em] text-[#8F7239] dark:text-[#C6A15B] mb-1.5 font-mono font-bold">Event Date</label>
-                        <input type="date" wire:model.live="event_date" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 text-sm font-medium">
+                        <label class="block text-[11px] uppercase tracking-[0.1em] text-[#8F7239] dark:text-[#D4AF67] mb-1.5 font-sans font-semibold">Event Date</label>
+                        <input type="date" wire:model.live="event_date" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B] rounded-xl text-[#171513] dark:text-white py-2.5 px-3.5 text-sm font-medium">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-[11px] uppercase tracking-[0.1em] text-[#8F7239] dark:text-[#C6A15B] mb-1.5 font-mono font-bold">Event Function Type</label>
-                    <select wire:model.live="event_type" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 text-sm font-medium">
+                    <label class="block text-[11px] uppercase tracking-[0.1em] text-[#8F7239] dark:text-[#D4AF67] mb-1.5 font-sans font-semibold">Event Function Type</label>
+                    <select wire:model.live="event_type" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B] rounded-xl text-[#171513] dark:text-white py-2.5 px-3.5 text-sm font-medium">
                         <option value="Barat">Barat Ceremony</option>
                         <option value="Valima">Valima Reception</option>
                         <option value="Mehndi">Mehndi Celebration</option>
@@ -79,24 +78,24 @@
                 </div>
 
                 <div>
-                    <label class="block text-[11px] uppercase tracking-[0.1em] text-[#8F7239] dark:text-[#C6A15B] mb-2 font-mono font-bold">Operational Shift Slot</label>
+                    <label class="block text-[11px] uppercase tracking-[0.1em] text-[#8F7239] dark:text-[#D4AF67] mb-2 font-sans font-semibold">Operational Shift Slot</label>
                     <div class="grid grid-cols-3 gap-3">
-                        <label class="cursor-pointer border p-3.5 text-center transition {{ $slot_type === 'AFTERNOON' ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#171513] dark:text-[#C6A15B] font-bold shadow-sm ring-1 ring-[#C6A15B]' : 'border-[#E7E5E4] dark:border-white/15 bg-[#F8F5EF] dark:bg-[#171513] hover:border-[#C6A15B] text-stone-700 dark:text-stone-300' }}">
+                        <label class="cursor-pointer border p-3.5 text-center rounded-xl transition-all {{ $slot_type === 'AFTERNOON' ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#171513] dark:text-[#C6A15B] font-bold shadow-sm ring-1 ring-[#C6A15B]' : 'border-[#E7E5E4] dark:border-white/15 bg-[#F8F5EF] dark:bg-[#171513] hover:border-[#C6A15B] text-stone-700 dark:text-stone-300' }}">
                             <input type="radio" wire:model.live="slot_type" value="AFTERNOON" class="sr-only">
-                            <span class="text-xs uppercase font-bold block font-mono">Afternoon</span>
-                            <span class="text-[11px] text-stone-500 dark:text-stone-400 block font-mono mt-1">12:00 – 16:00</span>
+                            <span class="text-xs uppercase font-semibold block font-sans">Afternoon</span>
+                            <span class="text-[11px] text-stone-500 dark:text-stone-400 block font-sans mt-1">12:00 – 16:00</span>
                         </label>
 
-                        <label class="cursor-pointer border p-3.5 text-center transition {{ $slot_type === 'EVENING' ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#171513] dark:text-[#C6A15B] font-bold shadow-sm ring-1 ring-[#C6A15B]' : 'border-[#E7E5E4] dark:border-white/15 bg-[#F8F5EF] dark:bg-[#171513] hover:border-[#C6A15B] text-stone-700 dark:text-stone-300' }}">
+                        <label class="cursor-pointer border p-3.5 text-center rounded-xl transition-all {{ $slot_type === 'EVENING' ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#171513] dark:text-[#C6A15B] font-bold shadow-sm ring-1 ring-[#C6A15B]' : 'border-[#E7E5E4] dark:border-white/15 bg-[#F8F5EF] dark:bg-[#171513] hover:border-[#C6A15B] text-stone-700 dark:text-stone-300' }}">
                             <input type="radio" wire:model.live="slot_type" value="EVENING" class="sr-only">
-                            <span class="text-xs uppercase font-bold block font-mono">Evening</span>
-                            <span class="text-[11px] text-stone-500 dark:text-stone-400 block font-mono mt-1">19:00 – 23:00</span>
+                            <span class="text-xs uppercase font-semibold block font-sans">Evening</span>
+                            <span class="text-[11px] text-stone-500 dark:text-stone-400 block font-sans mt-1">19:00 – 23:00</span>
                         </label>
 
-                        <label class="cursor-pointer border p-3.5 text-center transition {{ $slot_type === 'NIGHT' ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#171513] dark:text-[#C6A15B] font-bold shadow-sm ring-1 ring-[#C6A15B]' : 'border-[#E7E5E4] dark:border-white/15 bg-[#F8F5EF] dark:bg-[#171513] hover:border-[#C6A15B] text-stone-700 dark:text-stone-300' }}">
+                        <label class="cursor-pointer border p-3.5 text-center rounded-xl transition-all {{ $slot_type === 'NIGHT' ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#171513] dark:text-[#C6A15B] font-bold shadow-sm ring-1 ring-[#C6A15B]' : 'border-[#E7E5E4] dark:border-white/15 bg-[#F8F5EF] dark:bg-[#171513] hover:border-[#C6A15B] text-stone-700 dark:text-stone-300' }}">
                             <input type="radio" wire:model.live="slot_type" value="NIGHT" class="sr-only">
-                            <span class="text-xs uppercase font-bold block font-mono">Late Night</span>
-                            <span class="text-[11px] text-stone-500 dark:text-stone-400 block font-mono mt-1">23:30 – 03:30</span>
+                            <span class="text-xs uppercase font-semibold block font-sans">Late Night</span>
+                            <span class="text-[11px] text-stone-500 dark:text-stone-400 block font-sans mt-1">23:30 – 03:30</span>
                         </label>
                     </div>
                 </div>
@@ -345,53 +344,53 @@
             <!-- STEP 5: Success & Instant Confirmation -->
             @if($step === 5 && $createdBooking)
             <div class="p-6 text-center space-y-6">
-                <div class="w-16 h-16 border-2 border-[#C6A15B]/60 bg-[#C6A15B]/15 dark:bg-[#171513]/85 flex items-center justify-center mx-auto text-3xl font-cinzel text-[#8F7239] dark:text-[#C6A15B]">
+                <div class="w-16 h-16 rounded-full border border-[#C6A15B]/50 bg-[#C6A15B]/15 dark:bg-[#171513]/85 flex items-center justify-center mx-auto text-3xl font-cinzel text-[#8F7239] dark:text-[#D4AF67] shadow-sm">
                     ✓
                 </div>
 
                 <div>
                     @if($createdBooking->status === 'CONFIRMED')
-                        <span class="text-[10px] uppercase tracking-[0.25em] text-[#8F7239] dark:text-[#C6A15B] font-bold block font-mono">
+                        <span class="text-[10px] uppercase tracking-[0.25em] text-[#8F7239] dark:text-[#D4AF67] font-semibold block font-sans">
                             Zero-Collision Atomic Lock Acquired
                         </span>
-                        <h3 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white mt-2 font-normal">
+                        <h3 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white mt-2 font-normal" style="text-wrap: balance;">
                             Reservation Confirmed
                         </h3>
-                        <p class="text-xs text-stone-600 dark:text-stone-300 font-sans mt-1 max-w-md mx-auto">
+                        <p class="text-xs text-stone-600 dark:text-stone-300 font-sans mt-1 max-w-md mx-auto" style="text-wrap: pretty;">
                             Booking #{{ substr($createdBooking->id, 0, 8) }} recorded with automated kitchen KOT ingredient calculations.
                         </p>
                     @else
-                        <span class="text-[10px] uppercase tracking-[0.25em] text-[#8F7239] dark:text-[#C6A15B] font-bold block font-mono">
+                        <span class="text-[10px] uppercase tracking-[0.25em] text-[#8F7239] dark:text-[#D4AF67] font-semibold block font-sans">
                             Booking Request Received
                         </span>
-                        <h3 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white mt-2 font-normal">
+                        <h3 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white mt-2 font-normal" style="text-wrap: balance;">
                             Inquiry Submitted
                         </h3>
-                        <p class="text-xs text-stone-600 dark:text-stone-300 font-sans mt-1 max-w-md mx-auto">
+                        <p class="text-xs text-stone-600 dark:text-stone-300 font-sans mt-1 max-w-md mx-auto" style="text-wrap: pretty;">
                             Inquiry #{{ substr($createdBooking->id, 0, 8) }} has been forwarded to the venue banquet management team. You will be contacted shortly with official quotation.
                         </p>
                     @endif
                 </div>
 
                 <!-- Action Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto pt-2 font-mono">
-                    <a href="{{ route('documents.agreement', $createdBooking->id) }}" target="_blank" class="border border-[#E7E5E4] dark:border-white/20 bg-[#F8F5EF] dark:bg-white/10 hover:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3 text-xs font-bold uppercase transition block text-center">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto pt-2 font-sans">
+                    <a href="{{ route('documents.agreement', $createdBooking->id) }}" target="_blank" class="border border-[#E7E5E4] dark:border-white/20 bg-[#F8F5EF] dark:bg-white/10 hover:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition block text-center">
                         View Contract &rarr;
                     </a>
                     @if($createdBooking->payments->isNotEmpty())
-                        <a href="{{ route('documents.receipt', $createdBooking->payments->first()->id) }}" target="_blank" class="btn-gold !h-auto py-2.5 px-3 text-xs font-bold uppercase block text-center">
+                        <a href="{{ route('documents.receipt', $createdBooking->payments->first()->id) }}" target="_blank" class="btn-gold !h-auto py-2.5 px-3 rounded-xl text-xs font-semibold uppercase tracking-wider block text-center">
                             Print Receipt &rarr;
                         </a>
                     @endif
                     @if($createdBooking->kitchenKot && $isStaff)
-                        <a href="{{ route('documents.kot', $createdBooking->kitchenKot->id) }}" target="_blank" class="border border-[#C6A15B]/60 bg-[#C6A15B]/15 dark:bg-[#171513]/85 text-[#8F7239] dark:text-[#C6A15B] hover:bg-[#C6A15B]/20 py-2.5 px-3 text-xs font-bold uppercase transition block text-center">
+                        <a href="{{ route('documents.kot', $createdBooking->kitchenKot->id) }}" target="_blank" class="border border-[#C6A15B]/50 bg-[#C6A15B]/15 dark:bg-[#171513]/85 text-[#8F7239] dark:text-[#D4AF67] hover:bg-[#C6A15B]/20 py-2.5 px-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition block text-center">
                             Chef KOT Slip &rarr;
                         </a>
                     @endif
                 </div>
 
                 <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10">
-                    <button wire:click="closeModal" class="btn-obsidian dark:bg-white/10 dark:text-white dark:border-white/20 px-6 py-2.5 text-xs font-bold uppercase tracking-wider font-mono transition">
+                    <button wire:click="closeModal" class="btn-obsidian dark:bg-white/10 dark:text-white dark:border-white/20 px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider font-sans transition">
                         Close Terminal
                     </button>
                 </div>

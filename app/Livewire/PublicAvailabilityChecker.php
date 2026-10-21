@@ -65,12 +65,18 @@ class PublicAvailabilityChecker extends Component
         }
 
         // Quick date shortcuts (This Friday, This Saturday, This Sunday, Next Saturday)
+        $now = Carbon::now();
+        $thisFriday = $now->isFriday() ? $now->copy() : $now->copy()->next(Carbon::FRIDAY);
+        $thisSaturday = $now->isSaturday() ? $now->copy() : $now->copy()->next(Carbon::SATURDAY);
+        $thisSunday = $now->isSunday() ? $now->copy() : $now->copy()->next(Carbon::SUNDAY);
+        $nextSaturday = $thisSaturday->copy()->addWeek();
+
         $shortcuts = [
             ['label' => 'Tomorrow', 'date' => Carbon::tomorrow()->format('Y-m-d')],
-            ['label' => 'This Friday', 'date' => Carbon::now()->next(Carbon::FRIDAY)->format('Y-m-d')],
-            ['label' => 'This Saturday', 'date' => Carbon::now()->next(Carbon::SATURDAY)->format('Y-m-d')],
-            ['label' => 'This Sunday', 'date' => Carbon::now()->next(Carbon::SUNDAY)->format('Y-m-d')],
-            ['label' => 'Next Saturday', 'date' => Carbon::now()->next(Carbon::SATURDAY)->addWeek()->format('Y-m-d')],
+            ['label' => 'This Friday', 'date' => $thisFriday->format('Y-m-d')],
+            ['label' => 'This Saturday', 'date' => $thisSaturday->format('Y-m-d')],
+            ['label' => 'This Sunday', 'date' => $thisSunday->format('Y-m-d')],
+            ['label' => 'Next Saturday', 'date' => $nextSaturday->format('Y-m-d')],
         ];
 
         return view('livewire.public-availability-checker', [

@@ -251,92 +251,104 @@ class AdminDashboard extends Component
 
         $plan = $this->newPlanId ? SubscriptionPlan::find($this->newPlanId) : SubscriptionPlan::first();
 
-        // 1. Create Tenant with unique slug
+        // 1. Create Tenant with unique slug and subdomain
         $baseSlug = Str::slug($this->newBusinessName);
         $slug = $baseSlug;
         $counter = 1;
         while (Tenant::where('slug', $slug)->exists()) {
             $slug = $baseSlug . '-' . $counter++;
         }
-        $tenant = Tenant::create([
-            'name' => $this->newBusinessName,
-            'slug' => $slug,
-            'subdomain' => Str::slug($this->newBusinessName),
-            'email' => $this->newOwnerEmail,
-            'phone' => $this->newOwnerPhone,
-            'address' => $this->newAddress ?: "Main Boulevard, {$this->newCity}",
-            'subscription_plan_id' => $plan ? $plan->id : null,
-            'subscription_status' => 'ACTIVE',
-            'verification_status' => 'APPROVED',
-            'is_active' => true,
-            'subscription_starts_at' => Carbon::now(),
-            'subscription_expires_at' => Carbon::now()->addYear(),
-            'currency' => 'PKR',
-        ]);
 
-        // 2. Create Rent Admin User
-        $user = User::create([
-            'tenant_id' => $tenant->id,
-            'name' => $this->newOwnerName,
-            'email' => $this->newOwnerEmail,
-            'phone' => $this->newOwnerPhone,
-            'password' => Hash::make($this->newOwnerPassword),
-            'role' => 'ROLE_TENANT_OWNER',
-        ]);
-        if (method_exists($user, 'assignRole')) {
-            $user->assignRole('ROLE_TENANT_OWNER');
+        $baseSubdomain = Str::slug($this->newBusinessName);
+        $subdomain = $baseSubdomain;
+        $subCounter = 1;
+        while (Tenant::where('subdomain', $subdomain)->exists()) {
+            $subdomain = $baseSubdomain . '-' . $subCounter++;
         }
-
-        // 3. Create Venue with unique slug
-        $baseSlug = Str::slug($this->newBusinessName);
-        $slug = $baseSlug;
-        $counter = 1;
-        while (Venue::where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . $counter++;
-        }
-        $venue = Venue::create([
-            'tenant_id' => $tenant->id,
-            'name' => $this->newBusinessName . ' Complex',
-            'slug' => $slug . '-venue',
-            'city' => $this->newCity,
-            'area' => 'Prime District',
-            'address' => $this->newAddress ?: "Main Commercial Boulevard, {$this->newCity}",
-            'phone' => $this->newOwnerPhone,
-            'email' => $this->newOwnerEmail,
-            'description' => "Premier hospitality venue hosting royal weddings, banquets, and executive functions in {$this->newCity}.",
-            'is_active' => true,
-        ]);
 
         // 4. Default 2026 Luxury Services Catalog from config
         $defaultServices = config('hall.default_services');
 
-        // 5. Create Hall
-        $hall = Hall::create([
-            'tenant_id' => $tenant->id,
-            'venue_id' => $venue->id,
-            'name' => $this->newBusinessName,
-            'tagline' => $this->newTagline ?: "Exquisite Celebrations & Royal Banquets in {$this->newCity}",
-            'min_capacity' => $this->newMinCapacity,
-            'max_capacity' => $this->newMaxCapacity,
-            'base_rent' => $this->newBaseRent,
-            'description' => "Grand wedding banquet marquee ballroom featuring Austrian crystal chandeliers, climate control, VIP bridal suites, and standby CAT generators.",
-            'operating_hours' => 'Morning: 11:30 AM - 3:30 PM | Evening: 7:00 PM - 12:00 AM',
-            'policies' => "1. 50% Token advance required to atomically secure wedding date.\n2. Music permissible till 10:00 PM per city banquet bylaws.\n3. Outside catering permitted with kitchen NOC.",
-            'cover_image' => 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
-            'images' => [
-                'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
-                'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200&auto=format&fit=crop',
-                'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?q=80&w=1200&auto=format&fit=crop',
-            ],
-            'videos' => [
-                'https://www.youtube.com/embed/7wtfhZwyrcc',
-            ],
-            'services' => $defaultServices,
-            'has_air_conditioning' => true,
-            'has_generator_backup' => true,
-            'has_bridal_room' => true,
-            'is_active' => true,
-        ]);
+        [$tenant, $hall] = DB::transaction(function () use ($plan, $slug, $subdomain, $defaultServices) {
+            $tenant = Tenant::create([
+                'name' => $this->newBusinessName,
+                'slug' => $slug,
+                'subdomain' => $subdomain,
+                'email' => $this->newOwnerEmail,
+                'phone' => $this->newOwnerPhone,
+                'address' => $this->newAddress ?: "Main Boulevard, {$this->newCity}",
+                'subscription_plan_id' => $plan ? $plan->id : null,
+                'subscription_status' => 'ACTIVE',
+                'verification_status' => 'APPROVED',
+                'is_active' => true,
+                'subscription_starts_at' => Carbon::now(),
+                'subscription_expires_at' => Carbon::now()->addYear(),
+                'currency' => 'PKR',
+            ]);
+
+            // 2. Create Rent Admin User
+            $user = User::create([
+                'tenant_id' => $tenant->id,
+                'name' => $this->newOwnerName,
+                'email' => $this->newOwnerEmail,
+                'phone' => $this->newOwnerPhone,
+                'password' => Hash::make($this->newOwnerPassword),
+                'role' => 'ROLE_TENANT_OWNER',
+            ]);
+            if (method_exists($user, 'assignRole')) {
+                $user->assignRole('ROLE_TENANT_OWNER');
+            }
+
+            // 3. Create Venue with unique slug
+            $baseVenueSlug = Str::slug($this->newBusinessName);
+            $venueSlug = $baseVenueSlug;
+            $vCounter = 1;
+            while (Venue::where('slug', $venueSlug)->exists()) {
+                $venueSlug = $baseVenueSlug . '-' . $vCounter++;
+            }
+            $venue = Venue::create([
+                'tenant_id' => $tenant->id,
+                'name' => $this->newBusinessName . ' Complex',
+                'slug' => $venueSlug . '-venue',
+                'city' => $this->newCity,
+                'area' => 'Prime District',
+                'address' => $this->newAddress ?: "Main Commercial Boulevard, {$this->newCity}",
+                'phone' => $this->newOwnerPhone,
+                'email' => $this->newOwnerEmail,
+                'description' => "Premier hospitality venue hosting royal weddings, banquets, and executive functions in {$this->newCity}.",
+                'is_active' => true,
+            ]);
+
+            // 5. Create Hall
+            $hall = Hall::create([
+                'tenant_id' => $tenant->id,
+                'venue_id' => $venue->id,
+                'name' => $this->newBusinessName,
+                'tagline' => $this->newTagline ?: "Exquisite Celebrations & Royal Banquets in {$this->newCity}",
+                'min_capacity' => $this->newMinCapacity,
+                'max_capacity' => $this->newMaxCapacity,
+                'base_rent' => $this->newBaseRent,
+                'description' => "Grand wedding banquet marquee ballroom featuring Austrian crystal chandeliers, climate control, VIP bridal suites, and standby CAT generators.",
+                'operating_hours' => 'Morning: 11:30 AM - 3:30 PM | Evening: 7:00 PM - 12:00 AM',
+                'policies' => "1. 50% Token advance required to atomically secure wedding date.\n2. Music permissible till 10:00 PM per city banquet bylaws.\n3. Outside catering permitted with kitchen NOC.",
+                'cover_image' => 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
+                'images' => [
+                    'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?q=80&w=1200&auto=format&fit=crop',
+                ],
+                'videos' => [
+                    'https://www.youtube.com/embed/7wtfhZwyrcc',
+                ],
+                'services' => $defaultServices,
+                'has_air_conditioning' => true,
+                'has_generator_backup' => true,
+                'has_bridal_room' => true,
+                'is_active' => true,
+            ]);
+
+            return [$tenant, $hall];
+        });
 
         AuditLog::log(
             'HALL_PROVISIONED',
@@ -422,7 +434,15 @@ class AdminDashboard extends Component
         $tenant = Tenant::findOrFail($tenantId);
         $name = $tenant->name;
 
-        // Cascade delete or soft delete
+        // If the vendor has active/confirmed client bookings, prevent accidental destruction
+        if ($tenant->bookings()->whereIn('status', ['CONFIRMED', 'HOLD'])->exists()) {
+            $tenant->update(['is_active' => false, 'verification_status' => 'SUSPENDED']);
+            AuditLog::log('VENDOR_SUSPENDED', "Vendor [{$name}] has confirmed bookings; suspended instead of deleted to protect client data.", null, 'Tenant', $tenantId);
+            $this->feedbackMessage = "Vendor [{$name}] has active confirmed bookings. To protect client contracts and payment history, the vendor was safely deactivated and suspended instead of permanently deleted.";
+            return;
+        }
+
+        // Clean delete if no active bookings exist
         $tenant->halls()->delete();
         $tenant->users()->delete();
         $tenant->delete();
@@ -819,7 +839,7 @@ class AdminDashboard extends Component
         }
 
         if ($activeSessionsCount === 0) {
-            $activeSessionsCount = PageVisit::where('visited_at', '>=', now()->subMinutes(15))->distinct('session_id')->count();
+            $activeSessionsCount = PageVisit::where('visited_at', '>=', now()->subMinutes(15))->distinct('ip_address')->count('ip_address');
             if ($activeSessionsCount === 0) {
                 $activeSessionsCount = 1;
             }

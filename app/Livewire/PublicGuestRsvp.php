@@ -47,11 +47,18 @@ class PublicGuestRsvp extends Component
     {
         if (!$this->foundRsvp) return;
 
+        $this->validate([
+            'statusResponse' => 'required|in:ATTENDING,DECLINED',
+            'attendingGuests' => 'required|integer|min:1|max:20',
+        ]);
+
+        $count = ($this->statusResponse === 'ATTENDING') ? (int) $this->attendingGuests : 0;
+
         $this->foundRsvp->update([
             'rsvp_status' => $this->statusResponse,
-            'attending_count' => ($this->statusResponse === 'ATTENDING') ? $this->attendingGuests : 0,
+            'attending_count' => $count,
             'last_reply_message' => ($this->statusResponse === 'ATTENDING') 
-                ? "Online RSVP: Attending with {$this->attendingGuests} guests"
+                ? "Online RSVP: Attending with {$count} guest(s)"
                 : "Online RSVP: Regret, cannot attend",
         ]);
 

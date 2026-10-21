@@ -83,33 +83,121 @@ class PublicHallDetails extends Component
         $userId = auth()->id() ? (string) auth()->id() : null;
         $this->isWishlisted = HallWishlist::isWishlisted($this->hall->id, $userId, $sessionId);
         $this->wishlistCount = HallWishlist::countWishlists($this->hall->id);
+        $now = now();
+        $this->calendarMonth = $now->format('Y-m');
+        $this->selectedYear = max(2026, min(2030, (int) $now->format('Y')));
+        $this->selectedMonthNumber = (int) $now->format('n');
+
         $this->selectFirstBookableDateForCurrentMonth();
     }
 
+    public string $calendarMonth = '';
+    public int $selectedYear = 2026;
+    public int $selectedMonthNumber = 10;
+    public array $allowedYears = [2026, 2027, 2028, 2029, 2030];
     public int $monthOffset = 0; // 0 = current month, 1 = +1 month, 2 = +2 month
+
+    public function jumpToYear(int $year): void
+    {
+        if (in_array($year, $this->allowedYears, true)) {
+            $this->selectedYear = $year;
+            $this->syncCalendarMonth();
+        }
+    }
+
+    public function updatedSelectedYear(): void
+    {
+        $this->selectedYear = max(2026, min(2030, (int) $this->selectedYear));
+        $this->syncCalendarMonth();
+    }
+
+    public function updatedSelectedMonthNumber(): void
+    {
+        $this->selectedMonthNumber = max(1, min(12, (int) $this->selectedMonthNumber));
+        $this->syncCalendarMonth();
+    }
+
+    private function syncCalendarMonth(): void
+    {
+        $this->calendarMonth = sprintf('%04d-%02d', $this->selectedYear, $this->selectedMonthNumber);
+        $today = Carbon::today()->startOfMonth();
+        $target = Carbon::createFromFormat('Y-m', $this->calendarMonth)->startOfMonth();
+        $this->monthOffset = (int) $today->diffInMonths($target, false);
+        $this->selectFirstBookableDateForCurrentMonth();
+    }
 
     public function prevMonth(): void
     {
-        if ($this->monthOffset > 0) {
-            $this->monthOffset--;
-            $this->selectFirstBookableDateForCurrentMonth();
+        $this->previousMonth();
+    }
+
+    public function previousMonth(): void
+    {
+        $current = Carbon::createFromFormat('Y-m', $this->calendarMonth)->startOfMonth();
+        $prev = $current->subMonth();
+
+        if ($prev->year < 2026) {
+            return;
         }
+
+        $this->calendarMonth = $prev->format('Y-m');
+        $this->selectedYear = (int) $prev->format('Y');
+        $this->selectedMonthNumber = (int) $prev->format('n');
+        $today = Carbon::today()->startOfMonth();
+        $this->monthOffset = (int) $today->diffInMonths($prev, false);
+        $this->selectFirstBookableDateForCurrentMonth();
     }
 
     public function nextMonth(): void
     {
-        if ($this->monthOffset < 2) {
-            $this->monthOffset++;
-            $this->selectFirstBookableDateForCurrentMonth();
+        $current = Carbon::createFromFormat('Y-m', $this->calendarMonth)->startOfMonth();
+        $next = $current->addMonth();
+
+        if ($next->year > 2030) {
+            return;
         }
+
+        $this->calendarMonth = $next->format('Y-m');
+        $this->selectedYear = (int) $next->format('Y');
+        $this->selectedMonthNumber = (int) $next->format('n');
+        $today = Carbon::today()->startOfMonth();
+        $this->monthOffset = (int) $today->diffInMonths($next, false);
+        $this->selectFirstBookableDateForCurrentMonth();
     }
 
     public function setMonth(int $offset): void
     {
-        if ($offset >= 0 && $offset <= 2) {
-            $this->monthOffset = $offset;
-            $this->selectFirstBookableDateForCurrentMonth();
+        $this->monthOffset = $offset;
+        $target = Carbon::today()->addMonths($offset);
+        $this->calendarMonth = $target->format('Y-m');
+        $this->selectedYear = (int) $target->format('Y');
+        $this->selectedMonthNumber = (int) $target->format('n');
+        $this->selectFirstBookableDateForCurrentMonth();
+    }
+
+    public function selectCalendarDate(string $date): void
+    {
+        $this->setSelectedDate($date);
+    }
+
+    public function triggerBooking(string $slotType, bool $isBooked): void
+    {
+        if ($isBooked) {
+            $formattedDate = Carbon::parse($this->selectedDate)->format('l, M jS, Y');
+            $this->dispatch('luxury-alert', [
+                'title' => 'Shift Already Booked',
+                'message' => "The {$slotType} shift on {$formattedDate} for {$this->hall->name} has already been reserved and locked for an event. In strict compliance with our single-host protocol, double bookings are prohibited. Please choose another shift or date.",
+                'type' => 'gold',
+                'confirmText' => 'Acknowledge',
+            ]);
+            return;
         }
+
+        $this->dispatch('openWalkInModal', [
+            'hall_id' => $this->hall->id,
+            'event_date' => $this->selectedDate,
+            'slot_type' => $slotType,
+        ]);
     }
 
     public function setPhoto(string $url)
@@ -131,7 +219,7 @@ class PublicHallDetails extends Component
 
         $selectedDate = Carbon::createFromFormat('Y-m-d', $date)->startOfDay();
         $today = Carbon::today();
-        $targetMonth = $today->copy()->addMonths($this->monthOffset);
+        $targetMonth = Carbon::createFromFormat('Y-m', $this->calendarMonth)->startOfMonth();
 
         if ($selectedDate->lt($today)
             || ! $selectedDate->isSameMonth($targetMonth)
@@ -145,7 +233,7 @@ class PublicHallDetails extends Component
     private function selectFirstBookableDateForCurrentMonth(): void
     {
         $today = Carbon::today();
-        $targetMonth = $today->copy()->addMonths($this->monthOffset);
+        $targetMonth = Carbon::createFromFormat('Y-m', $this->calendarMonth)->startOfMonth();
         $startDate = $targetMonth->isSameMonth($today)
             ? $today
             : $targetMonth->copy()->startOfMonth();
@@ -168,7 +256,7 @@ class PublicHallDetails extends Component
             }
         }
 
-        $this->selectedDate = '';
+        $this->selectedDate = $startDate->format('Y-m-d');
     }
 
     private function dateHasAvailableShift(Carbon $date): bool
@@ -204,15 +292,18 @@ class PublicHallDetails extends Component
     {
         $today = Carbon::today();
 
-        // Target month calculated by offset (0 = current, 1 = +1 month, 2 = +2 month)
-        $targetDate = $today->copy()->addMonths($this->monthOffset);
-        $monthTitle = $targetDate->format('F Y');
+        if (empty($this->calendarMonth)) {
+            $this->calendarMonth = now()->format('Y-m');
+        }
 
+        $targetDate = Carbon::createFromFormat('Y-m', $this->calendarMonth)->startOfMonth();
+        $monthTitle = $targetDate->format('F Y');
         $monthName = strtoupper($targetDate->format('F'));
         $year = $targetDate->format('Y');
 
         $startOfMonth = $targetDate->copy()->startOfMonth();
         $endOfMonth = $targetDate->copy()->endOfMonth();
+        $daysInMonth = $targetDate->daysInMonth;
 
         // 3 Upcoming Months List for quick selector tabs
         $upcomingMonths = [
@@ -229,8 +320,8 @@ class PublicHallDetails extends Component
             $cursor->addDay();
         }
 
-        // Sunday-first weekday offset (0 = Sunday, 1 = Monday, ..., 6 = Saturday) to match requested calendar image
-        $startDayOfWeek = $startOfMonth->dayOfWeek; // Carbon dayOfWeek: 0 (Sun) to 6 (Sat)
+        // Sunday-first weekday offset (0 = Sunday to 6 = Saturday)
+        $startDayOfWeek = $startOfMonth->dayOfWeek;
 
         // Query bookings for this full month
         $startDate = $startOfMonth->format('Y-m-d');
@@ -242,8 +333,6 @@ class PublicHallDetails extends Component
             ->select(['id', 'hall_id', 'event_date', 'slot_type', 'status', 'event_type'])
             ->get();
 
-        // Expand legacy/full-day reservations so each of the three public shift cards
-        // correctly shows as booked instead of exposing an overlapping booking CTA.
         $bookings = collect();
         foreach ($bookingRows as $booking) {
             $date = $booking->event_date->format('Y-m-d');
@@ -255,6 +344,67 @@ class PublicHallDetails extends Component
                 $bookings->put($date.'_'.$slot, $booking);
             }
         }
+
+        // Build monthGrid for Image 2 design
+        $monthGrid = [];
+        for ($d = 1; $d <= $daysInMonth; $d++) {
+            $dayCarbon = $startOfMonth->copy()->day($d);
+            $dateStr = $dayCarbon->format('Y-m-d');
+
+            $dayBookings = $bookingRows->filter(fn ($b) => $b->event_date->format('Y-m-d') === $dateStr);
+            $hasFullDay = $dayBookings->contains(fn ($b) => $b->slot_type === 'FULL_DAY');
+
+            $aBooked = $hasFullDay || $dayBookings->contains(fn ($b) => $b->slot_type === 'AFTERNOON');
+            $eBooked = $hasFullDay || $dayBookings->contains(fn ($b) => $b->slot_type === 'EVENING');
+            $nBooked = $hasFullDay || $dayBookings->contains(fn ($b) => $b->slot_type === 'NIGHT');
+
+            $monthGrid[$d] = [
+                'day' => $d,
+                'date' => $dateStr,
+                'dayOfWeek' => $dayCarbon->dayOfWeek,
+                'dayName' => $dayCarbon->format('D'),
+                'isPast' => $dayCarbon->isPast() && !$dayCarbon->isToday(),
+                'isToday' => $dayCarbon->isToday(),
+                'afternoon_available' => !$aBooked,
+                'evening_available' => !$eBooked,
+                'night_available' => !$nBooked,
+                'all_booked' => ($aBooked && $eBooked && $nBooked),
+                'total_booked' => ($aBooked ? 1 : 0) + ($eBooked ? 1 : 0) + ($nBooked ? 1 : 0),
+            ];
+        }
+
+        // Details for currently selected date
+        $selDateStr = $this->selectedDate ?: $startOfMonth->format('Y-m-d');
+        $selCarbon = Carbon::parse($selDateStr);
+        $selDayBookings = $bookingRows->filter(fn ($b) => $b->event_date->format('Y-m-d') === $selDateStr);
+        $selHasFullDay = $selDayBookings->contains(fn ($b) => $b->slot_type === 'FULL_DAY');
+
+        $selAfternoonBooked = $selHasFullDay || $selDayBookings->contains(fn ($b) => $b->slot_type === 'AFTERNOON');
+        $selEveningBooked = $selHasFullDay || $selDayBookings->contains(fn ($b) => $b->slot_type === 'EVENING');
+        $selNightBooked = $selHasFullDay || $selDayBookings->contains(fn ($b) => $b->slot_type === 'NIGHT');
+
+        $selectedDayDetails = [
+            'date' => $selDateStr,
+            'formattedDate' => $selCarbon->format('l, M jS'),
+            'afternoon' => [
+                'name' => 'AFTERNOON',
+                'time' => '11 AM - 3 PM',
+                'icon' => '☀️',
+                'isBooked' => $selAfternoonBooked,
+            ],
+            'evening' => [
+                'name' => 'EVENING',
+                'time' => '4 PM - 8 PM',
+                'icon' => '🌄',
+                'isBooked' => $selEveningBooked,
+            ],
+            'night' => [
+                'name' => 'NIGHT',
+                'time' => '9 PM - 1 AM',
+                'icon' => '🌙',
+                'isBooked' => $selNightBooked,
+            ],
+        ];
 
         // Ensure packages belong to this specific tenant or are platform standard offerings
         $packages = Package::where('is_active', true)
@@ -281,6 +431,11 @@ class PublicHallDetails extends Component
             'isWishlisted' => $this->isWishlisted,
             'wishlistCount' => $this->wishlistCount,
             'totalViews' => $this->totalViews,
+            'monthGrid' => $monthGrid,
+            'selectedDayDetails' => $selectedDayDetails,
+            'allowedYears' => $this->allowedYears,
+            'selectedYear' => $this->selectedYear,
+            'selectedMonthNumber' => $this->selectedMonthNumber,
         ]);
     }
 }

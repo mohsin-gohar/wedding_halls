@@ -377,8 +377,8 @@ class HallMediaManager extends Component
         $user = Auth::user();
 
         if ($this->hall) {
-            // Strictly check ownership
-            if ($this->hall->tenant_id !== $user->tenant_id) {
+            // Strictly check ownership unless super admin
+            if (!$user->isSuperAdmin() && $this->hall->tenant_id !== $user->tenant_id) {
                 abort(403, 'Unauthorized.');
             }
 
@@ -416,8 +416,9 @@ class HallMediaManager extends Component
             }
 
             // Update tenant name
-            if ($user->tenant) {
-                $user->tenant->update([
+            $targetTenant = $this->hall->tenant ?: $user->tenant;
+            if ($targetTenant) {
+                $targetTenant->update([
                     'name' => $this->venue_name,
                     'city' => $this->city,
                     'address' => $this->address,

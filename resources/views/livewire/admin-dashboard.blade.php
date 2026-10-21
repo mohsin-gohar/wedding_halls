@@ -17,11 +17,10 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-            <button wire:click="openProvisionModal" class="btn-gold !h-10 !px-5 text-xs font-bold uppercase font-mono shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.55)] transition-all duration-300 group relative overflow-hidden">
-                <span class="relative z-10">+ Register &amp; Provision Hall</span>
-                <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+            <button wire:click="openProvisionModal" class="btn-gold !h-10 !px-5 text-xs font-bold font-sans tracking-wide rounded-lg shadow-sm transition-all duration-200">
+                <span>+ Register &amp; Provision Hall</span>
             </button>
-            <button wire:click="openCreatePlanModal" class="px-4 py-2 bg-stone-100 dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 hover:border-[#C6A15B] text-[#171513] dark:text-white text-xs font-mono uppercase transition font-bold">
+            <button wire:click="openCreatePlanModal" class="px-4 py-2 rounded-lg bg-stone-100 dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/20 hover:border-[#C6A15B] text-[#171513] dark:text-white text-xs font-sans transition font-semibold">
                 + New SaaS Plan
             </button>
         </div>
@@ -82,12 +81,11 @@
             <div class="flex flex-wrap items-center gap-3 pt-2">
                     <button type="button" 
                             onclick="const text = `Assalamu Alaikum {{ $provisionedCredentials['owner_name'] }}!\nYour EventHub Rent Admin portal for *{{ $provisionedCredentials['business_name'] }}* is ready.\n\nLogin URL: {{ $provisionedCredentials['login_url'] }}\nEmail: {{ $provisionedCredentials['email'] }}\n\nLive Hall Website: {{ $provisionedCredentials['hall_url'] }}\n\nPlease sign in to customize your hall photos, services catalog, and shifts.`; navigator.clipboard.writeText(text); window.luxuryToast('WhatsApp credentials message copied to clipboard!', 'gold');"
-                            class="btn-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.55)] transition-all duration-300 group relative overflow-hidden">
-                        <span class="relative z-10">Copy WhatsApp Handover Message</span>
-                        <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                            class="btn-gold !h-9 !px-4 text-xs font-bold font-sans tracking-wide rounded-lg shadow-sm transition-all duration-200">
+                        <span>Copy WhatsApp Handover Message</span>
                     </button>
 
-                    <a href="{{ $provisionedCredentials['hall_url'] }}" target="_blank" class="btn-outline-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-[0_0_15px_rgba(198,161,91,0.25)] hover:shadow-[0_0_25px_rgba(198,161,91,0.4)] transition-all duration-300">
+                    <a href="{{ $provisionedCredentials['hall_url'] }}" target="_blank" class="btn-outline-gold !h-9 !px-4 text-xs font-semibold font-sans rounded-lg shadow-sm transition-all duration-200">
                         View Live Hall Website &rarr;
                     </a>
             </div>
@@ -749,9 +747,8 @@
                     </h3>
                     <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Manage public visibility, edit shift pricing, and audit all listed banquet spaces.</p>
                 </div>
-                <button wire:click="openProvisionModal" class="btn-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.55)] transition-all duration-300 group relative overflow-hidden">
-                    <span class="relative z-10">+ Register Hall</span>
-                    <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                <button wire:click="openProvisionModal" class="btn-gold !h-9 !px-4 text-xs font-bold font-sans tracking-wide rounded-lg shadow-sm transition-all duration-200">
+                    <span>+ Register Hall</span>
                 </button>
             </div>
 
@@ -1450,9 +1447,8 @@
                     <button wire:click="closeProvisionModal" class="px-4 py-2 border border-white/20 text-white text-xs font-mono uppercase hover:bg-white/10 transition">
                         Cancel
                     </button>
-                    <button wire:click="provisionHallAccount" class="btn-gold !h-9 !px-5 text-xs font-bold uppercase font-mono shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.55)] transition-all duration-300 group relative overflow-hidden">
-                        <span class="relative z-10">Provision Hall &amp; Generate Credentials &rarr;</span>
-                        <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                    <button wire:click="provisionHallAccount" class="btn-gold !h-9 !px-5 text-xs font-bold font-sans tracking-wide rounded-lg shadow-sm transition-all duration-200">
+                        <span>Provision Hall &amp; Generate Credentials &rarr;</span>
                     </button>
                 </div>
             </div>
@@ -1512,9 +1508,8 @@
 
                 <div class="border-t border-white/10 pt-4 flex items-center justify-end gap-3 font-mono">
                     <button wire:click="closeEditVendorModal" class="px-4 py-2 border border-white/20 text-white text-xs uppercase">Cancel</button>
-                    <button wire:click="updateVendor" class="btn-gold !h-9 !px-5 text-xs font-bold uppercase shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.55)] transition-all duration-300 group relative overflow-hidden">
-                        <span class="relative z-10">Save Changes &rarr;</span>
-                        <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                    <button wire:click="updateVendor" class="btn-gold !h-9 !px-5 text-xs font-bold font-sans tracking-wide rounded-lg shadow-sm transition-all duration-200">
+                        <span>Save Changes &rarr;</span>
                     </button>
                 </div>
             </div>
@@ -1598,9 +1593,8 @@
 
                 <div class="border-t border-white/10 pt-4 flex items-center justify-end gap-3 font-mono">
                     <button wire:click="closePlanModal" class="px-4 py-2 border border-white/20 text-white text-xs uppercase">Cancel</button>
-                    <button wire:click="savePlan" class="btn-gold !h-9 !px-5 text-xs font-bold uppercase shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.55)] transition-all duration-300 group relative overflow-hidden">
-                        <span class="relative z-10">Save Plan &rarr;</span>
-                        <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                    <button wire:click="savePlan" class="btn-gold !h-9 !px-5 text-xs font-bold font-sans tracking-wide rounded-lg shadow-sm transition-all duration-200">
+                        <span>Save Plan &rarr;</span>
                     </button>
                 </div>
             </div>
@@ -1653,9 +1647,8 @@
 
                 <div class="border-t border-white/10 pt-4 flex items-center justify-end gap-3 font-mono">
                     <button wire:click="closeEditHallModal" class="px-4 py-2 border border-white/20 text-white text-xs uppercase">Cancel</button>
-                    <button wire:click="updateHall" class="btn-gold !h-9 !px-5 text-xs font-bold uppercase shadow-[0_0_20px_rgba(198,161,91,0.4)] hover:shadow-[0_0_30px_rgba(198,161,91,0.55)] transition-all duration-300 group relative overflow-hidden">
-                        <span class="relative z-10">Update Hall &rarr;</span>
-                        <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                    <button wire:click="updateHall" class="btn-gold !h-9 !px-5 text-xs font-bold font-sans tracking-wide rounded-lg shadow-sm transition-all duration-200">
+                        <span>Update Hall &rarr;</span>
                     </button>
                 </div>
             </div>

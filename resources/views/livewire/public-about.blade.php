@@ -17,29 +17,29 @@
         </div>
 
         <!-- What This Website Is -->
-        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-8 sm:p-12 space-y-6">
-            <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#8F7239] block">About This Website</span>
+        <div class="bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 rounded-2xl p-8 sm:p-12 space-y-6 shadow-sm">
+            <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#8F7239] dark:text-[#C6A15B] block">About This Website</span>
             <h2 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white font-normal leading-snug">
                 A Two-Sided Website Built for Weddings in Pakistan.
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
                 <div class="space-y-3">
-                    <h3 class="font-cinzel text-sm font-bold uppercase tracking-wider text-[#8F7239]">For Couples &amp; Families</h3>
-                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
+                    <h3 class="font-cinzel text-sm font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B]">For Couples &amp; Families</h3>
+                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
                         Browse verified wedding halls, lawns, and marquees with real photos, 4K tours, per-head catering menus, and transparent PKR pricing. Check live 3-month shift availability, compare venues city by city, plan your feast budget with the interactive estimator, RSVP to invitations online, and reserve your date — all from this website.
                     </p>
-                    <ul class="text-xs text-stone-600 dark:text-stone-300 space-y-1.5">
+                    <ul class="text-xs text-stone-600 dark:text-stone-300 space-y-1.5 font-normal">
                         <li>✓ Venue discovery with filters, gallery &amp; packages</li>
                         <li>✓ Real-time availability calendar with zero double-booking</li>
                         <li>✓ Online reservations, WhatsApp concierge &amp; RSVP portal</li>
                     </ul>
                 </div>
                 <div class="space-y-3">
-                    <h3 class="font-cinzel text-sm font-bold uppercase tracking-wider text-[#8F7239]">For Hall &amp; Marquee Owners</h3>
-                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
+                    <h3 class="font-cinzel text-sm font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B]">For Hall &amp; Marquee Owners</h3>
+                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
                         The same website powers your business behind a secure login: a dedicated public page for your hall, a Rent Admin dashboard for bookings, kitchen KOT slips, inventory, staff payroll, expenses, printable contracts, and analytics — a complete multi-tenant ERP suite delivered through the browser.
                     </p>
-                    <ul class="text-xs text-stone-600 dark:text-stone-300 space-y-1.5">
+                    <ul class="text-xs text-stone-600 dark:text-stone-300 space-y-1.5 font-normal">
                         <li>✓ Dedicated hall website + private dashboard</li>
                         <li>✓ Kitchen, staff, inventory &amp; expense ERP modules</li>
                         <li>✓ A4 agreements, invoices &amp; PDF receipts</li>
@@ -51,7 +51,7 @@
         <!-- Story & Mission Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div class="lg:col-span-7 space-y-6">
-                <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#8F7239] block">Our Story</span>
+                <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#8F7239] dark:text-[#C6A15B] block">Our Story</span>
                 <h2 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white font-normal leading-snug">
                     Why We Built This Website.
                 </h2>
@@ -74,15 +74,15 @@
                         <span class="text-[11px] uppercase tracking-wider text-stone-500 dark:text-stone-400 font-bold mt-1 block">Hidden Fees</span>
                     </div>
                     <div>
-                        <strong class="font-cinzel text-3xl text-[#171513] dark:text-white block">SEC P</strong>
+                        <strong class="font-cinzel text-3xl text-[#171513] dark:text-white block">SECP</strong>
                         <span class="text-[11px] uppercase tracking-wider text-stone-500 dark:text-stone-400 font-bold mt-1 block">Registered in PK</span>
                     </div>
                 </div>
             </div>
 
             <!-- Right Architectural Image -->
-            <div class="lg:col-span-5 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-3 shadow-md">
-                <div class="aspect-[4/5] bg-stone-900 overflow-hidden relative">
+            <div class="lg:col-span-5 bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 p-3 rounded-2xl shadow-sm">
+                <div class="aspect-[4/5] bg-stone-900 overflow-hidden relative rounded-xl">
                     <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1000&auto=format&fit=crop" 
                          alt="EventHub Executive Headquarters" 
                          class="w-full h-full object-cover">
@@ -98,37 +98,37 @@
         <!-- Explore This Website (Page Guide) -->
         <div class="border-t border-[#E7E5E4] dark:border-white/10 pt-8 space-y-6">
             <div class="space-y-2">
-                <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#8F7239] block">Website Guide</span>
+                <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#8F7239] dark:text-[#C6A15B] block">Website Guide</span>
                 <h2 class="font-serif-luxury text-3xl text-[#171513] dark:text-white font-normal">Explore Every Section of This Website</h2>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <a href="{{ route('public.venues') }}" class="p-5 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] transition space-y-1.5 group">
-                    <span class="font-cinzel text-xs font-bold uppercase tracking-wider text-[#8F7239]">Venues</span>
+                <a href="{{ route('public.venues') }}" class="p-5 rounded-xl bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] transition space-y-1.5 group shadow-xs">
+                    <span class="font-cinzel text-xs font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B]">Venues</span>
                     <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white group-hover:text-[#C6A15B] transition">Hall Discovery &amp; Details</h4>
                     <p class="text-xs text-stone-500 dark:text-stone-400">Compare verified halls by city, capacity, price, and facilities.</p>
                 </a>
-                <a href="{{ route('public.availability') }}" class="p-5 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] transition space-y-1.5 group">
-                    <span class="font-cinzel text-xs font-bold uppercase tracking-wider text-[#8F7239]">Availability</span>
+                <a href="{{ route('public.availability') }}" class="p-5 rounded-xl bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] transition space-y-1.5 group shadow-xs">
+                    <span class="font-cinzel text-xs font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B]">Availability</span>
                     <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white group-hover:text-[#C6A15B] transition">Live Shift Checker</h4>
                     <p class="text-xs text-stone-500 dark:text-stone-400">See open Afternoon, Evening, and Night shifts across all venues.</p>
                 </a>
-                <a href="{{ route('public.packages') }}" class="p-5 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] transition space-y-1.5 group">
-                    <span class="font-cinzel text-xs font-bold uppercase tracking-wider text-[#8F7239]">Packages</span>
+                <a href="{{ route('public.packages') }}" class="p-5 rounded-xl bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] transition space-y-1.5 group shadow-xs">
+                    <span class="font-cinzel text-xs font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B]">Packages</span>
                     <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white group-hover:text-[#C6A15B] transition">Menus &amp; Budget Estimator</h4>
                     <p class="text-xs text-stone-500 dark:text-stone-400">Per-head feasts, raw ingredient calculator, and PKR estimates.</p>
                 </a>
-                <a href="{{ route('public.gallery') }}" class="p-5 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] transition space-y-1.5 group">
-                    <span class="font-cinzel text-xs font-bold uppercase tracking-wider text-[#8F7239]">Gallery</span>
+                <a href="{{ route('public.gallery') }}" class="p-5 rounded-xl bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] transition space-y-1.5 group shadow-xs">
+                    <span class="font-cinzel text-xs font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B]">Gallery</span>
                     <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white group-hover:text-[#C6A15B] transition">Photos &amp; 4K Video Tours</h4>
                     <p class="text-xs text-stone-500 dark:text-stone-400">Stages, lighting, floral décor, and banquet halls in full detail.</p>
                 </a>
-                <a href="{{ route('public.rsvp') }}" class="p-5 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] transition space-y-1.5 group">
-                    <span class="font-cinzel text-xs font-bold uppercase tracking-wider text-[#8F7239]">RSVP</span>
+                <a href="{{ route('public.rsvp') }}" class="p-5 rounded-xl bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] transition space-y-1.5 group shadow-xs">
+                    <span class="font-cinzel text-xs font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B]">RSVP</span>
                     <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white group-hover:text-[#C6A15B] transition">Guest Invitation Portal</h4>
                     <p class="text-xs text-stone-500 dark:text-stone-400">Guests reply to wedding invitations online with their headcount.</p>
                 </a>
-                <a href="{{ route('public.services') }}" class="p-5 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] transition space-y-1.5 group">
-                    <span class="font-cinzel text-xs font-bold uppercase tracking-wider text-[#8F7239]">Services</span>
+                <a href="{{ route('public.services') }}" class="p-5 rounded-xl bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] transition space-y-1.5 group shadow-xs">
+                    <span class="font-cinzel text-xs font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B]">Services</span>
                     <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white group-hover:text-[#C6A15B] transition">What We Give Hall Owners</h4>
                     <p class="text-xs text-stone-500 dark:text-stone-400">Website, dashboard, calendar, KOT, payroll &amp; more for vendors.</p>
                 </a>
@@ -137,21 +137,21 @@
 
         <!-- Pillar Guarantees (Zero-Pill Cards) -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8 border-t border-[#E7E5E4] dark:border-white/10">
-            <div class="editorial-card p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-3">
+            <div class="rounded-2xl p-8 bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 space-y-3 shadow-sm">
                 <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">1. Concurrency Locking</h3>
                 <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
                     Redis distributed locks and ACID database transactions ensure that no two clients can ever reserve the same hall and shift simultaneously.
                 </p>
             </div>
 
-            <div class="editorial-card p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-3">
+            <div class="rounded-2xl p-8 bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 space-y-3 shadow-sm">
                 <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">2. Standardized Bawarchi Ratios</h3>
                 <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
                     Proprietary culinary algorithms dynamically formulate mutton, chicken, basmati rice, and cooking oil ratios based on exact guest counts.
                 </p>
             </div>
 
-            <div class="editorial-card p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-3">
+            <div class="rounded-2xl p-8 bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 space-y-3 shadow-sm">
                 <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">3. Multi-Tenant Independence</h3>
                 <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
                     Complete data segregation. Each venue owner operates within an isolated tenant partition with zero cross-tenant visibility.
@@ -160,9 +160,9 @@
         </div>
 
         <!-- Booking CTA (Reserve Your Date) -->
-        <section class="bg-[#171513] border border-[#C6A15B]/25 p-8 sm:p-12 flex flex-col md:flex-row md:items-center justify-between gap-8">
+        <section class="bg-[#171513] border border-[#C6A15B]/25 rounded-2xl p-8 sm:p-12 flex flex-col md:flex-row md:items-center justify-between gap-8 shadow-md">
             <div class="space-y-3">
-                <span class="text-[10px] uppercase font-bold tracking-[0.2em] text-[#C6A15B] block">Begin Your Celebration</span>
+                <span class="text-[11px] uppercase font-semibold tracking-[0.16em] text-[#C6A15B] block">Begin Your Celebration</span>
                 <h3 class="font-serif-luxury text-2xl sm:text-3xl text-white font-normal">
                     Reserve Your Dream Wedding Date Today.
                 </h3>
@@ -172,10 +172,10 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-4 shrink-0">
-                <button type="button" onclick="Livewire.dispatch('openWalkInModal')" class="btn-gold !h-11 !px-6 text-xs font-bold uppercase font-mono">
+                <button type="button" onclick="Livewire.dispatch('openWalkInModal')" class="btn-gold !h-11 !px-6 text-xs font-bold font-sans tracking-wide rounded-xl">
                     Reserve Your Date
                 </button>
-                <a href="{{ route('public.venues') }}" class="btn-outline-gold !h-11 !px-6 text-xs font-bold uppercase font-mono">
+                <a href="{{ route('public.venues') }}" class="btn-outline-gold !h-11 !px-6 text-xs font-bold font-sans tracking-wide rounded-xl">
                     Browse All Venues &rarr;
                 </a>
             </div>

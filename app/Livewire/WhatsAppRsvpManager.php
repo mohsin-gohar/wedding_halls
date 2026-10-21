@@ -45,9 +45,16 @@ class WhatsAppRsvpManager extends Component
 
     public function updatedSelectedBookingId($val)
     {
-        $firstRsvp = GuestRsvp::where('booking_id', $val)->first();
+        $user = Auth::user();
+        $query = GuestRsvp::where('booking_id', $val);
+        if ($user && $user->tenant_id && !$user->isSuperAdmin()) {
+            $query->where('tenant_id', $user->tenant_id);
+        }
+        $firstRsvp = $query->first();
         if ($firstRsvp) {
             $this->simPhone = $firstRsvp->phone;
+        } else {
+            $this->simPhone = '';
         }
     }
 
@@ -142,8 +149,15 @@ class WhatsAppRsvpManager extends Component
         }
         $bookings = $query->take(15)->get();
 
+        $rsvpsQuery = GuestRsvp::query();
+        if ($user && $user->tenant_id && !$user->isSuperAdmin()) {
+            $rsvpsQuery->where('tenant_id', $user->tenant_id);
+        } elseif (!$user || !$user->isSuperAdmin()) {
+            $rsvpsQuery->whereRaw('1 = 0');
+        }
+
         $rsvps = $this->selectedBookingId
-            ? GuestRsvp::where('booking_id', $this->selectedBookingId)->latest()->get()
+            ? (clone $rsvpsQuery)->where('booking_id', $this->selectedBookingId)->latest()->get()
             : collect([]);
 
         $attendingCount = $rsvps->where('rsvp_status', 'ATTENDING')->sum('attending_count');

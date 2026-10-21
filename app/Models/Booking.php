@@ -13,6 +13,20 @@ class Booking extends Model
 {
     use HasFactory, HasUuids;
 
+    protected static function booted(): void
+    {
+        static::creating(function (Booking $booking) {
+            if (empty($booking->booking_reference)) {
+                $booking->booking_reference = static::generateReference();
+            }
+        });
+    }
+
+    public static function generateReference(): string
+    {
+        return 'BK-' . strtoupper(now()->format('Ym')) . '-' . strtoupper(substr(uniqid(), -5));
+    }
+
     protected $fillable = [
         'tenant_id',
         'hall_id',

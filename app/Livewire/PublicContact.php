@@ -21,6 +21,7 @@ class PublicContact extends Component
         'email' => 'required|email|max:150',
         'phone' => 'required|string|min:10|max:25',
         'city' => 'required|string',
+        'eventDate' => 'nullable|date',
         'message' => 'required|string|min:10|max:2000',
     ];
 

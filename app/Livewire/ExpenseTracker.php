@@ -8,6 +8,7 @@ use App\Models\Expense;
 use App\Models\Hall;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -82,7 +83,10 @@ class ExpenseTracker extends Component
 
     public function createExpense()
     {
-        $this->validate();
+        $tenantId = Auth::user()->tenant_id;
+        $this->validate(array_merge($this->rules, [
+            'hall_id' => ['nullable', Rule::exists('halls', 'id')->where('tenant_id', $tenantId)],
+        ]));
 
         $expense = Expense::create([
             'tenant_id' => Auth::user()->tenant_id,
@@ -141,7 +145,9 @@ class ExpenseTracker extends Component
             return;
         }
 
+        $tenantId = Auth::user()->tenant_id;
         $this->validate([
+            'edit_hall_id' => ['nullable', Rule::exists('halls', 'id')->where('tenant_id', $tenantId)],
             'edit_category' => 'required|string',
             'edit_title' => 'required|string|max:150',
             'edit_amount' => 'required|numeric|min:1',
