@@ -13,7 +13,9 @@ use Livewire\Component;
 class CustomerLogin extends Component
 {
     public string $email = '';
+
     public string $password = '';
+
     public bool $remember = false;
 
     protected $rules = [
@@ -44,11 +46,13 @@ class CustomerLogin extends Component
             if ($user->status === 'SUSPENDED') {
                 Auth::logout();
                 $this->addError('email', 'Your account has been suspended by the platform administrator.');
+
                 return;
             }
 
             $user->recordLogin();
             session()->flash('message', 'Welcome back! Signed in to your customer portal.');
+
             return redirect()->intended(route('customer.dashboard'));
         }
 

@@ -13,7 +13,9 @@ use App\Livewire\Dashboard;
 use App\Livewire\ExpenseTracker;
 use App\Livewire\FloorPlanDesigner;
 use App\Livewire\HallMediaManager;
+use App\Livewire\InventoryTracker;
 use App\Livewire\KitchenKotBoard;
+use App\Livewire\PackageManager;
 use App\Livewire\PublicAbout;
 use App\Livewire\PublicAvailabilityChecker;
 use App\Livewire\PublicContact;
@@ -29,8 +31,6 @@ use App\Livewire\PublicVenues;
 use App\Livewire\StaffAttendance;
 use App\Livewire\StaffManager;
 use App\Livewire\StaffPayroll;
-use App\Livewire\InventoryTracker;
-use App\Livewire\PackageManager;
 use App\Livewire\UtilityFuelTracker;
 use App\Livewire\WhatsAppRsvpManager;
 use App\Models\Hall;
@@ -49,7 +49,7 @@ Route::get('/', function () {
         ->where('is_active', true)
         ->whereHas('tenant', function ($q) {
             $q->where('is_active', true)
-              ->where('verification_status', 'APPROVED');
+                ->where('verification_status', 'APPROVED');
         })
         ->take(6)
         ->get();
@@ -57,10 +57,10 @@ Route::get('/', function () {
     $packages = Package::where('is_active', true)
         ->where(function ($query) {
             $query->whereNull('tenant_id')
-                  ->orWhereHas('tenant', function ($q) {
-                      $q->where('is_active', true)
+                ->orWhereHas('tenant', function ($q) {
+                    $q->where('is_active', true)
                         ->where('verification_status', 'APPROVED');
-                  });
+                });
         })
         ->take(4)
         ->get();
@@ -95,20 +95,28 @@ Route::get('/policies/{policy?}', PublicPolicies::class)->name('public.policies'
 Route::get('/policies/terms', [PublicPolicies::class, '__invoke'])->name('public.policies.terms');
 Route::get('/policies/privacy', [PublicPolicies::class, '__invoke'])->name('public.policies.privacy');
 Route::get('/policies/cancellation', [PublicPolicies::class, '__invoke'])->name('public.policies.cancellation');
-Route::get('/terms', function () { return redirect()->route('public.policies', ['policy' => 'terms']); })->name('terms');
-Route::get('/privacy', function () { return redirect()->route('public.policies', ['policy' => 'privacy']); })->name('privacy');
-Route::get('/cancellation', function () { return redirect()->route('public.policies', ['policy' => 'cancellation']); })->name('cancellation');
-Route::get('/refund', function () { return redirect()->route('public.policies', ['policy' => 'refund']); })->name('refund');
+Route::get('/terms', function () {
+    return redirect()->route('public.policies', ['policy' => 'terms']);
+})->name('terms');
+Route::get('/privacy', function () {
+    return redirect()->route('public.policies', ['policy' => 'privacy']);
+})->name('privacy');
+Route::get('/cancellation', function () {
+    return redirect()->route('public.policies', ['policy' => 'cancellation']);
+})->name('cancellation');
+Route::get('/refund', function () {
+    return redirect()->route('public.policies', ['policy' => 'refund']);
+})->name('refund');
 
 /*
 |--------------------------------------------------------------------------
 | 2. Customer Portal Authentication & Experience
 |--------------------------------------------------------------------------
 */
-    Route::middleware('guest')->prefix('customer')->group(function () {
-        Route::get('/login', CustomerLogin::class)->name('customer.login')->middleware('throttle:60,1');
-        Route::get('/register', CustomerRegister::class)->name('customer.register')->middleware('throttle:60,1');
-    });
+Route::middleware('guest')->prefix('customer')->group(function () {
+    Route::get('/login', CustomerLogin::class)->name('customer.login')->middleware('throttle:60,1');
+    Route::get('/register', CustomerRegister::class)->name('customer.register')->middleware('throttle:60,1');
+});
 
 Route::middleware('auth')->prefix('customer')->group(function () {
     Route::get('/dashboard', CustomerDashboard::class)->name('customer.dashboard');
@@ -120,15 +128,16 @@ Route::middleware('auth')->prefix('customer')->group(function () {
 | 3. Vendor Authentication Routes
 |--------------------------------------------------------------------------
 */
-    Route::middleware('guest')->group(function () {
-        Route::get('/login', Login::class)->name('login')->middleware('throttle:60,1');
-        Route::get('/register', Register::class)->name('register')->middleware('throttle:60,1');
-    });
+Route::middleware('guest')->group(function () {
+    Route::get('/login', Login::class)->name('login')->middleware('throttle:60,1');
+    Route::get('/register', Register::class)->name('register')->middleware('throttle:60,1');
+});
 
 Route::post('/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
+
     return redirect()->route('login')->with('message', 'You have been signed out successfully.');
 })->name('logout');
 

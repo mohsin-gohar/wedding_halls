@@ -42,7 +42,7 @@ class PublicAvailabilityChecker extends Component
             ->where('is_active', true)
             ->whereHas('tenant', function ($q) {
                 $q->where('is_active', true)
-                  ->where('verification_status', 'APPROVED');
+                    ->where('verification_status', 'APPROVED');
             })
             ->orderBy('name')
             ->paginate(12);
@@ -60,7 +60,7 @@ class PublicAvailabilityChecker extends Component
                 : [$booking->slot_type];
 
             foreach ($slots as $slot) {
-                $bookings->put($booking->hall_id . '_' . $slot, $booking);
+                $bookings->put($booking->hall_id.'_'.$slot, $booking);
             }
         }
 

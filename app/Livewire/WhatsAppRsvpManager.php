@@ -4,7 +4,6 @@ namespace App\Livewire;
 
 use App\Models\Booking;
 use App\Models\GuestRsvp;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -14,22 +13,25 @@ class WhatsAppRsvpManager extends Component
 
     // RSVP Add Modal
     public string $guest_name = '';
+
     public string $phone = '';
 
     // Interactive WhatsApp Bot Simulator
     public string $simPhone = '';
+
     public string $simMessage = 'Attending: 4';
+
     public ?string $simBotReply = null;
 
     public function mount()
     {
         $user = Auth::user();
-        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+        if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized. Tenant staff access required.');
         }
 
         $query = Booking::whereIn('status', ['CONFIRMED', 'HOLD'])->latest();
-        if (!$user->isSuperAdmin()) {
+        if (! $user->isSuperAdmin()) {
             $query->where('tenant_id', $user->tenant_id);
         }
         $firstBooking = $query->first();
@@ -47,7 +49,7 @@ class WhatsAppRsvpManager extends Component
     {
         $user = Auth::user();
         $query = GuestRsvp::where('booking_id', $val);
-        if ($user && $user->tenant_id && !$user->isSuperAdmin()) {
+        if ($user && $user->tenant_id && ! $user->isSuperAdmin()) {
             $query->where('tenant_id', $user->tenant_id);
         }
         $firstRsvp = $query->first();
@@ -67,12 +69,12 @@ class WhatsAppRsvpManager extends Component
         ]);
 
         $user = Auth::user();
-        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+        if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized.');
         }
 
         $query = Booking::query();
-        if (!$user->isSuperAdmin()) {
+        if (! $user->isSuperAdmin()) {
             $query->where('tenant_id', $user->tenant_id);
         }
         $booking = $query->findOrFail($this->selectedBookingId);
@@ -103,8 +105,9 @@ class WhatsAppRsvpManager extends Component
         }
         $rsvp = $query->first();
 
-        if (!$rsvp) {
+        if (! $rsvp) {
             $this->simBotReply = "❌ Number [{$this->simPhone}] not found in guest invitation registry.";
+
             return;
         }
 
@@ -150,9 +153,9 @@ class WhatsAppRsvpManager extends Component
         $bookings = $query->take(15)->get();
 
         $rsvpsQuery = GuestRsvp::query();
-        if ($user && $user->tenant_id && !$user->isSuperAdmin()) {
+        if ($user && $user->tenant_id && ! $user->isSuperAdmin()) {
             $rsvpsQuery->where('tenant_id', $user->tenant_id);
-        } elseif (!$user || !$user->isSuperAdmin()) {
+        } elseif (! $user || ! $user->isSuperAdmin()) {
             $rsvpsQuery->whereRaw('1 = 0');
         }
 

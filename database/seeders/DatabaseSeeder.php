@@ -5,14 +5,12 @@ namespace Database\Seeders;
 use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\Expense;
-use App\Models\FloorPlan;
 use App\Models\GuestRsvp;
 use App\Models\Hall;
 use App\Models\KitchenKot;
 use App\Models\MenuItem;
 use App\Models\Package;
 use App\Models\Payment;
-use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use App\Models\User;
@@ -189,7 +187,7 @@ class DatabaseSeeder extends Seeder
                 'is_complimentary' => true,
                 'category' => 'VIP Hospitality',
                 'description' => 'Air-conditioned private suite with attached restroom, illuminated Hollywood makeup vanity, and dedicated dressing concierge.',
-                'icon' => 'sparkles'
+                'icon' => 'sparkles',
             ],
             [
                 'title' => '500 kVA Caterpillar Standby Power Generator',
@@ -197,7 +195,7 @@ class DatabaseSeeder extends Seeder
                 'is_complimentary' => true,
                 'category' => 'Infrastructure',
                 'description' => 'Uninterrupted power system with automatic synchronization and fuel backup covering 100% chiller AC load.',
-                'icon' => 'bolt'
+                'icon' => 'bolt',
             ],
             [
                 'title' => 'Bespoke Fresh Rose Stage Decor & Walkway',
@@ -205,7 +203,7 @@ class DatabaseSeeder extends Seeder
                 'is_complimentary' => false,
                 'category' => 'Decor & Ambience',
                 'description' => 'Fresh imported gladiolus, red roses, golden filigree stage sofa, ambient pin spot lighting, and floral aisle runners.',
-                'icon' => 'star'
+                'icon' => 'star',
             ],
             [
                 'title' => 'Executive Chauffeur Valet Parking Service',
@@ -213,7 +211,7 @@ class DatabaseSeeder extends Seeder
                 'is_complimentary' => false,
                 'category' => 'Guest Logistics',
                 'description' => 'Dedicated 8-member uniformed valet team with electronic key logging and paved parking for 250+ cars.',
-                'icon' => 'truck'
+                'icon' => 'truck',
             ],
             [
                 'title' => '4K Drone Aerial Cinematography & LED P3 Wall',
@@ -221,8 +219,8 @@ class DatabaseSeeder extends Seeder
                 'is_complimentary' => false,
                 'category' => 'Multimedia & Video',
                 'description' => 'Dual 16x10 ft P3 ultra-HD stage display screens with live dual-camera vision mixer for program broadcast.',
-                'icon' => 'camera'
-            ]
+                'icon' => 'camera',
+            ],
         ];
 
         $hallRoyal = Hall::create([

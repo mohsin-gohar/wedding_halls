@@ -150,7 +150,7 @@
     </div>
 
     <!-- Payroll Master Table -->
-    <div class="bg-white border border-[#E7E5E4] p-6 space-y-4 shadow-sm">
+    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-4 shadow-sm dark:shadow-xl">
         <div class="border-b border-[#E7E5E4] pb-3 flex items-center justify-between">
             <h3 class="font-serif text-2xl text-[#171513] font-normal">Salary Disbursement Registry</h3>
             <span class="text-xs font-mono text-stone-500">Auto-calculated Net Salary = Basic + OT + Allowances - Deductions</span>
@@ -159,7 +159,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
                 <thead>
-                    <tr class="bg-[#F8F5EF] border-b border-[#E7E5E4] text-[10px] uppercase font-bold tracking-wider text-stone-600 font-mono">
+                    <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
                         <th class="p-3 border-r border-[#E7E5E4]">Employee Name</th>
                         <th class="p-3 border-r border-[#E7E5E4]">Designation</th>
                         <th class="p-3 border-r border-[#E7E5E4]">Basic Pay</th>
@@ -173,7 +173,7 @@
                 </thead>
                 <tbody class="divide-y divide-[#E7E5E4]">
                     @forelse($payrolls as $p)
-                        <tr class="hover:bg-[#F8F5EF] transition font-mono">
+                        <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition font-mono">
                             <td class="p-3 border-r border-[#E7E5E4] font-sans">
                                 <div class="font-bold text-[#171513] text-sm">{{ $p->user->name ?? 'Staff' }}</div>
                                 <span class="text-[10px] text-stone-500 font-mono">{{ $p->user->phone ?: $p->user->email }}</span>

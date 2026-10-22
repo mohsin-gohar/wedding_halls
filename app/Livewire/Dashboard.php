@@ -4,7 +4,6 @@ namespace App\Livewire;
 
 use App\Models\Booking;
 use App\Models\Expense;
-use App\Models\GuestRsvp;
 use App\Models\Hall;
 use App\Models\HallView;
 use App\Models\HallWishlist;
@@ -23,42 +22,62 @@ class Dashboard extends Component
 {
     // Filter controls for Hall Owner
     public string $timeframe = 'MONTHLY'; // 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY'
+
     public string $selectedHallId = 'ALL';
+
     public string $chartMetric = 'sales'; // 'sales' or 'programs'
 
     // Interactive CRM Kanban & Customer Details Drawer
     public bool $showCustomerModal = false;
+
     public ?string $selectedBookingId = null;
+
     public string $leadNoteText = '';
+
     public ?string $crmFeedback = null;
 
     // Daily Operational Kharcha & Generator Fuel Register (Hall Admin Operations)
     public bool $showDailyExpenseModal = false;
+
     public ?string $expenseHallId = null;
+
     public string $expenseCategory = 'GENERATOR_DIESEL'; // GENERATOR_DIESEL, STAFF_DAILY_WAGES, CLEANING_HYGIENE, WAPDA_ELECTRICITY, CHILLER_AC, DECOR_STAGE, SOUND_LIGHTS, KITCHEN_GAS, MISC_OPERATIONAL
+
     public string $expenseTitle = '';
+
     public float $expenseAmount = 14250.0;
+
     public string $expenseDate = '';
+
     public string $expensePayee = '';
+
     public string $expensePaymentMethod = 'CASH';
+
     public string $expenseReceiptNumber = '';
+
     public string $expenseNotes = '';
 
     // Historical daily operations ledger month and pagination.
     public string $operationsMonth = '';
+
     public int $operationsPage = 1;
 
     // Generator Fuel specific inputs
     public float $fuelDieselLiters = 50.0;
+
     public float $fuelRatePerLiter = 285.0;
+
     public float $fuelRunHours = 4.0;
+
     public ?string $fuelBookingId = null;
 
     // Wapda / Electricity specific inputs
     public float $electricityUnits = 120.0;
+
     public float $electricityUnitRate = 65.0;
 
     public ?string $expenseFeedback = null;
+
     public ?string $expenseError = null;
 
     public function mount()
@@ -92,8 +111,8 @@ class Dashboard extends Component
     {
         try {
             $month = Carbon::createFromFormat('!Y-m', $this->operationsMonth);
-            if (!$month || $month->format('Y-m') !== $this->operationsMonth || $month->year < 2000 || $month->year > 2100) {
-                throw new \InvalidArgumentException();
+            if (! $month || $month->format('Y-m') !== $this->operationsMonth || $month->year < 2000 || $month->year > 2100) {
+                throw new \InvalidArgumentException;
             }
         } catch (\Throwable) {
             $this->operationsMonth = Carbon::now()->format('Y-m');
@@ -112,7 +131,7 @@ class Dashboard extends Component
         $this->expenseError = null;
 
         // Auto-select first hall of tenant if not chosen
-        if (!$this->expenseHallId && $user && $user->tenant_id) {
+        if (! $this->expenseHallId && $user && $user->tenant_id) {
             $firstHall = Hall::where('tenant_id', $user->tenant_id)->where('is_active', true)->first();
             $this->expenseHallId = $firstHall?->id;
         }
@@ -167,15 +186,15 @@ class Dashboard extends Component
             }
         } elseif ($this->expenseCategory === 'STAFF_DAILY_WAGES') {
             if (empty($this->expenseTitle) || str_starts_with($this->expenseTitle, 'Staff Daily Dihaari')) {
-                $this->expenseTitle = "Staff Daily Dihaari / Waiters & Cleaning Duty";
+                $this->expenseTitle = 'Staff Daily Dihaari / Waiters & Cleaning Duty';
             }
         } elseif ($this->expenseCategory === 'CLEANING_HYGIENE') {
             if (empty($this->expenseTitle) || str_starts_with($this->expenseTitle, 'Hall Cleaning')) {
-                $this->expenseTitle = "Hall Cleaning, Washroom Hygiene & Disinfectants";
+                $this->expenseTitle = 'Hall Cleaning, Washroom Hygiene & Disinfectants';
             }
         } elseif ($this->expenseCategory === 'KITCHEN_GAS') {
             if (empty($this->expenseTitle) || str_starts_with($this->expenseTitle, 'LPG Commercial Gas')) {
-                $this->expenseTitle = "LPG Commercial Gas Cylinder Refill for Bawarchi";
+                $this->expenseTitle = 'LPG Commercial Gas Cylinder Refill for Bawarchi';
             }
         }
     }
@@ -185,8 +204,9 @@ class Dashboard extends Component
         $user = Auth::user();
         $tenantId = $user?->tenant_id;
 
-        if (!$tenantId) {
+        if (! $tenantId) {
             $this->expenseError = 'Session tenant not found. Please log in again.';
+
             return;
         }
 
@@ -209,7 +229,7 @@ class Dashboard extends Component
             'title' => trim($this->expenseTitle),
             'amount' => (float) $this->expenseAmount,
             'expense_date' => $this->expenseDate,
-            'payee' => !empty($this->expensePayee) ? trim($this->expensePayee) : 'Cash Drawer / Vendor',
+            'payee' => ! empty($this->expensePayee) ? trim($this->expensePayee) : 'Cash Drawer / Vendor',
             'payment_method' => $this->expensePaymentMethod,
             'receipt_number' => $this->expenseReceiptNumber,
             'notes' => $this->expenseNotes,
@@ -220,7 +240,7 @@ class Dashboard extends Component
         if ($this->expenseCategory === 'GENERATOR_DIESEL' || $this->expenseCategory === 'WAPDA_ELECTRICITY') {
             UtilityLog::create([
                 'tenant_id' => $tenantId,
-                'booking_id' => !empty($this->fuelBookingId) ? $this->fuelBookingId : null,
+                'booking_id' => ! empty($this->fuelBookingId) ? $this->fuelBookingId : null,
                 'generator_run_hours' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelRunHours : 0,
                 'diesel_liters_consumed' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelDieselLiters : 0,
                 'diesel_rate_per_liter' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelRatePerLiter : 0,
@@ -233,8 +253,8 @@ class Dashboard extends Component
         }
 
         $this->showDailyExpenseModal = false;
-        $this->expenseFeedback = "Daily Kharcha [Rs " . number_format($this->expenseAmount) . "] recorded successfully.";
-        
+        $this->expenseFeedback = 'Daily Kharcha [Rs '.number_format($this->expenseAmount).'] recorded successfully.';
+
         // Reset form
         $this->expenseTitle = '';
         $this->expensePayee = '';
@@ -249,7 +269,7 @@ class Dashboard extends Component
         $amount = $expense->amount;
         $expense->delete();
 
-        $this->expenseFeedback = "Expense record [Rs " . number_format($amount) . "] deleted.";
+        $this->expenseFeedback = 'Expense record [Rs '.number_format($amount).'] deleted.';
     }
 
     public function setTimeframe(string $tf): void
@@ -284,11 +304,11 @@ class Dashboard extends Component
     {
         $tenantId = Auth::user()?->tenant_id;
         $allowedStages = ['NEW_INQUIRY', 'SITE_VISIT', 'QUOTATION', 'CONFIRMED', 'CANCELLED'];
-        if (!in_array($newStage, $allowedStages)) {
+        if (! in_array($newStage, $allowedStages)) {
             return;
         }
 
-        $booking = Booking::when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))->findOrFail($bookingId);
+        $booking = Booking::when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))->findOrFail($bookingId);
         $updateData = ['crm_stage' => $newStage];
         if ($newStage === 'CONFIRMED' && $booking->status === 'INQUIRY') {
             $updateData['status'] = 'CONFIRMED';
@@ -296,27 +316,27 @@ class Dashboard extends Component
 
         $booking->update($updateData);
 
-        $this->crmFeedback = "Lead [{$booking->customer_name}] moved to " . str_replace('_', ' ', $newStage) . ".";
+        $this->crmFeedback = "Lead [{$booking->customer_name}] moved to ".str_replace('_', ' ', $newStage).'.';
     }
 
     public function addLeadNote(): void
     {
-        if (empty(trim($this->leadNoteText)) || !$this->selectedBookingId) {
+        if (empty(trim($this->leadNoteText)) || ! $this->selectedBookingId) {
             return;
         }
 
         $tenantId = Auth::user()?->tenant_id;
-        $booking = Booking::when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))->findOrFail($this->selectedBookingId);
+        $booking = Booking::when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))->findOrFail($this->selectedBookingId);
 
         $timestamp = Carbon::now()->format('d M Y, h:i A');
         $author = Auth::user()?->name ?? 'Staff';
-        $newNote = "[{$timestamp} by {$author}]: " . trim($this->leadNoteText);
+        $newNote = "[{$timestamp} by {$author}]: ".trim($this->leadNoteText);
 
-        $existingNotes = $booking->notes ? $booking->notes . "\n" : '';
-        $booking->update(['notes' => $existingNotes . $newNote]);
+        $existingNotes = $booking->notes ? $booking->notes."\n" : '';
+        $booking->update(['notes' => $existingNotes.$newNote]);
 
         $this->leadNoteText = '';
-        $this->crmFeedback = "Interaction note recorded successfully.";
+        $this->crmFeedback = 'Interaction note recorded successfully.';
     }
 
     public function render()
@@ -342,7 +362,7 @@ class Dashboard extends Component
                 $endDate = $now->copy()->endOfWeek()->format('Y-m-d');
                 $previousStartDate = $now->copy()->subWeek()->startOfWeek()->format('Y-m-d');
                 $previousEndDate = $now->copy()->subWeek()->endOfWeek()->format('Y-m-d');
-                $periodLabel = 'This Week (' . Carbon::parse($startDate)->format('d M') . ' - ' . Carbon::parse($endDate)->format('d M') . ')';
+                $periodLabel = 'This Week ('.Carbon::parse($startDate)->format('d M').' - '.Carbon::parse($endDate)->format('d M').')';
                 break;
 
             case 'QUARTERLY':
@@ -358,7 +378,7 @@ class Dashboard extends Component
                 $endDate = $now->copy()->endOfYear()->format('Y-m-d');
                 $previousStartDate = $now->copy()->subYear()->startOfYear()->format('Y-m-d');
                 $previousEndDate = $now->copy()->subYear()->endOfYear()->format('Y-m-d');
-                $periodLabel = 'Year ' . $now->year;
+                $periodLabel = 'Year '.$now->year;
                 break;
 
             case 'MONTHLY':
@@ -367,7 +387,7 @@ class Dashboard extends Component
                 $endDate = $now->copy()->endOfMonth()->format('Y-m-d');
                 $previousStartDate = $now->copy()->subMonth()->startOfMonth()->format('Y-m-d');
                 $previousEndDate = $now->copy()->subMonth()->endOfMonth()->format('Y-m-d');
-                $periodLabel = 'This Month (' . $now->format('F Y') . ')';
+                $periodLabel = 'This Month ('.$now->format('F Y').')';
                 break;
         }
 
@@ -448,8 +468,8 @@ class Dashboard extends Component
         // Net Operating Profit: uses actual recorded expenses if available, otherwise baseline overhead
         $totalOperationalCost = $actualRecordedExpenses > 0 ? $actualRecordedExpenses : ($estimatedFoodCost + $totalUtilityCost);
         $netOwnerProfit = $grossSalesTurnover - $totalOperationalCost;
-        $profitMarginPercent = $grossSalesTurnover > 0 
-            ? round(($netOwnerProfit / $grossSalesTurnover) * 100, 1) 
+        $profitMarginPercent = $grossSalesTurnover > 0
+            ? round(($netOwnerProfit / $grossSalesTurnover) * 100, 1)
             : 0;
 
         // 5. Programs Breakdown by Event Type
@@ -478,6 +498,7 @@ class Dashboard extends Component
         // 7. Hall-by-Hall Performance Matrix (Scoped to Owner's Halls)
         $hallPerformance = $halls->map(function ($h) use ($allPeriodBookings) {
             $hallBookings = $allPeriodBookings->where('hall_id', $h->id);
+
             return [
                 'id' => $h->id,
                 'name' => $h->name,
@@ -533,10 +554,10 @@ class Dashboard extends Component
         $todayEventsCount = $todayBookings->count();
         $upcomingEventsCount = Booking::where('event_date', '>=', $today)
             ->whereIn('status', ['CONFIRMED', 'HOLD'])
-            ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+            ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
             ->count();
         $pendingInquiriesCount = Booking::whereIn('status', ['INQUIRY', 'PENDING'])
-            ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+            ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
             ->count();
 
         // 12. Hall Analytics: Views, Wishlists, Bookings per hall
@@ -544,15 +565,15 @@ class Dashboard extends Component
             $views = HallView::where('hall_id', $h->id)->count();
             $wishlists = HallWishlist::where('hall_id', $h->id)->count();
             $bookings = Booking::where('hall_id', $h->id)
-                ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+                ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
                 ->count();
             $confirmedBookings = Booking::where('hall_id', $h->id)
                 ->where('status', 'CONFIRMED')
-                ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+                ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
                 ->count();
             $totalRevenue = (float) Booking::where('hall_id', $h->id)
                 ->whereIn('status', ['CONFIRMED', 'COMPLETED'])
-                ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+                ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
                 ->sum('grand_total');
 
             return [
@@ -573,7 +594,7 @@ class Dashboard extends Component
 
         // 13. Interactive Kanban CRM Leads (Strictly Scoped to Tenant)
         $crmLeadsQuery = Booking::with(['hall', 'package', 'payments'])
-            ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+            ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
             ->latest();
 
         if ($this->selectedHallId !== 'ALL' && in_array($this->selectedHallId, $tenantHallIds)) {
@@ -583,32 +604,32 @@ class Dashboard extends Component
         $allLeads = $crmLeadsQuery->take(60)->get();
 
         $kanbanColumns = [
-            'NEW_INQUIRY' => $allLeads->filter(fn($b) => ($b->crm_stage === 'NEW_INQUIRY' || empty($b->crm_stage)) && $b->status !== 'CONFIRMED'),
-            'SITE_VISIT' => $allLeads->filter(fn($b) => $b->crm_stage === 'SITE_VISIT' || ($b->status === 'HOLD' && $b->crm_stage !== 'CONFIRMED' && $b->crm_stage !== 'QUOTATION')),
-            'QUOTATION' => $allLeads->filter(fn($b) => $b->crm_stage === 'QUOTATION'),
-            'CONFIRMED' => $allLeads->filter(fn($b) => $b->crm_stage === 'CONFIRMED' || $b->status === 'CONFIRMED'),
+            'NEW_INQUIRY' => $allLeads->filter(fn ($b) => ($b->crm_stage === 'NEW_INQUIRY' || empty($b->crm_stage)) && $b->status !== 'CONFIRMED'),
+            'SITE_VISIT' => $allLeads->filter(fn ($b) => $b->crm_stage === 'SITE_VISIT' || ($b->status === 'HOLD' && $b->crm_stage !== 'CONFIRMED' && $b->crm_stage !== 'QUOTATION')),
+            'QUOTATION' => $allLeads->filter(fn ($b) => $b->crm_stage === 'QUOTATION'),
+            'CONFIRMED' => $allLeads->filter(fn ($b) => $b->crm_stage === 'CONFIRMED' || $b->status === 'CONFIRMED'),
         ];
 
         $selectedLead = null;
         if ($this->showCustomerModal && $this->selectedBookingId) {
             $selectedLead = Booking::with(['hall', 'package', 'payments'])
-                ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+                ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
                 ->find($this->selectedBookingId);
         }
 
         // 14. Daily Operational Kharcha & Generator Fuel Tracking (Hall Admin Daily Operations)
         $todayExpensesQuery = Expense::where('tenant_id', $tenantId)->whereDate('expense_date', $today);
         $todayExpensesSum = (float) $todayExpensesQuery->sum('amount');
-        
+
         $todayDieselLiters = (float) UtilityLog::where('tenant_id', $tenantId)
             ->whereDate('created_at', $today)
             ->sum('diesel_liters_consumed');
-            
+
         $todayDieselCost = (float) Expense::where('tenant_id', $tenantId)
             ->whereDate('expense_date', $today)
             ->where('category', 'GENERATOR_DIESEL')
             ->sum('amount');
-            
+
         $todayWagesCost = (float) Expense::where('tenant_id', $tenantId)
             ->whereDate('expense_date', $today)
             ->where('category', 'STAFF_DAILY_WAGES')
@@ -661,7 +682,7 @@ class Dashboard extends Component
 
         // 15. Real-Time ERP Modular Health Matrix
         $todayKotsQuery = KitchenKot::where('tenant_id', $tenantId)
-            ->whereHas('booking', fn($q) => $q->whereDate('event_date', $today));
+            ->whereHas('booking', fn ($q) => $q->whereDate('event_date', $today));
         $todayKitchenKotsCount = (clone $todayKotsQuery)->count();
         $todayTotalDiners = (int) (clone $todayKotsQuery)->sum('guest_count');
         $todayMeatNeeded = (float) (clone $todayKotsQuery)->sum('raw_meat_kg');
@@ -762,10 +783,10 @@ class Dashboard extends Component
                 } else {
                     $q->whereRaw('1 = 0');
                 }
-                
+
                 if ($hallId !== 'ALL' && in_array($hallId, $allowedHallIds)) {
                     $q->where('hall_id', $hallId);
-                } elseif (!empty($allowedHallIds)) {
+                } elseif (! empty($allowedHallIds)) {
                     $q->whereIn('hall_id', $allowedHallIds);
                 }
 
@@ -773,7 +794,7 @@ class Dashboard extends Component
                 $points[] = [
                     'label' => $day->format('D (d)'),
                     'value' => $val,
-                    'formatted' => ($metric === 'sales') ? 'PKR ' . number_format($val) : $val . ' Events',
+                    'formatted' => ($metric === 'sales') ? 'PKR '.number_format($val) : $val.' Events',
                 ];
             }
         } elseif ($timeframe === 'YEARLY') {
@@ -788,10 +809,10 @@ class Dashboard extends Component
                 } else {
                     $q->whereRaw('1 = 0');
                 }
-                
+
                 if ($hallId !== 'ALL' && in_array($hallId, $allowedHallIds)) {
                     $q->where('hall_id', $hallId);
-                } elseif (!empty($allowedHallIds)) {
+                } elseif (! empty($allowedHallIds)) {
                     $q->whereIn('hall_id', $allowedHallIds);
                 }
 
@@ -799,7 +820,7 @@ class Dashboard extends Component
                 $points[] = [
                     'label' => $mDate->format('M'),
                     'value' => $val,
-                    'formatted' => ($metric === 'sales') ? 'PKR ' . number_format($val) : $val . ' Events',
+                    'formatted' => ($metric === 'sales') ? 'PKR '.number_format($val) : $val.' Events',
                 ];
             }
         } else {
@@ -817,18 +838,18 @@ class Dashboard extends Component
                 } else {
                     $q->whereRaw('1 = 0');
                 }
-                
+
                 if ($hallId !== 'ALL' && in_array($hallId, $allowedHallIds)) {
                     $q->where('hall_id', $hallId);
-                } elseif (!empty($allowedHallIds)) {
+                } elseif (! empty($allowedHallIds)) {
                     $q->whereIn('hall_id', $allowedHallIds);
                 }
 
                 $val = ($metric === 'sales') ? (float) $q->sum('grand_total') : (int) $q->count();
                 $points[] = [
-                    'label' => 'Wk ' . $w . ' (' . $wStart->format('d M') . ')',
+                    'label' => 'Wk '.$w.' ('.$wStart->format('d M').')',
                     'value' => $val,
-                    'formatted' => ($metric === 'sales') ? 'PKR ' . number_format($val) : $val . ' Events',
+                    'formatted' => ($metric === 'sales') ? 'PKR '.number_format($val) : $val.' Events',
                 ];
             }
         }

@@ -79,7 +79,7 @@ class EndToEndSystemAuditTest extends TestCase
         Livewire::test(PublicVenues::class)
             ->assertDontSee('Margalla Grand Marquee');
 
-        $this->get('/venues/' . $hall->slug)->assertStatus(404);
+        $this->get('/venues/'.$hall->slug)->assertStatus(404);
 
         // ---------------------------------------------------------------------
         // STEP 3: Super Admin Approves the New Hall Tenant
@@ -103,7 +103,7 @@ class EndToEndSystemAuditTest extends TestCase
         // ---------------------------------------------------------------------
         // STEP 4: Approved Hall Showcase is Now Publicly Accessible
         // ---------------------------------------------------------------------
-        $publicVenueResponse = $this->get('/venues/' . $hall->slug);
+        $publicVenueResponse = $this->get('/venues/'.$hall->slug);
         $publicVenueResponse->assertStatus(200);
         $publicVenueResponse->assertSee('Margalla Grand Marquee');
 

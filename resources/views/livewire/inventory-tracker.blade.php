@@ -96,12 +96,12 @@
          TAB 1: CURRENT STOCK LEVELS
          =================================================================== -->
     @if($activeTab === 'stock')
-        <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-6 shadow-sm dark:shadow-xl">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E7E5E4] pb-4">
                 <div class="flex items-center gap-3">
                     <label class="text-xs font-mono uppercase text-stone-600 font-bold">Filter Category:</label>
                     <select wire:model.live="selectedCategory" 
-                            class="bg-[#F8F5EF] border border-[#E7E5E4] text-xs font-mono px-3 py-1.5 text-stone-900 outline-none focus:border-[#C6A15B]">
+                            class="bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono px-3 py-1.5 text-stone-900 dark:text-stone-100 outline-none focus:border-[#C6A15B]">
                         <option value="ALL">All Categories</option>
                         <option value="RAW_FOOD">Raw Food &amp; Meats</option>
                         <option value="BEVERAGES">Beverages &amp; Mineral Water</option>
@@ -121,7 +121,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
                     <thead>
-                        <tr class="bg-[#F8F5EF] border-b border-[#E7E5E4] text-[10px] uppercase font-bold tracking-wider text-stone-600 font-mono">
+                        <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
                             <th class="p-3 border-r border-[#E7E5E4]">Item Name</th>
                             <th class="p-3 border-r border-[#E7E5E4]">Category</th>
                             <th class="p-3 border-r border-[#E7E5E4]">Current Stock</th>
@@ -134,7 +134,7 @@
                     </thead>
                     <tbody class="divide-y divide-[#E7E5E4]">
                         @forelse($items as $i)
-                            <tr class="hover:bg-[#F8F5EF] transition font-mono">
+                            <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition font-mono">
                                 <td class="p-3 border-r border-[#E7E5E4] font-sans">
                                     <div class="font-bold text-[#171513] text-sm">{{ $i->name }}</div>
                                     <span class="text-[10px] text-stone-500 font-mono">Unit: {{ $i->unit }}</span>
@@ -205,7 +205,7 @@
          TAB 2: STOCK MOVEMENT AUDIT
          =================================================================== -->
     @if($activeTab === 'movement')
-        <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-6 shadow-sm dark:shadow-xl">
             <div class="border-b border-[#E7E5E4] pb-3">
                 <h3 class="font-serif text-2xl text-[#171513] font-normal">Stock Movements &amp; Wastage Audit</h3>
                 <p class="text-xs text-stone-500">Immutable audit log of all stock arrivals, event wedding consumption, and wastage.</p>
@@ -214,7 +214,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
                     <thead>
-                        <tr class="bg-[#F8F5EF] border-b border-[#E7E5E4] text-[10px] uppercase font-bold tracking-wider text-stone-600 font-mono">
+                        <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
                             <th class="p-3 border-r border-[#E7E5E4]">Timestamp</th>
                             <th class="p-3 border-r border-[#E7E5E4]">Item</th>
                             <th class="p-3 border-r border-[#E7E5E4]">Movement Type</th>
@@ -227,7 +227,7 @@
                     </thead>
                     <tbody class="divide-y divide-[#E7E5E4]">
                         @forelse($logs as $lg)
-                            <tr class="hover:bg-[#F8F5EF] transition font-mono">
+                            <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition font-mono">
                                 <td class="p-3 border-r border-[#E7E5E4] text-stone-500">{{ $lg->created_at->format('d M Y, H:i') }}</td>
                                 <td class="p-3 border-r border-[#E7E5E4] font-sans font-bold text-stone-900">{{ $lg->item->name ?? 'Deleted Item' }}</td>
                                 <td class="p-3 border-r border-[#E7E5E4]">
@@ -277,7 +277,7 @@
          TAB 3: SUPPLIER PURCHASE ORDERS
          =================================================================== -->
     @if($activeTab === 'procurement')
-        <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-6 shadow-sm dark:shadow-xl">
             <div class="flex items-center justify-between border-b border-[#E7E5E4] pb-3">
                 <div>
                     <h3 class="font-serif text-2xl text-[#171513] font-normal">Supplier Purchase Orders</h3>
@@ -291,7 +291,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
                     <thead>
-                        <tr class="bg-[#F8F5EF] border-b border-[#E7E5E4] text-[10px] uppercase font-bold tracking-wider text-stone-600 font-mono">
+                        <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
                             <th class="p-3 border-r border-[#E7E5E4]">PO Number</th>
                             <th class="p-3 border-r border-[#E7E5E4]">Order Date</th>
                             <th class="p-3 border-r border-[#E7E5E4]">Supplier Name</th>
@@ -303,7 +303,7 @@
                     </thead>
                     <tbody class="divide-y divide-[#E7E5E4]">
                         @forelse($orders as $po)
-                            <tr class="hover:bg-[#F8F5EF] transition font-mono">
+                            <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition font-mono">
                                 <td class="p-3 border-r border-[#E7E5E4] font-bold text-stone-900">{{ $po->po_number }}</td>
                                 <td class="p-3 border-r border-[#E7E5E4] text-stone-500">{{ $po->order_date->format('d M Y') }}</td>
                                 <td class="p-3 border-r border-[#E7E5E4] font-sans font-bold text-stone-900">{{ $po->supplier_name }}</td>

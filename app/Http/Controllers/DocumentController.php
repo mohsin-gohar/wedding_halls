@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\KitchenKot;
 use App\Models\Payment;
+use App\Models\StaffPayroll;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
@@ -16,7 +17,7 @@ class DocumentController extends Controller
     protected function authorizeBookingAccess(Booking $booking): void
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             abort(403, 'Unauthorized. Please sign in to view confidential documents.');
         }
 
@@ -47,7 +48,7 @@ class DocumentController extends Controller
     protected function authorizePaymentAccess(Payment $payment): void
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             abort(403, 'Unauthorized. Please sign in to view payment receipts.');
         }
 
@@ -81,7 +82,7 @@ class DocumentController extends Controller
     protected function authorizeInternalKotAccess(KitchenKot $kot): void
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             abort(403, 'Unauthorized. Please sign in to view operational records.');
         }
 
@@ -112,6 +113,7 @@ class DocumentController extends Controller
         if ($request->boolean('pdf')) {
             $pdf = Pdf::loadView('documents.agreement', compact('booking'))
                 ->setPaper('a4', 'portrait');
+
             return $pdf->download("VenueCloud_Contract_{$booking->id}.pdf");
         }
 
@@ -130,6 +132,7 @@ class DocumentController extends Controller
             // 80mm width in points is approx 226pt (80mm / 25.4 * 72)
             $pdf = Pdf::loadView('documents.thermal-receipt', compact('payment'))
                 ->setPaper([0, 0, 226, 600], 'portrait');
+
             return $pdf->download("Receipt_{$payment->receipt_no}.pdf");
         }
 
@@ -148,6 +151,7 @@ class DocumentController extends Controller
         if ($request->boolean('pdf')) {
             $pdf = Pdf::loadView('documents.chef-kot', compact('kot'))
                 ->setPaper('a4', 'portrait');
+
             return $pdf->download("KOT_{$kot->kot_number}.pdf");
         }
 
@@ -165,6 +169,7 @@ class DocumentController extends Controller
         if ($request->boolean('pdf')) {
             $pdf = Pdf::loadView('documents.quotation', compact('booking'))
                 ->setPaper('a4', 'portrait');
+
             return $pdf->download("Quotation_{$booking->id}.pdf");
         }
 
@@ -182,6 +187,7 @@ class DocumentController extends Controller
         if ($request->boolean('pdf')) {
             $pdf = Pdf::loadView('documents.invoice', compact('booking'))
                 ->setPaper('a4', 'portrait');
+
             return $pdf->download("Tax_Invoice_{$booking->id}.pdf");
         }
 
@@ -193,22 +199,23 @@ class DocumentController extends Controller
      */
     public function salarySlip(string $id, Request $request)
     {
-        $payroll = \App\Models\StaffPayroll::with(['user', 'tenant'])->findOrFail($id);
+        $payroll = StaffPayroll::with(['user', 'tenant'])->findOrFail($id);
 
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             abort(403, 'Unauthorized.');
         }
 
         // Super Admin or Tenant Admin/Accountant/Manager or the employee themselves
         $isTenantStaff = ($user->tenant_id === $payroll->tenant_id && ($user->isTenantOwner() || $user->isManager() || $user->isAccountant() || $user->id === $payroll->user_id));
-        if (!$user->isSuperAdmin() && !$isTenantStaff) {
+        if (! $user->isSuperAdmin() && ! $isTenantStaff) {
             abort(403, 'Forbidden. You do not have permission to view this confidential salary slip.');
         }
 
         if ($request->boolean('pdf')) {
             $pdf = Pdf::loadView('documents.salary-slip', compact('payroll'))
                 ->setPaper('a4', 'portrait');
+
             return $pdf->download("Salary_Slip_{$payroll->id}.pdf");
         }
 

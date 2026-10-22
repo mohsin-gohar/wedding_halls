@@ -7,7 +7,6 @@ use App\Livewire\Dashboard;
 use App\Models\Expense;
 use App\Models\Hall;
 use App\Models\PlatformTask;
-use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UtilityLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;

@@ -19,7 +19,7 @@ return [
             'is_complimentary' => true,
             'category' => 'VIP Hospitality',
             'description' => 'Air-conditioned private suite with attached restroom, illuminated Hollywood makeup vanity, and dedicated dressing concierge.',
-            'icon' => 'sparkles'
+            'icon' => 'sparkles',
         ],
         [
             'title' => '500 kVA Heavy Duty Standby Generator',
@@ -27,7 +27,7 @@ return [
             'is_complimentary' => true,
             'category' => 'Infrastructure',
             'description' => 'Uninterrupted power system with automatic synchronization and fuel backup covering 100% chiller AC load.',
-            'icon' => 'bolt'
+            'icon' => 'bolt',
         ],
         [
             'title' => 'Bespoke Fresh Rose Stage Decor & Walkway',
@@ -35,7 +35,7 @@ return [
             'is_complimentary' => false,
             'category' => 'Decor & Ambience',
             'description' => 'Fresh imported gladiolus, red roses, golden filigree stage sofa, ambient pin spot lighting, and floral aisle runners.',
-            'icon' => 'star'
+            'icon' => 'star',
         ],
         [
             'title' => 'Executive Chauffeur Valet Parking Service',
@@ -43,7 +43,7 @@ return [
             'is_complimentary' => false,
             'category' => 'Guest Logistics',
             'description' => 'Dedicated 8-member uniformed valet team with electronic key logging and paved parking for 250+ cars.',
-            'icon' => 'truck'
+            'icon' => 'truck',
         ],
         [
             'title' => '4K Drone Aerial Cinematography & LED P3 Wall',
@@ -51,7 +51,7 @@ return [
             'is_complimentary' => false,
             'category' => 'Multimedia & Video',
             'description' => 'Dual 16x10 ft P3 ultra-HD stage display screens with live dual-camera vision mixer for program broadcast.',
-            'icon' => 'camera'
+            'icon' => 'camera',
         ],
     ],
 

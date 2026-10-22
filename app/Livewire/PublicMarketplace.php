@@ -14,7 +14,9 @@ class PublicMarketplace extends Component
     use WithPagination;
 
     public string $city = 'All';
+
     public int $minCapacity = 100;
+
     public ?string $searchQuery = '';
 
     public function updatingCity(): void
@@ -57,7 +59,7 @@ class PublicMarketplace extends Component
         }
 
         if ($this->searchQuery) {
-            $searchTerm = '%' . trim($this->searchQuery) . '%';
+            $searchTerm = '%'.trim($this->searchQuery).'%';
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('halls.name', 'like', $searchTerm)
                     ->orWhereHas('venue', function ($venue) use ($searchTerm) {

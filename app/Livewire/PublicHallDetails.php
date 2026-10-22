@@ -9,6 +9,7 @@ use App\Models\HallWishlist;
 use App\Models\Package;
 use App\Models\PageVisit;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -34,7 +35,7 @@ class PublicHallDetails extends Component
         }
 
         // 1. Strict Visibility: Support resolving by slug (preferred) or UUID fallback
-        $isUuid = \Illuminate\Support\Str::isUuid($identifier);
+        $isUuid = Str::isUuid($identifier);
         $this->hall = Hall::with(['venue', 'tenant'])
             ->where(function ($q) use ($identifier, $isUuid) {
                 $q->where('slug', $identifier);
@@ -92,9 +93,13 @@ class PublicHallDetails extends Component
     }
 
     public string $calendarMonth = '';
+
     public int $selectedYear = 2026;
+
     public int $selectedMonthNumber = 10;
+
     public array $allowedYears = [2026, 2027, 2028, 2029, 2030];
+
     public int $monthOffset = 0; // 0 = current month, 1 = +1 month, 2 = +2 month
 
     public function jumpToYear(int $year): void
@@ -190,6 +195,7 @@ class PublicHallDetails extends Component
                 'type' => 'gold',
                 'confirmText' => 'Acknowledge',
             ]);
+
             return;
         }
 
@@ -363,11 +369,11 @@ class PublicHallDetails extends Component
                 'date' => $dateStr,
                 'dayOfWeek' => $dayCarbon->dayOfWeek,
                 'dayName' => $dayCarbon->format('D'),
-                'isPast' => $dayCarbon->isPast() && !$dayCarbon->isToday(),
+                'isPast' => $dayCarbon->isPast() && ! $dayCarbon->isToday(),
                 'isToday' => $dayCarbon->isToday(),
-                'afternoon_available' => !$aBooked,
-                'evening_available' => !$eBooked,
-                'night_available' => !$nBooked,
+                'afternoon_available' => ! $aBooked,
+                'evening_available' => ! $eBooked,
+                'night_available' => ! $nBooked,
                 'all_booked' => ($aBooked && $eBooked && $nBooked),
                 'total_booked' => ($aBooked ? 1 : 0) + ($eBooked ? 1 : 0) + ($nBooked ? 1 : 0),
             ];

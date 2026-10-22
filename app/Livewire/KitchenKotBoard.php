@@ -14,7 +14,7 @@ class KitchenKotBoard extends Component
     public function mount()
     {
         $user = Auth::user();
-        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+        if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized. Culinary and operations staff access required.');
         }
         $this->filterDate = Carbon::today()->format('Y-m-d');
@@ -23,12 +23,12 @@ class KitchenKotBoard extends Component
     public function updateStatus(string $kotId, string $status)
     {
         $user = Auth::user();
-        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+        if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized.');
         }
 
         $query = KitchenKot::query();
-        if (!$user->isSuperAdmin()) {
+        if (! $user->isSuperAdmin()) {
             $query->where('tenant_id', $user->tenant_id);
         }
         $kot = $query->findOrFail($kotId);
@@ -45,7 +45,7 @@ class KitchenKotBoard extends Component
         $kotsQuery = KitchenKot::with(['booking.hall'])
             ->whereHas('booking', function ($q) use ($tenantId, $isSuperAdmin) {
                 $q->where('event_date', $this->filterDate);
-                if (!$isSuperAdmin) {
+                if (! $isSuperAdmin) {
                     if ($tenantId) {
                         $q->where('tenant_id', $tenantId);
                     } else {

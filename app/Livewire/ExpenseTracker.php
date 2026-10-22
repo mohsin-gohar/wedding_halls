@@ -16,34 +16,55 @@ use Livewire\Component;
 class ExpenseTracker extends Component
 {
     public string $period = 'THIS_MONTH'; // THIS_MONTH, LAST_MONTH, ALL_TIME
+
     public string $filterCategory = 'ALL';
+
     public bool $isCreating = false;
 
     // Form inputs
     public ?string $hall_id = null;
+
     public string $category = 'GENERATOR_DIESEL';
+
     public string $title = '';
+
     public string $amount = '';
+
     public string $expense_date = '';
+
     public string $payee = '';
+
     public string $payment_method = 'CASH';
+
     public string $receipt_number = '';
+
     public string $notes = '';
 
     // Edit Form State
     public bool $isEditing = false;
+
     public ?string $editingExpenseId = null;
+
     public ?string $edit_hall_id = null;
+
     public string $edit_category = 'GENERATOR_DIESEL';
+
     public string $edit_title = '';
+
     public string $edit_amount = '';
+
     public string $edit_expense_date = '';
+
     public string $edit_payee = '';
+
     public string $edit_payment_method = 'CASH';
+
     public string $edit_receipt_number = '';
+
     public string $edit_notes = '';
 
     public ?string $feedbackMessage = null;
+
     public ?string $errorMessage = null;
 
     protected $rules = [
@@ -60,7 +81,7 @@ class ExpenseTracker extends Component
     public function mount()
     {
         $user = Auth::user();
-        if (!$user || (!$user->isTenantOwner() && !$user->isManager() && !$user->isAccountant() && !$user->isSuperAdmin())) {
+        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isAccountant() && ! $user->isSuperAdmin())) {
             abort(403, 'Unauthorized. Only Venue Owners, Managers, or Accountants can access Financial Expenses.');
         }
 
@@ -90,7 +111,7 @@ class ExpenseTracker extends Component
 
         $expense = Expense::create([
             'tenant_id' => Auth::user()->tenant_id,
-            'hall_id' => !empty($this->hall_id) ? $this->hall_id : null,
+            'hall_id' => ! empty($this->hall_id) ? $this->hall_id : null,
             'category' => $this->category,
             'title' => $this->title,
             'amount' => (float) $this->amount,
@@ -104,13 +125,13 @@ class ExpenseTracker extends Component
 
         AuditLog::log(
             'EXPENSE_RECORDED',
-            "Recorded [{$this->category}] expense of PKR " . number_format($expense->amount) . " for [{$expense->title}].",
+            "Recorded [{$this->category}] expense of PKR ".number_format($expense->amount)." for [{$expense->title}].",
             Auth::user()->tenant_id,
             'Expense',
             $expense->id
         );
 
-        $this->feedbackMessage = "Expense of PKR " . number_format($expense->amount) . " logged successfully!";
+        $this->feedbackMessage = 'Expense of PKR '.number_format($expense->amount).' logged successfully!';
         $this->isCreating = false;
         $this->reset(['title', 'amount', 'payee', 'receipt_number', 'notes']);
     }
@@ -141,7 +162,7 @@ class ExpenseTracker extends Component
 
     public function updateExpense()
     {
-        if (!$this->editingExpenseId) {
+        if (! $this->editingExpenseId) {
             return;
         }
 
@@ -161,7 +182,7 @@ class ExpenseTracker extends Component
         $expense = Expense::where('tenant_id', Auth::user()->tenant_id)->findOrFail($this->editingExpenseId);
 
         $expense->update([
-            'hall_id' => !empty($this->edit_hall_id) ? $this->edit_hall_id : null,
+            'hall_id' => ! empty($this->edit_hall_id) ? $this->edit_hall_id : null,
             'category' => $this->edit_category,
             'title' => $this->edit_title,
             'amount' => (float) $this->edit_amount,
@@ -174,7 +195,7 @@ class ExpenseTracker extends Component
 
         AuditLog::log(
             'EXPENSE_UPDATED',
-            "Updated expense [{$expense->title}] of PKR " . number_format($expense->amount),
+            "Updated expense [{$expense->title}] of PKR ".number_format($expense->amount),
             Auth::user()->tenant_id,
             'Expense',
             $expense->id
@@ -193,13 +214,13 @@ class ExpenseTracker extends Component
 
         AuditLog::log(
             'EXPENSE_DELETED',
-            "Deleted expense of PKR " . number_format($amount) . " [{$title}].",
+            'Deleted expense of PKR '.number_format($amount)." [{$title}].",
             Auth::user()->tenant_id,
             'Expense',
             $expenseId
         );
 
-        $this->feedbackMessage = "Expense record deleted.";
+        $this->feedbackMessage = 'Expense record deleted.';
     }
 
     public function render()

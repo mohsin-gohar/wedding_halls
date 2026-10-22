@@ -2,6 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Models\ContactInquiry;
+use App\Models\PlatformTask;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -9,11 +12,17 @@ use Livewire\Component;
 class PublicContact extends Component
 {
     public string $name = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public string $city = 'Lahore';
+
     public string $eventDate = '';
+
     public string $message = '';
+
     public bool $isSubmitted = false;
 
     protected $rules = [
@@ -29,24 +38,24 @@ class PublicContact extends Component
     {
         $this->validate();
 
-        \App\Models\ContactInquiry::create([
+        ContactInquiry::create([
             'name' => trim($this->name),
             'email' => trim($this->email),
             'phone' => trim($this->phone),
             'city' => trim($this->city),
-            'event_date' => !empty($this->eventDate) ? $this->eventDate : null,
+            'event_date' => ! empty($this->eventDate) ? $this->eventDate : null,
             'message' => trim($this->message),
             'status' => 'NEW',
         ]);
 
         // Auto-create task for Super Admin follow-up
         try {
-            \App\Models\PlatformTask::create([
+            PlatformTask::create([
                 'title' => "Customer Inquiry: {$this->name} ({$this->city})",
                 'category' => 'GENERAL',
                 'priority' => 'HIGH',
                 'due_date' => now()->addDay(),
-                'notes' => "Phone: {$this->phone} | Email: {$this->email} | Message: " . \Illuminate\Support\Str::limit($this->message, 120),
+                'notes' => "Phone: {$this->phone} | Email: {$this->email} | Message: ".Str::limit($this->message, 120),
             ]);
         } catch (\Throwable $e) {
             // Task creation failure should not block user inquiry

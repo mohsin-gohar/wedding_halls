@@ -7,7 +7,6 @@ use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 
 class SubscriptionService
 {
@@ -16,8 +15,6 @@ class SubscriptionService
     /**
      * Inspect all active/trial tenants and expire any accounts whose subscription + grace period has lapsed.
      * Crucial Guarantee: Data is NEVER deleted on expiry; historical records remain strictly intact.
-     *
-     * @return array
      */
     public function checkAndExpireSubscriptions(): array
     {
@@ -101,7 +98,7 @@ class SubscriptionService
         ?int $approvedByUserId = null
     ): SubscriptionPayment {
         $billingCycle = strtoupper($billingCycle);
-        if (!in_array($billingCycle, ['WEEKLY', 'MONTHLY', 'YEARLY'])) {
+        if (! in_array($billingCycle, ['WEEKLY', 'MONTHLY', 'YEARLY'])) {
             $billingCycle = 'MONTHLY';
         }
 
@@ -122,7 +119,7 @@ class SubscriptionService
             'billing_cycle' => $billingCycle,
             'amount' => $amount,
             'payment_method' => $paymentMethod,
-            'transaction_reference' => $transactionReference ?? ('VC-PAY-' . strtoupper(bin2hex(random_bytes(4)))),
+            'transaction_reference' => $transactionReference ?? ('VC-PAY-'.strtoupper(bin2hex(random_bytes(4)))),
             'status' => $status,
             'approved_by_user_id' => $autoApprove ? $approvedByUserId : null,
             'approved_at' => $autoApprove ? Carbon::now() : null,

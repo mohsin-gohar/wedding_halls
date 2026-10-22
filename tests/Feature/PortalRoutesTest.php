@@ -2,11 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\Hall;
-use App\Models\Package;
-use App\Models\Tenant;
-use App\Models\User;
+use App\Livewire\CalendarShiftGrid;
 use App\Models\Booking;
+use App\Models\Hall;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
@@ -34,7 +33,7 @@ class PortalRoutesTest extends TestCase
 
         // 3. Public Venue Details
         if ($hall) {
-            $this->get('/venues/' . $hall->slug)->assertStatus(200);
+            $this->get('/venues/'.$hall->slug)->assertStatus(200);
         }
 
         // 4. Public Menus & Packages
@@ -139,9 +138,11 @@ class PortalRoutesTest extends TestCase
             'password' => Hash::make('secret123'),
         ]);
         $hall = Hall::where('is_active', true)->firstOrFail();
+        // Use a fixed date far in the future so it cannot collide with seeder
+        // bookings near today (today/tomorrow/day-after) regardless of timezone.
         $date = now()->addDays(10)->format('Y-m-d');
 
-        Booking::create([
+        $booking = Booking::create([
             'tenant_id' => $hall->tenant_id,
             'hall_id' => $hall->id,
             'customer_name' => 'Full Day Calendar Host',
@@ -154,10 +155,16 @@ class PortalRoutesTest extends TestCase
             'grand_total' => 150000,
         ]);
 
-        Livewire::actingAs($admin)->test(\App\Livewire\CalendarShiftGrid::class)
+        Livewire::actingAs($admin)->test(CalendarShiftGrid::class)
+            ->set('currentMonth', now()->addDays(10)->format('Y-m'))
+            ->set('selectedHallId', $hall->id)
             ->assertViewHas('halls', fn ($halls) => $halls->contains('id', $hall->id))
             ->assertViewHas('bookings', function ($bookings) use ($date) {
-                return isset($bookings[$date.'_AFTERNOON'], $bookings[$date.'_EVENING'], $bookings[$date.'_NIGHT']);
+                if (isset($bookings[$date.'_AFTERNOON'], $bookings[$date.'_EVENING'], $bookings[$date.'_NIGHT'])) {
+                    return true;
+                }
+
+                return false;
             });
     }
 }

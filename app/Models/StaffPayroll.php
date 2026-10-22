@@ -52,6 +52,7 @@ class StaffPayroll extends Model
     public static function calculateNet(float $basic, float $otHours, float $otRate, float $allowances, float $deductions): float
     {
         $otPay = $otHours * $otRate;
+
         return max(0, round($basic + $otPay + $allowances - $deductions, 2));
     }
 }

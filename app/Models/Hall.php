@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Hall extends Model
 {
@@ -24,12 +25,12 @@ class Hall extends Model
     protected static function booted(): void
     {
         static::creating(function (Hall $hall) {
-            if (empty($hall->slug) && !empty($hall->name)) {
-                $base = \Illuminate\Support\Str::slug($hall->name);
+            if (empty($hall->slug) && ! empty($hall->name)) {
+                $base = Str::slug($hall->name);
                 $slug = $base;
                 $counter = 1;
                 while (static::where('slug', $slug)->exists()) {
-                    $slug = $base . '-' . $counter++;
+                    $slug = $base.'-'.$counter++;
                 }
                 $hall->slug = $slug;
             }

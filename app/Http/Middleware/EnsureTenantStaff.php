@@ -16,7 +16,7 @@ class EnsureTenantStaff
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
@@ -32,7 +32,7 @@ class EnsureTenantStaff
         }
 
         // Vendor staff MUST have an assigned tenant_id
-        if (!$user->tenant_id) {
+        if (! $user->tenant_id) {
             abort(403, 'Forbidden. You do not have an active venue organization assigned.');
         }
 

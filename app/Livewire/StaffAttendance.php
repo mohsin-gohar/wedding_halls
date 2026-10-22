@@ -16,8 +16,11 @@ use Livewire\Component;
 class StaffAttendance extends Component
 {
     public string $activeTab = 'daily'; // daily, leaves, monthly
+
     public string $selectedDate = '';
+
     public string $selectedMonth = '';
+
     public string $selectedStaffId = 'ALL';
 
     // Daily attendance rows: [user_id => ['status' => 'PRESENT', 'check_in' => '10:00', 'check_out' => '22:00', 'overtime_hours' => 0, 'notes' => '']]
@@ -25,24 +28,38 @@ class StaffAttendance extends Component
 
     // Leave request modal state
     public bool $showLeaveModal = false;
+
     public ?int $leaveUserId = null;
+
     public string $leaveType = 'CASUAL';
+
     public string $leaveStartDate = '';
+
     public string $leaveEndDate = '';
+
     public string $leaveReason = '';
 
     // Quick Edit Attendance Record Modal
     public bool $showEditRecordModal = false;
+
     public ?int $editingUserId = null;
+
     public string $editingStaffName = '';
+
     public string $editingRecordDate = '';
+
     public string $editingStatus = 'PRESENT';
+
     public string $editingCheckIn = '10:00';
+
     public string $editingCheckOut = '22:00';
+
     public float $editingOvertime = 0.0;
+
     public string $editingNotes = '';
 
     public ?string $feedbackMessage = null;
+
     public ?string $errorMessage = null;
 
     public function mount()
@@ -63,7 +80,7 @@ class StaffAttendance extends Component
     private function authorizeAttendanceManager(): void
     {
         $user = Auth::user();
-        if (!$user || (!$user->isTenantOwner() && !$user->isManager() && !$user->isAccountant()) || !$user->tenant_id) {
+        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isAccountant()) || ! $user->tenant_id) {
             abort(403, 'Unauthorized. Only Venue Owners or Managers have access to Attendance ERP.');
         }
     }
@@ -100,8 +117,8 @@ class StaffAttendance extends Component
     {
         try {
             $month = Carbon::createFromFormat('!Y-m', $this->selectedMonth);
-            if (!$month || $month->format('Y-m') !== $this->selectedMonth || $month->year < 2000 || $month->year > 2100) {
-                throw new \InvalidArgumentException();
+            if (! $month || $month->format('Y-m') !== $this->selectedMonth || $month->year < 2000 || $month->year > 2100) {
+                throw new \InvalidArgumentException;
             }
         } catch (\Throwable) {
             $this->selectedMonth = Carbon::today()->format('Y-m');
@@ -159,7 +176,7 @@ class StaffAttendance extends Component
         foreach ($this->attendanceData as $userId => $val) {
             $this->attendanceData[$userId]['status'] = 'PRESENT';
         }
-        $this->feedbackMessage = 'Marked all team members as Present for ' . $this->selectedDate;
+        $this->feedbackMessage = 'Marked all team members as Present for '.$this->selectedDate;
     }
 
     public function saveDailyAttendance()
@@ -179,7 +196,7 @@ class StaffAttendance extends Component
         ]);
 
         foreach ($this->attendanceData as $userId => $data) {
-            if (!in_array((int) $userId, $staffIds, true)) {
+            if (! in_array((int) $userId, $staffIds, true)) {
                 continue;
             }
 
@@ -199,8 +216,8 @@ class StaffAttendance extends Component
                 ],
                 [
                     'status' => $data['status'] ?? 'PRESENT',
-                    'check_in' => !empty($data['check_in']) ? $data['check_in'] : null,
-                    'check_out' => !empty($data['check_out']) ? $data['check_out'] : null,
+                    'check_in' => ! empty($data['check_in']) ? $data['check_in'] : null,
+                    'check_out' => ! empty($data['check_out']) ? $data['check_out'] : null,
                     'overtime_hours' => (float) ($data['overtime_hours'] ?? 0),
                     'notes' => $data['notes'] ?? null,
                     'created_by' => Auth::id(),
@@ -216,7 +233,7 @@ class StaffAttendance extends Component
             $this->selectedDate
         );
 
-        $this->feedbackMessage = "Daily attendance recorded successfully for " . Carbon::parse($this->selectedDate)->format('d M Y') . ".";
+        $this->feedbackMessage = 'Daily attendance recorded successfully for '.Carbon::parse($this->selectedDate)->format('d M Y').'.';
     }
 
     public function selectStaff(string $staffId): void
@@ -275,8 +292,8 @@ class StaffAttendance extends Component
             ],
             [
                 'status' => $this->editingStatus,
-                'check_in' => !empty($this->editingCheckIn) ? $this->editingCheckIn : null,
-                'check_out' => !empty($this->editingCheckOut) ? $this->editingCheckOut : null,
+                'check_in' => ! empty($this->editingCheckIn) ? $this->editingCheckIn : null,
+                'check_out' => ! empty($this->editingCheckOut) ? $this->editingCheckOut : null,
                 'overtime_hours' => $this->editingOvertime,
                 'notes' => $this->editingNotes ?: null,
                 'created_by' => Auth::id(),
@@ -361,7 +378,7 @@ class StaffAttendance extends Component
             'action_by' => Auth::id(),
         ]);
 
-        $this->feedbackMessage = "Leave application rejected.";
+        $this->feedbackMessage = 'Leave application rejected.';
     }
 
     public function render()

@@ -424,12 +424,14 @@ class WalkInBookingModal extends Component
         if (! $this->isStaff) {
             if (! $hall->is_active || ! $hall->tenant || ! $hall->tenant->is_active || $hall->tenant->verification_status !== 'APPROVED') {
                 $this->errorMessage = 'This venue space is currently not accepting online reservations.';
+
                 return;
             }
         }
 
         if ($hall->max_capacity && $this->guest_count > $hall->max_capacity) {
             $this->errorMessage = "The guest count ({$this->guest_count}) exceeds the maximum hall capacity of {$hall->max_capacity}.";
+
             return;
         }
 

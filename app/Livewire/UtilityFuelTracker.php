@@ -10,23 +10,30 @@ use Livewire\Component;
 class UtilityFuelTracker extends Component
 {
     public ?string $selectedBookingId = null;
+
     public float $generator_run_hours = 3.5;
+
     public float $diesel_liters_consumed = 45.0;
+
     public float $diesel_rate_per_liter = 280.00;
+
     public float $wapda_units_consumed = 220.0;
+
     public float $wapda_unit_rate = 65.00;
+
     public ?string $notes = null;
+
     public ?string $successMessage = null;
 
     public function mount()
     {
         $user = Auth::user();
-        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+        if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized. Tenant staff access required.');
         }
 
         $query = Booking::whereIn('status', ['CONFIRMED', 'COMPLETED']);
-        if (!$user->isSuperAdmin()) {
+        if (! $user->isSuperAdmin()) {
             $query->where('tenant_id', $user->tenant_id);
         }
         $firstBooking = $query->latest()->first();
@@ -39,17 +46,18 @@ class UtilityFuelTracker extends Component
     public function selectBooking(string $bookingId)
     {
         $user = Auth::user();
-        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+        if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized.');
         }
 
         $bookingQuery = Booking::where('id', $bookingId);
-        if (!$user->isSuperAdmin()) {
+        if (! $user->isSuperAdmin()) {
             $bookingQuery->where('tenant_id', $user->tenant_id);
         }
         $targetBooking = $bookingQuery->first();
-        if (!$targetBooking) {
+        if (! $targetBooking) {
             $this->selectedBookingId = null;
+
             return;
         }
 
@@ -57,7 +65,7 @@ class UtilityFuelTracker extends Component
         $this->successMessage = null;
 
         $logQuery = UtilityLog::where('booking_id', $bookingId);
-        if (!$user->isSuperAdmin()) {
+        if (! $user->isSuperAdmin()) {
             $logQuery->where('tenant_id', $user->tenant_id);
         }
         $existingLog = $logQuery->first();
@@ -83,12 +91,12 @@ class UtilityFuelTracker extends Component
         ]);
 
         $user = Auth::user();
-        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+        if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized.');
         }
 
         $bQuery = Booking::query();
-        if (!$user->isSuperAdmin()) {
+        if (! $user->isSuperAdmin()) {
             $bQuery->where('tenant_id', $user->tenant_id);
         }
         $booking = $bQuery->findOrFail($this->selectedBookingId);
@@ -111,7 +119,7 @@ class UtilityFuelTracker extends Component
             ]
         );
 
-        $this->successMessage = "Generator run-hours and fuel consumption logged successfully!";
+        $this->successMessage = 'Generator run-hours and fuel consumption logged successfully!';
     }
 
     public function render()
@@ -119,19 +127,19 @@ class UtilityFuelTracker extends Component
         $user = Auth::user();
         $query = Booking::with(['hall', 'utilityLog'])
             ->whereIn('status', ['CONFIRMED', 'COMPLETED']);
-        
+
         if ($user && $user->tenant_id) {
             $query->where('tenant_id', $user->tenant_id);
-        } elseif (!$user || !$user->isSuperAdmin()) {
+        } elseif (! $user || ! $user->isSuperAdmin()) {
             $query->whereRaw('1 = 0');
         }
 
         $bookings = $query->latest()->take(20)->get();
 
         $currentBookingQuery = Booking::with('hall');
-        if ($user && $user->tenant_id && !$user->isSuperAdmin()) {
+        if ($user && $user->tenant_id && ! $user->isSuperAdmin()) {
             $currentBookingQuery->where('tenant_id', $user->tenant_id);
-        } elseif (!$user || !$user->isSuperAdmin()) {
+        } elseif (! $user || ! $user->isSuperAdmin()) {
             $currentBookingQuery->whereRaw('1 = 0');
         }
         $currentBooking = $this->selectedBookingId ? $currentBookingQuery->find($this->selectedBookingId) : null;

@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Middleware\EnsureActiveAccount;
+use App\Http\Middleware\EnsurePortalRole;
+use App\Http\Middleware\EnsureTenantStaff;
+use App\Http\Middleware\ForceHttps;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,18 +22,18 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Enforce HTTPS redirects early (production only via FORCE_HTTPS).
         $middleware->web(prepend: [
-            \App\Http\Middleware\ForceHttps::class,
+            ForceHttps::class,
         ]);
 
         // Append baseline security headers to every web response.
         $middleware->web(append: [
-            \App\Http\Middleware\SecurityHeaders::class,
-            \App\Http\Middleware\EnsureActiveAccount::class,
+            SecurityHeaders::class,
+            EnsureActiveAccount::class,
         ]);
 
         $middleware->alias([
-            'tenant.staff' => \App\Http\Middleware\EnsureTenantStaff::class,
-            'portal.role' => \App\Http\Middleware\EnsurePortalRole::class,
+            'tenant.staff' => EnsureTenantStaff::class,
+            'portal.role' => EnsurePortalRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

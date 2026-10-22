@@ -28,7 +28,7 @@ return new class extends Migration
             $table->foreignId('customer_id')->nullable()->after('booking_reference')->constrained('users')->nullOnDelete();
             $table->string('pipeline_stage', 40)->default('CONFIRMED')->after('status');
             // NEW_INQUIRY, CONTACTED, SITE_VISIT, QUOTATION_SENT, NEGOTIATION, DEPOSIT_PENDING, CONFIRMED, COMPLETED, CANCELLED
-            
+
         });
 
         Schema::table('bookings', function (Blueprint $table) {

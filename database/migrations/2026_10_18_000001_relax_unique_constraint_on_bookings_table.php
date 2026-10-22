@@ -20,7 +20,7 @@ return new class extends Migration
             Schema::table('bookings', function (Blueprint $table) {
                 $table->dropUnique('uq_hall_event_slot');
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Ignore if index is not present
         }
 
@@ -28,7 +28,7 @@ return new class extends Migration
             Schema::table('bookings', function (Blueprint $table) {
                 $table->index(['hall_id', 'event_date', 'slot_type'], 'idx_hall_event_slot');
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Ignore if index already exists
         }
     }

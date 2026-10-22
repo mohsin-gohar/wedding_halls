@@ -24,10 +24,15 @@ class PublicVenues extends Component
     public string $search = '';
 
     public string $calendarMonth = '';
+
     public string $selectedCalendarDate = '';
+
     public ?string $calendarHallId = null;
+
     public int $selectedYear = 2026;
+
     public int $selectedMonthNumber = 10;
+
     public array $allowedYears = [2026, 2027, 2028, 2029, 2030];
 
     public function mount(): void
@@ -131,6 +136,7 @@ class PublicVenues extends Component
                 'type' => 'gold',
                 'confirmText' => 'Acknowledge',
             ]);
+
             return;
         }
 
@@ -149,7 +155,7 @@ class PublicVenues extends Component
             ->whereHas('venue', fn ($venueQuery) => $venueQuery->where('is_active', true))
             ->whereHas('tenant', function ($t) {
                 $t->where('is_active', true)
-                  ->where('verification_status', 'APPROVED');
+                    ->where('verification_status', 'APPROVED');
             });
 
         $hasPublicHalls = (clone $publicHalls)->exists();
@@ -171,15 +177,15 @@ class PublicVenues extends Component
         $query = clone $publicHalls;
 
         // 2. Filter by city
-        if ($this->city !== 'All' && !empty($this->city)) {
+        if ($this->city !== 'All' && ! empty($this->city)) {
             $query->whereHas('venue', function ($q) {
                 $q->where('city', $this->city);
             });
         }
 
         // Keep the directory search focused on venue names.
-        if (!empty($this->search)) {
-            $searchTerm = '%' . trim($this->search) . '%';
+        if (! empty($this->search)) {
+            $searchTerm = '%'.trim($this->search).'%';
             $query->where('name', 'like', $searchTerm);
         }
 
@@ -213,7 +219,7 @@ class PublicVenues extends Component
             ->whereHas('venue', fn ($venueQuery) => $venueQuery->where('is_active', true))
             ->whereHas('tenant', fn ($t) => $t->where('is_active', true)->where('verification_status', 'APPROVED'));
 
-        if ($this->city !== 'All' && !empty($this->city)) {
+        if ($this->city !== 'All' && ! empty($this->city)) {
             $calendarHallsQuery->whereHas('venue', fn ($q) => $q->where('city', $this->city));
         }
 
@@ -223,7 +229,7 @@ class PublicVenues extends Component
         $monthBookingsQuery = Booking::whereIn('status', ['HOLD', 'CONFIRMED'])
             ->whereBetween('event_date', [$startOfMonth, $endOfMonth]);
 
-        if (!empty($this->calendarHallId)) {
+        if (! empty($this->calendarHallId)) {
             $monthBookingsQuery->where('hall_id', $this->calendarHallId);
             $effectiveCapacity = 1;
         } else {
@@ -257,12 +263,12 @@ class PublicVenues extends Component
                 'date' => $dateStr,
                 'dayOfWeek' => $dayCarbon->dayOfWeek,
                 'dayName' => $dayCarbon->format('D'),
-                'isPast' => $dayCarbon->isPast() && !$dayCarbon->isToday(),
+                'isPast' => $dayCarbon->isPast() && ! $dayCarbon->isToday(),
                 'isToday' => $dayCarbon->isToday(),
                 'afternoon_available' => $aAvailable,
                 'evening_available' => $eAvailable,
                 'night_available' => $nAvailable,
-                'all_booked' => (!$aAvailable && !$eAvailable && !$nAvailable),
+                'all_booked' => (! $aAvailable && ! $eAvailable && ! $nAvailable),
                 'total_booked' => $aBooked + $eBooked + $nBooked,
             ];
         }

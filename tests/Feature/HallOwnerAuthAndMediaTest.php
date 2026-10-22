@@ -213,6 +213,7 @@ class HallOwnerAuthAndMediaTest extends TestCase
             ->call('closeModal')
             ->assertSet('isOpen', false);
     }
+
     public function test_walk_in_modal_addons_calculation_uses_editable_price()
     {
         $result = Livewire::test(WalkInBookingModal::class)
@@ -246,5 +247,4 @@ class HallOwnerAuthAndMediaTest extends TestCase
             ->assertSet('addons_total', 25000.00)
             ->assertSet('grand_total', 351750.00);
     }
-
 }

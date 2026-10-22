@@ -42,7 +42,7 @@ class DemoVenuesSeeder extends Seeder
                 'is_complimentary' => true,
                 'category' => 'VIP Hospitality',
                 'description' => 'Air-conditioned private suite with attached restroom, illuminated Hollywood makeup vanity, and dedicated dressing concierge.',
-                'icon' => 'sparkles'
+                'icon' => 'sparkles',
             ],
             [
                 'title' => '500 kVA Standby Power Generator',
@@ -50,7 +50,7 @@ class DemoVenuesSeeder extends Seeder
                 'is_complimentary' => true,
                 'category' => 'Infrastructure',
                 'description' => 'Uninterrupted power system with automatic synchronization and fuel backup covering 100% chiller AC load.',
-                'icon' => 'bolt'
+                'icon' => 'bolt',
             ],
             [
                 'title' => 'Bespoke Fresh Rose Stage Decor & Walkway',
@@ -58,7 +58,7 @@ class DemoVenuesSeeder extends Seeder
                 'is_complimentary' => false,
                 'category' => 'Decor & Ambience',
                 'description' => 'Fresh imported gladiolus, red roses, golden filigree stage sofa, ambient pin spot lighting, and floral aisle runners.',
-                'icon' => 'star'
+                'icon' => 'star',
             ],
             [
                 'title' => 'Executive Chauffeur Valet Parking Service',
@@ -66,7 +66,7 @@ class DemoVenuesSeeder extends Seeder
                 'is_complimentary' => false,
                 'category' => 'Guest Logistics',
                 'description' => 'Dedicated 8-member uniformed valet team with electronic key logging and paved parking for 250+ cars.',
-                'icon' => 'truck'
+                'icon' => 'truck',
             ],
             [
                 'title' => '4K Drone Aerial Cinematography & LED P3 Wall',
@@ -74,8 +74,8 @@ class DemoVenuesSeeder extends Seeder
                 'is_complimentary' => false,
                 'category' => 'Multimedia & Video',
                 'description' => 'Dual 16x10 ft P3 ultra-HD stage display screens with live dual-camera vision mixer for program broadcast.',
-                'icon' => 'camera'
-            ]
+                'icon' => 'camera',
+            ],
         ];
 
         // Demo Marquees Data
@@ -273,12 +273,12 @@ class DemoVenuesSeeder extends Seeder
             );
 
             // Create Manager User
-            $ownerEmail = 'owner@' . $vData['slug'] . '.pk';
+            $ownerEmail = 'owner@'.$vData['slug'].'.pk';
             $user = User::firstOrCreate(
                 ['email' => $ownerEmail],
                 [
                     'tenant_id' => $tenant->id,
-                    'name' => $vData['tenant_name'] . ' Owner',
+                    'name' => $vData['tenant_name'].' Owner',
                     'phone' => $vData['phone'],
                     'password' => Hash::make('password'),
                     'role' => 'ROLE_TENANT_OWNER',
@@ -332,7 +332,7 @@ class DemoVenuesSeeder extends Seeder
 
                     // Add catering package
                     Package::firstOrCreate(
-                        ['tenant_id' => $tenant->id, 'name' => 'Royal Shahi Banquet Menu — ' . $hallItem['name']],
+                        ['tenant_id' => $tenant->id, 'name' => 'Royal Shahi Banquet Menu — '.$hallItem['name']],
                         [
                             'description' => 'Mutton Kunna, Chicken Malai Boti, Special Mutton Biryani, Roghani Naan, Salad Bar, Gajar Halwa, and Kulfi Falooda.',
                             'per_head_price' => 3200.00,

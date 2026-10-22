@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 return new class extends Migration
@@ -25,7 +25,7 @@ return new class extends Migration
                 $slug = $base;
                 $counter = 1;
                 while (DB::table('halls')->where('slug', $slug)->exists()) {
-                    $slug = $base . '-' . $counter++;
+                    $slug = $base.'-'.$counter++;
                 }
                 DB::table('halls')->where('id', $hall->id)->update(['slug' => $slug]);
             }

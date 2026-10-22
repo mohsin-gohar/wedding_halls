@@ -13,11 +13,14 @@ use Livewire\Component;
 class CalendarShiftGrid extends Component
 {
     public string $currentMonth = '';
+
     public ?string $selectedVenueId = null;
+
     public ?string $selectedHallId = null;
-    
+
     // Quick Details Modal
     public ?Booking $viewingBooking = null;
+
     public bool $showDetailsModal = false;
 
     protected $listeners = [
@@ -28,7 +31,7 @@ class CalendarShiftGrid extends Component
     public function mount()
     {
         $user = Auth::user();
-        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+        if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized. Tenant staff access required.');
         }
 
@@ -65,7 +68,7 @@ class CalendarShiftGrid extends Component
         try {
             $month = Carbon::createFromFormat('!Y-m', $this->currentMonth);
             if (! $month || $month->format('Y-m') !== $this->currentMonth || $month->year < 2000 || $month->year > 2100) {
-                throw new \InvalidArgumentException();
+                throw new \InvalidArgumentException;
             }
         } catch (\Throwable) {
             $this->currentMonth = Carbon::now()->format('Y-m');
@@ -152,6 +155,7 @@ class CalendarShiftGrid extends Component
                 ->where('hall_id', $selectedHall->id)
                 ->whereBetween('event_date', [$startOfMonth->format('Y-m-d'), $endOfMonth->format('Y-m-d')])
                 ->whereIn('status', ['CONFIRMED', 'HOLD', 'INQUIRY'])
+                ->whereRaw('date(event_date) between ? and ?', [$startOfMonth->format('Y-m-d'), $endOfMonth->format('Y-m-d')])
                 ->get();
 
             foreach ($bookingsList as $b) {
@@ -160,7 +164,7 @@ class CalendarShiftGrid extends Component
                     ? ['AFTERNOON', 'EVENING', 'NIGHT']
                     : [strtoupper($b->slot_type)];
                 foreach ($slots as $slot) {
-                    $bookings[$date . '_' . $slot] ??= $b;
+                    $bookings[$date.'_'.$slot] ??= $b;
                 }
             }
         }

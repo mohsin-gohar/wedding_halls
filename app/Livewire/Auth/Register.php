@@ -3,10 +3,12 @@
 namespace App\Livewire\Auth;
 
 use App\Models\Hall;
+use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Venue;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -15,13 +17,21 @@ use Livewire\Component;
 class Register extends Component
 {
     public string $hallName = '';
+
     public string $ownerName = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public string $city = 'Lahore';
+
     public int $capacity = 500;
+
     public float $baseRent = 150000;
+
     public string $password = '';
+
     public string $password_confirmation = '';
 
     protected $rules = [
@@ -37,17 +47,18 @@ class Register extends Component
 
     public function mount()
     {
-        $isOpen = \Illuminate\Support\Facades\Cache::get('platform_vendor_registration_open', true);
-        if (!$isOpen) {
+        $isOpen = Cache::get('platform_vendor_registration_open', true);
+        if (! $isOpen) {
             session()->flash('error', 'Vendor self-registration is currently paused by platform administrators.');
         }
     }
 
     public function register()
     {
-        $isOpen = \Illuminate\Support\Facades\Cache::get('platform_vendor_registration_open', true);
-        if (!$isOpen) {
+        $isOpen = Cache::get('platform_vendor_registration_open', true);
+        if (! $isOpen) {
             $this->addError('hallName', 'Vendor self-registration is currently paused. Please contact platform concierge.');
+
             return;
         }
 
@@ -55,16 +66,16 @@ class Register extends Component
 
         $user = DB::transaction(function () {
             // 1. Create Tenant
-            $slug = Str::slug($this->hallName) . '-' . Str::lower(Str::random(5));
-            $defaultPlan = \App\Models\SubscriptionPlan::where('slug', 'starter-marquee')->first() 
-                ?? \App\Models\SubscriptionPlan::where('is_active', true)->orderBy('price_monthly', 'asc')->first();
+            $slug = Str::slug($this->hallName).'-'.Str::lower(Str::random(5));
+            $defaultPlan = SubscriptionPlan::where('slug', 'starter-marquee')->first()
+                ?? SubscriptionPlan::where('is_active', true)->orderBy('price_monthly', 'asc')->first();
 
             $tenant = Tenant::create([
                 'name' => $this->hallName,
                 'slug' => $slug,
                 'email' => $this->email,
                 'phone' => $this->phone,
-                'address' => $this->city . ', Pakistan',
+                'address' => $this->city.', Pakistan',
                 'city' => $this->city,
                 'subscription_plan' => $defaultPlan?->name ?? 'Starter Marquee',
                 'subscription_plan_id' => $defaultPlan?->id,
@@ -80,10 +91,10 @@ class Register extends Component
             // 2. Create Venue
             $venue = Venue::create([
                 'tenant_id' => $tenant->id,
-                'name' => $this->hallName . ' Complex',
-                'slug' => Str::slug($this->hallName . '-complex'),
+                'name' => $this->hallName.' Complex',
+                'slug' => Str::slug($this->hallName.'-complex'),
                 'city' => $this->city,
-                'address' => $this->city . ', Pakistan',
+                'address' => $this->city.', Pakistan',
                 'phone' => $this->phone,
                 'email' => $this->email,
                 'is_active' => true,
@@ -94,17 +105,17 @@ class Register extends Component
                 'tenant_id' => $tenant->id,
                 'venue_id' => $venue->id,
                 'name' => $this->hallName,
-                'min_capacity' => (int)($this->capacity * 0.4),
+                'min_capacity' => (int) ($this->capacity * 0.4),
                 'max_capacity' => $this->capacity,
                 'base_rent' => $this->baseRent,
                 'description' => 'Luxury banqueting hall space with central climate control, power backup, and VIP bridal room.',
                 'cover_image' => 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
                 'images' => [
                     'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
-                    'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200&auto=format&fit=crop'
+                    'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200&auto=format&fit=crop',
                 ],
                 'videos' => [
-                    'https://www.youtube.com/embed/7wtfhZwyrcc'
+                    'https://www.youtube.com/embed/7wtfhZwyrcc',
                 ],
                 'has_air_conditioning' => true,
                 'has_generator_backup' => true,

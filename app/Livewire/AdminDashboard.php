@@ -30,72 +30,121 @@ class AdminDashboard extends Component
 {
     #[Url(as: 'tab')]
     public string $activeTab = 'vendors'; // vendors, tasks, traffic, plans, payments, halls, bookings, users, analytics, audit
+
     public ?string $feedbackMessage = null;
+
     public ?string $errorMessage = null;
 
     // Platform Tasks Management (Super Admin Tasks & Action Items)
     public string $newTaskTitle = '';
+
     public string $newTaskCategory = 'GENERAL'; // VENDOR_ONBOARDING, TRAFFIC_MONITOR, PAYMENT_REVIEW, GENERAL
+
     public string $newTaskPriority = 'MEDIUM'; // HIGH, MEDIUM, LOW
+
     public string $newTaskDueDate = '';
+
     public string $newTaskNotes = '';
 
     // Platform Traffic & Operations Control Center
     public bool $vendorRegistrationOpen = true;
+
     public bool $marketplaceEnabled = true;
+
     public string $announcementBanner = '';
 
     // SaaS Plan Form (CRUD)
     public bool $showPlanModal = false;
+
     public bool $isEditingPlan = false;
+
     public ?int $editingPlanId = null;
+
     public string $planName = '';
+
     public string $planSlug = '';
+
     public string $planDescription = '';
+
     public float $planPriceWeekly = 5000;
+
     public float $planPriceMonthly = 15000;
+
     public float $planPriceYearly = 150000;
+
     public int $planMaxHalls = 1;
+
     public int $planMaxStaff = 3;
+
     public int $planMaxBookings = 20;
+
     public bool $planHasKot = true;
+
     public bool $planHasWhatsapp = false;
+
     public bool $planHasAccounting = true;
 
     // Vendor Provisioning Form (Super Admin Onboarding)
     public bool $showProvisionModal = false;
+
     public string $newBusinessName = '';
+
     public string $newCity = 'Lahore';
+
     public string $newAddress = '';
+
     public int $newMinCapacity = 150;
+
     public int $newMaxCapacity = 750;
+
     public float $newBaseRent = 175000;
+
     public string $newTagline = '';
+
     public string $newOwnerName = '';
+
     public string $newOwnerEmail = '';
+
     public string $newOwnerPassword = '';
+
     public string $newOwnerPhone = '';
+
     public ?int $newPlanId = null;
 
     // Vendor Edit Form (CRUD)
     public bool $showEditVendorModal = false;
+
     public ?string $editingVendorId = null;
+
     public string $editVendorName = '';
+
     public string $editVendorCity = '';
+
     public string $editVendorAddress = '';
+
     public string $editVendorPhone = '';
+
     public string $editVendorEmail = '';
+
     public ?int $editVendorPlanId = null;
+
     public string $editVendorExpiresAt = '';
 
     // Hall Edit Form (CRUD)
     public bool $showEditHallModal = false;
+
     public ?string $editingHallId = null;
+
     public string $editHallName = '';
+
     public string $editHallCity = 'Lahore';
+
     public int $editHallMinCapacity = 150;
+
     public int $editHallMaxCapacity = 750;
+
     public float $editHallBaseRent = 175000;
+
     public bool $editHallIsActive = true;
 
     // Handover Credentials Card
@@ -103,13 +152,15 @@ class AdminDashboard extends Component
 
     // User Directory & Access Management (Filters)
     public string $userSearch = '';
+
     public string $userRoleFilter = 'ALL';
+
     public string $userStatusFilter = 'ALL';
 
     public function mount()
     {
         $user = Auth::user();
-        if (!$user || !$user->isSuperAdmin()) {
+        if (! $user || ! $user->isSuperAdmin()) {
             abort(403, 'Access denied. You do not possess Super Admin administrative privileges.');
         }
 
@@ -146,7 +197,7 @@ class AdminDashboard extends Component
             'title' => trim($this->newTaskTitle),
             'category' => $this->newTaskCategory,
             'priority' => $this->newTaskPriority,
-            'due_date' => !empty($this->newTaskDueDate) ? $this->newTaskDueDate : null,
+            'due_date' => ! empty($this->newTaskDueDate) ? $this->newTaskDueDate : null,
             'notes' => $this->newTaskNotes,
             'created_by_user_id' => Auth::id(),
             'is_completed' => false,
@@ -162,12 +213,12 @@ class AdminDashboard extends Component
     public function toggleTask(string $taskId): void
     {
         $task = PlatformTask::findOrFail($taskId);
-        $task->is_completed = !$task->is_completed;
+        $task->is_completed = ! $task->is_completed;
         $task->completed_at = $task->is_completed ? now() : null;
         $task->save();
 
-        AuditLog::log('TOGGLE_PLATFORM_TASK', "Updated status of task [{$task->title}] to " . ($task->is_completed ? 'COMPLETED' : 'PENDING'));
-        $this->feedbackMessage = "Task updated.";
+        AuditLog::log('TOGGLE_PLATFORM_TASK', "Updated status of task [{$task->title}] to ".($task->is_completed ? 'COMPLETED' : 'PENDING'));
+        $this->feedbackMessage = 'Task updated.';
     }
 
     public function deleteTask(string $taskId): void
@@ -177,30 +228,30 @@ class AdminDashboard extends Component
         $task->delete();
 
         AuditLog::log('DELETE_PLATFORM_TASK', "Deleted task [{$title}]");
-        $this->feedbackMessage = "Task removed.";
+        $this->feedbackMessage = 'Task removed.';
     }
 
     public function toggleRegistrationStatus(): void
     {
-        $this->vendorRegistrationOpen = !$this->vendorRegistrationOpen;
+        $this->vendorRegistrationOpen = ! $this->vendorRegistrationOpen;
         Cache::put('platform_vendor_registration_open', $this->vendorRegistrationOpen);
-        AuditLog::log('TOGGLE_REGISTRATION_STATUS', "Vendor public registration set to " . ($this->vendorRegistrationOpen ? 'OPEN' : 'CLOSED'));
-        $this->feedbackMessage = "Vendor Registration is now " . ($this->vendorRegistrationOpen ? 'OPEN for all new marquees' : 'CLOSED temporarily');
+        AuditLog::log('TOGGLE_REGISTRATION_STATUS', 'Vendor public registration set to '.($this->vendorRegistrationOpen ? 'OPEN' : 'CLOSED'));
+        $this->feedbackMessage = 'Vendor Registration is now '.($this->vendorRegistrationOpen ? 'OPEN for all new marquees' : 'CLOSED temporarily');
     }
 
     public function toggleMarketplaceStatus(): void
     {
-        $this->marketplaceEnabled = !$this->marketplaceEnabled;
+        $this->marketplaceEnabled = ! $this->marketplaceEnabled;
         Cache::put('platform_marketplace_enabled', $this->marketplaceEnabled);
-        AuditLog::log('TOGGLE_MARKETPLACE_STATUS', "Public marketplace visibility set to " . ($this->marketplaceEnabled ? 'ACTIVE' : 'PAUSED'));
-        $this->feedbackMessage = "Public Marketplace visibility is now " . ($this->marketplaceEnabled ? 'ACTIVE' : 'PAUSED (Maintenance)');
+        AuditLog::log('TOGGLE_MARKETPLACE_STATUS', 'Public marketplace visibility set to '.($this->marketplaceEnabled ? 'ACTIVE' : 'PAUSED'));
+        $this->feedbackMessage = 'Public Marketplace visibility is now '.($this->marketplaceEnabled ? 'ACTIVE' : 'PAUSED (Maintenance)');
     }
 
     public function saveAnnouncement(): void
     {
         Cache::put('platform_announcement', trim($this->announcementBanner));
         AuditLog::log('UPDATE_ANNOUNCEMENT', "Updated platform announcement banner: {$this->announcementBanner}");
-        $this->feedbackMessage = "Platform announcement updated.";
+        $this->feedbackMessage = 'Platform announcement updated.';
     }
 
     // ==========================================
@@ -256,14 +307,14 @@ class AdminDashboard extends Component
         $slug = $baseSlug;
         $counter = 1;
         while (Tenant::where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . $counter++;
+            $slug = $baseSlug.'-'.$counter++;
         }
 
         $baseSubdomain = Str::slug($this->newBusinessName);
         $subdomain = $baseSubdomain;
         $subCounter = 1;
         while (Tenant::where('subdomain', $subdomain)->exists()) {
-            $subdomain = $baseSubdomain . '-' . $subCounter++;
+            $subdomain = $baseSubdomain.'-'.$subCounter++;
         }
 
         // 4. Default 2026 Luxury Services Catalog from config
@@ -304,12 +355,12 @@ class AdminDashboard extends Component
             $venueSlug = $baseVenueSlug;
             $vCounter = 1;
             while (Venue::where('slug', $venueSlug)->exists()) {
-                $venueSlug = $baseVenueSlug . '-' . $vCounter++;
+                $venueSlug = $baseVenueSlug.'-'.$vCounter++;
             }
             $venue = Venue::create([
                 'tenant_id' => $tenant->id,
-                'name' => $this->newBusinessName . ' Complex',
-                'slug' => $venueSlug . '-venue',
+                'name' => $this->newBusinessName.' Complex',
+                'slug' => $venueSlug.'-venue',
                 'city' => $this->newCity,
                 'area' => 'Prime District',
                 'address' => $this->newAddress ?: "Main Commercial Boulevard, {$this->newCity}",
@@ -328,7 +379,7 @@ class AdminDashboard extends Component
                 'min_capacity' => $this->newMinCapacity,
                 'max_capacity' => $this->newMaxCapacity,
                 'base_rent' => $this->newBaseRent,
-                'description' => "Grand wedding banquet marquee ballroom featuring Austrian crystal chandeliers, climate control, VIP bridal suites, and standby CAT generators.",
+                'description' => 'Grand wedding banquet marquee ballroom featuring Austrian crystal chandeliers, climate control, VIP bridal suites, and standby CAT generators.',
                 'operating_hours' => 'Morning: 11:30 AM - 3:30 PM | Evening: 7:00 PM - 12:00 AM',
                 'policies' => "1. 50% Token advance required to atomically secure wedding date.\n2. Music permissible till 10:00 PM per city banquet bylaws.\n3. Outside catering permitted with kitchen NOC.",
                 'cover_image' => 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
@@ -439,6 +490,7 @@ class AdminDashboard extends Component
             $tenant->update(['is_active' => false, 'verification_status' => 'SUSPENDED']);
             AuditLog::log('VENDOR_SUSPENDED', "Vendor [{$name}] has confirmed bookings; suspended instead of deleted to protect client data.", null, 'Tenant', $tenantId);
             $this->feedbackMessage = "Vendor [{$name}] has active confirmed bookings. To protect client contracts and payment history, the vendor was safely deactivated and suspended instead of permanently deleted.";
+
             return;
         }
 
@@ -489,11 +541,11 @@ class AdminDashboard extends Component
     {
         $tenant = Tenant::findOrFail($tenantId);
         $tenant->update([
-            'is_active' => !$tenant->is_active,
+            'is_active' => ! $tenant->is_active,
         ]);
 
-        AuditLog::log('VENDOR_TOGGLED', "Toggled active status of vendor [{$tenant->name}] to " . ($tenant->is_active ? 'Active' : 'Inactive'), $tenant->id, 'Tenant', $tenant->id);
-        $this->feedbackMessage = "Tenant [{$tenant->name}] status toggled to " . ($tenant->is_active ? 'Active' : 'Inactive') . ".";
+        AuditLog::log('VENDOR_TOGGLED', "Toggled active status of vendor [{$tenant->name}] to ".($tenant->is_active ? 'Active' : 'Inactive'), $tenant->id, 'Tenant', $tenant->id);
+        $this->feedbackMessage = "Tenant [{$tenant->name}] status toggled to ".($tenant->is_active ? 'Active' : 'Inactive').'.';
     }
 
     public function assignPlanToTenant(string $tenantId, int $planId)
@@ -594,7 +646,7 @@ class AdminDashboard extends Component
         } else {
             $plan = SubscriptionPlan::create([
                 'name' => $this->planName,
-                'slug' => $slug . '-' . rand(100, 999),
+                'slug' => $slug.'-'.rand(100, 999),
                 'description' => $this->planDescription,
                 'price_weekly' => $this->planPriceWeekly,
                 'price_monthly' => $this->planPriceMonthly,
@@ -618,6 +670,7 @@ class AdminDashboard extends Component
         $plan = SubscriptionPlan::withCount('tenants')->findOrFail($planId);
         if ($plan->tenants_count > 0) {
             $this->errorMessage = "Cannot delete plan [{$plan->name}] because {$plan->tenants_count} vendors are subscribed to it.";
+
             return;
         }
 
@@ -684,9 +737,9 @@ class AdminDashboard extends Component
     {
         $hall = Hall::findOrFail($hallId);
         $hall->update([
-            'is_active' => !$hall->is_active,
+            'is_active' => ! $hall->is_active,
         ]);
-        $this->feedbackMessage = "Hall [{$hall->name}] status changed to " . ($hall->is_active ? 'Published' : 'Hidden') . ".";
+        $this->feedbackMessage = "Hall [{$hall->name}] status changed to ".($hall->is_active ? 'Published' : 'Hidden').'.';
     }
 
     // ==========================================
@@ -695,11 +748,11 @@ class AdminDashboard extends Component
     public function approveSubscriptionPayment(string $paymentId)
     {
         $payment = SubscriptionPayment::with(['tenant', 'plan'])->findOrFail($paymentId);
-        
+
         $tenant = $payment->tenant;
-        
-        $currentExpiry = ($tenant->subscription_expires_at && $tenant->subscription_expires_at->isFuture()) 
-            ? $tenant->subscription_expires_at 
+
+        $currentExpiry = ($tenant->subscription_expires_at && $tenant->subscription_expires_at->isFuture())
+            ? $tenant->subscription_expires_at
             : Carbon::now();
 
         $newExpiry = match (strtoupper($payment->billing_cycle)) {
@@ -723,13 +776,13 @@ class AdminDashboard extends Component
 
         AuditLog::log(
             'SUBSCRIPTION_PAYMENT_APPROVED',
-            "Approved subscription payment of PKR " . number_format($payment->amount) . " for vendor [{$tenant->name}]. Extended to {$newExpiry->format('d M Y')}.",
+            'Approved subscription payment of PKR '.number_format($payment->amount)." for vendor [{$tenant->name}]. Extended to {$newExpiry->format('d M Y')}.",
             $tenant->id,
             'SubscriptionPayment',
             $payment->id
         );
 
-        $this->feedbackMessage = "Subscription payment approved. [{$tenant->name}] renewed until " . $newExpiry->format('d M Y') . ".";
+        $this->feedbackMessage = "Subscription payment approved. [{$tenant->name}] renewed until ".$newExpiry->format('d M Y').'.';
     }
 
     public function rejectSubscriptionPayment(string $paymentId)
@@ -743,13 +796,13 @@ class AdminDashboard extends Component
 
         AuditLog::log(
             'SUBSCRIPTION_PAYMENT_REJECTED',
-            "Rejected subscription payment of PKR " . number_format($payment->amount) . " for vendor [{$payment->tenant->name}].",
+            'Rejected subscription payment of PKR '.number_format($payment->amount)." for vendor [{$payment->tenant->name}].",
             $payment->tenant_id,
             'SubscriptionPayment',
             $payment->id
         );
 
-        $this->feedbackMessage = "Subscription payment marked as REJECTED.";
+        $this->feedbackMessage = 'Subscription payment marked as REJECTED.';
     }
 
     // ==========================================
@@ -778,7 +831,8 @@ class AdminDashboard extends Component
     {
         $user = User::findOrFail($userId);
         if ($user->id === Auth::id()) {
-            $this->errorMessage = "You cannot suspend your own Super Admin account.";
+            $this->errorMessage = 'You cannot suspend your own Super Admin account.';
+
             return;
         }
 
@@ -852,12 +906,12 @@ class AdminDashboard extends Component
 
         // User Directory query with filters
         $usersQuery = User::with('tenant');
-        if (!empty($this->userSearch)) {
-            $search = '%' . trim($this->userSearch) . '%';
+        if (! empty($this->userSearch)) {
+            $search = '%'.trim($this->userSearch).'%';
             $usersQuery->where(function ($q) use ($search) {
                 $q->where('name', 'like', $search)
-                  ->orWhere('email', 'like', $search)
-                  ->orWhere('phone', 'like', $search);
+                    ->orWhere('email', 'like', $search)
+                    ->orWhere('phone', 'like', $search);
             });
         }
         if ($this->userRoleFilter !== 'ALL') {

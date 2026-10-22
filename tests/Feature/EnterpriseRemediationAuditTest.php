@@ -6,20 +6,17 @@ use App\Livewire\Auth\Register;
 use App\Livewire\FloorPlanDesigner;
 use App\Livewire\HallMediaManager;
 use App\Livewire\KitchenKotBoard;
+use App\Livewire\PublicAvailabilityChecker;
 use App\Livewire\PublicContact;
 use App\Livewire\PublicGuestRsvp;
-use App\Livewire\PublicAvailabilityChecker;
 use App\Livewire\PublicVenues;
 use App\Livewire\UtilityFuelTracker;
-use App\Livewire\WhatsAppRsvpManager;
 use App\Models\Booking;
 use App\Models\ContactInquiry;
 use App\Models\GuestRsvp;
 use App\Models\Hall;
 use App\Models\PlatformTask;
-use App\Models\Tenant;
 use App\Models\User;
-use App\Models\Venue;
 use App\Services\BookingService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -210,9 +207,9 @@ class EnterpriseRemediationAuditTest extends TestCase
         Livewire::test(PublicAvailabilityChecker::class)
             ->set('selectedDate', $eventDate)
             ->assertViewHas('bookings', function ($bookings) use ($hall) {
-                return $bookings->has($hall->id . '_AFTERNOON')
-                    && $bookings->has($hall->id . '_EVENING')
-                    && $bookings->has($hall->id . '_NIGHT');
+                return $bookings->has($hall->id.'_AFTERNOON')
+                    && $bookings->has($hall->id.'_EVENING')
+                    && $bookings->has($hall->id.'_NIGHT');
             });
     }
 

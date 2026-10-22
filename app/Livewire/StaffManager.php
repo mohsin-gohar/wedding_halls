@@ -17,33 +17,53 @@ use Livewire\Component;
 class StaffManager extends Component
 {
     public bool $isCreating = false;
+
     public string $name = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public string $role = 'ROLE_FRONT_DESK';
+
     public string $password = '';
+
     public string $baseSalary = '';
+
     public string $search = '';
+
     public string $roleFilter = 'ALL';
+
     public string $statusFilter = 'ACTIVE';
+
     public bool $showFormerStaff = false;
 
     // Staff Profile Drawer/Modal State
     public bool $showProfileModal = false;
+
     public ?int $profileStaffId = null;
+
     public ?array $profileStats = null;
 
     // Edit Staff State
     public bool $isEditing = false;
+
     public ?int $editingStaffId = null;
+
     public string $editName = '';
+
     public string $editEmail = '';
+
     public string $editPhone = '';
+
     public string $editRole = 'ROLE_FRONT_DESK';
+
     public string $editPassword = '';
+
     public string $editBaseSalary = '';
 
     public ?string $feedbackMessage = null;
+
     public ?string $errorMessage = null;
 
     protected $rules = [
@@ -62,7 +82,7 @@ class StaffManager extends Component
     private function authorizeStaffManager(): void
     {
         $user = Auth::user();
-        if (!$user || (!$user->isTenantOwner() && !$user->isManager()) || !$user->tenant_id) {
+        if (! $user || (! $user->isTenantOwner() && ! $user->isManager()) || ! $user->tenant_id) {
             abort(403, 'Unauthorized. Only Venue Owners or General Managers can access Staff Management.');
         }
     }
@@ -81,9 +101,10 @@ class StaffManager extends Component
     {
         $this->authorizeStaffManager();
         $tenant = Auth::user()->tenant;
-        if ($tenant && !$tenant->canAddStaff()) {
+        if ($tenant && ! $tenant->canAddStaff()) {
             $maxStaff = $tenant->subscriptionPlan?->max_staff ?? 'plan limit';
-            $this->errorMessage = "Staff limit reached (" . $tenant->users()->count() . "/{$maxStaff}). Upgrade your SaaS subscription to add more team members.";
+            $this->errorMessage = 'Staff limit reached ('.$tenant->users()->count()."/{$maxStaff}). Upgrade your SaaS subscription to add more team members.";
+
             return;
         }
 
@@ -104,8 +125,9 @@ class StaffManager extends Component
     {
         $this->authorizeStaffManager();
         $tenant = Auth::user()->tenant;
-        if ($tenant && !$tenant->canAddStaff()) {
-            $this->errorMessage = "Staff limit reached. Please upgrade your subscription plan.";
+        if ($tenant && ! $tenant->canAddStaff()) {
+            $this->errorMessage = 'Staff limit reached. Please upgrade your subscription plan.';
+
             return;
         }
 
@@ -147,7 +169,7 @@ class StaffManager extends Component
         $this->authorizeStaffManager();
         $staff = User::where('tenant_id', Auth::user()->tenant_id)->findOrFail($userId);
         if (($staff->isTenantOwner() && $staff->id !== Auth::id())
-            || (!Auth::user()->isTenantOwner() && $staff->isManager())) {
+            || (! Auth::user()->isTenantOwner() && $staff->isManager())) {
             abort(403, 'You do not have permission to edit this staff profile.');
         }
         $this->editingStaffId = $staff->id;
@@ -172,7 +194,7 @@ class StaffManager extends Component
     public function updateStaffMember()
     {
         $this->authorizeStaffManager();
-        if (!$this->editingStaffId) {
+        if (! $this->editingStaffId) {
             return;
         }
 
@@ -195,12 +217,12 @@ class StaffManager extends Component
             'base_salary' => $this->editBaseSalary !== '' ? (float) $this->editBaseSalary : null,
         ];
 
-        if (!empty($this->editPassword)) {
+        if (! empty($this->editPassword)) {
             $data['password'] = Hash::make($this->editPassword);
         }
 
         $staff->update($data);
-        if (!$staff->isTenantOwner()) {
+        if (! $staff->isTenantOwner()) {
             $staff->syncRoles([$this->editRole]);
         }
 
@@ -221,18 +243,20 @@ class StaffManager extends Component
         $this->authorizeStaffManager();
         $currentUser = Auth::user();
         if ($currentUser->id === $userId) {
-            $this->errorMessage = "You cannot remove your own user account.";
+            $this->errorMessage = 'You cannot remove your own user account.';
+
             return;
         }
 
         $staff = User::where('tenant_id', $currentUser->tenant_id)->findOrFail($userId);
 
         if ($staff->isTenantOwner()) {
-            $this->errorMessage = "The primary venue business owner account cannot be deleted.";
+            $this->errorMessage = 'The primary venue business owner account cannot be deleted.';
+
             return;
         }
 
-        if (!$currentUser->isTenantOwner() && $staff->isManager()) {
+        if (! $currentUser->isTenantOwner() && $staff->isManager()) {
             abort(403, 'Only the venue owner can remove a manager account.');
         }
 
@@ -253,14 +277,15 @@ class StaffManager extends Component
     public function restoreStaffMember(int $userId): void
     {
         $this->authorizeStaffManager();
-        if (!Auth::user()->isTenantOwner()) {
+        if (! Auth::user()->isTenantOwner()) {
             abort(403, 'Only the venue owner can restore former staff accounts.');
         }
 
         $staff = User::onlyTrashed()->where('tenant_id', Auth::user()->tenant_id)->findOrFail($userId);
         $tenant = Auth::user()->tenant;
-        if ($tenant && !$tenant->canAddStaff()) {
+        if ($tenant && ! $tenant->canAddStaff()) {
             $this->errorMessage = 'Staff limit reached. Upgrade your subscription before restoring this account.';
+
             return;
         }
 
@@ -322,13 +347,15 @@ class StaffManager extends Component
         $this->authorizeStaffManager();
         $currentUser = Auth::user();
         if ($currentUser->id === $userId) {
-            $this->errorMessage = "You cannot suspend your own account.";
+            $this->errorMessage = 'You cannot suspend your own account.';
+
             return;
         }
 
         $staff = User::where('tenant_id', $currentUser->tenant_id)->findOrFail($userId);
         if ($staff->isTenantOwner()) {
-            $this->errorMessage = "Cannot alter status of the primary venue owner.";
+            $this->errorMessage = 'Cannot alter status of the primary venue owner.';
+
             return;
         }
 
@@ -354,7 +381,8 @@ class StaffManager extends Component
         $this->authorizeStaffManager();
         $currentUser = Auth::user();
         if ($currentUser->id === $userId) {
-            $this->errorMessage = "You cannot delete your own user account.";
+            $this->errorMessage = 'You cannot delete your own user account.';
+
             return;
         }
 
@@ -363,11 +391,12 @@ class StaffManager extends Component
             ->findOrFail($userId);
 
         if ($staff->isTenantOwner()) {
-            $this->errorMessage = "The primary venue business owner account cannot be permanently deleted.";
+            $this->errorMessage = 'The primary venue business owner account cannot be permanently deleted.';
+
             return;
         }
 
-        if (!$currentUser->isTenantOwner() && $staff->isManager()) {
+        if (! $currentUser->isTenantOwner() && $staff->isManager()) {
             abort(403, 'Only the venue owner can permanently purge a manager account.');
         }
 
@@ -401,14 +430,14 @@ class StaffManager extends Component
             ? User::onlyTrashed()->where('tenant_id', Auth::user()->tenant_id)
             : User::where('tenant_id', Auth::user()->tenant_id);
 
-        if (!$this->showFormerStaff && $this->statusFilter !== 'ALL') {
+        if (! $this->showFormerStaff && $this->statusFilter !== 'ALL') {
             $staffQuery->where('status', $this->statusFilter);
         }
         if ($this->roleFilter !== 'ALL') {
             $staffQuery->where('role', $this->roleFilter);
         }
         if (trim($this->search) !== '') {
-            $search = '%' . trim($this->search) . '%';
+            $search = '%'.trim($this->search).'%';
             $staffQuery->where(fn ($query) => $query->where('name', 'like', $search)
                 ->orWhere('email', 'like', $search)
                 ->orWhere('phone', 'like', $search));

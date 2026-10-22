@@ -168,7 +168,7 @@
     <!-- ===================================================================
          SECTION 4: PRIME PAKISTANI WEDDING HUBS (City Spotlight)
          =================================================================== -->
-    <section class="py-16 bg-[#F8F5EF]/60 border-t border-b border-[#E7E5E4]">
+    <section class="py-16 bg-[#F8F5EF]/60 dark:bg-white/5 border-t border-b border-[#E7E5E4] dark:border-white/10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
             <div class="text-center space-y-2 max-w-2xl mx-auto">
                 <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8F7239] font-bold block">
@@ -263,7 +263,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Tier 1 -->
-            <div class="p-8 bg-white border border-[#E7E5E4] space-y-4">
+            <div class="p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-4">
                 <span class="text-[10px] uppercase font-bold font-mono tracking-widest text-[#8F7239] block">TIER 1</span>
                 <h3 class="font-serif-luxury text-2xl text-[#171513]">Royal Ballrooms</h3>
                 <p class="text-xs text-stone-600 leading-relaxed font-normal">
@@ -277,7 +277,7 @@
             </div>
 
             <!-- Tier 2 -->
-            <div class="p-8 bg-white border border-[#E7E5E4] space-y-4">
+            <div class="p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-4">
                 <span class="text-[10px] uppercase font-bold font-mono tracking-widest text-[#8F7239] block">TIER 2</span>
                 <h3 class="font-serif-luxury text-2xl text-[#171513]">Crystal Marquees</h3>
                 <p class="text-xs text-stone-600 leading-relaxed font-normal">
@@ -291,7 +291,7 @@
             </div>
 
             <!-- Tier 3 -->
-            <div class="p-8 bg-white border border-[#E7E5E4] space-y-4">
+            <div class="p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-4">
                 <span class="text-[10px] uppercase font-bold font-mono tracking-widest text-[#8F7239] block">TIER 3</span>
                 <h3 class="font-serif-luxury text-2xl text-[#171513]">Botanical Lawns</h3>
                 <p class="text-xs text-stone-600 leading-relaxed font-normal">
@@ -310,7 +310,7 @@
     <!-- ===================================================================
          SECTION 6: FREQUENTLY ASKED QUESTIONS (Zero-Pill Luxury Accordion)
          =================================================================== -->
-    <section class="py-16 bg-white border-t border-b border-[#E7E5E4]">
+    <section class="py-16 bg-white dark:bg-[#171513] border-t border-b border-[#E7E5E4] dark:border-white/10">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
             <div class="text-center space-y-2">
                 <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8F7239] font-bold block">
@@ -322,21 +322,21 @@
             </div>
 
             <div class="space-y-4">
-                <div class="p-5 border border-[#E7E5E4] bg-[#F8F5EF] space-y-2">
+                <div class="p-5 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 space-y-2">
                     <h4 class="font-serif-luxury text-lg text-[#171513] font-medium">How does atomic shift reservation work?</h4>
                     <p class="text-xs text-stone-600 leading-relaxed font-normal">
                         EventHub uses database atomic transactions (`SELECT FOR UPDATE`). When you confirm a wedding shift (Afternoon, Evening, or Night), our software locks that exact hall date immediately so no other client or operator can book the same slot.
                     </p>
                 </div>
 
-                <div class="p-5 border border-[#E7E5E4] bg-[#F8F5EF] space-y-2">
+                <div class="p-5 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 space-y-2">
                     <h4 class="font-serif-luxury text-lg text-[#171513] font-medium">Can I bring outside catering or only use hall food?</h4>
                     <p class="text-xs text-stone-600 leading-relaxed font-normal">
                         Every hall sets their policy on their dedicated showcase page. Most venues offer premier in-house Mughlai Bawarchi feasts, while some permit outside caterers with a kitchen utility surcharge.
                     </p>
                 </div>
 
-                <div class="p-5 border border-[#E7E5E4] bg-[#F8F5EF] space-y-2">
+                <div class="p-5 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 space-y-2">
                     <h4 class="font-serif-luxury text-lg text-[#171513] font-medium">What is the payment deposit schedule?</h4>
                     <p class="text-xs text-stone-600 leading-relaxed font-normal">
                         Typically, a 50% token advance is paid upon date confirmation, followed by the remaining balance clearance 3 days prior to the event date. Official A4 printable receipts and WhatsApp notifications are issued automatically.

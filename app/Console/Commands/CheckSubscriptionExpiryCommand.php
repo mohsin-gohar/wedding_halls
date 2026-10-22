@@ -33,7 +33,7 @@ class CheckSubscriptionExpiryCommand extends Command
         $this->line("• Accounts moved to Grace Period: {$results['warning_count']}");
         $this->line("• Accounts moved to EXPIRED:      {$results['expired_count']}");
 
-        if (!empty($results['details'])) {
+        if (! empty($results['details'])) {
             $this->table(
                 ['Tenant ID', 'Name', 'Action', 'Timestamp'],
                 array_map(function ($item) {
@@ -48,6 +48,7 @@ class CheckSubscriptionExpiryCommand extends Command
         }
 
         $this->info('SaaS Subscription Audit completed successfully.');
+
         return Command::SUCCESS;
     }
 }

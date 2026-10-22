@@ -45,9 +45,10 @@ class Payment extends Model
 
     public static function generateReceiptNumber(): string
     {
-        $prefix = 'WH-RCP-' . date('Ymd');
+        $prefix = 'WH-RCP-'.date('Ymd');
         $random = strtoupper(Str::random(4));
         $count = self::whereDate('created_at', today())->count() + 1;
+
         return sprintf('%s-%04d-%s', $prefix, $count, $random);
     }
 }

@@ -10,10 +10,10 @@ return new class extends Migration
     {
         if (Schema::hasTable('users')) {
             Schema::table('users', function (Blueprint $table) {
-                if (!Schema::hasColumn('users', 'last_login_at')) {
+                if (! Schema::hasColumn('users', 'last_login_at')) {
                     $table->timestamp('last_login_at')->nullable()->after('remember_token');
                 }
-                if (!Schema::hasColumn('users', 'status')) {
+                if (! Schema::hasColumn('users', 'status')) {
                     $table->string('status', 20)->default('ACTIVE')->after('role'); // ACTIVE, PENDING, SUSPENDED
                 }
             });
@@ -21,7 +21,7 @@ return new class extends Migration
 
         if (Schema::hasTable('bookings')) {
             Schema::table('bookings', function (Blueprint $table) {
-                if (!Schema::hasColumn('bookings', 'crm_stage')) {
+                if (! Schema::hasColumn('bookings', 'crm_stage')) {
                     $table->string('crm_stage', 30)->default('NEW_INQUIRY')->after('status'); // NEW_INQUIRY, SITE_VISIT, QUOTATION, CONFIRMED, CANCELLED
                     $table->index(['tenant_id', 'crm_stage']);
                 }

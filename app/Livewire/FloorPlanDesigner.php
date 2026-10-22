@@ -10,14 +10,17 @@ use Livewire\Component;
 class FloorPlanDesigner extends Component
 {
     public ?string $selectedHallId = null;
+
     public string $planName = 'Standard Wedding Banquet Layout';
+
     public array $elements = [];
+
     public ?string $successMessage = null;
 
     public function mount()
     {
         $user = Auth::user();
-        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+        if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized. Tenant staff access required.');
         }
 
@@ -88,7 +91,7 @@ class FloorPlanDesigner extends Component
 
     public function removeElement(string $id)
     {
-        $this->elements = array_values(array_filter($this->elements, fn($el) => $el['id'] !== $id));
+        $this->elements = array_values(array_filter($this->elements, fn ($el) => $el['id'] !== $id));
     }
 
     public function saveFloorPlan()
@@ -99,7 +102,7 @@ class FloorPlanDesigner extends Component
         ]);
 
         $user = Auth::user();
-        if (!$user || (!$user->isSuperAdmin() && (!$user->tenant_id || $user->isCustomer()))) {
+        if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized hall access.');
         }
 
@@ -109,7 +112,7 @@ class FloorPlanDesigner extends Component
         }
         $hall = $query->first();
 
-        if (!$hall) {
+        if (! $hall) {
             abort(403, 'Unauthorized hall access.');
         }
 

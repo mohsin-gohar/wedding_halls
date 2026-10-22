@@ -11,7 +11,9 @@ use Livewire\Component;
 class Login extends Component
 {
     public string $email = '';
+
     public string $password = '';
+
     public bool $remember = false;
 
     protected $rules = [
@@ -42,6 +44,7 @@ class Login extends Component
             if ($user->status === 'SUSPENDED') {
                 Auth::logout();
                 $this->addError('email', 'Your account has been suspended by the platform administrator.');
+
                 return;
             }
 

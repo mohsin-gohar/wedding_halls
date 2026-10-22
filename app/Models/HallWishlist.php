@@ -46,6 +46,7 @@ class HallWishlist extends Model
         if ($sessionId) {
             return $query->where('session_id', $sessionId)->exists();
         }
+
         return false;
     }
 
@@ -61,6 +62,7 @@ class HallWishlist extends Model
         $existing = $query->first();
         if ($existing) {
             $existing->delete();
+
             return false;
         }
 

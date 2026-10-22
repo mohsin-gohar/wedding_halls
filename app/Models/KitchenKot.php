@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Str;
 
 class KitchenKot extends Model
 {
@@ -48,8 +47,9 @@ class KitchenKot extends Model
 
     public static function generateKotNumber(): string
     {
-        $prefix = 'KOT-' . date('ymd');
+        $prefix = 'KOT-'.date('ymd');
         $count = self::whereDate('created_at', today())->count() + 1;
+
         return sprintf('%s-%03d', $prefix, $count);
     }
 }

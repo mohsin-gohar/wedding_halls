@@ -888,7 +888,7 @@
          TAB 6: SECURITY AUDIT LOG
          =================================================================== -->
     @if($activeTab === 'audit')
-        <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-6 shadow-sm dark:shadow-xl">
             <div class="border-b border-[#E7E5E4] pb-4">
                 <h3 class="font-serif text-2xl text-[#171513] font-normal">
                     System Security &amp; Concurrency Audit Trail
@@ -899,7 +899,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
                     <thead>
-                        <tr class="bg-[#F8F5EF] border-b border-[#E7E5E4] text-[10px] uppercase font-bold tracking-wider text-stone-600 font-mono">
+                        <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
                             <th class="p-3 border-r border-[#E7E5E4]">Timestamp</th>
                             <th class="p-3 border-r border-[#E7E5E4]">Action</th>
                             <th class="p-3 border-r border-[#E7E5E4]">User / IP</th>
@@ -909,7 +909,7 @@
                     </thead>
                     <tbody class="divide-y divide-[#E7E5E4] font-mono">
                         @forelse($auditLogs as $log)
-                            <tr class="hover:bg-[#F8F5EF] transition">
+                            <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition">
                                 <td class="p-3 border-r border-[#E7E5E4] text-stone-500 text-[11px]">
                                     {{ $log->created_at->format('d M Y H:i:s') }}
                                 </td>
@@ -1132,7 +1132,7 @@
     @endif
 
     @if($activeTab === 'analytics')
-        <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-6 shadow-sm dark:shadow-xl">
             <div class="border-b border-[#E7E5E4] pb-4 flex items-center justify-between">
                 <div>
                     <h3 class="font-serif text-2xl text-[#171513] font-normal">
@@ -1255,7 +1255,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
                         <thead>
-                            <tr class="bg-[#F8F5EF] border-b border-[#E7E5E4] text-[10px] uppercase font-bold tracking-wider text-stone-600 font-mono">
+                            <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
                                 <th class="p-3 border-r border-[#E7E5E4]">Time</th>
                                 <th class="p-3 border-r border-[#E7E5E4]">Page / Path</th>
                                 <th class="p-3 border-r border-[#E7E5E4]">Visitor</th>
@@ -1265,7 +1265,7 @@
                         </thead>
                         <tbody class="divide-y divide-[#E7E5E4] font-mono">
                             @forelse($recentVisits as $visit)
-                                <tr class="hover:bg-[#F8F5EF] transition">
+                                <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition">
                                     <td class="p-3 border-r border-[#E7E5E4] text-stone-500 text-[11px]">{{ $visit->visited_at->format('d M Y H:i:s') }}</td>
                                     <td class="p-3 border-r border-[#E7E5E4] text-stone-800 font-sans">{{ $visit->path }}</td>
                                     <td class="p-3 border-r border-[#E7E5E4]">

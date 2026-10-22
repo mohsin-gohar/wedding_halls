@@ -47,6 +47,7 @@ class UtilityLog extends Model
     {
         $dieselCost = (float) $this->diesel_liters_consumed * (float) $this->diesel_rate_per_liter;
         $wapdaCost = (float) $this->wapda_units_consumed * (float) $this->wapda_unit_rate;
+
         return round($dieselCost + $wapdaCost, 2);
     }
 }

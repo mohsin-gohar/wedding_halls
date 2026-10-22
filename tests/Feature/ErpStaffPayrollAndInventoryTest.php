@@ -2,15 +2,16 @@
 
 namespace Tests\Feature;
 
-use App\Livewire\InventoryTracker;
 use App\Livewire\Dashboard;
+use App\Livewire\InventoryTracker;
 use App\Livewire\StaffAttendance;
 use App\Livewire\StaffManager;
 use App\Livewire\StaffPayroll;
 use App\Models\Expense;
 use App\Models\InventoryItem;
-use App\Models\StaffPayroll as PayrollModel;
+use App\Models\PurchaseOrder;
 use App\Models\StaffAttendance as AttendanceModel;
+use App\Models\StaffPayroll as PayrollModel;
 use App\Models\Tenant;
 use App\Models\User;
 use Carbon\Carbon;
@@ -131,7 +132,7 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
             ->assertViewHas('operationsExpenseCount', 2)
             ->assertViewHas('recentExpenses', fn ($records) => $records->count() === 2
                 && $records->contains('title', 'Monthly generator diesel')
-                && !$records->contains('title', 'Previous month only'));
+                && ! $records->contains('title', 'Previous month only'));
 
         $ledger->call('previousOperationsMonth')
             ->assertSet('operationsMonth', Carbon::today()->subMonth()->format('Y-m'))
@@ -281,7 +282,7 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
 
         Livewire::actingAs($owner)->test(StaffManager::class)
             ->call('removeStaffMember', $staff->id)
-            ->assertViewHas('staffMembers', fn ($members) => !$members->contains('id', $staff->id));
+            ->assertViewHas('staffMembers', fn ($members) => ! $members->contains('id', $staff->id));
 
         $this->assertSoftDeleted('users', ['id' => $staff->id]);
         $this->assertDatabaseHas('staff_payrolls', ['id' => $payroll->id, 'user_id' => $staff->id]);
@@ -428,7 +429,7 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
             'status' => 'ORDERED',
         ]);
 
-        $po = \App\Models\PurchaseOrder::where('tenant_id', $tenant->id)->first();
+        $po = PurchaseOrder::where('tenant_id', $tenant->id)->first();
         Livewire::test(InventoryTracker::class)
             ->call('markPoPaid', $po->id);
 

@@ -15,7 +15,7 @@ class WhatsAppWebhookController extends Controller
     public function verify(Request $request)
     {
         $verifyToken = config('services.whatsapp.verify_token');
-        
+
         $mode = $request->query('hub_mode');
         $token = $request->query('hub_verify_token');
         $challenge = $request->query('hub_challenge');
@@ -38,7 +38,7 @@ class WhatsAppWebhookController extends Controller
             ? 'sha256='.hash_hmac('sha256', $request->getContent(), $appSecret)
             : '';
 
-        if (!$expectedSignature || !hash_equals($expectedSignature, $signature)) {
+        if (! $expectedSignature || ! hash_equals($expectedSignature, $signature)) {
             return response()->json(['status' => 'unauthorized'], 403);
         }
 
@@ -46,7 +46,7 @@ class WhatsAppWebhookController extends Controller
         Log::info('WhatsApp Webhook received');
 
         $entry = $payload['entry'][0]['changes'][0]['value'] ?? null;
-        if (!$entry || empty($entry['messages'])) {
+        if (! $entry || empty($entry['messages'])) {
             return response()->json(['status' => 'ignored'], 200);
         }
 
@@ -54,7 +54,7 @@ class WhatsAppWebhookController extends Controller
         $fromPhone = $messageObj['from'] ?? null;
         $messageBody = trim($messageObj['text']['body'] ?? '');
 
-        if (!$fromPhone || empty($messageBody)) {
+        if (! $fromPhone || empty($messageBody)) {
             return response()->json(['status' => 'empty'], 200);
         }
 
@@ -67,7 +67,7 @@ class WhatsAppWebhookController extends Controller
             ->latest()
             ->first();
 
-        $replyText = "Thank you for contacting Wedding_Hall.";
+        $replyText = 'Thank you for contacting Wedding_Hall.';
 
         if ($rsvp) {
             $status = 'ATTENDING';
@@ -125,7 +125,7 @@ class WhatsAppWebhookController extends Controller
                     'text' => ['body' => $message],
                 ]);
             } catch (\Exception $e) {
-                Log::error('WhatsApp dispatch error: ' . $e->getMessage());
+                Log::error('WhatsApp dispatch error: '.$e->getMessage());
             }
         } else {
             Log::info("WhatsApp Sandbox Outbound to [{$toPhone}]: {$message}");

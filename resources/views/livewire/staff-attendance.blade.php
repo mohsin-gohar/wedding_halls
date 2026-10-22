@@ -129,12 +129,12 @@
          TAB 1: DAILY ATTENDANCE REGISTER
          =================================================================== -->
     @if($activeTab === 'daily')
-        <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-6 shadow-sm dark:shadow-xl">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E7E5E4] pb-4">
                 <div class="flex items-center gap-3">
                     <label class="text-xs font-mono uppercase text-stone-600 font-bold">Select Date:</label>
                     <input type="date" wire:model.live="selectedDate" 
-                           class="bg-[#F8F5EF] border border-[#E7E5E4] text-xs font-mono px-3 py-1.5 text-stone-900 outline-none focus:border-[#C6A15B]">
+                           class="bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono px-3 py-1.5 text-stone-900 dark:text-stone-100 outline-none focus:border-[#C6A15B]">
                     <span class="text-xs font-serif italic text-stone-500">
                         {{ \Carbon\Carbon::parse($selectedDate)->format('l, d F Y') }}
                     </span>
@@ -160,7 +160,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
                     <thead>
-                        <tr class="bg-[#F8F5EF] border-b border-[#E7E5E4] text-[10px] uppercase font-bold tracking-wider text-stone-600 font-mono">
+                        <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
                             <th class="p-3 border-r border-[#E7E5E4]">Staff Member</th>
                             <th class="p-3 border-r border-[#E7E5E4]">Role / Designation</th>
                             <th class="p-3 border-r border-[#E7E5E4]">Attendance Status</th>
@@ -173,7 +173,7 @@
                     </thead>
                     <tbody class="divide-y divide-[#E7E5E4]">
                         @forelse($staff as $m)
-                            <tr class="hover:bg-[#F8F5EF] transition">
+                            <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition">
                                 <td class="p-3 border-r border-[#E7E5E4]">
                                     <div class="font-bold text-[#171513] text-sm">{{ $m->name }}</div>
                                     <span class="text-[10px] text-stone-500 font-mono block">{{ $m->phone ?: $m->email }}</span>
@@ -185,7 +185,7 @@
                                 </td>
                                 <td class="p-3 border-r border-[#E7E5E4]">
                                     <select wire:model="attendanceData.{{ $m->id }}.status" 
-                                            class="w-full bg-[#F8F5EF] border border-[#E7E5E4] text-xs font-mono font-bold px-2 py-1 outline-none focus:border-[#C6A15B]">
+                                            class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono font-bold px-2 py-1 outline-none focus:border-[#C6A15B]">
                                         <option value="PRESENT" class="text-[#8F7239]">PRESENT (HAZIR)</option>
                                         <option value="ABSENT" class="text-[#171513]">ABSENT (GHAIR HAZIR)</option>
                                         <option value="HALF_DAY" class="text-[#8F7239]">HALF DAY</option>
@@ -195,19 +195,19 @@
                                 </td>
                                 <td class="p-3 border-r border-[#E7E5E4]">
                                     <input type="time" wire:model="attendanceData.{{ $m->id }}.check_in" 
-                                           class="w-24 bg-[#F8F5EF] border border-[#E7E5E4] text-xs font-mono px-2 py-1 outline-none focus:border-[#C6A15B]">
+                                           class="w-24 bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono px-2 py-1 outline-none focus:border-[#C6A15B]">
                                 </td>
                                 <td class="p-3 border-r border-[#E7E5E4]">
                                     <input type="time" wire:model="attendanceData.{{ $m->id }}.check_out" 
-                                           class="w-24 bg-[#F8F5EF] border border-[#E7E5E4] text-xs font-mono px-2 py-1 outline-none focus:border-[#C6A15B]">
+                                           class="w-24 bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono px-2 py-1 outline-none focus:border-[#C6A15B]">
                                 </td>
                                 <td class="p-3 border-r border-[#E7E5E4]">
                                     <input type="number" step="0.5" min="0" max="12" wire:model="attendanceData.{{ $m->id }}.overtime_hours" 
-                                           class="w-20 bg-[#F8F5EF] border border-[#E7E5E4] text-xs font-mono px-2 py-1 text-center outline-none focus:border-[#C6A15B]">
+                                           class="w-20 bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono px-2 py-1 text-center outline-none focus:border-[#C6A15B]">
                                 </td>
                                 <td class="p-3 border-r border-[#E7E5E4]">
                                     <input type="text" placeholder="e.g. Covered evening walima shift" wire:model="attendanceData.{{ $m->id }}.notes" 
-                                           class="w-full bg-[#F8F5EF] border border-[#E7E5E4] text-xs px-2 py-1 outline-none focus:border-[#C6A15B]">
+                                           class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs px-2 py-1 outline-none focus:border-[#C6A15B]">
                                 </td>
                                 <td class="p-3 text-right whitespace-nowrap">
                                     <button wire:click="openEditRecordModal({{ $m->id }})" type="button" 
@@ -239,7 +239,7 @@
          TAB 2: LEAVE APPLICATIONS
          =================================================================== -->
     @if($activeTab === 'leaves')
-        <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-6 shadow-sm dark:shadow-xl">
             <div class="flex items-center justify-between border-b border-[#E7E5E4] pb-4">
                 <div>
                     <h3 class="font-serif text-2xl text-[#171513] font-normal">Team Leave Applications</h3>
@@ -253,7 +253,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
                     <thead>
-                        <tr class="bg-[#F8F5EF] border-b border-[#E7E5E4] text-[10px] uppercase font-bold tracking-wider text-stone-600 font-mono">
+                        <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
                             <th class="p-3 border-r border-[#E7E5E4]">Staff Member</th>
                             <th class="p-3 border-r border-[#E7E5E4]">Leave Type</th>
                             <th class="p-3 border-r border-[#E7E5E4]">Duration</th>
@@ -265,7 +265,7 @@
                     </thead>
                     <tbody class="divide-y divide-[#E7E5E4]">
                         @forelse($leaves as $lv)
-                            <tr class="hover:bg-[#F8F5EF] transition font-mono">
+                            <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition font-mono">
                                 <td class="p-3 border-r border-[#E7E5E4] font-sans">
                                     <div class="font-bold text-stone-900">{{ $lv->user->name ?? 'Staff' }}</div>
                                     <span class="text-[10px] text-stone-500 font-mono">{{ $lv->user->role ?? '' }}</span>
@@ -330,13 +330,13 @@
          TAB 3: MONTHLY SUMMARY ROSTER
          =================================================================== -->
     @if($activeTab === 'monthly')
-        <div class="bg-white border border-[#E7E5E4] p-6 space-y-6 shadow-sm">
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-6 shadow-sm dark:shadow-xl">
             <div class="flex items-center justify-between border-b border-[#E7E5E4] pb-4">
                 <div class="flex flex-wrap items-center gap-3">
                     <label class="text-xs font-mono uppercase text-stone-600 font-bold">Select Month:</label>
                     <button type="button" wire:click="previousMonth" aria-label="Previous month" class="h-8 w-8 border border-[#C6A15B]/40 text-[#8F7239]">&larr;</button>
                     <input type="month" wire:model.live="selectedMonth" 
-                           class="bg-[#F8F5EF] border border-[#E7E5E4] text-xs font-mono px-3 py-1.5 text-stone-900 outline-none focus:border-[#C6A15B]">
+                           class="bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono px-3 py-1.5 text-stone-900 dark:text-stone-100 outline-none focus:border-[#C6A15B]">
                     <button type="button" wire:click="nextMonth" aria-label="Next month" class="h-8 w-8 border border-[#C6A15B]/40 text-[#8F7239]">&rarr;</button>
                     <label for="monthly-attendance-staff-filter" class="sr-only">Filter monthly attendance by staff member</label>
                     <select id="monthly-attendance-staff-filter" wire:model.live="selectedStaffId" class="bg-[#171513] border border-[#C6A15B]/40 px-3 py-1.5 text-xs text-white">
@@ -354,7 +354,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
                     <thead>
-                        <tr class="bg-[#F8F5EF] border-b border-[#E7E5E4] text-[10px] uppercase font-bold tracking-wider text-stone-600 font-mono">
+                        <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
                             <th class="p-3 border-r border-[#E7E5E4]">Staff Member</th>
                             <th class="p-3 border-r border-[#E7E5E4]">Designation</th>
                             <th class="p-3 border-r border-[#E7E5E4] text-[#8F7239]">Present (Days)</th>
@@ -366,7 +366,7 @@
                     </thead>
                     <tbody class="divide-y divide-[#E7E5E4]">
                         @foreach($summary as $uId => $row)
-                            <tr class="hover:bg-[#F8F5EF] transition font-mono">
+                            <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition font-mono">
                                 <td class="p-3 border-r border-[#E7E5E4] font-sans font-bold text-stone-900">
                                     {{ $row['name'] }}
                                 </td>

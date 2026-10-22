@@ -24,7 +24,7 @@ class Booking extends Model
 
     public static function generateReference(): string
     {
-        return 'BK-' . strtoupper(now()->format('Ym')) . '-' . strtoupper(substr(uniqid(), -5));
+        return 'BK-'.strtoupper(now()->format('Ym')).'-'.strtoupper(substr(uniqid(), -5));
     }
 
     protected $fillable = [
@@ -128,6 +128,7 @@ class Booking extends Model
         $cateringTotal = (float) $this->per_head_rate * (int) $this->guest_count;
         $subtotal = $cateringTotal + (float) $this->hall_rent + (float) $this->addons_total;
         $total = ($subtotal - (float) $this->discount_amount) + (float) $this->tax_amount;
+
         return max(0, round($total, 2));
     }
 
