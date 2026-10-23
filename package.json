@@ -3,6 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
+        "prebuild": "node -e \"const fs=require('fs');if(fs.existsSync('public/hot'))fs.unlinkSync('public/hot')\"",
         "build": "vite build",
         "dev": "vite"
     },

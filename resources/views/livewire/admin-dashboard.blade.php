@@ -3,10 +3,10 @@
     <!-- ===================================================================
          HEADER BANNER (Unified Luxury Obsidian)
          =================================================================== -->
-    <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/50 gold-foil-border p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl transition-colors duration-200">
+    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm transition-colors duration-200">
         <div class="space-y-1.5">
-            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 border border-[#C6A15B]/50 bg-[#C6A15B]/10 text-[#8F7239] dark:text-[#C6A15B] text-[10px] font-mono uppercase tracking-widest font-bold">
-                ★ Platform Owner Suite
+            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full border border-[#C6A15B]/40 bg-[#C6A15B]/10 text-[#8F7239] dark:text-[#C6A15B] text-[10px] font-sans uppercase tracking-widest font-bold">
+                Platform Owner Suite
             </div>
             <h1 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white font-normal">
                 Super Admin Console
@@ -28,27 +28,27 @@
 
     <!-- Feedback Message Alerts -->
     @if($feedbackMessage)
-        <div class="p-4 bg-[#171513]/90 border border-[#C6A15B]/60 text-[#C6A15B] text-xs font-semibold shadow-md flex justify-between items-center">
+        <div class="p-4 rounded-xl bg-[#171513]/90 border border-[#C6A15B]/60 text-[#C6A15B] text-xs font-semibold shadow-md flex justify-between items-center">
             <span>✓ {{ $feedbackMessage }}</span>
             <button wire:click="$set('feedbackMessage', null)" class="text-[#C6A15B] font-bold text-sm">&times;</button>
         </div>
     @endif
 
     @if($errorMessage)
-        <div class="p-4 bg-[#171513]/90 border border-[#C6A15B]/60 text-[#F8F5EF] text-xs font-semibold shadow-md flex justify-between items-center">
-            <span>⚠️ {{ $errorMessage }}</span>
+        <div class="p-4 rounded-xl bg-[#171513]/90 border border-[#C6A15B]/60 text-[#F8F5EF] text-xs font-semibold shadow-md flex justify-between items-center">
+            <span>{{ $errorMessage }}</span>
             <button wire:click="$set('errorMessage', null)" class="text-[#F8F5EF] font-bold text-sm">&times;</button>
         </div>
     @endif
 
     <!-- Handover Credentials Card for Rent Admin -->
     @if($provisionedCredentials)
-        <div class="bg-[#171513] border-2 border-[#C6A15B] p-6 text-white space-y-4 shadow-2xl relative">
-            <button wire:click="dismissCredentials" class="absolute top-4 right-4 text-white/60 hover:text-white text-lg font-mono">&times;</button>
+        <div class="bg-[#171513] border border-[#C6A15B]/60 rounded-2xl p-6 text-white space-y-4 shadow-xl relative">
+            <button wire:click="dismissCredentials" class="absolute top-4 right-4 text-white/60 hover:text-white text-lg font-sans">&times;</button>
             
             <div class="flex items-center gap-2">
-                <span class="w-3 h-3 bg-[#C6A15B] rounded-full animate-pulse"></span>
-                <span class="text-xs font-mono font-bold uppercase tracking-widest text-[#C6A15B]">Hall Account Provisioned — Handover Credentials</span>
+                <span class="w-2.5 h-2.5 bg-[#C6A15B] rounded-full"></span>
+                <span class="text-xs font-sans font-bold uppercase tracking-widest text-[#C6A15B]">Hall Account Provisioned — Handover Credentials</span>
             </div>
             
             <p class="text-xs text-stone-300 font-sans">
@@ -56,13 +56,13 @@
             </p>
 
             @if(session('provisioned_password'))
-                <div class="mb-4 p-4 bg-[#171513]/90 border border-[#C6A15B]/60 text-[#C6A15B] text-xs font-semibold shadow-md flex justify-between items-center">
+                <div class="mb-4 p-4 rounded-xl bg-[#171513]/90 border border-[#C6A15B]/60 text-[#C6A15B] text-xs font-semibold shadow-md flex justify-between items-center">
                     <span>✓ For security, here is the one-time password for the Rent Admin:</span>
                     <button wire:click="$set('provisioned_password', null)" class="text-[#C6A15B] font-bold text-sm">&times;</button>
                 </div>
             @endif
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-[#171513] p-4 border border-white/10 font-mono text-xs">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-[#1E1A16] rounded-xl p-4 border border-white/10 font-sans text-xs">
                 <div>
                     <span class="text-stone-400 text-[10px] uppercase block">Business / Hall</span>
                     <strong class="text-white text-sm">{{ $provisionedCredentials['business_name'] }}</strong>
@@ -94,68 +94,64 @@
 
     <!-- Platform Metric Cards -->
     <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
-        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group hover:border-[#C6A15B] transition">
-            <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-[#C6A15B] to-transparent absolute top-0 left-0 opacity-0 group-hover:opacity-100 dark:opacity-60 transition duration-300"></div>
-            <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-mono">Total Tenants</span>
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-xl p-5 shadow-sm space-y-1 relative overflow-hidden group hover:border-[#C6A15B]/60 transition">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-sans">Total Tenants</span>
             <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalTenants }}</strong>
             <span class="text-[11px] text-stone-400 block font-sans">Registered Venues</span>
         </div>
 
-        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group hover:border-[#C6A15B] transition">
-            <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-[#C6A15B] to-transparent absolute top-0 left-0 opacity-0 group-hover:opacity-100 dark:opacity-60 transition duration-300"></div>
-            <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-mono">Pending Approvals</span>
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-xl p-5 shadow-sm space-y-1 relative overflow-hidden group hover:border-[#C6A15B]/60 transition">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-sans">Pending Approvals</span>
             <strong class="font-cinzel text-2xl text-[#8F7239] dark:text-[#C6A15B]">{{ $pendingTenants }}</strong>
             <span class="text-[11px] text-stone-400 block font-sans">Awaiting Review</span>
         </div>
 
-        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group hover:border-[#C6A15B] transition">
-            <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-[#C6A15B] to-transparent absolute top-0 left-0 opacity-0 group-hover:opacity-100 dark:opacity-60 transition duration-300"></div>
-            <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-mono">Active Halls</span>
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-xl p-5 shadow-sm space-y-1 relative overflow-hidden group hover:border-[#C6A15B]/60 transition">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-sans">Active Halls</span>
             <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalHalls }}</strong>
             <span class="text-[11px] text-stone-400 block font-sans">Across Pakistan</span>
         </div>
 
-        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group hover:border-[#C6A15B] transition">
-            <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-[#C6A15B] to-transparent absolute top-0 left-0 opacity-0 group-hover:opacity-100 dark:opacity-60 transition duration-300"></div>
-            <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-mono">Total Bookings</span>
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-xl p-5 shadow-sm space-y-1 relative overflow-hidden group hover:border-[#C6A15B]/60 transition">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-sans">Total Bookings</span>
             <strong class="font-cinzel text-2xl text-[#171513] dark:text-white">{{ $totalBookings }}</strong>
             <span class="text-[11px] text-stone-400 block font-sans">Confirmed Functions</span>
         </div>
 
-        <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/50 gold-foil-border p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group">
-            <span class="text-[10px] uppercase font-bold tracking-wider text-[#8F7239] dark:text-[#C6A15B] block font-mono">Platform GMV</span>
+        <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/40 rounded-xl p-5 shadow-sm space-y-1 relative overflow-hidden group">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-[#8F7239] dark:text-[#C6A15B] block font-sans">Platform GMV</span>
             <strong class="font-cinzel text-xl text-[#171513] dark:text-[#C6A15B] block font-bold">PKR {{ number_format($totalGmv) }}</strong>
-            <span class="text-[10px] text-stone-500 dark:text-stone-400 block font-mono">Gross Volume</span>
+            <span class="text-[10px] text-stone-500 dark:text-stone-400 block font-sans">Gross Volume</span>
         </div>
     </div>
 
-    <!-- Navigation Tabs (Zero-Pill Minimalist) -->
-    <div class="flex items-center gap-2 border-b border-[#E7E5E4] dark:border-white/10 pb-3 text-xs font-bold uppercase tracking-wider overflow-x-auto font-mono">
-        <button wire:click="setTab('vendors')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'vendors' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+    <!-- Navigation Tabs -->
+    <div class="flex items-center gap-2 border-b border-[#E7E5E4] dark:border-white/10 pb-3 text-xs font-bold uppercase tracking-wider overflow-x-auto font-sans">
+        <button wire:click="setTab('vendors')" class="px-4 py-2 rounded-lg transition whitespace-nowrap {{ $activeTab === 'vendors' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             Vendors &amp; Subscriptions ({{ $tenants->count() }})
         </button>
-        <button wire:click="setTab('tasks')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'tasks' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
-            📋 Platform Tasks ({{ $pendingTasksCount }})
+        <button wire:click="setTab('tasks')" class="px-4 py-2 rounded-lg transition whitespace-nowrap {{ $activeTab === 'tasks' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+            Platform Tasks ({{ $pendingTasksCount }})
         </button>
-        <button wire:click="setTab('traffic')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'traffic' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
-            🚦 Traffic &amp; Controls ({{ $activeSessionsCount }} Live)
+        <button wire:click="setTab('traffic')" class="px-4 py-2 rounded-lg transition whitespace-nowrap {{ $activeTab === 'traffic' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+            Traffic &amp; Controls ({{ $activeSessionsCount }} Live)
         </button>
-        <button wire:click="setTab('plans')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'plans' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+        <button wire:click="setTab('plans')" class="px-4 py-2 rounded-lg transition whitespace-nowrap {{ $activeTab === 'plans' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             SaaS Plans ({{ $plans->count() }})
         </button>
-        <button wire:click="setTab('payments')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'payments' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+        <button wire:click="setTab('payments')" class="px-4 py-2 rounded-lg transition whitespace-nowrap {{ $activeTab === 'payments' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             Payment Approvals ({{ $subscriptionPayments->count() }})
         </button>
-        <button wire:click="setTab('halls')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'halls' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+        <button wire:click="setTab('halls')" class="px-4 py-2 rounded-lg transition whitespace-nowrap {{ $activeTab === 'halls' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             Halls Catalog ({{ $halls->count() }})
         </button>
-        <button wire:click="setTab('bookings')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'bookings' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+        <button wire:click="setTab('bookings')" class="px-4 py-2 rounded-lg transition whitespace-nowrap {{ $activeTab === 'bookings' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             All Bookings ({{ $recentBookings->count() }})
         </button>
-        <button wire:click="setTab('users')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'users' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+        <button wire:click="setTab('users')" class="px-4 py-2 rounded-lg transition whitespace-nowrap {{ $activeTab === 'users' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             Users Directory ({{ $totalRegisteredUsers }})
         </button>
-        <button wire:click="setTab('audit')" class="px-4 py-2 transition whitespace-nowrap {{ $activeTab === 'audit' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
+        <button wire:click="setTab('audit')" class="px-4 py-2 rounded-lg transition whitespace-nowrap {{ $activeTab === 'audit' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513]' : 'bg-white dark:bg-[#171513] text-stone-700 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF]' }}">
             Security Audit Log ({{ $auditLogs->count() }})
         </button>
     </div>
@@ -168,9 +164,9 @@
             <!-- Automated Alert Summary Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <!-- Alert 1: Pending Approvals -->
-                <div class="bg-white dark:bg-[#171513] border {{ $pendingApprovalsCount > 0 ? 'border-amber-500/60' : 'border-[#E7E5E4] dark:border-white/10' }} p-5 shadow-sm space-y-2">
-                    <div class="flex items-center justify-between text-xs font-mono uppercase font-bold text-stone-600 dark:text-stone-400">
-                        <span>🏛️ Pending Hall Verifications</span>
+                <div class="bg-white dark:bg-[#171513] rounded-xl border {{ $pendingApprovalsCount > 0 ? 'border-amber-500/60' : 'border-[#E7E5E4] dark:border-white/10' }} p-5 shadow-sm space-y-2">
+                    <div class="flex items-center justify-between text-xs font-sans uppercase font-bold text-stone-600 dark:text-stone-400">
+                        <span>Pending Hall Verifications</span>
                         <span class="px-2 py-0.5 rounded font-bold text-[10px] {{ $pendingApprovalsCount > 0 ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400' : 'bg-stone-100 dark:bg-white/5 text-stone-500' }}">
                             {{ $pendingApprovalsCount }} Action Needed
                         </span>

@@ -10,8 +10,8 @@
         <div class="absolute inset-0 bg-black/20"></div>
 
         <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 text-center">
-            <div class="inline-flex items-center gap-2.5 px-4 py-1.5 border border-[#C6A15B]/50 bg-[#171513]/90 text-[#C6A15B] text-[11px] font-semibold tracking-[0.22em] uppercase font-mono">
-                <span class="w-1.5 h-1.5 bg-[#C6A15B]"></span>
+            <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-[#C6A15B]/40 bg-[#171513]/90 text-[#E8DCBE] text-[11px] font-semibold tracking-[0.18em] uppercase font-sans">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#C6A15B]"></span>
                 <span>Verified Pakistani Wedding Halls &amp; Royal Marquees</span>
             </div>
 
@@ -27,12 +27,11 @@
 
 
     <!-- Focused search: city and hall name -->
-    <!-- Focused search: city and hall name -->
     <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
-        <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)_auto] gap-4 items-end bg-white dark:bg-[#161412] border border-[#C6A15B]/30 rounded-2xl p-5 sm:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.35)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.85)]">
+        <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)_auto] gap-4 items-end bg-white dark:bg-[#1C1917] border border-[#C6A15B]/30 rounded-2xl p-5 sm:p-6 shadow-[0_12px_36px_-8px_rgba(23,21,19,0.18)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.7)]">
             <div>
-                <label for="venue-city" class="block text-[11px] font-semibold uppercase tracking-[0.08em] text-stone-700 dark:text-stone-300 mb-1.5 font-sans">City</label>
-                <select id="venue-city" wire:model.live="city" class="input-luxury w-full text-sm dark:bg-[#1C1A17] dark:text-white dark:border-white/15 rounded-md focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25">
+                <label for="venue-city" class="block text-[11px] font-semibold uppercase tracking-[0.06em] text-stone-700 dark:text-stone-300 mb-1.5 font-sans">City</label>
+                <select id="venue-city" wire:model.live="city" class="input-luxury w-full text-sm dark:bg-[#171513] dark:text-white dark:border-white/15 rounded-lg focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25">
                     <option value="All">All cities</option>
                     @foreach($cities as $availableCity)
                         <option value="{{ $availableCity }}">{{ $availableCity }}</option>
@@ -40,10 +39,10 @@
                 </select>
             </div>
             <div>
-                <label for="venue-search" class="block text-[11px] font-semibold uppercase tracking-[0.08em] text-stone-700 dark:text-stone-300 mb-1.5 font-sans">Hall name</label>
-                <input id="venue-search" type="search" wire:model.live.debounce.300ms="search" placeholder="Search by hall name" class="input-luxury w-full text-sm dark:bg-[#1C1A17] dark:text-white dark:border-white/15 dark:placeholder:text-stone-500 rounded-md focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25">
+                <label for="venue-search" class="block text-[11px] font-semibold uppercase tracking-[0.06em] text-stone-700 dark:text-stone-300 mb-1.5 font-sans">Hall name</label>
+                <input id="venue-search" type="search" wire:model.live.debounce.300ms="search" placeholder="Search by hall name" class="input-luxury w-full text-sm dark:bg-[#171513] dark:text-white dark:border-white/15 dark:placeholder:text-stone-500 rounded-lg focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25">
             </div>
-            <button type="button" wire:click="resetFilters" class="btn-outline-gold !h-[42px] !px-5 text-xs font-bold uppercase tracking-wider rounded-md">Clear filters</button>
+            <button type="button" wire:click="resetFilters" class="btn-outline-gold !h-[42px] !px-5 text-xs font-semibold uppercase tracking-wider rounded-lg">Clear filters</button>
         </div>
     </section>
 
@@ -69,13 +68,13 @@
                     if ($hall->has_bridal_room) { $amenities[] = 'Bridal Lounge'; }
                 @endphp
                 <a href="{{ route('public.venue.details', $hall->slug) }}"
-                   class="group flex flex-col rounded-xl overflow-hidden bg-white dark:bg-[#171513] border border-stone-200/80 dark:border-white/10 hover:border-[#C6A15B]/70 shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                   class="group flex flex-col rounded-2xl overflow-hidden bg-white dark:bg-[#1C1917] border border-stone-200/80 dark:border-white/10 hover:border-[#C6A15B]/60 shadow-xs hover:shadow-[0_12px_30px_-8px_rgba(23,21,19,0.12)] hover:-translate-y-0.5 transition-all duration-300">
                     <!-- Image Banner (16:10) -->
                     <div class="relative aspect-[16/10] overflow-hidden bg-stone-900">
                         <img src="{{ $coverImg }}"
                              alt="{{ $hall->name }}"
                              loading="lazy"
-                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10"></div>
 
                         <!-- Location Badge (top-left) -->
@@ -102,7 +101,7 @@
                     <!-- Content Block -->
                     <div class="flex flex-col flex-1 p-5 sm:p-6 space-y-3">
                         <div class="space-y-1">
-                            <h3 class="font-serif-luxury text-xl sm:text-2xl text-[#171513] dark:text-white font-medium leading-snug group-hover:text-[#8F7239] dark:group-hover:text-[#C6A15B] transition-colors">
+                            <h3 class="font-serif-luxury text-xl sm:text-2xl text-[#171513] dark:text-white font-medium leading-snug group-hover:text-[#8F7239] dark:group-hover:text-[#E8DCBE] transition-colors">
                                 {{ $hall->name }}
                             </h3>
                             @if(!empty($hall->tagline))
@@ -132,14 +131,14 @@
                                 <span class="text-[10px] uppercase font-semibold tracking-wider text-stone-500 dark:text-stone-400 block font-sans">Base Shift Rent</span>
                                 <strong class="font-cinzel text-lg sm:text-xl text-[#171513] dark:text-[#C6A15B] font-bold">PKR {{ number_format($hall->base_rent) }}</strong>
                             </div>
-                            <span class="btn-gold !h-9 !px-4 text-[11px] font-bold uppercase rounded-md shrink-0">
+                            <span class="btn-gold !h-9 !px-4 text-[11px] font-semibold uppercase rounded-lg shrink-0">
                                 Details &rarr;
                             </span>
                         </div>
                     </div>
                     </a>
             @empty
-                <div class="col-span-1 md:col-span-2 lg:col-span-3 mx-auto w-full max-w-2xl text-center py-14 px-6 bg-white dark:bg-[#211e1a] border border-[#C6A15B]/30 space-y-3">
+                <div class="col-span-1 md:col-span-2 lg:col-span-3 mx-auto w-full max-w-2xl text-center py-14 px-6 bg-white dark:bg-[#211e1a] rounded-2xl border border-[#C6A15B]/30 space-y-3">
                     @if($hasPublicHalls)
                         <p class="font-serif-luxury text-2xl text-stone-800 dark:text-white">No venues match these filters</p>
                         <p class="text-sm text-stone-600 dark:text-stone-300 max-w-md mx-auto">Try another city or a shorter hall name to see more verified venues.</p>
@@ -171,13 +170,13 @@
     <section class="py-16 bg-[#F8F5EF]/60 dark:bg-white/5 border-t border-b border-[#E7E5E4] dark:border-white/10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
             <div class="text-center space-y-2 max-w-2xl mx-auto">
-                <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8F7239] font-bold block">
+                <span class="text-[11px] font-sans uppercase tracking-[0.2em] text-[#8F7239] dark:text-[#C6A15B] font-semibold block">
                     Nationwide Banqueting
                 </span>
-                <h2 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] font-normal">
+                <h2 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white font-normal">
                     Popular Wedding Destinations
                 </h2>
-                <p class="text-xs text-stone-600 font-sans">
+                <p class="text-xs text-stone-600 dark:text-stone-300 font-sans">
                     Explore marquee complexes and luxury hotel ballrooms in Pakistan's premier cultural hubs.
                 </p>
             </div>
@@ -185,57 +184,57 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Lahore -->
                 <button type="button" wire:click="$set('city', 'Lahore')"
-                        class="group text-left relative aspect-[4/5] overflow-hidden bg-black border border-[#E7E5E4] cursor-pointer">
+                        class="group text-left relative aspect-[4/5] rounded-2xl overflow-hidden bg-black border border-[#E7E5E4] dark:border-white/10 cursor-pointer shadow-xs hover:shadow-lg transition-all">
                     <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=800&auto=format&fit=crop"
                          alt="Lahore Wedding Halls"
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                         class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700 opacity-65">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent"></div>
                     <div class="absolute bottom-6 left-6 right-6 text-white space-y-1">
-                        <span class="text-[10px] uppercase font-bold tracking-widest text-[#C6A15B] font-mono">Mughal Heritage</span>
+                        <span class="text-[10px] uppercase font-semibold tracking-widest text-[#C6A15B] font-sans">Mughal Heritage</span>
                         <h3 class="font-serif-luxury text-2xl font-medium">Lahore</h3>
-                        <p class="text-[11px] text-stone-300 font-mono">Gulberg, Cantt, DHA &amp; Canal Road</p>
+                        <p class="text-[11px] text-stone-300 font-sans">Gulberg, Cantt, DHA &amp; Canal Road</p>
                     </div>
                 </button>
 
                 <!-- Karachi -->
                 <button type="button" wire:click="$set('city', 'Karachi')"
-                        class="group text-left relative aspect-[4/5] overflow-hidden bg-black border border-[#E7E5E4] cursor-pointer">
+                        class="group text-left relative aspect-[4/5] rounded-2xl overflow-hidden bg-black border border-[#E7E5E4] dark:border-white/10 cursor-pointer shadow-xs hover:shadow-lg transition-all">
                     <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=800&auto=format&fit=crop"
                          alt="Karachi Wedding Halls"
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                         class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700 opacity-65">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent"></div>
                     <div class="absolute bottom-6 left-6 right-6 text-white space-y-1">
-                        <span class="text-[10px] uppercase font-bold tracking-widest text-[#C6A15B] font-mono">Coastal Elegance</span>
+                        <span class="text-[10px] uppercase font-semibold tracking-widest text-[#C6A15B] font-sans">Coastal Elegance</span>
                         <h3 class="font-serif-luxury text-2xl font-medium">Karachi</h3>
-                        <p class="text-[11px] text-stone-300 font-mono">Clifton, DHA, Karsaz &amp; Shahrah-e-Faisal</p>
+                        <p class="text-[11px] text-stone-300 font-sans">Clifton, DHA, Karsaz &amp; Shahrah-e-Faisal</p>
                     </div>
                 </button>
 
                 <!-- Islamabad -->
                 <button type="button" wire:click="$set('city', 'Islamabad')"
-                        class="group text-left relative aspect-[4/5] overflow-hidden bg-black border border-[#E7E5E4] cursor-pointer">
+                        class="group text-left relative aspect-[4/5] rounded-2xl overflow-hidden bg-black border border-[#E7E5E4] dark:border-white/10 cursor-pointer shadow-xs hover:shadow-lg transition-all">
                     <img src="https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?q=80&w=800&auto=format&fit=crop"
                          alt="Islamabad Wedding Venues"
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                         class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700 opacity-65">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent"></div>
                     <div class="absolute bottom-6 left-6 right-6 text-white space-y-1">
-                        <span class="text-[10px] uppercase font-bold tracking-widest text-[#C6A15B] font-mono">Margalla Serenity</span>
+                        <span class="text-[10px] uppercase font-semibold tracking-widest text-[#C6A15B] font-sans">Margalla Serenity</span>
                         <h3 class="font-serif-luxury text-2xl font-medium">Islamabad</h3>
-                        <p class="text-[11px] text-stone-300 font-mono">Club Road, E-11, Express Highway</p>
+                        <p class="text-[11px] text-stone-300 font-sans">Club Road, E-11, Express Highway</p>
                     </div>
                 </button>
 
                 <!-- Faisalabad -->
                 <button type="button" wire:click="$set('city', 'Faisalabad')"
-                        class="group text-left relative aspect-[4/5] overflow-hidden bg-black border border-[#E7E5E4] cursor-pointer">
+                        class="group text-left relative aspect-[4/5] rounded-2xl overflow-hidden bg-black border border-[#E7E5E4] dark:border-white/10 cursor-pointer shadow-xs hover:shadow-lg transition-all">
                     <img src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop"
                          alt="Faisalabad Wedding Halls"
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                         class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700 opacity-65">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent"></div>
                     <div class="absolute bottom-6 left-6 right-6 text-white space-y-1">
-                        <span class="text-[10px] uppercase font-bold tracking-widest text-[#C6A15B] font-mono">Industrial Grandeur</span>
+                        <span class="text-[10px] uppercase font-semibold tracking-widest text-[#C6A15B] font-sans">Industrial Grandeur</span>
                         <h3 class="font-serif-luxury text-2xl font-medium">Faisalabad</h3>
-                        <p class="text-[11px] text-stone-300 font-mono">Canal Road, Kohinoor &amp; Jaranwala</p>
+                        <p class="text-[11px] text-stone-300 font-sans">Canal Road, Kohinoor &amp; Jaranwala</p>
                     </div>
                 </button>
             </div>
@@ -247,29 +246,29 @@
          SECTION 5: VENUE TIER & ARCHITECTURAL COMPARISON MATRIX
          =================================================================== -->
     <section class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        <div class="border-b border-[#E7E5E4] pb-4 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-4 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-                <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8F7239] font-bold block">
+                <span class="text-[11px] font-sans uppercase tracking-[0.2em] text-[#8F7239] dark:text-[#C6A15B] font-semibold block">
                     Venue Classification
                 </span>
-                <h2 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] font-normal">
+                <h2 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white font-normal">
                     Banquet Tiers &amp; Facility Guide
                 </h2>
             </div>
-            <p class="text-xs text-stone-500 font-mono">
+            <p class="text-xs text-stone-500 dark:text-stone-400 font-sans">
                 Compare typical specifications across our certified banquet formats
             </p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Tier 1 -->
-            <div class="p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-4">
-                <span class="text-[10px] uppercase font-bold font-mono tracking-widest text-[#8F7239] block">TIER 1</span>
-                <h3 class="font-serif-luxury text-2xl text-[#171513]">Royal Ballrooms</h3>
-                <p class="text-xs text-stone-600 leading-relaxed font-normal">
+            <div class="p-8 rounded-2xl bg-white dark:bg-[#1C1917] border border-[#E7E5E4] dark:border-white/10 space-y-4 shadow-xs">
+                <span class="text-[11px] uppercase font-semibold font-sans tracking-widest text-[#8F7239] dark:text-[#C6A15B] block">Tier 1</span>
+                <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white">Royal Ballrooms</h3>
+                <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
                     Indoor grand halls featuring high ceilings, imported Austrian chandeliers, heavy HVAC cooling, and VIP bridal dressing chambers.
                 </p>
-                <div class="pt-4 border-t border-[#E7E5E4] space-y-2 text-xs font-mono text-stone-700">
+                <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 space-y-2 text-xs font-sans text-stone-700 dark:text-stone-300">
                     <div>• Capacity: 400 - 1,200 Guests</div>
                     <div>• Ideal for: Barat &amp; Grand Valima</div>
                     <div>• 100% Cat Diesel Generator</div>
@@ -277,13 +276,13 @@
             </div>
 
             <!-- Tier 2 -->
-            <div class="p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-4">
-                <span class="text-[10px] uppercase font-bold font-mono tracking-widest text-[#8F7239] block">TIER 2</span>
-                <h3 class="font-serif-luxury text-2xl text-[#171513]">Crystal Marquees</h3>
-                <p class="text-xs text-stone-600 leading-relaxed font-normal">
+            <div class="p-8 rounded-2xl bg-white dark:bg-[#1C1917] border border-[#E7E5E4] dark:border-white/10 space-y-4 shadow-xs">
+                <span class="text-[11px] uppercase font-semibold font-sans tracking-widest text-[#8F7239] dark:text-[#C6A15B] block">Tier 2</span>
+                <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white">Crystal Marquees</h3>
+                <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
                     Expansive modular structures with pillarless sightlines, royal carpeted staging, and dedicated paved parking for 300+ vehicles.
                 </p>
-                <div class="pt-4 border-t border-[#E7E5E4] space-y-2 text-xs font-mono text-stone-700">
+                <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 space-y-2 text-xs font-sans text-stone-700 dark:text-stone-300">
                     <div>• Capacity: 500 - 2,500 Guests</div>
                     <div>• Ideal for: Large Gatherings &amp; Expos</div>
                     <div>• Uniformed Valet Logistics</div>
@@ -291,13 +290,13 @@
             </div>
 
             <!-- Tier 3 -->
-            <div class="p-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 space-y-4">
-                <span class="text-[10px] uppercase font-bold font-mono tracking-widest text-[#8F7239] block">TIER 3</span>
-                <h3 class="font-serif-luxury text-2xl text-[#171513]">Botanical Lawns</h3>
-                <p class="text-xs text-stone-600 leading-relaxed font-normal">
-                    Open-sky manicured gardens with fairy light tree wraps, illuminated water fountains, and custom live BBQ live station counters.
+            <div class="p-8 rounded-2xl bg-white dark:bg-[#1C1917] border border-[#E7E5E4] dark:border-white/10 space-y-4 shadow-xs">
+                <span class="text-[11px] uppercase font-semibold font-sans tracking-widest text-[#8F7239] dark:text-[#C6A15B] block">Tier 3</span>
+                <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white">Botanical Lawns</h3>
+                <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
+                    Open-sky manicured gardens with fairy light tree wraps, illuminated water fountains, and custom live BBQ station counters.
                 </p>
-                <div class="pt-4 border-t border-[#E7E5E4] space-y-2 text-xs font-mono text-stone-700">
+                <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 space-y-2 text-xs font-sans text-stone-700 dark:text-stone-300">
                     <div>• Capacity: 250 - 1,500 Guests</div>
                     <div>• Ideal for: Festive Mehndi &amp; Qawwali</div>
                     <div>• Natural Ambience &amp; Fairy Lights</div>
@@ -308,37 +307,37 @@
 
 
     <!-- ===================================================================
-         SECTION 6: FREQUENTLY ASKED QUESTIONS (Zero-Pill Luxury Accordion)
+         SECTION 6: FREQUENTLY ASKED QUESTIONS
          =================================================================== -->
     <section class="py-16 bg-white dark:bg-[#171513] border-t border-b border-[#E7E5E4] dark:border-white/10">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
             <div class="text-center space-y-2">
-                <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8F7239] font-bold block">
+                <span class="text-[11px] font-sans uppercase tracking-[0.2em] text-[#8F7239] dark:text-[#C6A15B] font-semibold block">
                     Transparent Booking
                 </span>
-                <h2 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] font-normal">
+                <h2 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white font-normal">
                     Frequently Asked Questions
                 </h2>
             </div>
 
             <div class="space-y-4">
-                <div class="p-5 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 space-y-2">
-                    <h4 class="font-serif-luxury text-lg text-[#171513] font-medium">How does atomic shift reservation work?</h4>
-                    <p class="text-xs text-stone-600 leading-relaxed font-normal">
-                        EventHub uses database atomic transactions (`SELECT FOR UPDATE`). When you confirm a wedding shift (Afternoon, Evening, or Night), our software locks that exact hall date immediately so no other client or operator can book the same slot.
+                <div class="p-6 rounded-xl border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#1C1917] space-y-2">
+                    <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-medium">How does single-shift reservation exclusivity work?</h4>
+                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
+                        When you confirm a wedding shift (Afternoon, Evening, or Night), our reservation system immediately locks that exact hall date and shift so no other family or operator can book the same slot.
                     </p>
                 </div>
 
-                <div class="p-5 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 space-y-2">
-                    <h4 class="font-serif-luxury text-lg text-[#171513] font-medium">Can I bring outside catering or only use hall food?</h4>
-                    <p class="text-xs text-stone-600 leading-relaxed font-normal">
+                <div class="p-6 rounded-xl border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#1C1917] space-y-2">
+                    <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-medium">Can I bring outside catering or only use hall food?</h4>
+                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
                         Every hall sets their policy on their dedicated showcase page. Most venues offer premier in-house Mughlai Bawarchi feasts, while some permit outside caterers with a kitchen utility surcharge.
                     </p>
                 </div>
 
-                <div class="p-5 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 space-y-2">
-                    <h4 class="font-serif-luxury text-lg text-[#171513] font-medium">What is the payment deposit schedule?</h4>
-                    <p class="text-xs text-stone-600 leading-relaxed font-normal">
+                <div class="p-6 rounded-xl border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#1C1917] space-y-2">
+                    <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-medium">What is the payment deposit schedule?</h4>
+                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
                         Typically, a 50% token advance is paid upon date confirmation, followed by the remaining balance clearance 3 days prior to the event date. Official A4 printable receipts and WhatsApp notifications are issued automatically.
                     </p>
                 </div>
@@ -353,7 +352,7 @@
     <section class="py-16 bg-[#171513] text-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-8">
             <div class="space-y-2">
-                <span class="text-[10px] font-mono uppercase tracking-widest text-[#C6A15B] block font-bold">
+                <span class="text-[11px] font-sans uppercase tracking-[0.2em] text-[#C6A15B] block font-semibold">
                     EventHub Concierge
                 </span>
                 <h3 class="font-serif-luxury text-2xl sm:text-3xl font-normal text-white">
@@ -365,11 +364,11 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-4 shrink-0">
-                <a href="{{ route('public.contact') }}" class="btn-gold !h-11 !px-6 text-xs font-bold uppercase font-mono">
+                <a href="{{ route('public.contact') }}" class="btn-gold !h-11 !px-6 text-xs font-semibold uppercase font-sans">
                     Speak with Concierge &rarr;
                 </a>
                 @guest
-                    <a href="{{ route('register') }}" class="btn-outline-gold !h-11 !px-5 text-xs font-semibold text-white border-white/20 font-mono">
+                    <a href="{{ route('register') }}" class="btn-outline-gold !h-11 !px-5 text-xs font-semibold text-white border-white/20 font-sans">
                         List Your Wedding Hall &rarr;
                     </a>
                 @endguest
@@ -378,16 +377,16 @@
     </section>
 
     <!-- ===================================================================
-         SECTION 8: LUXURY SHIFT AVAILABILITY CALENDAR (MATCHING IMAGE 2)
+         SECTION 8: LUXURY SHIFT AVAILABILITY CALENDAR
          =================================================================== -->
-    <section class="py-20 bg-[#0e0c0a] text-white border-t border-b border-[#C6A15B]/30 relative overflow-hidden">
-        <!-- Subtle royal dark damask background glow -->
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(198,161,91,0.08)_0%,transparent_70%)] pointer-events-none"></div>
+    <section class="py-20 bg-[#12100E] text-white border-t border-b border-[#C6A15B]/30 relative overflow-hidden">
+        <!-- Subtle ambient glow -->
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(198,161,91,0.06)_0%,transparent_70%)] pointer-events-none"></div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 relative z-10">
-            <!-- Header matching Image 2 -->
+            <!-- Header -->
             <div class="text-center space-y-2 max-w-2xl mx-auto">
-                <span class="text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.28em] text-[#C6A15B] font-bold block">
+                <span class="text-[11px] font-sans uppercase tracking-[0.22em] text-[#C6A15B] font-semibold block">
                     Interactive Booking • Shift Availability
                 </span>
                 <h2 class="font-serif-luxury text-3xl sm:text-5xl text-white font-normal tracking-wide">
@@ -399,8 +398,8 @@
 
                 @if($calendarHallsList->count() > 1)
                     <div class="pt-3 flex items-center justify-center gap-2">
-                        <label for="hall-selector" class="text-[11px] font-mono text-[#C6A15B] uppercase tracking-wider">Hall Filter:</label>
-                        <select id="hall-selector" wire:model.live="calendarHallId" class="bg-[#18140f] text-stone-200 text-xs border border-[#C6A15B]/40 rounded-lg px-3 py-1.5 focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B] font-mono">
+                        <label for="hall-selector" class="text-[11px] font-sans text-[#C6A15B] uppercase tracking-wider font-semibold">Hall Filter:</label>
+                        <select id="hall-selector" wire:model.live="calendarHallId" class="bg-[#18140f] text-stone-200 text-xs border border-[#C6A15B]/40 rounded-lg px-3 py-1.5 focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B] font-sans">
                             <option value="">All Certified Halls ({{ $city === 'All' ? 'Nationwide' : $city }})</option>
                             @foreach($calendarHallsList as $h)
                                 <option value="{{ $h->id }}">{{ $h->name }} ({{ $h->venue->name ?? 'Venue' }})</option>
@@ -410,8 +409,8 @@
                 @endif
             </div>
 
-            <!-- Main Golden Card Container (As shown in Image 2) -->
-            <div class="max-w-6xl mx-auto rounded-3xl border-2 border-[#C6A15B]/50 bg-[#14110d]/95 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_40px_rgba(198,161,91,0.2)] p-5 sm:p-8 lg:p-10 backdrop-blur-md">
+            <!-- Main Golden Card Container -->
+            <div class="max-w-6xl mx-auto rounded-2xl border border-[#C6A15B]/40 bg-[#171513] shadow-[0_20px_50px_rgba(0,0,0,0.75)] p-5 sm:p-8 lg:p-10">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                     
                     <!-- LEFT COLUMN: The Monthly Calendar + Legend (8 cols) -->
@@ -420,20 +419,20 @@
                         <!-- Year Jump Quick Pills (2026 to 2030) -->
                         <div class="flex items-center justify-between flex-wrap gap-2.5 pb-1">
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="text-[10px] font-mono text-[#C6A15B] uppercase font-bold tracking-wider">Year:</span>
+                                <span class="text-[11px] font-sans text-[#C6A15B] uppercase font-semibold tracking-wider">Year:</span>
                                 @foreach($allowedYears as $yr)
                                     <button type="button" 
                                             wire:click="jumpToYear({{ $yr }})" 
-                                            class="px-2.5 py-1 rounded-md text-xs font-mono font-bold transition cursor-pointer {{ $selectedYear === $yr ? 'bg-[#C6A15B] text-[#16120b] shadow-[0_0_12px_rgba(198,161,91,0.5)]' : 'bg-[#18140f] text-stone-300 border border-[#C6A15B]/30 hover:border-[#C6A15B] hover:text-white' }}">
+                                            class="px-2.5 py-1 rounded-md text-xs font-sans font-semibold transition cursor-pointer {{ $selectedYear === $yr ? 'bg-[#C6A15B] text-[#16120b]' : 'bg-[#18140f] text-stone-300 border border-[#C6A15B]/30 hover:border-[#C6A15B] hover:text-white' }}">
                                         {{ $yr }}
                                     </button>
                                 @endforeach
                             </div>
-                            <span class="text-[10px] font-mono text-stone-400">Multi-Year Engine (2026–2030)</span>
+                            <span class="text-[11px] font-sans text-stone-400">Multi-Year Calendar (2026–2030)</span>
                         </div>
 
-                        <!-- Month Header Golden Banner (Brushed Gold with Arrows & Year/Month Selectors) -->
-                        <div class="rounded-xl overflow-hidden border border-[#C6A15B]/40 shadow-lg">
+                        <!-- Month Header Golden Banner -->
+                        <div class="rounded-xl overflow-hidden border border-[#C6A15B]/40 shadow-md">
                             <div class="bg-gradient-to-r from-[#9e7633] via-[#e2c178] to-[#9e7633] text-[#16120b] py-3.5 px-4 sm:px-6 flex items-center justify-between gap-2">
                                 <button type="button" 
                                         wire:click="previousMonth" 
@@ -446,7 +445,7 @@
                                 <div class="flex items-center justify-center gap-1 sm:gap-2 text-[#16120b]">
                                     <!-- Month Dropdown -->
                                     <select wire:model.live="selectedMonthNumber" 
-                                            class="bg-black/10 hover:bg-black/20 text-[#16120b] font-serif-luxury font-black text-base sm:text-2xl uppercase tracking-wider border-none rounded-md px-2 py-0.5 focus:ring-0 cursor-pointer">
+                                            class="bg-black/10 hover:bg-black/20 text-[#16120b] font-serif-luxury font-bold text-base sm:text-2xl uppercase tracking-wider border-none rounded-md px-2 py-0.5 focus:ring-0 cursor-pointer">
                                         <option value="1">January</option>
                                         <option value="2">February</option>
                                         <option value="3">March</option>
@@ -463,7 +462,7 @@
 
                                     <!-- Year Dropdown (Up to 2030) -->
                                     <select wire:model.live="selectedYear" 
-                                            class="bg-black/10 hover:bg-black/20 text-[#16120b] font-serif-luxury font-black text-base sm:text-2xl uppercase tracking-wider border-none rounded-md px-2 py-0.5 focus:ring-0 cursor-pointer">
+                                            class="bg-black/10 hover:bg-black/20 text-[#16120b] font-serif-luxury font-bold text-base sm:text-2xl uppercase tracking-wider border-none rounded-md px-2 py-0.5 focus:ring-0 cursor-pointer">
                                         @foreach($allowedYears as $yr)
                                             <option value="{{ $yr }}">{{ $yr }}</option>
                                         @endforeach
@@ -483,13 +482,13 @@
                             <div class="bg-[#18140f] p-3 sm:p-5">
                                 <!-- Day Names Row (Sun Mon Tue Wed Thu Fri Sat) -->
                                 <div class="grid grid-cols-7 gap-1.5 sm:gap-2 mb-2 text-center">
-                                    <span class="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-stone-300">Sun</span>
-                                    <span class="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-stone-300">Mon</span>
-                                    <span class="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-stone-300">Tue</span>
-                                    <span class="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-stone-300">Wed</span>
-                                    <span class="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-stone-300">Thu</span>
-                                    <span class="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-stone-300">Fri</span>
-                                    <span class="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-stone-300">Sat</span>
+                                    <span class="text-[11px] sm:text-xs font-sans font-semibold tracking-wider text-stone-300">Sun</span>
+                                    <span class="text-[11px] sm:text-xs font-sans font-semibold tracking-wider text-stone-300">Mon</span>
+                                    <span class="text-[11px] sm:text-xs font-sans font-semibold tracking-wider text-stone-300">Tue</span>
+                                    <span class="text-[11px] sm:text-xs font-sans font-semibold tracking-wider text-stone-300">Wed</span>
+                                    <span class="text-[11px] sm:text-xs font-sans font-semibold tracking-wider text-stone-300">Thu</span>
+                                    <span class="text-[11px] sm:text-xs font-sans font-semibold tracking-wider text-stone-300">Fri</span>
+                                    <span class="text-[11px] sm:text-xs font-sans font-semibold tracking-wider text-stone-300">Sat</span>
                                 </div>
 
                                 <!-- Days Grid (7 columns) -->
@@ -508,7 +507,7 @@
                                                 wire:click="selectCalendarDate('{{ $cell['date'] }}')"
                                                 class="min-h-[58px] sm:min-h-[70px] rounded-lg p-1.5 sm:p-2 flex flex-col justify-between items-center text-center transition cursor-pointer select-none relative group
                                                     {{ $isSelected 
-                                                        ? 'border-2 border-[#fcedaa] bg-[#2a2217] shadow-[0_0_18px_rgba(240,210,140,0.45)] ring-2 ring-[#C6A15B]/60' 
+                                                        ? 'border-2 border-[#E8DCBE] bg-[#2a2217] ring-1 ring-[#C6A15B]/50' 
                                                         : 'border border-[#C6A15B]/25 bg-[#17130e] hover:border-[#dfbe74]/80 hover:bg-[#221c15]' 
                                                     }}">
                                             
@@ -517,31 +516,29 @@
                                                 {{ $cell['day'] }}
                                             </span>
 
-                                            <!-- 3 Shift Indicators as shown in Image 2 -->
+                                            <!-- 3 Shift Indicators -->
                                             @if($cell['all_booked'])
-                                                <!-- When all 3 booked (like Day 22 in Image 2): 3 red bars -->
                                                 <div class="flex items-center justify-center gap-1 my-1">
-                                                    <span class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-600 rounded-xs shadow-xs" title="Afternoon: Booked"></span>
-                                                    <span class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-600 rounded-xs shadow-xs" title="Evening: Booked"></span>
-                                                    <span class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-600 rounded-xs shadow-xs" title="Night: Booked"></span>
+                                                    <span class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-600 rounded-xs" title="Afternoon: Booked"></span>
+                                                    <span class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-600 rounded-xs" title="Evening: Booked"></span>
+                                                    <span class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-600 rounded-xs" title="Night: Booked"></span>
                                                 </div>
                                             @else
-                                                <!-- Individual Shift Icons + Availability Dots -->
                                                 <div class="flex items-center justify-center gap-1 sm:gap-1.5 my-1">
-                                                    <!-- Afternoon ☀️ -->
+                                                    <!-- Afternoon -->
                                                     <span class="flex flex-col items-center leading-none" title="Afternoon: {{ $cell['afternoon_available'] ? 'Available' : 'Booked' }}">
-                                                        <span class="text-[9px] sm:text-[10px]">☀️</span>
-                                                        <span class="w-1.5 h-1.5 rounded-full mt-0.5 {{ $cell['afternoon_available'] ? 'bg-emerald-400 ring-1 ring-emerald-300/60' : 'bg-red-500' }}"></span>
+                                                        <svg class="w-3 h-3 text-[#C6A15B]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
+                                                        <span class="w-1.5 h-1.5 rounded-full mt-0.5 {{ $cell['afternoon_available'] ? 'bg-emerald-400' : 'bg-red-500' }}"></span>
                                                     </span>
-                                                    <!-- Evening 🌅 -->
+                                                    <!-- Evening -->
                                                     <span class="flex flex-col items-center leading-none" title="Evening: {{ $cell['evening_available'] ? 'Available' : 'Booked' }}">
-                                                        <span class="text-[9px] sm:text-[10px]">🌄</span>
-                                                        <span class="w-1.5 h-1.5 rounded-full mt-0.5 {{ $cell['evening_available'] ? 'bg-emerald-400 ring-1 ring-emerald-300/60' : 'bg-red-500' }}"></span>
+                                                        <svg class="w-3 h-3 text-[#C6A15B]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 0a5 5 0 015 5H7a5 5 0 015-5zm-9 9h18M5 16h14M8 20h8"/></svg>
+                                                        <span class="w-1.5 h-1.5 rounded-full mt-0.5 {{ $cell['evening_available'] ? 'bg-emerald-400' : 'bg-red-500' }}"></span>
                                                     </span>
-                                                    <!-- Night 🌙 -->
+                                                    <!-- Night -->
                                                     <span class="flex flex-col items-center leading-none" title="Night: {{ $cell['night_available'] ? 'Available' : 'Booked' }}">
-                                                        <span class="text-[9px] sm:text-[10px]">🌙</span>
-                                                        <span class="w-1.5 h-1.5 rounded-full mt-0.5 {{ $cell['night_available'] ? 'bg-emerald-400 ring-1 ring-emerald-300/60' : 'bg-red-500' }}"></span>
+                                                        <svg class="w-3 h-3 text-[#C6A15B]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                                                        <span class="w-1.5 h-1.5 rounded-full mt-0.5 {{ $cell['night_available'] ? 'bg-emerald-400' : 'bg-red-500' }}"></span>
                                                     </span>
                                                 </div>
                                             @endif
@@ -551,32 +548,32 @@
                             </div>
                         </div>
 
-                        <!-- LEGEND Box (Exact placement as bottom-left of calendar in Image 2) -->
-                        <div class="w-full max-w-xs border border-[#C6A15B]/40 rounded-xl overflow-hidden bg-[#17130e] shadow-lg">
-                            <div class="bg-gradient-to-r from-[#9e7633] via-[#dfbe74] to-[#9e7633] text-[#16120b] font-bold text-[10px] tracking-widest font-mono uppercase px-3.5 py-1.5 text-center">
+                        <!-- LEGEND Box -->
+                        <div class="w-full max-w-xs border border-[#C6A15B]/40 rounded-xl overflow-hidden bg-[#17130e] shadow-md">
+                            <div class="bg-gradient-to-r from-[#9e7633] via-[#dfbe74] to-[#9e7633] text-[#16120b] font-bold text-[10px] tracking-widest font-sans uppercase px-3.5 py-1.5 text-center">
                                 LEGEND
                             </div>
                             <div class="p-3 space-y-1.5 text-[11px] font-sans text-stone-300">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-xs">☀️</span>
+                                    <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
                                     <span>Afternoon (11 AM - 3 PM)</span>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <span class="text-xs">🌄</span>
+                                    <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 0a5 5 0 015 5H7a5 5 0 015-5zm-9 9h18M5 16h14M8 20h8"/></svg>
                                     <span>Evening (4 PM - 8 PM)</span>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <span class="text-xs">🌙</span>
+                                    <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
                                     <span>Night (9 PM - 1 AM)</span>
                                 </div>
-                                <div class="flex items-center gap-4 pt-2 border-t border-[#C6A15B]/20 font-mono text-[10px]">
+                                <div class="flex items-center gap-4 pt-2 border-t border-[#C6A15B]/20 font-sans text-[11px]">
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2.5 h-2.5 bg-emerald-500 rounded-xs inline-block"></span>
-                                        <span class="text-emerald-400 font-bold">Available</span>
+                                        <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full inline-block"></span>
+                                        <span class="text-emerald-400 font-semibold">Available</span>
                                     </div>
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2.5 h-2.5 bg-red-600 rounded-xs inline-block"></span>
-                                        <span class="text-red-400 font-bold">Booked</span>
+                                        <span class="w-2.5 h-2.5 bg-red-600 rounded-full inline-block"></span>
+                                        <span class="text-red-400 font-semibold">Booked</span>
                                     </div>
                                 </div>
                             </div>
@@ -589,7 +586,7 @@
                         
                         <!-- Selected Day Header -->
                         <div class="border-b border-[#C6A15B]/30 pb-3">
-                            <span class="text-[10px] uppercase font-mono tracking-widest text-[#C6A15B] font-bold block">Selected Day Shifts</span>
+                            <span class="text-[11px] uppercase font-sans tracking-widest text-[#C6A15B] font-semibold block">Selected Day Shifts</span>
                             <h3 class="font-serif-luxury text-2xl sm:text-3xl font-medium text-white tracking-wide">
                                 {{ $selectedDayDetails['formattedDate'] }}
                             </h3>
@@ -604,23 +601,23 @@
                                     <div>
                                         <div class="flex items-center gap-2">
                                             <h4 class="font-serif-luxury text-base font-bold text-white tracking-wider">AFTERNOON</h4>
-                                            <span class="text-base">☀️</span>
+                                            <svg class="w-4 h-4 text-[#C6A15B]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
                                         </div>
-                                        <span class="text-[11px] font-mono text-stone-400 block mt-0.5">11 AM - 3 PM</span>
+                                        <span class="text-[11px] font-sans text-stone-400 block mt-0.5">11 AM - 3 PM</span>
                                     </div>
                                     @if($selectedDayDetails['afternoon']['isBooked'])
-                                        <span class="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-red-950/80 border border-red-500/80 text-red-400">
+                                        <span class="px-2.5 py-0.5 rounded-md text-[10px] font-sans font-semibold uppercase tracking-wider bg-red-950/80 border border-red-500/80 text-red-400">
                                             BOOKED
                                         </span>
                                     @else
-                                        <span class="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-950/80 border border-emerald-500/80 text-emerald-400">
+                                        <span class="px-2.5 py-0.5 rounded-md text-[10px] font-sans font-semibold uppercase tracking-wider bg-emerald-950/80 border border-emerald-500/80 text-emerald-400">
                                             AVAILABLE
                                         </span>
                                     @endif
                                 </div>
                                 <button type="button" 
                                         wire:click="triggerBooking('AFTERNOON', {{ $selectedDayDetails['afternoon']['isBooked'] ? 'true' : 'false' }})"
-                                        class="w-full py-2.5 px-4 rounded-lg font-mono font-bold text-xs uppercase tracking-wider transition shadow cursor-pointer
+                                        class="w-full py-2.5 px-4 rounded-lg font-sans font-semibold text-xs uppercase tracking-wider transition shadow cursor-pointer
                                             {{ $selectedDayDetails['afternoon']['isBooked'] 
                                                 ? 'bg-gradient-to-r from-[#7a5823] via-[#b39556] to-[#7a5823] text-stone-200 hover:brightness-110' 
                                                 : 'bg-gradient-to-r from-[#9e7633] via-[#dfbe74] to-[#9e7633] text-[#16120b] hover:brightness-110 active:scale-98' 
@@ -635,23 +632,23 @@
                                     <div>
                                         <div class="flex items-center gap-2">
                                             <h4 class="font-serif-luxury text-base font-bold text-white tracking-wider">EVENING</h4>
-                                            <span class="text-base">🌄</span>
+                                            <svg class="w-4 h-4 text-[#C6A15B]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 0a5 5 0 015 5H7a5 5 0 015-5zm-9 9h18M5 16h14M8 20h8"/></svg>
                                         </div>
-                                        <span class="text-[11px] font-mono text-stone-400 block mt-0.5">4 PM - 8 PM</span>
+                                        <span class="text-[11px] font-sans text-stone-400 block mt-0.5">4 PM - 8 PM</span>
                                     </div>
                                     @if($selectedDayDetails['evening']['isBooked'])
-                                        <span class="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-red-950/80 border border-red-500/80 text-red-400">
+                                        <span class="px-2.5 py-0.5 rounded-md text-[10px] font-sans font-semibold uppercase tracking-wider bg-red-950/80 border border-red-500/80 text-red-400">
                                             BOOKED
                                         </span>
                                     @else
-                                        <span class="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-950/80 border border-emerald-500/80 text-emerald-400">
+                                        <span class="px-2.5 py-0.5 rounded-md text-[10px] font-sans font-semibold uppercase tracking-wider bg-emerald-950/80 border border-emerald-500/80 text-emerald-400">
                                             AVAILABLE
                                         </span>
                                     @endif
                                 </div>
                                 <button type="button" 
                                         wire:click="triggerBooking('EVENING', {{ $selectedDayDetails['evening']['isBooked'] ? 'true' : 'false' }})"
-                                        class="w-full py-2.5 px-4 rounded-lg font-mono font-bold text-xs uppercase tracking-wider transition shadow cursor-pointer
+                                        class="w-full py-2.5 px-4 rounded-lg font-sans font-semibold text-xs uppercase tracking-wider transition shadow cursor-pointer
                                             {{ $selectedDayDetails['evening']['isBooked'] 
                                                 ? 'bg-gradient-to-r from-[#7a5823] via-[#b39556] to-[#7a5823] text-stone-200 hover:brightness-110' 
                                                 : 'bg-gradient-to-r from-[#9e7633] via-[#dfbe74] to-[#9e7633] text-[#16120b] hover:brightness-110 active:scale-98' 
@@ -666,23 +663,23 @@
                                     <div>
                                         <div class="flex items-center gap-2">
                                             <h4 class="font-serif-luxury text-base font-bold text-white tracking-wider">NIGHT</h4>
-                                            <span class="text-base">🌙</span>
+                                            <svg class="w-4 h-4 text-[#C6A15B]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
                                         </div>
-                                        <span class="text-[11px] font-mono text-stone-400 block mt-0.5">9 PM - 1 AM</span>
+                                        <span class="text-[11px] font-sans text-stone-400 block mt-0.5">9 PM - 1 AM</span>
                                     </div>
                                     @if($selectedDayDetails['night']['isBooked'])
-                                        <span class="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-red-950/80 border border-red-500/80 text-red-400">
+                                        <span class="px-2.5 py-0.5 rounded-md text-[10px] font-sans font-semibold uppercase tracking-wider bg-red-950/80 border border-red-500/80 text-red-400">
                                             BOOKED
                                         </span>
                                     @else
-                                        <span class="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-950/80 border border-emerald-500/80 text-emerald-400">
+                                        <span class="px-2.5 py-0.5 rounded-md text-[10px] font-sans font-semibold uppercase tracking-wider bg-emerald-950/80 border border-emerald-500/80 text-emerald-400">
                                             AVAILABLE
                                         </span>
                                     @endif
                                 </div>
                                 <button type="button" 
                                         wire:click="triggerBooking('NIGHT', {{ $selectedDayDetails['night']['isBooked'] ? 'true' : 'false' }})"
-                                        class="w-full py-2.5 px-4 rounded-lg font-mono font-bold text-xs uppercase tracking-wider transition shadow cursor-pointer
+                                        class="w-full py-2.5 px-4 rounded-lg font-sans font-semibold text-xs uppercase tracking-wider transition shadow cursor-pointer
                                             {{ $selectedDayDetails['night']['isBooked'] 
                                                 ? 'bg-gradient-to-r from-[#7a5823] via-[#b39556] to-[#7a5823] text-stone-200 hover:brightness-110' 
                                                 : 'bg-gradient-to-r from-[#9e7633] via-[#dfbe74] to-[#9e7633] text-[#16120b] hover:brightness-110 active:scale-98' 

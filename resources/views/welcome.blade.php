@@ -40,12 +40,10 @@
             <div class="absolute inset-0 bg-black/20 z-1"></div>
         </div>
 
-        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-
         <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24 text-center space-y-7 flex flex-col items-center">
             
             <!-- Prestige Eyebrow Badge -->
-            <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-[#C6A15B]/30 bg-[#171513]/85 text-[#F2DE9A] text-[11px] font-medium tracking-[0.2em] uppercase backdrop-blur-md shadow-xs">
+            <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-[#C6A15B]/30 bg-[#171513]/85 text-[#F2DE9A] text-[11px] font-medium tracking-[0.18em] uppercase backdrop-blur-md">
                 <span class="w-1.5 h-1.5 rounded-full bg-[#C6A15B]"></span>
                 <span>Pakistan's Premier Wedding Venue Network</span>
             </div>
@@ -63,15 +61,15 @@
 
             <!-- Action CTAs (Handcrafted Tactile Luxury) -->
             <div class="flex flex-wrap items-center justify-center gap-4 pt-2">
-                <a href="#search-section" class="btn-gold !h-12 !px-8 text-xs font-bold uppercase tracking-wider">
+                <a href="#search-section" class="btn-gold !h-12 !px-8 text-xs font-semibold uppercase tracking-wider">
                     <span>Explore Wedding Halls &rarr;</span>
                 </a>
-                <a href="#featured-venues" class="btn-outline-gold !h-12 !px-7 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                <a href="#featured-venues" class="btn-outline-gold !h-12 !px-7 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
                     <svg class="w-4 h-4 text-[#C6A15B]" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     <span>View Featured Venues</span>
                 </a>
                 @guest
-                    <a href="{{ route('register') }}" class="btn-obsidian !h-12 !px-7 text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-[#C6A15B]/40 hover:border-[#C6A15B]">
+                    <a href="{{ route('register') }}" class="btn-obsidian !h-12 !px-7 text-xs font-semibold uppercase tracking-wider flex items-center gap-2 border-[#C6A15B]/40 hover:border-[#C6A15B]">
                         <svg class="w-4 h-4 text-[#C6A15B]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                         <span>List Your Venue &rarr;</span>
                     </a>
@@ -105,17 +103,17 @@
          2. FUNCTIONAL SEARCH BAR (Bespoke Concierge Search Console)
          =================================================================== -->
     <section class="relative -mt-10 z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8" id="search-section">
-        <div class="bg-white dark:bg-[#161412] border border-[#C6A15B]/35 rounded-2xl p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.4)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.85)]">
+        <div class="bg-white dark:bg-[#1C1917] border border-[#C6A15B]/30 rounded-2xl p-6 sm:p-8 shadow-[0_12px_36px_-8px_rgba(23,21,19,0.18)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.7)]">
             <div class="text-center mb-6">
-                <span class="text-[10px] uppercase tracking-[0.24em] text-[#8F7239] dark:text-[#C6A15B] font-bold block mb-1.5 font-sans">Find Your Perfect Venue</span>
+                <span class="text-[11px] uppercase tracking-[0.2em] text-[#8F7239] dark:text-[#C6A15B] font-semibold block mb-1.5 font-sans">Find Your Perfect Venue</span>
                 <h3 class="font-serif-luxury text-2xl sm:text-3xl text-[#171513] dark:text-white font-normal">Check Real-Time Availability</h3>
                 <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-400 mt-1">Select date, shift, and guest count to view live availability across all verified halls.</p>
             </div>
             <form action="{{ route('public.venues') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                 <!-- City -->
                 <div>
-                    <label for="city" class="block text-[11px] font-semibold uppercase tracking-[0.08em] text-stone-700 dark:text-stone-300 mb-1.5 font-sans">City</label>
-                    <select name="city" id="city" class="input-luxury dark:bg-[#1C1A17] dark:text-white dark:border-white/15 text-sm focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25 rounded-md">
+                    <label for="city" class="block text-[11px] font-semibold uppercase tracking-[0.06em] text-stone-700 dark:text-stone-300 mb-1.5 font-sans">City</label>
+                    <select name="city" id="city" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/15 text-sm focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25 rounded-lg">
                         <option value="All">All Cities</option>
                         <option value="Lahore" selected>Lahore</option>
                         <option value="Karachi">Karachi</option>
@@ -128,14 +126,14 @@
 
                 <!-- Event Date -->
                 <div>
-                    <label for="date" class="block text-[11px] font-semibold uppercase tracking-[0.08em] text-stone-700 dark:text-stone-300 mb-1.5 font-sans">Event Date</label>
-                    <input type="date" name="date" id="date" value="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}" class="input-luxury dark:bg-[#1C1A17] dark:text-white dark:border-white/15 text-sm focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25 rounded-md">
+                    <label for="date" class="block text-[11px] font-semibold uppercase tracking-[0.06em] text-stone-700 dark:text-stone-300 mb-1.5 font-sans">Event Date</label>
+                    <input type="date" name="date" id="date" value="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/15 text-sm focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25 rounded-lg">
                 </div>
 
                 <!-- Shift -->
                 <div>
-                    <label for="shift" class="block text-[11px] font-semibold uppercase tracking-[0.08em] text-stone-700 dark:text-stone-300 mb-1.5 font-sans">Shift</label>
-                    <select name="shift" id="shift" class="input-luxury dark:bg-[#1C1A17] dark:text-white dark:border-white/15 text-sm focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25 rounded-md">
+                    <label for="shift" class="block text-[11px] font-semibold uppercase tracking-[0.06em] text-stone-700 dark:text-stone-300 mb-1.5 font-sans">Shift</label>
+                    <select name="shift" id="shift" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/15 text-sm focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25 rounded-lg">
                         <option value="ALL">Any Shift</option>
                         <option value="EVENING" selected>Evening Dinner (7–11 PM)</option>
                         <option value="AFTERNOON">Afternoon Lunch (12–4 PM)</option>
@@ -145,8 +143,8 @@
 
                 <!-- Guest Count -->
                 <div>
-                    <label for="guests" class="block text-[11px] font-semibold uppercase tracking-[0.08em] text-stone-700 dark:text-stone-300 mb-1.5 font-sans">Guest Count</label>
-                    <select name="guests" id="guests" class="input-luxury dark:bg-[#1C1A17] dark:text-white dark:border-white/15 text-sm focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25 rounded-md">
+                    <label for="guests" class="block text-[11px] font-semibold uppercase tracking-[0.06em] text-stone-700 dark:text-stone-300 mb-1.5 font-sans">Guest Count</label>
+                    <select name="guests" id="guests" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/15 text-sm focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25 rounded-lg">
                         <option value="100">100+ Guests</option>
                         <option value="250" selected>250+ Guests</option>
                         <option value="500">500+ Guests</option>
@@ -157,7 +155,7 @@
 
                 <!-- Submit Button -->
                 <div>
-                    <button type="submit" class="btn-gold !w-full !h-[44px] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2">
+                    <button type="submit" class="btn-gold !w-full !h-[44px] text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2">
                         <span>Search Halls</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </button>
@@ -166,15 +164,15 @@
         </div>
     </section>
 
-<!-- ===================================================================
-         2b. OUR SERVICES — 4-column dark glassmorphism grid
+    <!-- ===================================================================
+         2b. OUR SERVICES — 4-column hospitality grid
          =================================================================== -->
     <section class="relative py-20 bg-[#171513] border-b border-[#C6A15B]/20 overflow-hidden">
         <div class="absolute inset-0 bg-palace-pattern opacity-50 pointer-events-none"></div>
 
         <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             <div class="text-center max-w-2xl mx-auto space-y-3 reveal-on-scroll">
-                <span class="text-[11px] uppercase tracking-[0.25em] text-[#C6A15B] font-bold block font-mono">
+                <span class="text-[11px] uppercase tracking-[0.2em] text-[#C6A15B] font-semibold block font-sans">
                     Curated Hospitality
                 </span>
                 <h2 class="font-serif-luxury text-3xl sm:text-5xl text-[#F8F5EF] font-normal">
@@ -187,58 +185,58 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {{-- Grand Ballrooms --}}
-                <div class="glass-card-lux p-7 space-y-4 reveal-on-scroll reveal-delay-1 group hover:shadow-[0_25px_60px_-15px_rgba(198,161,91,0.45)]">
-                    <div class="w-12 h-12 border border-[#C6A15B]/60 flex items-center justify-center text-[#C6A15B] bg-[#171513]/60 group-hover:bg-gradient-to-br group-hover:from-[#C6A15B] group-hover:to-[#8F7239] group-hover:text-[#171513] transition-all duration-300 rounded-sm shadow-[0_0_20px_-8px_rgba(198,161,91,0.4)] group-hover:shadow-[0_0_30px_rgba(198,161,91,0.6)]">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>
+                <div class="glass-card-lux rounded-2xl p-7 space-y-4 reveal-on-scroll reveal-delay-1 group">
+                    <div class="w-11 h-11 rounded-xl border border-[#C6A15B]/35 flex items-center justify-center text-[#C6A15B] bg-[#C6A15B]/10 group-hover:bg-[#C6A15B] group-hover:text-[#171513] transition-colors duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>
                     </div>
-                    <h3 class="font-serif-luxury text-xl text-[#F8F5EF] font-normal group-hover:text-[#C6A15B] transition-colors duration-300">Grand Ballrooms</h3>
+                    <h3 class="font-serif-luxury text-xl text-[#F8F5EF] font-normal group-hover:text-[#E8DCBE] transition-colors">Grand Ballrooms</h3>
                     <p class="text-xs text-stone-400 leading-relaxed font-light">
                         Crystal-chandelier banquet halls with climate control, power backup, and bridal suites for up to 1,500 guests.
                     </p>
-                    <a href="{{ route('public.venues') }}" class="text-[11px] uppercase tracking-wider text-[#C6A15B] hover:text-[#E8DCBE] transition flex items-center gap-1 group-hover:gap-2 duration-300">
-                        Explore Halls <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    <a href="{{ route('public.venues') }}" class="text-[11px] font-semibold uppercase tracking-wider text-[#C6A15B] hover:text-[#E8DCBE] transition inline-flex items-center gap-1.5">
+                        Explore Halls <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
                 </div>
 
                 {{-- Marquees & Lawns --}}
-                <div class="glass-card-lux p-7 space-y-4 reveal-on-scroll reveal-delay-2 group">
-                    <div class="w-12 h-12 border border-[#C6A15B]/60 flex items-center justify-center text-[#C6A15B] bg-[#171513]/60 group-hover:bg-[#C6A15B] group-hover:text-[#171513] transition-all duration-300">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l9 6H3l9-6zM5 9v11m14-11v11M3 20h18M9 20v-5h6v5"/></svg>
+                <div class="glass-card-lux rounded-2xl p-7 space-y-4 reveal-on-scroll reveal-delay-2 group">
+                    <div class="w-11 h-11 rounded-xl border border-[#C6A15B]/35 flex items-center justify-center text-[#C6A15B] bg-[#C6A15B]/10 group-hover:bg-[#C6A15B] group-hover:text-[#171513] transition-colors duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l9 6H3l9-6zM5 9v11m14-11v11M3 20h18M9 20v-5h6v5"/></svg>
                     </div>
-                    <h3 class="font-serif-luxury text-xl text-[#F8F5EF] font-normal">Marquees & Lawns</h3>
+                    <h3 class="font-serif-luxury text-xl text-[#F8F5EF] font-normal group-hover:text-[#E8DCBE] transition-colors">Marquees &amp; Lawns</h3>
                     <p class="text-xs text-stone-400 leading-relaxed font-light">
                         Expansive open-air marquees and manicured lawns, ideal for Mehndi pavilions and grand Barat receptions.
                     </p>
-                    <a href="{{ route('public.venues') }}" class="text-[11px] uppercase tracking-wider text-[#C6A15B] hover:text-[#E8DCBE] transition flex items-center gap-1">
-                        View Lawns <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    <a href="{{ route('public.venues') }}" class="text-[11px] font-semibold uppercase tracking-wider text-[#C6A15B] hover:text-[#E8DCBE] transition inline-flex items-center gap-1.5">
+                        View Lawns <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
                 </div>
 
                 {{-- Catering Menus --}}
-                <div class="glass-card-lux p-7 space-y-4 reveal-on-scroll reveal-delay-3 group">
-                    <div class="w-12 h-12 border border-[#C6A15B]/60 flex items-center justify-center text-[#C6A15B] bg-[#171513]/60 group-hover:bg-[#C6A15B] group-hover:text-[#171513] transition-all duration-300">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3v8a2 2 0 002 2v8M9 3v8m8-8c0 3-2 3-2 6v4h2v5M15 9c0 2 2 2 2 4"/></svg>
+                <div class="glass-card-lux rounded-2xl p-7 space-y-4 reveal-on-scroll reveal-delay-3 group">
+                    <div class="w-11 h-11 rounded-xl border border-[#C6A15B]/35 flex items-center justify-center text-[#C6A15B] bg-[#C6A15B]/10 group-hover:bg-[#C6A15B] group-hover:text-[#171513] transition-colors duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3v8a2 2 0 002 2v8M9 3v8m8-8c0 3-2 3-2 6v4h2v5M15 9c0 2 2 2 2 4"/></svg>
                     </div>
-                    <h3 class="font-serif-luxury text-xl text-[#F8F5EF] font-normal">Catering Menus</h3>
+                    <h3 class="font-serif-luxury text-xl text-[#F8F5EF] font-normal group-hover:text-[#E8DCBE] transition-colors">Catering Menus</h3>
                     <p class="text-xs text-stone-400 leading-relaxed font-light">
                         Authentic Mughlai, BBQ, and continental feasts curated by master bawarchis with live counters and silver service.
                     </p>
-                    <a href="{{ route('public.packages') }}" class="text-[11px] uppercase tracking-wider text-[#C6A15B] hover:text-[#E8DCBE] transition flex items-center gap-1">
-                        View Menus <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    <a href="{{ route('public.packages') }}" class="text-[11px] font-semibold uppercase tracking-wider text-[#C6A15B] hover:text-[#E8DCBE] transition inline-flex items-center gap-1.5">
+                        View Menus <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
                 </div>
 
                 {{-- Event Planning --}}
-                <div class="glass-card-lux p-7 space-y-4 reveal-on-scroll reveal-delay-4 group">
-                    <div class="w-12 h-12 border border-[#C6A15B]/60 flex items-center justify-center text-[#C6A15B] bg-[#171513]/60 group-hover:bg-[#C6A15B] group-hover:text-[#171513] transition-all duration-300">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                <div class="glass-card-lux rounded-2xl p-7 space-y-4 reveal-on-scroll reveal-delay-4 group">
+                    <div class="w-11 h-11 rounded-xl border border-[#C6A15B]/35 flex items-center justify-center text-[#C6A15B] bg-[#C6A15B]/10 group-hover:bg-[#C6A15B] group-hover:text-[#171513] transition-colors duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                     </div>
-                    <h3 class="font-serif-luxury text-xl text-[#F8F5EF] font-normal">Event Planning</h3>
+                    <h3 class="font-serif-luxury text-xl text-[#F8F5EF] font-normal group-hover:text-[#E8DCBE] transition-colors">Event Planning</h3>
                     <p class="text-xs text-stone-400 leading-relaxed font-light">
                         Full-service décor, stage design, lighting, and dedicated coordinators to orchestrate your perfect celebration.
                     </p>
-                    <a href="{{ route('public.services') }}" class="text-[11px] uppercase tracking-wider text-[#C6A15B] hover:text-[#E8DCBE] transition flex items-center gap-1">
-                        Plan Event <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    <a href="{{ route('public.services') }}" class="text-[11px] font-semibold uppercase tracking-wider text-[#C6A15B] hover:text-[#E8DCBE] transition inline-flex items-center gap-1.5">
+                        Plan Event <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
                 </div>
             </div>
@@ -252,7 +250,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             
             <div class="text-center max-w-2xl mx-auto space-y-3 reveal-on-scroll">
-                <span class="text-[11px] uppercase tracking-[0.25em] text-[#C6A15B] font-bold block font-mono">
+                <span class="text-[11px] uppercase tracking-[0.2em] text-[#C6A15B] font-semibold block font-sans">
                     Verified Luxury Inventory
                 </span>
                 <h2 class="font-serif-luxury text-3xl sm:text-5xl text-[#F8F5EF] font-normal">
@@ -272,14 +270,14 @@
                             : ($hall->images[0] ?? 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1000&auto=format&fit=crop');
                         $hasVideo = !empty($hall->videos) && count($hall->videos) > 0;
                     @endphp
-                    <div class="group bg-[#171513] border border-[#C6A15B]/30 hover:border-[#C6A15B]/70 rounded-xl transition-all duration-300 overflow-hidden hover:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.7)] hover:-translate-y-1 flex flex-col justify-between">
+                    <div class="group bg-[#1C1917] border border-[#C6A15B]/25 hover:border-[#C6A15B]/55 rounded-2xl transition-all duration-300 overflow-hidden hover:shadow-[0_12px_32px_-8px_rgba(0,0,0,0.6)] hover:-translate-y-0.5 flex flex-col justify-between">
                         <div>
                             <!-- Opulent 4:3 Image Banner with subtle frame -->
                             <div class="relative aspect-[4/3] overflow-hidden bg-stone-900">
                                 <img src="{{ $coverImg }}" 
                                      alt="{{ $hall->name }}" 
-                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90">
-                                <div class="absolute inset-0 bg-gradient-to-t from-[#171513] via-transparent to-black/30"></div>
+                                     class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700 opacity-90">
+                                <div class="absolute inset-0 bg-gradient-to-t from-[#1C1917] via-transparent to-black/30"></div>
 
                                 <!-- Location Badge -->
                                 <span class="absolute top-4 left-4 px-3 py-1 rounded-full bg-black/75 text-stone-200 text-[11px] font-medium border border-white/15 backdrop-blur-md font-sans">
@@ -300,7 +298,7 @@
                                 
                                 <!-- View Details Overlay -->
                                 <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <a href="{{ route('public.venue.details', $hall->slug) }}" class="btn-gold !h-10 !px-6 text-xs font-bold uppercase tracking-wider shadow-lg">
+                                    <a href="{{ route('public.venue.details', $hall->slug) }}" class="btn-gold !h-10 !px-6 text-xs font-semibold uppercase tracking-wider shadow-lg">
                                         View Details &rarr;
                                     </a>
                                 </div>
@@ -308,7 +306,7 @@
 
                             <!-- Content Block -->
                             <div class="p-6 space-y-3">
-                                <h3 class="font-serif-luxury text-2xl text-[#F8F5EF] font-medium leading-snug group-hover:text-[#C6A15B] transition-colors duration-300">
+                                <h3 class="font-serif-luxury text-2xl text-[#F8F5EF] font-medium leading-snug group-hover:text-[#E8DCBE] transition-colors duration-200">
                                     <a href="{{ route('public.venue.details', $hall->slug) }}">
                                         {{ $hall->name }}
                                     </a>
@@ -320,13 +318,13 @@
                                 <!-- Amenities Strip -->
                                 <div class="pt-3 border-t border-white/10 flex flex-wrap gap-2 text-[11px] text-stone-300 font-medium font-sans">
                                     @if($hall->has_air_conditioning)
-                                        <span class="px-2.5 py-0.5 rounded-sm bg-white/5 border border-white/10">Central AC</span>
+                                        <span class="px-2.5 py-0.5 rounded-md bg-white/5 border border-white/10">Central AC</span>
                                     @endif
                                     @if($hall->has_generator_backup)
-                                        <span class="px-2.5 py-0.5 rounded-sm bg-white/5 border border-white/10">100% Gen Backup</span>
+                                        <span class="px-2.5 py-0.5 rounded-md bg-white/5 border border-white/10">100% Gen Backup</span>
                                     @endif
                                     @if($hall->has_bridal_room)
-                                        <span class="px-2.5 py-0.5 rounded-sm bg-white/5 border border-white/10">Bridal Lounge</span>
+                                        <span class="px-2.5 py-0.5 rounded-md bg-white/5 border border-white/10">Bridal Lounge</span>
                                     @endif
                                 </div>
                             </div>
@@ -338,7 +336,7 @@
                                 <span class="text-[10px] uppercase font-semibold tracking-wider text-stone-400 block font-sans">Starting Shift Rate</span>
                                 <strong class="font-cinzel text-lg text-[#C6A15B]">PKR {{ number_format($hall->base_rent) }}</strong>
                             </div>
-                            <a href="{{ route('public.venue.details', $hall->slug) }}" class="btn-gold !h-9 !px-4 text-[11px] font-bold uppercase tracking-wider rounded-md">
+                            <a href="{{ route('public.venue.details', $hall->slug) }}" class="btn-gold !h-9 !px-4 text-[11px] font-semibold uppercase tracking-wider rounded-lg">
                                 Reserve &rarr;
                             </a>
                         </div>
@@ -393,17 +391,17 @@
         <div class="absolute inset-0 bg-gradient-to-r from-[#171513] via-transparent to-[#171513]"></div>
 
         <div class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-            <span class="text-[11px] uppercase tracking-[0.22em] text-[#C6A15B] font-bold block font-sans">
+            <span class="text-[11px] uppercase tracking-[0.2em] text-[#C6A15B] font-semibold block font-sans">
                 A Legacy of Majestic Hospitality
             </span>
             <h2 class="font-serif-luxury text-3xl sm:text-5xl md:text-6xl text-white font-normal leading-tight">
-                "Every wedding marks the beginning of an empire. We craft the stage worthy of your crown."
+                "Where timeless traditions meet impeccable hospitality — every celebration crafted with grace."
             </h2>
             <p class="text-sm sm:text-base text-stone-300/90 max-w-2xl mx-auto font-light leading-relaxed">
                 From candlelit Mehndi pavilions in Gulberg to palatial Barat ballrooms hosting 1,500 VIP guests along Islamabad Club Road.
             </p>
             <div class="pt-2 flex items-center justify-center gap-4">
-                <a href="{{ route('public.venues') }}" class="btn-gold !h-11 !px-8 text-xs font-bold uppercase tracking-wider">
+                <a href="{{ route('public.venues') }}" class="btn-gold !h-11 !px-8 text-xs font-semibold uppercase tracking-wider">
                     <span>Explore All Wedding Halls &rarr;</span>
                 </a>
             </div>
@@ -417,7 +415,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             
             <div class="text-center max-w-2xl mx-auto space-y-2">
-                <span class="text-[11px] uppercase tracking-[0.2em] text-[#8F7239] dark:text-[#C6A15B] font-bold block font-sans">
+                <span class="text-[11px] uppercase tracking-[0.2em] text-[#8F7239] dark:text-[#C6A15B] font-semibold block font-sans">
                     Curated Across Pakistan
                 </span>
                 <h2 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white font-normal">
@@ -430,52 +428,52 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Lahore -->
-                <a href="{{ route('public.venues', ['city' => 'Lahore']) }}" class="group relative aspect-[4/5] rounded-xl overflow-hidden bg-stone-900 border border-stone-200/70 dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300">
+                <a href="{{ route('public.venues', ['city' => 'Lahore']) }}" class="group relative aspect-[4/5] rounded-2xl overflow-hidden bg-stone-900 border border-stone-200/70 dark:border-white/10 shadow-sm hover:shadow-lg transition-all duration-300">
                     <img src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop" 
                          alt="Lahore Wedding Venues" 
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-75">
+                         class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700 opacity-75">
                     <div class="absolute inset-0 bg-gradient-to-t from-[#171513] via-black/20 to-transparent"></div>
                     <div class="absolute bottom-6 left-6 right-6 text-white space-y-1">
-                        <span class="text-[10px] uppercase font-bold tracking-[0.14em] text-[#C6A15B] font-sans">Punjab Heritage</span>
+                        <span class="text-[10px] uppercase font-semibold tracking-[0.14em] text-[#C6A15B] font-sans">Punjab Heritage</span>
                         <h3 class="font-serif-luxury text-2xl font-normal">Lahore</h3>
                         <p class="text-xs text-stone-300 font-sans">Gulberg III • Cantt • DHA • Raiwind</p>
                     </div>
                 </a>
 
                 <!-- Islamabad -->
-                <a href="{{ route('public.venues', ['city' => 'Islamabad']) }}" class="group relative aspect-[4/5] rounded-xl overflow-hidden bg-stone-900 border border-stone-200/70 dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300">
+                <a href="{{ route('public.venues', ['city' => 'Islamabad']) }}" class="group relative aspect-[4/5] rounded-2xl overflow-hidden bg-stone-900 border border-stone-200/70 dark:border-white/10 shadow-sm hover:shadow-lg transition-all duration-300">
                     <img src="https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?q=80&w=800&auto=format&fit=crop" 
                          alt="Islamabad Wedding Venues" 
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-75">
+                         class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700 opacity-75">
                     <div class="absolute inset-0 bg-gradient-to-t from-[#171513] via-black/20 to-transparent"></div>
                     <div class="absolute bottom-6 left-6 right-6 text-white space-y-1">
-                        <span class="text-[10px] uppercase font-bold tracking-[0.14em] text-[#C6A15B] font-sans">Capital Elegance</span>
+                        <span class="text-[10px] uppercase font-semibold tracking-[0.14em] text-[#C6A15B] font-sans">Capital Elegance</span>
                         <h3 class="font-serif-luxury text-2xl font-normal">Islamabad</h3>
                         <p class="text-xs text-stone-300 font-sans">Club Road • E-11 • Chak Shahzad</p>
                     </div>
                 </a>
 
                 <!-- Karachi -->
-                <a href="{{ route('public.venues', ['city' => 'Karachi']) }}" class="group relative aspect-[4/5] rounded-xl overflow-hidden bg-stone-900 border border-stone-200/70 dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300">
+                <a href="{{ route('public.venues', ['city' => 'Karachi']) }}" class="group relative aspect-[4/5] rounded-2xl overflow-hidden bg-stone-900 border border-stone-200/70 dark:border-white/10 shadow-sm hover:shadow-lg transition-all duration-300">
                     <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=800&auto=format&fit=crop" 
                          alt="Karachi Wedding Venues" 
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-75">
+                         class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700 opacity-75">
                     <div class="absolute inset-0 bg-gradient-to-t from-[#171513] via-black/20 to-transparent"></div>
                     <div class="absolute bottom-6 left-6 right-6 text-white space-y-1">
-                        <span class="text-[10px] uppercase font-bold tracking-[0.14em] text-[#C6A15B] font-sans">Coastal Splendor</span>
+                        <span class="text-[10px] uppercase font-semibold tracking-[0.14em] text-[#C6A15B] font-sans">Coastal Splendor</span>
                         <h3 class="font-serif-luxury text-2xl font-normal">Karachi</h3>
                         <p class="text-xs text-stone-300 font-sans">Clifton • Karsaz • DHA Phase VIII</p>
                     </div>
                 </a>
 
                 <!-- Faisalabad / Multan -->
-                <a href="{{ route('public.venues', ['city' => 'Faisalabad']) }}" class="group relative aspect-[4/5] rounded-xl overflow-hidden bg-stone-900 border border-stone-200/70 dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300">
+                <a href="{{ route('public.venues', ['city' => 'Faisalabad']) }}" class="group relative aspect-[4/5] rounded-2xl overflow-hidden bg-stone-900 border border-stone-200/70 dark:border-white/10 shadow-sm hover:shadow-lg transition-all duration-300">
                     <img src="https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?q=80&w=800&auto=format&fit=crop" 
                          alt="Faisalabad Wedding Venues" 
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-75">
+                         class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700 opacity-75">
                     <div class="absolute inset-0 bg-gradient-to-t from-[#171513] via-black/20 to-transparent"></div>
                     <div class="absolute bottom-6 left-6 right-6 text-white space-y-1">
-                        <span class="text-[10px] uppercase font-bold tracking-[0.14em] text-[#C6A15B] font-sans">Grand Marquees</span>
+                        <span class="text-[10px] uppercase font-semibold tracking-[0.14em] text-[#C6A15B] font-sans">Grand Marquees</span>
                         <h3 class="font-serif-luxury text-2xl font-normal">Faisalabad</h3>
                         <p class="text-xs text-stone-300 font-sans">Canal Road • Jaranwala Road</p>
                     </div>
@@ -493,7 +491,7 @@
             
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[#E7E5E4] dark:border-white/10 pb-6 reveal-on-scroll">
                 <div class="space-y-2">
-                    <span class="text-[11px] uppercase tracking-[0.2em] text-[#8F7239] dark:text-[#C6A15B] font-bold block font-mono">
+                    <span class="text-[11px] uppercase tracking-[0.2em] text-[#8F7239] dark:text-[#C6A15B] font-semibold block font-sans">
                         Five-Star Mughlai Culinary Arts
                     </span>
                     <h2 class="font-serif-luxury text-3xl sm:text-5xl text-[#171513] dark:text-white font-normal">
@@ -510,14 +508,14 @@
             <!-- Packages Display -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 @forelse($packages as $pkg)
-                    <div class="group bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 hover:border-[#C6A15B] dark:hover:border-[#C6A15B] transition-all duration-500 overflow-hidden reveal-on-scroll reveal-delay-{{ $loop->iteration }} hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_40px_-10px_rgba(198,161,91,0.2)] p-8 flex flex-col justify-between space-y-6">
+                    <div class="group bg-white dark:bg-[#1C1917] border border-[#E7E5E4] dark:border-white/15 hover:border-[#C6A15B]/60 dark:hover:border-[#C6A15B]/60 rounded-2xl transition-all duration-300 overflow-hidden reveal-on-scroll reveal-delay-{{ $loop->iteration }} shadow-xs hover:shadow-[0_12px_28px_-8px_rgba(23,21,19,0.08)] dark:hover:shadow-[0_16px_32px_-8px_rgba(0,0,0,0.6)] p-8 flex flex-col justify-between space-y-6">
                         <div class="space-y-4">
                             <div class="flex items-center justify-between border-b border-[#E7E5E4] dark:border-white/10 pb-4">
-                                <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-[#8F7239] dark:text-[#C6A15B] font-mono">PAKISTANI BANQUET</span>
-                                <span class="text-xs font-semibold text-stone-500 dark:text-stone-400 font-mono">Min {{ $pkg->min_guests }} Guests</span>
+                                <span class="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8F7239] dark:text-[#C6A15B] font-sans">Pakistani Banquet</span>
+                                <span class="text-xs font-medium text-stone-500 dark:text-stone-400 font-sans">Min {{ $pkg->min_guests }} Guests</span>
                             </div>
                             
-                            <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium group-hover:text-[#C6A15B] transition-colors duration-300">{{ $pkg->name }}</h3>
+                            <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium group-hover:text-[#8F7239] dark:group-hover:text-[#E8DCBE] transition-colors">{{ $pkg->name }}</h3>
                             <p class="text-xs text-stone-600 dark:text-stone-300 font-normal leading-relaxed">
                                 {{ $pkg->description }}
                             </p>
@@ -527,7 +525,7 @@
                                 <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 space-y-2">
                                     <div class="flex flex-wrap gap-1.5">
                                         @foreach($pkg->menu_items_json as $item)
-                                            <span class="px-2 py-0.5 bg-[#F8F5EF] dark:bg-[#171513] text-[#171513] dark:text-stone-200 border border-[#E7E5E4] dark:border-white/10 text-[11px] font-sans group-hover:border-[#C6A15B] dark:group-hover:border-[#C6A15B] transition-colors duration-300">
+                                            <span class="px-2.5 py-1 rounded-md bg-[#F8F5EF] dark:bg-[#171513] text-[#171513] dark:text-stone-200 border border-[#E7E5E4] dark:border-white/10 text-[11px] font-sans">
                                                 {{ is_array($item) ? implode(', ', $item) : $item }}
                                             </span>
                                         @endforeach
@@ -538,17 +536,17 @@
 
                         <div class="pt-6 border-t border-[#E7E5E4] dark:border-white/10 flex items-center justify-between">
                             <div>
-                                <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block font-mono">PER HEAD RATE</span>
+                                <span class="text-[10px] uppercase font-semibold tracking-wider text-stone-500 dark:text-stone-400 block font-sans">Per Head Rate</span>
                                 <strong class="font-cinzel text-xl text-[#171513] dark:text-[#C6A15B]">PKR {{ number_format($pkg->per_head_price) }}</strong>
                             </div>
-                            <button onclick="Livewire.dispatch('openWalkInModal', { package_id: '{{ $pkg->id }}' })" class="btn-obsidian !h-9 !px-4 text-xs font-semibold hover:border-[#C6A15B] hover:text-[#C6A15B] transition-all duration-300 flex items-center gap-1.5">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                            <button onclick="Livewire.dispatch('openWalkInModal', { package_id: '{{ $pkg->id }}' })" class="btn-obsidian !h-9 !px-4 text-xs font-semibold hover:border-[#C6A15B] hover:text-[#E8DCBE] transition-all flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                                 Reserve
                             </button>
                         </div>
                     </div>
                 @empty
-                    <div class="col-span-3 text-center py-12 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10">
+                    <div class="col-span-3 text-center py-12 bg-white dark:bg-[#1C1917] rounded-2xl border border-[#E7E5E4] dark:border-white/10">
                         <p class="text-stone-500 text-sm">Packages will appear shortly.</p>
                     </div>
                 @endforelse
@@ -573,7 +571,7 @@
              }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             <div class="text-center max-w-3xl mx-auto space-y-3 reveal-on-scroll">
-                <span class="text-xs uppercase tracking-[0.2em] text-[#C6A15B] block">
+                <span class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#C6A15B] block font-sans">
                     Interactive Planning Assistant
                 </span>
                 <h2 class="font-serif-luxury text-3xl sm:text-5xl text-white font-normal">
@@ -584,17 +582,17 @@
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#171513] border border-white/10 p-6 sm:p-10 reveal-on-scroll">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#1C1917] border border-white/10 rounded-2xl p-6 sm:p-10 reveal-on-scroll">
                 <!-- Left: Interactive Controls (7 cols) -->
                 <div class="lg:col-span-7 space-y-6">
                     <div>
                         <div class="flex justify-between items-center mb-2 text-xs">
-                            <span class="text-stone-300 uppercase tracking-wider">Expected Guest Count:</span>
-                            <span class="text-[#C6A15B] font-bold text-base" x-text="guests + ' Guests'"></span>
+                            <span class="text-stone-300 uppercase tracking-wider font-medium">Expected Guest Count:</span>
+                            <span class="text-[#C6A15B] font-semibold text-base" x-text="guests + ' Guests'"></span>
                         </div>
                         <input type="range" min="100" max="1200" step="25" x-model.number="guests" 
                                class="w-full accent-[#C6A15B] cursor-pointer">
-                        <div class="flex justify-between text-[10px] text-stone-500 mt-1">
+                        <div class="flex justify-between text-[11px] text-stone-400 mt-1">
                             <span>100 Guests</span>
                             <span>500 Guests</span>
                             <span>1,200+ Guests</span>
@@ -603,74 +601,74 @@
 
                     <!-- Package Tier Selection -->
                     <div>
-                        <label class="block text-xs uppercase tracking-wider text-stone-300 mb-2">
+                        <label class="block text-xs uppercase tracking-wider text-stone-300 font-medium mb-2.5">
                             Select Feast Menu Standard:
                         </label>
                         <div class="grid grid-cols-3 gap-3">
                             <button type="button" @click="tier = 1850; hallRent = 120000"
-                                    :class="tier === 1850 ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#C6A15B] font-bold' : 'border-white/10 text-stone-400 hover:border-white/30'"
-                                    class="p-3 border text-center transition text-xs">
+                                    :class="tier === 1850 ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#E8DCBE] font-semibold' : 'border-white/10 text-stone-400 hover:border-white/25'"
+                                    class="p-3.5 rounded-xl border text-center transition text-xs">
                                 <div>Silver Feast</div>
-                                <div class="text-[10px] opacity-75 mt-0.5">PKR 1,850/Head</div>
+                                <div class="text-[11px] opacity-75 mt-0.5">PKR 1,850/Head</div>
                             </button>
 
                             <button type="button" @click="tier = 2200; hallRent = 150000"
-                                    :class="tier === 2200 ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#C6A15B] font-bold' : 'border-white/10 text-stone-400 hover:border-white/30'"
-                                    class="p-3 border text-center transition text-xs">
+                                    :class="tier === 2200 ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#E8DCBE] font-semibold' : 'border-white/10 text-stone-400 hover:border-white/25'"
+                                    class="p-3.5 rounded-xl border text-center transition text-xs">
                                 <div>Gold Mughlai</div>
-                                <div class="text-[10px] opacity-75 mt-0.5">PKR 2,200/Head</div>
+                                <div class="text-[11px] opacity-75 mt-0.5">PKR 2,200/Head</div>
                             </button>
 
                             <button type="button" @click="tier = 2850; hallRent = 200000"
-                                    :class="tier === 2850 ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#C6A15B] font-bold' : 'border-white/10 text-stone-400 hover:border-white/30'"
-                                    class="p-3 border text-center transition text-xs">
+                                    :class="tier === 2850 ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#E8DCBE] font-semibold' : 'border-white/10 text-stone-400 hover:border-white/25'"
+                                    class="p-3.5 rounded-xl border text-center transition text-xs">
                                 <div>Royal Imperial</div>
-                                <div class="text-[10px] opacity-75 mt-0.5">PKR 2,850/Head</div>
+                                <div class="text-[11px] opacity-75 mt-0.5">PKR 2,850/Head</div>
                             </button>
                         </div>
                     </div>
 
                     <!-- Raw Kitchen Requirements Output -->
-                    <div class="pt-4 border-t border-white/10 grid grid-cols-3 gap-4 text-center font-mono">
-                        <div class="bg-[#171513] p-3 border border-white/10">
-                            <span class="text-[10px] uppercase text-stone-400 block">Raw Meat</span>
-                            <strong class="text-sm text-white" x-text="meatKg + ' kg'"></strong>
+                    <div class="pt-4 border-t border-white/10 grid grid-cols-3 gap-4 text-center font-sans">
+                        <div class="bg-[#171513] p-3.5 rounded-xl border border-white/10">
+                            <span class="text-[10px] uppercase tracking-wider text-stone-400 block">Raw Meat</span>
+                            <strong class="text-sm text-white mt-0.5 block" x-text="meatKg + ' kg'"></strong>
                         </div>
-                        <div class="bg-[#171513] p-3 border border-white/10">
-                            <span class="text-[10px] uppercase text-stone-400 block">Basmati Rice</span>
-                            <strong class="text-sm text-white" x-text="riceKg + ' kg'"></strong>
+                        <div class="bg-[#171513] p-3.5 rounded-xl border border-white/10">
+                            <span class="text-[10px] uppercase tracking-wider text-stone-400 block">Basmati Rice</span>
+                            <strong class="text-sm text-white mt-0.5 block" x-text="riceKg + ' kg'"></strong>
                         </div>
-                        <div class="bg-[#171513] p-3 border border-white/10">
-                            <span class="text-[10px] uppercase text-stone-400 block">Pure Ghee / Oil</span>
-                            <strong class="text-sm text-white" x-text="oilLiters + ' L'"></strong>
+                        <div class="bg-[#171513] p-3.5 rounded-xl border border-white/10">
+                            <span class="text-[10px] uppercase tracking-wider text-stone-400 block">Pure Ghee / Oil</span>
+                            <strong class="text-sm text-white mt-0.5 block" x-text="oilLiters + ' L'"></strong>
                         </div>
                     </div>
                 </div>
 
                 <!-- Right: Calculated Estimate Card (5 cols) -->
-                <div class="lg:col-span-5 bg-[#171513] border border-[#C6A15B]/40 p-6 sm:p-8 space-y-6">
-                    <span class="text-[10px] uppercase tracking-widest text-[#C6A15B] block">Authoritative Estimate</span>
+                <div class="lg:col-span-5 bg-[#171513] border border-[#C6A15B]/35 rounded-2xl p-6 sm:p-8 space-y-6">
+                    <span class="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C6A15B] block font-sans">Indicative Banquet Estimate</span>
                     
                     <div class="space-y-3 text-xs border-b border-white/10 pb-4">
                         <div class="flex justify-between text-stone-300">
                             <span>Hall Shift Base Rent:</span>
-                            <span class="text-white font-bold" x-text="'PKR ' + Number(hallRent).toLocaleString()"></span>
+                            <span class="text-white font-semibold" x-text="'PKR ' + Number(hallRent).toLocaleString()"></span>
                         </div>
                         <div class="flex justify-between text-stone-300">
                             <span x-text="'Catering (' + guests + ' × PKR ' + tier + '):'"></span>
-                            <span class="text-white font-bold" x-text="'PKR ' + Number(cateringTotal).toLocaleString()"></span>
+                            <span class="text-white font-semibold" x-text="'PKR ' + Number(cateringTotal).toLocaleString()"></span>
                         </div>
                     </div>
 
                     <div>
-                        <span class="text-[10px] uppercase tracking-wider text-stone-400 block font-mono">Estimated Grand Total</span>
+                        <span class="text-[11px] uppercase tracking-wider text-stone-400 block font-sans">Estimated Grand Total</span>
                         <div class="font-serif-luxury text-3xl sm:text-4xl text-[#C6A15B] font-semibold mt-1"
                              x-text="'PKR ' + Number(grandTotal).toLocaleString()">
                         </div>
-                        <span class="text-[10px] text-stone-500 block mt-1">Indicative estimate • Subject to applicable provincial sales taxes.</span>
+                        <span class="text-[11px] text-stone-400 block mt-1">Indicative estimate • Subject to applicable provincial sales taxes.</span>
                     </div>
 
-                    <a :href="'{{ route('public.venues') }}?guests=' + guests" class="btn-gold !w-full !h-11 text-xs font-bold uppercase tracking-wider block text-center">
+                    <a :href="'{{ route('public.venues') }}?guests=' + guests" class="btn-gold !w-full !h-11 text-xs font-semibold uppercase tracking-wider block text-center">
                         View Matching Wedding Halls &rarr;
                     </a>
                 </div>
@@ -686,7 +684,7 @@
             
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-6">
                 <div class="space-y-2">
-                    <span class="text-[11px] uppercase tracking-[0.2em] text-[#C6A15B] font-bold block font-sans">
+                    <span class="text-[11px] uppercase tracking-[0.2em] text-[#C6A15B] font-semibold block font-sans">
                         Visual Excellence
                     </span>
                     <h2 class="font-serif-luxury text-3xl sm:text-5xl text-white font-normal">
@@ -702,10 +700,10 @@
 
             <!-- Gallery Mosaic -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="relative aspect-[4/3] rounded-xl overflow-hidden border border-white/10 group bg-stone-900 shadow-md">
+                <div class="relative aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 group bg-stone-900 shadow-sm">
                     <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1000&auto=format&fit=crop" 
                          alt="Crystal Chandeliers" 
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                         class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
                     <div class="absolute bottom-4 left-4 text-white">
                         <span class="text-[10px] uppercase font-semibold tracking-wider text-[#C6A15B] font-sans">Lighting Architecture</span>
@@ -713,10 +711,10 @@
                     </div>
                 </div>
 
-                <div class="relative aspect-[4/3] rounded-xl overflow-hidden border border-white/10 group bg-stone-900 shadow-md">
+                <div class="relative aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 group bg-stone-900 shadow-sm">
                     <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1000&auto=format&fit=crop" 
                          alt="Royal Stage Decor" 
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                         class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
                     <div class="absolute bottom-4 left-4 text-white">
                         <span class="text-[10px] uppercase font-semibold tracking-wider text-[#C6A15B] font-sans">Stage Styling</span>
@@ -724,10 +722,10 @@
                     </div>
                 </div>
 
-                <div class="relative aspect-[4/3] rounded-xl overflow-hidden border border-white/10 group bg-stone-900 shadow-md">
+                <div class="relative aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 group bg-stone-900 shadow-sm">
                     <img src="https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?q=80&w=1000&auto=format&fit=crop" 
                          alt="Imperial Dining Setup" 
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                         class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
                     <div class="absolute bottom-4 left-4 text-white">
                         <span class="text-[10px] uppercase font-semibold tracking-wider text-[#C6A15B] font-sans">Imperial Banqueting</span>
@@ -740,7 +738,7 @@
     </section>
 
     <!-- ===================================================================
-         9. CINEMATIC SCROLLING SAAS SECTION FOR VENUE OWNERS (Rent Admin)
+         9. CINEMATIC PARTNER SECTION FOR VENUE OWNERS (Rent Admin)
          =================================================================== -->
     <section class="relative py-24 sm:py-28 bg-fixed bg-cover bg-center overflow-hidden border-t border-[#C6A15B]/30"
              style="background-image: url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2000&auto=format&fit=crop');">
@@ -750,54 +748,54 @@
         <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
                 <div class="lg:col-span-8 space-y-6">
-                    <span class="text-[11px] uppercase tracking-[0.24em] text-[#C6A15B] block font-bold font-sans">
-                        EventHub Multi-Tenant SaaS
+                    <span class="text-[11px] uppercase tracking-[0.2em] text-[#C6A15B] block font-semibold font-sans">
+                        EventHub Partner Network
                     </span>
                     <h2 class="font-serif-luxury text-3xl sm:text-5xl font-normal leading-tight text-[#F8F5EF]">
                         Are You a Wedding Hall or Marquee Owner? <br>
                         <span class="italic text-[#C6A15B]">Power Your Banquet with EventHub.</span>
                     </h2>
                     <p class="text-sm sm:text-base text-stone-300 font-light leading-relaxed max-w-2xl">
-                        Power your entire banquet operations on EventHub. Every hall gets its own dedicated public website link to share with clients, a private Rent Admin dashboard, zero double-booking shift locking, chef kitchen KOT order slips, and generator fuel expense tracking.
+                        Manage your entire banquet operation seamlessly on EventHub. Every hall receives a dedicated public showcase link to share with families, a private Rent Admin workspace, guaranteed single-shift exclusivity, kitchen order slips, and complete expense tracking.
                     </p>
 
                     <!-- Features Grid -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs text-stone-200 font-sans">
                         <div class="flex items-center gap-2.5">
                             <span class="text-[#C6A15B] font-bold">✓</span>
-                            <span>Dedicated Public Website for Each Hall</span>
+                            <span>Dedicated Public Showcase for Each Hall</span>
                         </div>
                         <div class="flex items-center gap-2.5">
                             <span class="text-[#C6A15B] font-bold">✓</span>
-                            <span>Isolated Private Rent Admin Dashboard</span>
+                            <span>Private Rent Admin Operations Workspace</span>
                         </div>
                         <div class="flex items-center gap-2.5">
                             <span class="text-[#C6A15B] font-bold">✓</span>
-                            <span>Atomic Concurrency (Zero Overlapping Dates)</span>
+                            <span>Guaranteed Shift Exclusivity (Zero Double-Bookings)</span>
                         </div>
                         <div class="flex items-center gap-2.5">
                             <span class="text-[#C6A15B] font-bold">✓</span>
-                            <span>A4 Legal Contracts &amp; WhatsApp Bot</span>
+                            <span>Printable Contracts &amp; WhatsApp Guest RSVP</span>
                         </div>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-4 pt-3">
-                        <a href="{{ route('register') }}" class="btn-gold !h-12 !px-8 text-xs font-bold uppercase tracking-wider">
+                        <a href="{{ route('register') }}" class="btn-gold !h-12 !px-8 text-xs font-semibold uppercase tracking-wider">
                             <span>Register Your Hall on EventHub &rarr;</span>
                         </a>
                         <a href="{{ route('public.about') }}" class="btn-outline-gold !h-12 !px-7 text-xs font-semibold text-white border-white/20">
-                            Explore SaaS Architecture
+                            Learn About Partner Benefits
                         </a>
                     </div>
                 </div>
 
-                <div class="lg:col-span-4 bg-[#171513]/95 border border-[#C6A15B]/40 rounded-2xl p-6 sm:p-8 space-y-4 text-center shadow-2xl backdrop-blur-md">
-                    <span class="text-[10px] uppercase tracking-widest text-[#C6A15B] font-semibold block font-sans">Hall Owner Portal</span>
+                <div class="lg:col-span-4 bg-[#1C1917]/95 border border-[#C6A15B]/35 rounded-2xl p-6 sm:p-8 space-y-4 text-center shadow-xl backdrop-blur-md">
+                    <span class="text-[11px] uppercase tracking-[0.16em] text-[#C6A15B] font-semibold block font-sans">Hall Owner Portal</span>
                     <h3 class="font-serif-luxury text-2xl text-white font-normal">Already Listed?</h3>
                     <p class="text-xs text-stone-300 leading-relaxed">
                         Sign in to your Rent Admin dashboard to manage your hall website, calendar shifts, and payments.
                     </p>
-                    <a href="{{ route('login') }}" class="btn-obsidian !w-full !h-11 text-xs font-bold uppercase block hover:border-[#C6A15B] hover:text-[#C6A15B] transition-all duration-300">
+                    <a href="{{ route('login') }}" class="btn-obsidian !w-full !h-11 text-xs font-semibold uppercase block hover:border-[#C6A15B] hover:text-[#E8DCBE] transition-all">
                         Sign In as Rent Admin &rarr;
                     </a>
                 </div>

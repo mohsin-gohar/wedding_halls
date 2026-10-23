@@ -1,19 +1,16 @@
 <div class="w-full max-w-md mx-auto">
     <!-- Card Container -->
-    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-8 sm:p-10 shadow-2xl space-y-6 relative overflow-hidden">
-        
-        <!-- Top Accent Line -->
-        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#C6A15B] via-[#E8DCBE] to-[#C6A15B]"></div>
+    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 rounded-2xl p-8 sm:p-10 shadow-xl space-y-6 relative overflow-hidden">
 
         <!-- Brand Logo -->
         <div class="flex justify-center -mb-1">
-            <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub Logo" class="h-14 w-auto object-contain rounded border border-[#C6A15B]/50 bg-[#171513] shadow-[0_0_20px_rgba(198,161,91,0.25)] p-1">
+            <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub Logo" class="h-14 w-auto object-contain rounded-xl border border-[#C6A15B]/40 bg-[#171513] shadow-sm p-1">
         </div>
 
         <!-- Heading Section -->
         <div class="text-center space-y-2">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#C6A15B]/40 bg-[#C6A15B]/10 text-[#8F7239] dark:text-[#C6A15B] text-[10px] font-bold uppercase tracking-widest font-mono">
-                <span class="w-1.5 h-1.5 bg-[#C6A15B] rounded-full animate-pulse"></span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#C6A15B]/30 bg-[#C6A15B]/10 text-[#8F7239] dark:text-[#C6A15B] text-[10px] font-bold uppercase tracking-widest font-sans">
+                <span class="w-1.5 h-1.5 bg-[#C6A15B] rounded-full"></span>
                 Secure Access
             </span>
             <h1 class="font-serif-luxury text-2xl sm:text-3xl text-[#171513] dark:text-white font-normal">
@@ -26,13 +23,13 @@
 
         <!-- Flash Messages -->
         @if(session('message'))
-            <div class="p-3 bg-[#C6A15B]/15 border border-[#C6A15B]/60 text-[#8F7239] dark:text-[#C6A15B] text-xs text-center font-medium">
+            <div class="p-3 rounded-lg bg-[#C6A15B]/15 border border-[#C6A15B]/50 text-[#8F7239] dark:text-[#C6A15B] text-xs text-center font-medium">
                 {{ session('message') }}
             </div>
         @endif
 
         @if(session('error'))
-            <div class="p-3 bg-red-950/40 border border-red-700/60 text-red-300 text-xs text-center font-medium">
+            <div class="p-3 rounded-lg bg-red-950/40 border border-red-700/60 text-red-300 text-xs text-center font-medium">
                 {{ session('error') }}
             </div>
         @endif
@@ -41,7 +38,7 @@
         <form wire:submit="login" class="space-y-4">
             <!-- Email -->
             <div>
-                <label for="email" class="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5 font-mono">
+                <label for="email" class="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5 font-sans">
                     Email Address
                 </label>
                 <input id="email" 
@@ -53,14 +50,14 @@
                        placeholder="your-email@example.com"
                        class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm w-full">
                 @error('email') 
-                    <span class="text-rose-500 text-xs mt-1 block font-mono">{{ $message }}</span> 
+                    <span class="text-rose-500 text-xs mt-1 block font-sans">{{ $message }}</span> 
                 @enderror
             </div>
 
             <!-- Password -->
             <div>
                 <div class="flex items-center justify-between mb-1.5">
-                    <label for="password" class="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 font-mono">
+                    <label for="password" class="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 font-sans">
                         Password
                     </label>
                 </div>
@@ -72,7 +69,7 @@
                        placeholder="••••••••"
                        class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm w-full">
                 @error('password') 
-                    <span class="text-rose-500 text-xs mt-1 block font-mono">{{ $message }}</span> 
+                    <span class="text-rose-500 text-xs mt-1 block font-sans">{{ $message }}</span> 
                 @enderror
             </div>
 
@@ -82,14 +79,17 @@
                     <input type="checkbox" wire:model="remember" class="accent-[#C6A15B] rounded">
                     <span>Keep me signed in</span>
                 </label>
-                <span class="text-stone-400 dark:text-stone-500 text-[10px] font-mono">🔒 SSL 256-bit</span>
+                <span class="inline-flex items-center gap-1 text-stone-400 dark:text-stone-500 text-[11px] font-sans">
+                    <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    256-bit Encrypted
+                </span>
             </div>
 
             <!-- Submit Button -->
             <div class="pt-2">
                 <button type="submit" 
                         wire:loading.attr="disabled"
-                        class="btn-gold !w-full !h-12 text-xs font-bold uppercase tracking-wider font-mono shadow-[0_0_20px_rgba(198,161,91,0.3)] hover:shadow-[0_0_30px_rgba(198,161,91,0.5)] transition-all duration-300 flex items-center justify-center gap-2">
+                        class="btn-gold !w-full !h-12 text-xs font-bold uppercase tracking-wider font-sans rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
                     <span wire:loading.remove>Sign In &rarr;</span>
                     <span wire:loading class="inline-flex items-center gap-2">
                         <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
@@ -109,11 +109,11 @@
             </p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-center text-xs">
                 <a href="{{ route('register') }}" 
-                   class="p-2.5 rounded border border-[#C6A15B]/30 hover:border-[#C6A15B] bg-[#C6A15B]/5 hover:bg-[#C6A15B]/10 text-[#8F7239] dark:text-[#C6A15B] font-mono text-[11px] font-bold uppercase transition-colors">
+                   class="p-2.5 rounded-lg border border-[#C6A15B]/30 hover:border-[#C6A15B] bg-[#C6A15B]/5 hover:bg-[#C6A15B]/10 text-[#8F7239] dark:text-[#C6A15B] font-sans text-[11px] font-bold uppercase tracking-wider transition-colors">
                     Register Venue
                 </a>
                 <a href="{{ route('customer.register') }}" 
-                   class="p-2.5 rounded border border-stone-200 dark:border-white/10 hover:border-stone-400 dark:hover:border-white/30 bg-stone-50 dark:bg-white/5 text-stone-700 dark:text-stone-300 font-mono text-[11px] font-bold uppercase transition-colors">
+                   class="p-2.5 rounded-lg border border-stone-200 dark:border-white/10 hover:border-stone-400 dark:hover:border-white/30 bg-stone-50 dark:bg-white/5 text-stone-700 dark:text-stone-300 font-sans text-[11px] font-bold uppercase tracking-wider transition-colors">
                     Customer Sign Up
                 </a>
             </div>
