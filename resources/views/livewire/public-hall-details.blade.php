@@ -14,13 +14,29 @@
 
     @php
         $settings = is_array($hall->website_settings) ? $hall->website_settings : [];
+        $venueJsonLd = [
+            '@context' => 'https://schema.org',
+            '@type' => 'EventVenue',
+            'name' => $hall->name,
+            'description' => $hall->description ?? 'Luxury wedding banquet ballroom and marquee on EventHub Pakistan.',
+            'url' => route('hall.showcase', $hall->slug),
+            'image' => $activePhoto,
+            'maximumAttendeeCapacity' => (int) $hall->max_capacity,
+            'priceRange' => 'PKR ' . number_format((float) $hall->base_rent),
+            'address' => [
+                '@type' => 'PostalAddress',
+                'streetAddress' => $hall->venue->address ?? ($hall->venue->area ?? 'Main Boulevard'),
+                'addressLocality' => $hall->venue->city ?? 'Lahore',
+                'addressCountry' => 'PK',
+            ],
+        ];
     @endphp
+
+    <script type="application/ld+json">{!! json_encode($venueJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 
     @if(($settings['show_announcement'] ?? false) && !empty($settings['announcement_banner']))
         <div class="bg-[#C6A15B] text-[#171513] py-2 px-4 text-center font-sans text-xs font-semibold tracking-wider uppercase flex items-center justify-center gap-2 shadow-sm">
-            <span>✨</span>
             <span>{{ $settings['announcement_banner'] }}</span>
-            <span>✨</span>
         </div>
     @endif
 
@@ -1102,14 +1118,8 @@
                  x-transition:leave="transition ease-in duration-200"
                  x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                  x-transition:leave-end="opacity-0 scale-95 translate-y-3"
-                 class="relative w-full max-w-lg bg-[#171513] border-2 border-[#C6A15B] rounded-2xl shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_50px_rgba(198,161,91,0.35)] text-white overflow-hidden p-6 sm:p-8 space-y-6"
+                 class="relative w-full max-w-lg bg-[#171513] border border-[#C6A15B]/50 rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.85)] text-white overflow-hidden p-6 sm:p-8 space-y-6"
                  @click.outside="bookedAlertOpen = false">
-                
-                <!-- Royal Corner Accents -->
-                <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#DFBF7A] pointer-events-none"></div>
-                <div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#DFBF7A] pointer-events-none"></div>
-                <div class="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#DFBF7A] pointer-events-none"></div>
-                <div class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#DFBF7A] pointer-events-none"></div>
 
                 <!-- Gold Crest Emblem -->
                 <div class="relative mx-auto w-16 h-16 rounded-full bg-[#C6A15B]/10 border border-[#C6A15B]/50 flex items-center justify-center shadow-sm">
@@ -1167,5 +1177,28 @@
             </div>
         </div>
     </template>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        @livewire('hall-reviews', ['hallId' => $hall->id])
+    </div>
+    <script type="application/ld+json">
+        {!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'EventVenue',
+            'name' => $hall->name,
+            'description' => $hall->description ?? $hall->tagline,
+            'url' => url()->current(),
+            'telephone' => optional($hall->tenant)->phone,
+            'address' => [
+                '@type' => 'PostalAddress',
+                'streetAddress' => optional($hall->venue)->address,
+                'addressLocality' => optional($hall->venue)->city,
+                'addressCountry' => 'PK',
+            ],
+            'maximumAttendeeCapacity' => $hall->max_capacity,
+            'priceRange' => 'PKR ' . number_format($hall->base_rent),
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+    </script>
+
 
 </div>

@@ -6,16 +6,31 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $title ?? 'EventHub — Luxury Wedding Venues & Banquet Marketplace' }}</title>
-    <meta name="description" content="Discover and reserve Pakistan's premier luxury wedding ballrooms, royal marquees, and banquet complexes. Concurrency-safe shift reservations, authentic Mughlai catering, and transparent pricing in PKR.">
+    <meta name="description" content="{{ $metaDescription ?? 'Discover and reserve Pakistan\'s premier luxury wedding ballrooms, royal marquees, and banquet complexes. Concurrency-safe shift reservations, authentic Mughlai catering, and transparent pricing in PKR.' }}">
+    <meta name="theme-color" content="#171513">
+    <link rel="canonical" href="{{ url()->current() }}">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+
+    <!-- OpenGraph & Social Sharing Meta -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="EventHub Pakistan">
+    <meta property="og:title" content="{{ $title ?? 'EventHub — Luxury Wedding Venues & Banquet Marketplace' }}">
+    <meta property="og:description" content="{{ $metaDescription ?? 'Discover and reserve Pakistan\'s premier luxury wedding ballrooms, royal marquees, and banquet complexes with guaranteed single-host shift exclusivity.' }}">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:image" content="{{ $ogImage ?? asset('images/eventhub-logo.png') }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $title ?? 'EventHub — Luxury Wedding Venues & Banquet Marketplace' }}">
+    <meta name="twitter:description" content="{{ $metaDescription ?? 'Discover and reserve Pakistan\'s premier luxury wedding ballrooms, royal marquees, and banquet complexes.' }}">
+    <meta name="twitter:image" content="{{ $ogImage ?? asset('images/eventhub-logo.png') }}">
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('images/eventhub-logo.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/eventhub-logo.png') }}">
 
-    <!-- Google Fonts: Playfair Display, Cinzel, Plus Jakarta Sans -->
+    <!-- Google Fonts: Cormorant Garamond, Playfair Display, Cinzel, Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Styles & Livewire -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -48,6 +63,11 @@
               } 
           } 
       }">
+
+    <!-- Accessibility Skip Link (WCAG 2.1 AA) -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-[#C6A15B] focus:text-[#171513] focus:font-semibold focus:text-xs focus:shadow-lg">
+        Skip to main content
+    </a>
 
     <!-- Main Navigation Bar (Luxury Obsidian & Champagne Gold) -->
     <header id="site-header" class="site-header sticky top-0 z-40 bg-[#171513]/95 backdrop-blur-xl border-b border-[#C6A15B]/25 text-white">
@@ -190,7 +210,7 @@
     </header>
 
     <!-- Page Content Slot -->
-    <main class="public-page-content flex-1">
+    <main id="main-content" class="public-page-content flex-1">
         {{ $slot }}
     </main>
 
@@ -269,6 +289,36 @@
         </div>
     </footer>
 
+    <!-- Floating WhatsApp Concierge Button -->
+    <a href="https://wa.me/923008472910?text={{ urlencode('Assalamu Alaikum! I would like to inquire about venue availability on EventHub.') }}"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="Chat with EventHub Concierge on WhatsApp"
+       class="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-[#171513] border border-[#C6A15B]/50 hover:border-[#C6A15B] text-[#F8F5EF] shadow-[0_12px_30px_rgba(0,0,0,0.5)] hover:-translate-y-0.5 transition-all duration-200">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span class="text-xs font-semibold tracking-wide font-sans">WhatsApp Concierge</span>
+    </a>
+
+    <!-- GDPR / PDPA Cookie & Privacy Consent Bar -->
+    <div x-data="{ showCookieBar: !localStorage.getItem('EventHub_cookie_consent') }"
+         x-show="showCookieBar"
+         x-cloak
+         role="region"
+         aria-label="Cookie consent notice"
+         class="fixed bottom-4 left-4 right-4 sm:right-auto sm:max-w-md z-40 bg-[#171513]/95 backdrop-blur-md border border-[#C6A15B]/35 rounded-2xl p-4 text-xs text-stone-300 shadow-2xl">
+        <div class="flex items-start justify-between gap-4">
+            <p class="leading-relaxed">
+                We use essential cookies to guarantee secure shift reservations and personalize your venue search experience. Read our <a href="{{ route('public.policies.privacy') }}" class="text-[#C6A15B] underline hover:text-white">Privacy Policy</a>.
+            </p>
+            <button type="button"
+                    @click="localStorage.setItem('EventHub_cookie_consent', 'accepted'); showCookieBar = false"
+                    aria-label="Accept cookies"
+                    class="btn-gold !h-8 !px-3.5 text-[11px] font-semibold rounded-lg shrink-0">
+                Accept
+            </button>
+        </div>
+    </div>
+
     <!-- Interactive Walk-in Booking Modal Component (Accessible across public site) -->
     <livewire:walk-in-booking-modal />
 
@@ -276,6 +326,13 @@
     <x-luxury-alert-dialog />
 
     @livewireScripts
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+        }
+    </script>
 </body>
 </html>
 

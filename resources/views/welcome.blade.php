@@ -8,23 +8,23 @@
         <div class="hero-slideshow absolute inset-0 z-0 overflow-hidden" id="heroSlideshow">
             <!-- Slide 1: Elegant Wedding Venue -->
             <div class="slideshow-slide absolute inset-0 w-full h-full">
-                <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2000&auto=format&fit=crop" alt="Luxury Wedding Venue" class="w-full h-full object-cover slideshow-image transition-opacity duration-750">
+                <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2000&auto=format&fit=crop" alt="Luxury Wedding Venue" fetchpriority="high" decoding="async" class="w-full h-full object-cover slideshow-image transition-opacity duration-750">
             </div>
             <!-- Slide 2: Grand Wedding Ballroom -->
             <div class="slideshow-slide absolute inset-0 w-full h-full opacity-0">
-                <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=2000&auto=format&fit=crop" alt="Grand Wedding Ballroom" class="w-full h-full object-cover slideshow-image transition-opacity duration-750">
+                <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=2000&auto=format&fit=crop" alt="Grand Wedding Ballroom" loading="lazy" decoding="async" class="w-full h-full object-cover slideshow-image transition-opacity duration-750">
             </div>
             <!-- Slide 3: Wedding Ceremony Decor -->
             <div class="slideshow-slide absolute inset-0 w-full h-full opacity-0">
-                <img src="https://i.pinimg.com/1200x/b6/1d/f9/b61df9ab70e16a13f6a00b8341f0057c.jpg" alt="Wedding Ceremony Decor" class="w-full h-full object-cover slideshow-image transition-opacity duration-750">
+                <img src="https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?q=80&w=2000&auto=format&fit=crop" alt="Wedding Ceremony Decor" loading="lazy" decoding="async" class="w-full h-full object-cover slideshow-image transition-opacity duration-750">
             </div>
             <!-- Slide 4: Elegant Banquet Hall -->
             <div class="slideshow-slide absolute inset-0 w-full h-full opacity-0">
-                <img src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2000&auto=format&fit=crop" alt="Elegant Banquet Hall" class="w-full h-full object-cover slideshow-image transition-opacity duration-750">
+                <img src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2000&auto=format&fit=crop" alt="Elegant Banquet Hall" loading="lazy" decoding="async" class="w-full h-full object-cover slideshow-image transition-opacity duration-750">
             </div>
             <!-- Slide 5: Grand Wedding Reception -->
             <div class="slideshow-slide absolute inset-0 w-full h-full opacity-0">
-                <img src="https://i.pinimg.com/1200x/d6/b6/bd/d6b6bdb32f8029dfc2bbe091a6a260df.jpg" alt="Grand Wedding Reception" class="w-full h-full object-cover slideshow-image transition-opacity duration-750">
+                <img src="https://images.unsplash.com/photo-1520854221256-17451cc331bf?q=80&w=2000&auto=format&fit=crop" alt="Grand Wedding Reception" loading="lazy" decoding="async" class="w-full h-full object-cover slideshow-image transition-opacity duration-750">
             </div>
 
             <!-- Slideshow Navigation Dots -->
@@ -276,6 +276,8 @@
                             <div class="relative aspect-[4/3] overflow-hidden bg-stone-900">
                                 <img src="{{ $coverImg }}" 
                                      alt="{{ $hall->name }}" 
+                                     loading="lazy"
+                                     decoding="async"
                                      class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700 opacity-90">
                                 <div class="absolute inset-0 bg-gradient-to-t from-[#1C1917] via-transparent to-black/30"></div>
 

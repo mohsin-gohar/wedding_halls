@@ -6,15 +6,17 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $title ?? 'EventHub — Vendor SaaS Management Suite' }}</title>
+    <meta name="theme-color" content="#171513">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('images/eventhub-logo.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/eventhub-logo.png') }}">
 
-    <!-- Google Fonts: Cinzel, Playfair Display, Plus Jakarta Sans -->
+    <!-- Google Fonts: Cinzel, Cormorant Garamond, Playfair Display, Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Styles & Livewire -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -47,6 +49,11 @@
               } 
           } 
       }">
+
+    <!-- Accessibility Skip Link (WCAG 2.1 AA) -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-[#C6A15B] focus:text-[#171513] focus:font-semibold focus:text-xs focus:shadow-lg">
+        Skip to main content
+    </a>
 
     <!-- Top Command Strip -->
     <div class="bg-[#171513] text-white text-[11px] font-sans py-1.5 px-4 border-b border-[#C6A15B]/20 flex items-center justify-between">
@@ -579,7 +586,7 @@
             </div>
 
             <!-- Content Slot -->
-            <main class="app-page-content flex-1 p-4 sm:p-8 bg-[#F8F5EF] dark:bg-[#171513] transition-colors duration-200">
+            <main id="main-content" class="app-page-content flex-1 p-4 sm:p-8 bg-[#F8F5EF] dark:bg-[#171513] transition-colors duration-200">
                 {{ $slot }}
             </main>
 

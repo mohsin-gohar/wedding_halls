@@ -103,4 +103,24 @@ class Hall extends Model
     {
         return $this->hasMany(HallWishlist::class);
     }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->hasMany(Review::class)->where('status', Review::STATUS_APPROVED);
+    }
+
+    public function averageRating(): float
+    {
+        return Review::averageForHall($this->id);
+    }
+
+    public function reviewsCount(): int
+    {
+        return Review::countForHall($this->id);
+    }
 }

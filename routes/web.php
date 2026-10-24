@@ -35,38 +35,110 @@ use App\Livewire\UtilityFuelTracker;
 use App\Livewire\WhatsAppRsvpManager;
 use App\Models\Hall;
 use App\Models\Package;
+use App\Models\Tenant;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 
 /*
 |--------------------------------------------------------------------------
 | 1. Public Marketplace & Guest Experience Routes
 |--------------------------------------------------------------------------
 */
-// Cinematic Homepage
+// Cinematic Homepage (Cached for 5 minutes with automatic state invalidation)
 Route::get('/', function () {
-    $halls = Hall::with(['venue', 'tenant'])
-        ->where('is_active', true)
+    $cacheStamp = md5(implode('|', [
+        (string) Hall::max('updated_at'),
+        (string) Hall::count(),
+        (string) Tenant::max('updated_at'),
+        (string) Package::max('updated_at'),
+        (string) Package::count(),
+    ]));
+
+    [$halls, $packages] = Cache::remember("home.featured.{$cacheStamp}", 300, function () {
+        $featuredHalls = Hall::with(['venue', 'tenant'])
+            ->where('is_active', true)
+            ->whereHas('tenant', function ($q) {
+                $q->where('is_active', true)
+                    ->where('verification_status', 'APPROVED');
+            })
+            ->take(6)
+            ->get();
+
+        $featuredPackages = Package::where('is_active', true)
+            ->where(function ($query) {
+                $query->whereNull('tenant_id')
+                    ->orWhereHas('tenant', function ($q) {
+                        $q->where('is_active', true)
+                            ->where('verification_status', 'APPROVED');
+                    });
+            })
+            ->take(4)
+            ->get();
+
+        return [$featuredHalls, $featuredPackages];
+    });
+
+    return view('welcome', compact('halls', 'packages'));
+})->name('home');
+
+// Dynamic XML Sitemap for Search Engines
+Route::get('/sitemap.xml', function () {
+    $staticUrls = [
+        route('home'),
+        route('public.venues'),
+        route('marketplace'),
+        route('public.gallery'),
+        route('public.packages'),
+        route('public.menus'),
+        route('public.services'),
+        route('public.about'),
+        route('public.contact'),
+        route('public.faqs'),
+        route('public.availability'),
+    ];
+
+    $halls = Hall::where('is_active', true)
+        ->whereNotNull('slug')
         ->whereHas('tenant', function ($q) {
             $q->where('is_active', true)
                 ->where('verification_status', 'APPROVED');
         })
-        ->take(6)
+        ->select(['slug', 'updated_at'])
         ->get();
 
-    $packages = Package::where('is_active', true)
-        ->where(function ($query) {
-            $query->whereNull('tenant_id')
-                ->orWhereHas('tenant', function ($q) {
-                    $q->where('is_active', true)
-                        ->where('verification_status', 'APPROVED');
-                });
-        })
-        ->take(4)
-        ->get();
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
 
-    return view('welcome', compact('halls', 'packages'));
-})->name('home');
+    foreach ($staticUrls as $loc) {
+        $xml .= '  <url>'."\n";
+        $xml .= '    <loc>'.htmlspecialchars($loc, ENT_XML1, 'UTF-8').'</loc>'."\n";
+        $xml .= '    <changefreq>daily</changefreq>'."\n";
+        $xml .= '    <priority>0.8</priority>'."\n";
+        $xml .= '  </url>'."\n";
+    }
+
+    foreach ($halls as $hall) {
+        $loc = route('hall.showcase', $hall->slug);
+        $lastmod = optional($hall->updated_at)->toAtomString() ?? now()->toAtomString();
+        $xml .= '  <url>'."\n";
+        $xml .= '    <loc>'.htmlspecialchars($loc, ENT_XML1, 'UTF-8').'</loc>'."\n";
+        $xml .= '    <lastmod>'.$lastmod.'</lastmod>'."\n";
+        $xml .= '    <changefreq>weekly</changefreq>'."\n";
+        $xml .= '    <priority>0.9</priority>'."\n";
+        $xml .= '  </url>'."\n";
+    }
+
+    $xml .= '</urlset>';
+
+    return response($xml, 200, [
+        'Content-Type' => 'application/xml; charset=UTF-8',
+        'Cache-Control' => 'public, max-age=3600',
+    ]);
+})->name('sitemap');
 
 // Vendor Hall Media (defined before /hall/{id} wildcard)
 Route::middleware(['auth', 'tenant.staff', 'portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER'])->get('/hall/media', HallMediaManager::class)->name('hall.media');
@@ -113,7 +185,7 @@ Route::get('/refund', function () {
 | 2. Customer Portal Authentication & Experience
 |--------------------------------------------------------------------------
 */
-Route::middleware('guest')->prefix('customer')->group(function () {
+Route::prefix('customer')->group(function () {
     Route::get('/login', CustomerLogin::class)->name('customer.login')->middleware('throttle:60,1');
     Route::get('/register', CustomerRegister::class)->name('customer.register')->middleware('throttle:60,1');
 });
@@ -125,15 +197,77 @@ Route::middleware('auth')->prefix('customer')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| 3. Vendor Authentication Routes
+| 3. Unified & Vendor Authentication Routes (Livewire + Native HTTP POST)
 |--------------------------------------------------------------------------
 */
-Route::middleware('guest')->group(function () {
-    Route::get('/login', Login::class)->name('login')->middleware('throttle:60,1');
-    Route::get('/register', Register::class)->name('register')->middleware('throttle:60,1');
-});
+Route::get('/login', Login::class)->name('login')->middleware('throttle:60,1');
+Route::get('/register', Register::class)->name('register')->middleware('throttle:60,1');
 
-Route::post('/logout', function () {
+$authenticatePortalRequest = function (Request $request) {
+    $credentials = $request->validate([
+        'email' => ['required', 'email'],
+        'password' => ['required', 'string'],
+    ]);
+
+    $throttleKey = Str::lower($credentials['email']).'|'.$request->ip();
+
+    if (RateLimiter::tooManyAttempts($throttleKey, 10)) {
+        $seconds = RateLimiter::availableIn($throttleKey);
+
+        return back()->withErrors([
+            'email' => "Too many login attempts. Please try again in {$seconds} seconds.",
+        ])->withInput($request->only('email'));
+    }
+
+    if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        RateLimiter::clear($throttleKey);
+        $request->session()->regenerate();
+        $request->session()->forget('url.intended');
+
+        $user = Auth::user();
+
+        if ($user->status === 'SUSPENDED') {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()->withErrors([
+                'email' => 'Your account has been suspended by the platform administrator.',
+            ])->withInput($request->only('email'));
+        }
+
+        $user->recordLogin();
+
+        if ($user->role === 'ROLE_SUPER_ADMIN' || $user->isSuperAdmin()) {
+            return redirect()->route('admin.dashboard')->with('message', "Welcome back, {$user->name}!");
+        }
+
+        if ($user->isCustomer()) {
+            return redirect()->route('customer.dashboard')->with('message', "Welcome back, {$user->name}!");
+        }
+
+        if ($user->role === 'ROLE_CHEF') {
+            return redirect()->route('kitchen.board')->with('message', "Welcome back, {$user->name}!");
+        }
+
+        if (in_array($user->role, ['ROLE_FRONT_DESK', 'ROLE_FLOOR_STAFF'], true)) {
+            return redirect()->route('calendar')->with('message', "Welcome back, {$user->name}!");
+        }
+
+        return redirect()->route('dashboard')->with('message', "Welcome back, {$user->name}!");
+    }
+
+    RateLimiter::hit($throttleKey, 60);
+
+    return back()->withErrors([
+        'email' => 'These credentials do not match our registered records.',
+    ])->withInput($request->only('email'));
+};
+
+Route::post('/login', $authenticatePortalRequest)->name('login.perform')->middleware('throttle:60,1');
+Route::post('/customer/login', $authenticatePortalRequest)->name('customer.login.perform')->middleware('throttle:60,1');
+
+Route::match(['get', 'post'], '/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();

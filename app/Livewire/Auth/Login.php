@@ -50,25 +50,43 @@ class Login extends Component
 
             $user->recordLogin();
 
+            session()->forget('url.intended');
             session()->flash('message', "Welcome back, {$user->name}!");
 
             // Website Owner / Super Admin → Platform Admin Dashboard
             if ($user->role === 'ROLE_SUPER_ADMIN' || $user->isSuperAdmin()) {
-                return redirect()->intended(route('admin.dashboard'));
+                return redirect()->to(route('admin.dashboard'));
             }
 
             // Customer / Guest Client → Customer Booking Dashboard
             if ($user->isCustomer()) {
-                return redirect()->intended(route('customer.dashboard'));
+                return redirect()->to(route('customer.dashboard'));
+            }
+
+            if ($user->role === 'ROLE_CHEF') {
+                return redirect()->to(route('kitchen.board'));
+            }
+
+            if (in_array($user->role, ['ROLE_FRONT_DESK', 'ROLE_FLOOR_STAFF'], true)) {
+                return redirect()->to(route('calendar'));
             }
 
             // Hall Admin / Tenant Owner / Staff → Hall Operations Dashboard
-            return redirect()->intended(route('dashboard'));
+            return redirect()->to(route('dashboard'));
         }
 
         RateLimiter::hit($throttleKey, 60);
 
         $this->addError('email', 'These credentials do not match our registered records.');
+    }
+
+    public function quickLogin(string $demoEmail)
+    {
+        $this->email = $demoEmail;
+        $this->password = 'password';
+        $this->remember = true;
+
+        return $this->login();
     }
 
     public function render()

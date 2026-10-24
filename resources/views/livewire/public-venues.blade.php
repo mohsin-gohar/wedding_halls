@@ -107,6 +107,16 @@
                             @if(!empty($hall->tagline))
                                 <p class="text-xs text-[#8F7239] dark:text-[#C6A15B] font-medium font-sans">{{ $hall->tagline }}</p>
                             @endif
+                            @php
+                                $rCount = \App\Models\Review::countForHall($hall->id);
+                                $rAvg = \App\Models\Review::averageForHall($hall->id);
+                            @endphp
+                            @if($rCount > 0)
+                                <div class="flex items-center gap-1 text-xs text-[#C6A15B]">
+                                    @for($i = 1; $i <= 5; $i++){{ $i <= round($rAvg) ? '★' : '☆' }}@endfor
+                                    <span class="text-stone-500 dark:text-stone-400 ml-1">{{ number_format($rAvg, 1) }} ({{ $rCount }})</span>
+                                </div>
+                            @endif
                         </div>
 
                         <p class="text-xs sm:text-[13px] text-stone-600 dark:text-stone-300 leading-relaxed line-clamp-2">

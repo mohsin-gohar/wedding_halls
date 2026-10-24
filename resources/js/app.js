@@ -1,13 +1,9 @@
 import './bootstrap';
-import Alpine from 'alpinejs';
-window.Alpine = Alpine;
-Alpine.start();
 
 /**
- * Wedding_Hall Luxury Interactive Engine
- * 1. IntersectionObserver for Butter-Smooth Scroll Reveal Animations
- * 2. GPU-Accelerated 60fps Parallax Background Scrolling Engine
- * 3. Top Scroll Reading Progress Bar
+ * EventHub Luxury Interactive Engine
+ * Note: Livewire 4 bundles and initializes Alpine.js automatically via @livewireScripts.
+ * Do NOT import or start a second Alpine instance here, as it breaks wire:submit / wire:click.
  */
 
 document.addEventListener('DOMContentLoaded', () => {

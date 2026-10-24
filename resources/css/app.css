@@ -866,25 +866,19 @@ p, .prose {
 .reveal-slide-left,
 .reveal-slide-right,
 .reveal-zoom {
-    opacity: 0;
+    opacity: 1;
+    transform: none;
     transition:
-        opacity 0.8s var(--ease),
-        transform 0.8s var(--ease);
-    will-change: opacity, transform;
+        opacity 0.5s var(--ease),
+        transform 0.5s var(--ease);
 }
 
-.reveal-on-scroll { transform: translateY(34px); }
-.reveal-slide-left { transform: translateX(-46px); }
-.reveal-slide-right { transform: translateX(46px); }
-.reveal-zoom { transform: scale(0.92); }
-
-/* Staggered child reveals (used inside grids for a cascading entrance) */
 .reveal-on-scroll.is-revealed,
 .reveal-slide-left.is-revealed,
 .reveal-slide-right.is-revealed,
 .reveal-zoom.is-revealed {
     opacity: 1;
-    transform: translate(0, 0) scale(1);
+    transform: none;
 }
 
 /* Accessible: honour reduced-motion preference by skipping entrance motion */

@@ -34,15 +34,30 @@
             </div>
         @endif
 
+        @auth
+            <div class="p-3.5 rounded-xl bg-[#C6A15B]/10 border border-[#C6A15B]/35 text-xs flex items-center justify-between gap-3">
+                <div class="text-stone-700 dark:text-stone-200">
+                    Signed in as <strong class="text-[#8F7239] dark:text-[#C6A15B]">{{ auth()->user()->name }}</strong>
+                </div>
+                <a href="{{ auth()->user()->isSuperAdmin() ? route('admin.dashboard') : (auth()->user()->isCustomer() ? route('customer.dashboard') : route('dashboard')) }}"
+                   class="px-3 py-1.5 rounded-lg bg-[#C6A15B] text-[#171513] font-bold uppercase tracking-wider text-[10px] shrink-0">
+                    Open Portal &rarr;
+                </a>
+            </div>
+        @endauth
+
         <!-- Login Form -->
-        <form wire:submit="login" class="space-y-4">
+        <form method="POST" action="{{ route('login.perform') }}" class="space-y-4">
+            @csrf
             <!-- Email -->
             <div>
                 <label for="email" class="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5 font-sans">
                     Email Address
                 </label>
                 <input id="email" 
+                       name="email"
                        type="email" 
+                       value="{{ old('email', $email) }}"
                        wire:model="email" 
                        required 
                        autofocus
@@ -62,6 +77,7 @@
                     </label>
                 </div>
                 <input id="password" 
+                       name="password"
                        type="password" 
                        wire:model="password" 
                        required 
@@ -76,7 +92,7 @@
             <!-- Remember Me & Security -->
             <div class="flex items-center justify-between text-xs pt-1">
                 <label class="flex items-center gap-2 cursor-pointer text-stone-600 dark:text-stone-400 select-none">
-                    <input type="checkbox" wire:model="remember" class="accent-[#C6A15B] rounded">
+                    <input type="checkbox" name="remember" value="1" wire:model="remember" class="accent-[#C6A15B] rounded">
                     <span>Keep me signed in</span>
                 </label>
                 <span class="inline-flex items-center gap-1 text-stone-400 dark:text-stone-500 text-[11px] font-sans">
@@ -88,19 +104,73 @@
             <!-- Submit Button -->
             <div class="pt-2">
                 <button type="submit" 
-                        wire:loading.attr="disabled"
                         class="btn-gold !w-full !h-12 text-xs font-bold uppercase tracking-wider font-sans rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
-                    <span wire:loading.remove>Sign In &rarr;</span>
-                    <span wire:loading class="inline-flex items-center gap-2">
-                        <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                        </svg>
-                        Authenticating...
-                    </span>
+                    <span>Sign In &rarr;</span>
                 </button>
             </div>
         </form>
+
+        <!-- 1-Click Instant Portal Sign-In (Executive Demo Access) -->
+        <div class="border-t border-[#E7E5E4] dark:border-white/10 pt-5 space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B] font-sans">
+                    Instant 1-Click Portal Access
+                </span>
+                <span class="text-[10px] text-stone-400 dark:text-stone-500 font-sans">
+                    Password: <code class="text-stone-600 dark:text-stone-300">password</code>
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <!-- Super Admin -->
+                <form method="POST" action="{{ route('login.perform') }}">
+                    @csrf
+                    <input type="hidden" name="email" value="admin@venuecloud.pk">
+                    <input type="hidden" name="password" value="password">
+                    <input type="hidden" name="remember" value="1">
+                    <button type="submit" class="w-full text-left px-3 py-2.5 rounded-xl border border-[#C6A15B]/35 hover:border-[#C6A15B] bg-[#C6A15B]/10 hover:bg-[#C6A15B]/20 transition-all group">
+                        <span class="block text-[11px] font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#F2DE9A] group-hover:text-[#C6A15B]">Super Admin &rarr;</span>
+                        <span class="block text-[10px] text-stone-500 dark:text-stone-400 truncate">admin@venuecloud.pk</span>
+                    </button>
+                </form>
+
+                <!-- Hall Owner -->
+                <form method="POST" action="{{ route('login.perform') }}">
+                    @csrf
+                    <input type="hidden" name="email" value="owner@venuecloud.pk">
+                    <input type="hidden" name="password" value="password">
+                    <input type="hidden" name="remember" value="1">
+                    <button type="submit" class="w-full text-left px-3 py-2.5 rounded-xl border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B]/60 bg-stone-50 dark:bg-white/[0.03] hover:bg-[#C6A15B]/10 transition-all group">
+                        <span class="block text-[11px] font-bold uppercase tracking-wider text-[#171513] dark:text-white group-hover:text-[#C6A15B]">Hall Owner ERP &rarr;</span>
+                        <span class="block text-[10px] text-stone-500 dark:text-stone-400 truncate">owner@venuecloud.pk</span>
+                    </button>
+                </form>
+
+                <!-- Customer Portal -->
+                <form method="POST" action="{{ route('login.perform') }}">
+                    @csrf
+                    <input type="hidden" name="email" value="customer@example.com">
+                    <input type="hidden" name="password" value="password">
+                    <input type="hidden" name="remember" value="1">
+                    <button type="submit" class="w-full text-left px-3 py-2.5 rounded-xl border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B]/60 bg-stone-50 dark:bg-white/[0.03] hover:bg-[#C6A15B]/10 transition-all group">
+                        <span class="block text-[11px] font-bold uppercase tracking-wider text-[#171513] dark:text-white group-hover:text-[#C6A15B]">Customer Portal &rarr;</span>
+                        <span class="block text-[10px] text-stone-500 dark:text-stone-400 truncate">customer@example.com</span>
+                    </button>
+                </form>
+
+                <!-- Front Desk / Kitchen -->
+                <form method="POST" action="{{ route('login.perform') }}">
+                    @csrf
+                    <input type="hidden" name="email" value="reception@venuecloud.pk">
+                    <input type="hidden" name="password" value="password">
+                    <input type="hidden" name="remember" value="1">
+                    <button type="submit" class="w-full text-left px-3 py-2.5 rounded-xl border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B]/60 bg-stone-50 dark:bg-white/[0.03] hover:bg-[#C6A15B]/10 transition-all group">
+                        <span class="block text-[11px] font-bold uppercase tracking-wider text-[#171513] dark:text-white group-hover:text-[#C6A15B]">Front Desk / Shift &rarr;</span>
+                        <span class="block text-[10px] text-stone-500 dark:text-stone-400 truncate">reception@venuecloud.pk</span>
+                    </button>
+                </form>
+            </div>
+        </div>
 
         <!-- Alternative Options / Registration Links -->
         <div class="border-t border-[#E7E5E4] dark:border-white/10 pt-5 space-y-3">
