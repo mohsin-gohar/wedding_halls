@@ -118,10 +118,10 @@ class DatabaseSeeder extends Seeder
         $adminUser = User::create([
             'tenant_id' => $tenant->id,
             'name' => 'Sheikh Ahsan (Director)',
-            'email' => 'admin@venuecloud.pk',
-            'phone' => '+92 300 8472910',
+            'email' => 'admin@eventhub.com',
+            'phone' => '+92 42 35789000',
             'role' => 'ROLE_SUPER_ADMIN',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('admin1235'),
         ]);
         $adminUser->assignRole('ROLE_SUPER_ADMIN');
 
@@ -244,6 +244,10 @@ class DatabaseSeeder extends Seeder
                 'https://www.youtube.com/embed/7wtfhZwyrcc',
             ],
             'services' => $defaultServices,
+            'website_settings' => [
+                'whatsapp_number' => '+92 300 7654321',
+                'phone' => '+92 300 7654321',
+            ],
             'has_air_conditioning' => true,
             'has_generator_backup' => true,
             'has_bridal_room' => true,
@@ -270,6 +274,10 @@ class DatabaseSeeder extends Seeder
                 'https://www.youtube.com/embed/7wtfhZwyrcc',
             ],
             'services' => $defaultServices,
+            'website_settings' => [
+                'whatsapp_number' => '+92 301 5556677',
+                'phone' => '+92 301 5556677',
+            ],
             'has_air_conditioning' => false,
             'has_generator_backup' => true,
             'has_bridal_room' => true,
@@ -296,6 +304,10 @@ class DatabaseSeeder extends Seeder
                 'https://www.youtube.com/embed/7wtfhZwyrcc',
             ],
             'services' => $defaultServices,
+            'website_settings' => [
+                'whatsapp_number' => '+92 302 7778899',
+                'phone' => '+92 302 7778899',
+            ],
             'has_air_conditioning' => true,
             'has_generator_backup' => true,
             'has_bridal_room' => true,

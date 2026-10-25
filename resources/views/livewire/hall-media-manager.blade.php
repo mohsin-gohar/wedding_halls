@@ -600,10 +600,21 @@
                     <input type="url" wire:model="newImageUrl" placeholder="Paste image URL (Unsplash, Cloudinary, Imgur)..."
                            class="flex-1 bg-[#171513] border border-white/15 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
                     <button wire:click="addImage" class="px-3 py-2 bg-[#C6A15B] text-[#171513] text-xs font-bold font-mono uppercase tracking-wider">
-                        + Add
+                        + Add URL
                     </button>
                 </div>
                 @error('newImageUrl') <span class="text-rose-400 text-[10px] font-mono block">{{ $message }}</span> @enderror
+
+                <!-- OR upload from device -->
+                <div class="flex items-center gap-2 pt-1">
+                    <input type="file" wire:model="imageUploads" multiple accept="image/*"
+                           class="flex-1 text-xs text-white/70 file:mr-2 file:px-3 file:py-1.5 file:bg-white/10 file:border-0 file:text-white file:text-[10px] file:font-mono file:uppercase">
+                    <button wire:click="uploadImages" wire:loading.attr="disabled" class="px-3 py-2 bg-white/10 text-white text-xs font-bold font-mono uppercase tracking-wider hover:bg-white/20">
+                        Upload Photos
+                    </button>
+                </div>
+                <div wire:loading wire:target="imageUploads" class="text-[10px] font-mono text-[#C6A15B]">Uploading preview...</div>
+                @error('imageUploads.*') <span class="text-rose-400 text-[10px] font-mono block">{{ $message }}</span> @enderror
 
                 <!-- Images Grid -->
                 <div class="grid grid-cols-2 gap-3 pt-2">
@@ -642,18 +653,33 @@
                 </div>
 
                 <div class="flex gap-2">
-                    <input type="url" wire:model="newVideoUrl" placeholder="Paste YouTube link (e.g. https://youtube.com/watch?v=...)"
+                    <input type="url" wire:model="newVideoUrl" placeholder="Paste YouTube / Vimeo / Dailymotion / direct video URL"
                            class="flex-1 bg-[#171513] border border-white/15 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
                     <button wire:click="addVideo" class="px-3 py-2 bg-[#C6A15B] text-[#171513] text-xs font-bold font-mono uppercase tracking-wider">
-                        + Add Video
+                        + Add URL
                     </button>
                 </div>
                 @error('newVideoUrl') <span class="text-rose-400 text-[10px] font-mono block">{{ $message }}</span> @enderror
 
+                <!-- OR upload from device -->
+                <div class="flex items-center gap-2 pt-1">
+                    <input type="file" wire:model="videoUploads" multiple accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                           class="flex-1 text-xs text-white/70 file:mr-2 file:px-3 file:py-1.5 file:bg-white/10 file:border-0 file:text-white file:text-[10px] file:font-mono file:uppercase">
+                    <button wire:click="uploadVideos" wire:loading.attr="disabled" class="px-3 py-2 bg-white/10 text-white text-xs font-bold font-mono uppercase tracking-wider hover:bg-white/20">
+                        Upload Videos
+                    </button>
+                </div>
+                <div wire:loading wire:target="videoUploads" class="text-[10px] font-mono text-[#C6A15B]">Uploading preview...</div>
+                @error('videoUploads.*') <span class="text-rose-400 text-[10px] font-mono block">{{ $message }}</span> @enderror
+
                 @foreach($videos as $vIdx => $vid)
                     <div class="space-y-2 pt-2">
                         <div class="aspect-video bg-black border border-white/10 overflow-hidden">
-                            <iframe src="{{ $vid }}" class="w-full h-full" allowfullscreen></iframe>
+                            @if(\App\Support\Media::isDirectVideo($vid))
+                                <video src="{{ $vid }}" controls class="w-full h-full"></video>
+                            @else
+                                <iframe src="{{ \App\Support\Media::videoEmbedUrl($vid) }}" class="w-full h-full" allowfullscreen></iframe>
+                            @endif
                         </div>
                         <button type="button" wire:click="removeVideo({{ $vIdx }})"
                                 class="text-rose-400 hover:text-rose-300 text-xs font-mono uppercase underline">

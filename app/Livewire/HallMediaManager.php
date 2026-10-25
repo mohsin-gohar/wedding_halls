@@ -4,13 +4,18 @@ namespace App\Livewire;
 
 use App\Models\Hall;
 use App\Models\Venue;
+use App\Support\Media;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class HallMediaManager extends Component
 {
+    use WithFileUploads;
+
     public ?Hall $hall = null;
 
     public string $selectedHallId = '';
@@ -77,6 +82,11 @@ class HallMediaManager extends Component
     public array $images = [];
 
     public array $videos = [];
+
+    // Local file uploads (mobile/laptop)
+    public $imageUploads = [];
+
+    public $videoUploads = [];
 
     // Website Builder & Section Visibility Customization
     public array $website_settings = [
@@ -241,7 +251,7 @@ class HallMediaManager extends Component
             $this->venue_name = $venue->name ?? '';
             $this->city = $venue->city ?? 'Lahore';
             $this->address = $venue->address ?? '';
-            $this->phone = $venue->phone ?? '';
+            $this->phone = $hall->getWhatsappNumber() ?? $venue->phone ?? '';
             $this->latitude = (string) ($venue->latitude ?? '');
             $this->longitude = (string) ($venue->longitude ?? '');
             $this->google_maps_url = $venue->google_maps_url ?? '';
@@ -249,7 +259,7 @@ class HallMediaManager extends Component
             $this->venue_name = Auth::user()->tenant->name ?? 'Venue Complex';
             $this->city = Auth::user()->tenant->city ?? 'Lahore';
             $this->address = Auth::user()->tenant->address ?? '';
-            $this->phone = Auth::user()->tenant->phone ?? '';
+            $this->phone = $hall->getWhatsappNumber() ?? Auth::user()->tenant->phone ?? '';
             $this->latitude = '';
             $this->longitude = '';
             $this->google_maps_url = '';
@@ -378,17 +388,8 @@ class HallMediaManager extends Component
 
         $url = trim($this->newVideoUrl);
 
-        if (str_contains($url, 'youtube.com/watch?v=')) {
-            preg_match('/v=([a-zA-Z0-9_-]+)/', $url, $matches);
-            if (! empty($matches[1])) {
-                $url = 'https://www.youtube.com/embed/'.$matches[1];
-            }
-        } elseif (str_contains($url, 'youtu.be/')) {
-            $id = substr(parse_url($url, PHP_URL_PATH), 1);
-            if (! empty($id)) {
-                $url = 'https://www.youtube.com/embed/'.$id;
-            }
-        }
+        // Support YouTube, Vimeo, Dailymotion, direct files
+        $url = Media::videoEmbedUrl($url);
 
         $this->videos[] = $url;
         $this->newVideoUrl = '';
@@ -406,6 +407,57 @@ class HallMediaManager extends Component
         }
     }
 
+    public function uploadImages()
+    {
+        $this->validate([
+            'imageUploads.*' => 'image|max:5120', // 5MB per image
+        ]);
+
+        if (empty($this->imageUploads)) {
+            session()->flash('error', 'Please select at least one image file.');
+
+            return;
+        }
+
+        $tenantId = Auth::user()->tenant_id ?? 'platform';
+        $hallId = $this->hall?->id ?? 'new';
+        foreach ($this->imageUploads as $file) {
+            $path = $file->store('halls/'.$tenantId.'/'.$hallId.'/images', 'public');
+            $url = Storage::disk('public')->url($path);
+            $this->images[] = $url;
+            if (empty($this->cover_image)) {
+                $this->cover_image = $url;
+            }
+        }
+        $this->imageUploads = [];
+        $this->save();
+        session()->flash('message', 'Photos uploaded successfully!');
+    }
+
+    public function uploadVideos()
+    {
+        $this->validate([
+            'videoUploads.*' => 'mimetypes:video/mp4,video/webm,video/ogg,video/quicktime|max:51200', // 50MB
+        ]);
+
+        if (empty($this->videoUploads)) {
+            session()->flash('error', 'Please select at least one video file.');
+
+            return;
+        }
+
+        $tenantId = Auth::user()->tenant_id ?? 'platform';
+        $hallId = $this->hall?->id ?? 'new';
+        foreach ($this->videoUploads as $file) {
+            $path = $file->store('halls/'.$tenantId.'/'.$hallId.'/videos', 'public');
+            $url = Storage::disk('public')->url($path);
+            $this->videos[] = $url;
+        }
+        $this->videoUploads = [];
+        $this->save();
+        session()->flash('message', 'Videos uploaded successfully!');
+    }
+
     public function save()
     {
         $this->validate();
@@ -416,6 +468,12 @@ class HallMediaManager extends Component
             // Strictly check ownership unless super admin
             if (! $user->isSuperAdmin() && $this->hall->tenant_id !== $user->tenant_id) {
                 abort(403, 'Unauthorized.');
+            }
+
+            $settings = is_array($this->website_settings) ? $this->website_settings : [];
+            if (! empty($this->phone)) {
+                $settings['whatsapp_number'] = $this->phone;
+                $settings['phone'] = $this->phone;
             }
 
             $this->hall->update([
@@ -433,7 +491,7 @@ class HallMediaManager extends Component
                 'is_active' => $this->is_active,
                 'cover_image' => $this->cover_image,
                 'services' => array_values($this->services),
-                'website_settings' => $this->website_settings,
+                'website_settings' => $settings,
                 'images' => array_values($this->images),
                 'videos' => array_values($this->videos),
             ]);

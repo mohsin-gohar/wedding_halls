@@ -134,16 +134,17 @@
                     </button>
 
                     @php
-                        $rawPhone = $hall->venue->phone ?? $hall->tenant->phone ?? '923008472910';
-                        $cleanPhone = preg_replace('/[^0-9]/', '', $rawPhone);
-                        if (empty($cleanPhone)) { $cleanPhone = '923008472910'; }
+                        $hallWhatsappUrl = $hall->getWhatsappUrl("Hello {$hall->name}, I am interested in reserving an event date at your venue. Please share availability and packages.");
+                        $hallPhone = $hall->getWhatsappNumber();
                     @endphp
-                    <a href="https://wa.me/{{ $cleanPhone }}?text=Hello%20{{ urlencode($hall->name) }},%20I%20am%20interested%20in%20reserving%20an%20event%20date%20at%20your%20venue.%20Please%20share%20details." 
-                       target="_blank"
-                       class="btn-outline-gold !h-11 !px-5 text-xs font-semibold text-white border-white/20 flex items-center gap-2 rounded-lg">
-                        <span class="w-2 h-2 rounded-full bg-[#C6A15B]"></span>
-                        <span>WhatsApp Concierge</span>
-                    </a>
+                    @if($hallWhatsappUrl)
+                        <a href="{{ $hallWhatsappUrl }}" 
+                           target="_blank"
+                           class="btn-outline-gold !h-11 !px-5 text-xs font-semibold text-white border-white/20 flex items-center gap-2 rounded-lg">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span>WhatsApp Concierge</span>
+                        </a>
+                    @endif
 
                     <a href="#shift-matrix" class="px-4 py-2.5 rounded-lg border border-white/20 text-white text-xs font-sans tracking-wide hover:bg-white/10 transition">
                         View 14-Day Calendar &darr;
@@ -251,7 +252,7 @@
             <!-- Active Spotlight Image (7 cols) -->
             <div class="lg:col-span-7 space-y-4">
                 <div class="aspect-[16/10] overflow-hidden relative border border-[#E7E5E4] dark:border-white/10 bg-stone-950 shadow-lg">
-                    <img src="{{ $activePhoto }}" alt="{{ $hall->name }}" class="w-full h-full object-cover transition-all duration-500">
+                    <img src="{{ $activePhoto }}" alt="{{ $hall->name }}" class="w-full h-full object-cover transition-all duration-500" onerror="this.src='https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop'">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
                     <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white text-xs font-mono">
                         <span>{{ $hall->name }} Spotlight Gallery</span>
@@ -272,7 +273,7 @@
                     @foreach($displayImages as $photo)
                         <button type="button" wire:click="setPhoto('{{ $photo }}')" 
                                 class="aspect-[4/3] overflow-hidden border transition cursor-pointer {{ $activePhoto === $photo ? 'border-[#171513] dark:border-white ring-2 ring-[#C6A15B]' : 'border-[#E7E5E4] dark:border-white/10 opacity-75 hover:opacity-100' }}">
-                            <img src="{{ $photo }}" alt="Thumbnail" class="w-full h-full object-cover">
+                            <img src="{{ $photo }}" alt="Thumbnail" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=400&auto=format&fit=crop'">
                         </button>
                     @endforeach
                 </div>
@@ -289,8 +290,16 @@
                     </div>
 
                     @if(!empty($videos) && count($videos) > 0)
-                        <div class="aspect-video border border-[#E7E5E4] dark:border-white/10 overflow-hidden bg-black">
-                            <iframe src="{{ $videos[0] }}" class="w-full h-full" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                        <div class="space-y-3">
+                            @foreach($videos as $vid)
+                                <div class="aspect-video border border-[#E7E5E4] dark:border-white/10 overflow-hidden bg-black">
+                                    @if(\App\Support\Media::isDirectVideo($vid))
+                                        <video src="{{ $vid }}" controls class="w-full h-full" preload="metadata"></video>
+                                    @else
+                                        <iframe src="{{ \App\Support\Media::videoEmbedUrl($vid) }}" class="w-full h-full" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                                    @endif
+                                </div>
+                            @endforeach
                         </div>
                     @else
                         <div class="aspect-video bg-stone-900 border border-[#E7E5E4] dark:border-white/10 flex flex-col items-center justify-center p-6 text-center text-stone-400 space-y-2">
@@ -1054,7 +1063,7 @@
                     <div class="flex items-center gap-4 text-xs font-mono text-stone-400 pt-2">
                         <span>📍 {{ $hall->venue->address ?? 'Main Commercial Boulevard, Lahore' }}</span>
                         <span>•</span>
-                        <span>📞 {{ $hall->venue->phone ?? $hall->tenant->phone ?? '+92 300 8472910' }}</span>
+                        @if($hallPhone = $hall->getWhatsappNumber())<span>📞 {{ $hallPhone }}</span>@endif
                     </div>
                 </div>
 
@@ -1076,16 +1085,20 @@
                               <span>Instant Shift Reservation &rarr;</span>
                           </button>
 
-                          <a href="https://wa.me/{{ $cleanPhone }}?text=Hello%20{{ urlencode($hall->name) }},%20I%20would%20like%20to%20reserve%20an%20event%20shift." 
+                          @if($hallWhatsappUrl = $hall->getWhatsappUrl("Hello {$hall->name}, I would like to reserve an event shift at your venue."))
+                          <a href="{{ $hallWhatsappUrl }}" 
                              target="_blank"
                              class="btn-outline-gold !w-full !h-11 text-xs font-semibold flex items-center justify-center gap-2 rounded-xl transition-all duration-200">
-                              <span>Chat on WhatsApp</span>
+                              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                              <span>Chat with {{ $hall->name }} on WhatsApp</span>
                           </a>
-
-                        <a href="tel:{{ $rawPhone }}" 
+                          @endif
+                        @if($hallPhone = $hall->getWhatsappNumber())
+                        <a href="tel:{{ $hallPhone }}" 
                            class="w-full h-10 bg-transparent border border-white/10 text-stone-300 text-xs font-sans rounded-xl flex items-center justify-center gap-2 hover:bg-white/5 transition block">
-                            Direct Hotline: {{ $rawPhone }}
+                            Direct Hotline: {{ $hallPhone }}
                         </a>
+                        @endif
                     </div>
                 </div>
 

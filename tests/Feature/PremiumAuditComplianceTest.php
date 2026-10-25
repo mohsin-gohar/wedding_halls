@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Auth\Login;
+use App\Livewire\CustomerLogin;
 use App\Models\Hall;
 use App\Models\Tenant;
 use App\Models\Venue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class PremiumAuditComplianceTest extends TestCase
@@ -94,8 +97,8 @@ class PremiumAuditComplianceTest extends TestCase
         $response->assertSee('name="twitter:card"', false);
         $response->assertSee('Skip to main content', false);
         $response->assertSee('<main id="main-content"', false);
-        $response->assertSee('role="dialog"', false);
-        $response->assertSee('aria-modal="true"', false);
+        $response->assertSee('role="region"', false);
+        $response->assertSee('aria-label="Cookie consent notice"', false);
         $response->assertDontSee('i.pinimg.com', false);
     }
 
@@ -155,5 +158,49 @@ class PremiumAuditComplianceTest extends TestCase
         $this->assertTrue(Schema::hasIndex('halls', ['slug']));
         $this->assertTrue(Schema::hasIndex('tenants', ['verification_status']));
         $this->assertTrue(Schema::hasIndex('bookings', ['event_date']));
+    }
+
+    public function test_native_http_post_login_authenticates_and_redirects_all_portal_roles(): void
+    {
+        $this->seed();
+
+        // 1. Super Admin via POST /login
+        $response = $this->post(route('login.perform'), [
+            'email' => 'admin@eventhub.com',
+            'password' => 'admin1235',
+        ]);
+        $response->assertRedirect(route('admin.dashboard'));
+        $this->assertAuthenticated();
+        $this->get('/admin')->assertStatus(200);
+
+        // 2. Hall Owner via POST /login (can switch directly even while logged in)
+        $response = $this->post(route('login.perform'), [
+            'email' => 'owner@venuecloud.pk',
+            'password' => 'password',
+        ]);
+        $response->assertRedirect(route('dashboard'));
+        $this->get('/dashboard')->assertStatus(200);
+
+        // 3. Customer via POST /customer/login
+        $response = $this->post(route('customer.login.perform'), [
+            'email' => 'customer@example.com',
+            'password' => 'password',
+        ]);
+        $response->assertRedirect(route('customer.dashboard'));
+        $this->get('/customer/dashboard')->assertStatus(200);
+
+        // 4. Customer via Livewire Login component
+        Livewire::test(Login::class)
+            ->set('email', 'customer@example.com')
+            ->set('password', 'password')
+            ->call('login')
+            ->assertRedirect(route('customer.dashboard'));
+
+        // 5. Customer via Livewire CustomerLogin component
+        Livewire::test(CustomerLogin::class)
+            ->set('email', 'customer@example.com')
+            ->set('password', 'password')
+            ->call('login')
+            ->assertRedirect(route('customer.dashboard'));
     }
 }
