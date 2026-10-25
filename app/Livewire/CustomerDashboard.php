@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.public')]
+#[Layout('components.layouts.public', ['title' => 'Customer Dashboard — EventHub Pakistan'])]
 class CustomerDashboard extends Component
 {
     public ?string $selectedBookingId = null;
@@ -80,11 +80,15 @@ class CustomerDashboard extends Component
 
         $totalSpent = $bookings->sum('advance_paid');
         $totalDue = $bookings->sum('balance_due');
+        $totalGuests = $bookings->sum('guest_count');
+        $upcomingBooking = $bookings->where('event_date', '>=', now()->toDateString())->sortBy('event_date')->first();
 
         return view('livewire.customer-dashboard', [
             'bookings' => $bookings,
             'totalSpent' => $totalSpent,
             'totalDue' => $totalDue,
+            'totalGuests' => $totalGuests,
+            'upcomingBooking' => $upcomingBooking,
         ]);
     }
 }

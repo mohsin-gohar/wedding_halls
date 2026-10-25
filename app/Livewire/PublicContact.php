@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.public')]
+#[Layout('components.layouts.public', ['title' => 'Contact Us — EventHub Pakistan'])]
 class PublicContact extends Component
 {
     public string $name = '';

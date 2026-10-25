@@ -187,6 +187,7 @@ class DatabaseSeeder extends Seeder
                 'is_complimentary' => true,
                 'category' => 'VIP Hospitality',
                 'description' => 'Air-conditioned private suite with attached restroom, illuminated Hollywood makeup vanity, and dedicated dressing concierge.',
+                'image' => 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=800&auto=format&fit=crop',
                 'icon' => 'sparkles',
             ],
             [
@@ -195,6 +196,7 @@ class DatabaseSeeder extends Seeder
                 'is_complimentary' => true,
                 'category' => 'Infrastructure',
                 'description' => 'Uninterrupted power system with automatic synchronization and fuel backup covering 100% chiller AC load.',
+                'image' => 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?q=80&w=800&auto=format&fit=crop',
                 'icon' => 'bolt',
             ],
             [
@@ -203,6 +205,7 @@ class DatabaseSeeder extends Seeder
                 'is_complimentary' => false,
                 'category' => 'Decor & Ambience',
                 'description' => 'Fresh imported gladiolus, red roses, golden filigree stage sofa, ambient pin spot lighting, and floral aisle runners.',
+                'image' => 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop',
                 'icon' => 'star',
             ],
             [
@@ -211,6 +214,7 @@ class DatabaseSeeder extends Seeder
                 'is_complimentary' => false,
                 'category' => 'Guest Logistics',
                 'description' => 'Dedicated 8-member uniformed valet team with electronic key logging and paved parking for 250+ cars.',
+                'image' => 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=800&auto=format&fit=crop',
                 'icon' => 'truck',
             ],
             [
@@ -219,6 +223,7 @@ class DatabaseSeeder extends Seeder
                 'is_complimentary' => false,
                 'category' => 'Multimedia & Video',
                 'description' => 'Dual 16x10 ft P3 ultra-HD stage display screens with live dual-camera vision mixer for program broadcast.',
+                'image' => 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?q=80&w=800&auto=format&fit=crop',
                 'icon' => 'camera',
             ],
         ];

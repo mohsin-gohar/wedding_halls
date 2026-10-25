@@ -27,10 +27,14 @@
     <link rel="icon" type="image/png" href="{{ asset('images/eventhub-logo.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/eventhub-logo.png') }}">
 
-    <!-- Google Fonts: Cormorant Garamond, Playfair Display, Cinzel, Plus Jakarta Sans -->
+    <!-- Google Fonts: Preconnect & Asynchronous Loading (High Performance & Zero Render-Blocking) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+    </noscript>
 
     <!-- Styles & Livewire -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -233,7 +237,7 @@
                     </p>
                     <div class="pt-2 text-xs text-stone-400 space-y-1">
                         <p><strong class="text-white">Headquarters:</strong> Plot 42, Main Boulevard, Gulberg III, Lahore, Pakistan</p>
-                        <p><strong class="text-white">Direct Phone:</strong> +92 42 35789000 • +92 300 8472910</p>
+                        <p><strong class="text-white">Direct Phone:</strong> +92 42 35789000 (UAN Helpline)</p>
                         <p><strong class="text-white">Inquiries:</strong> inquiries@EventHub.pk</p>
                     </div>
                 </div>
@@ -289,15 +293,22 @@
         </div>
     </footer>
 
-    <!-- Floating WhatsApp Concierge Button -->
-    <a href="https://wa.me/923008472910?text={{ urlencode('Assalamu Alaikum! I would like to inquire about venue availability on EventHub.') }}"
+    <!-- Floating WhatsApp Concierge Button (Dynamic Per-Hall or Platform) -->
+    @php
+        $floatingHall = isset($hall) && $hall instanceof \App\Models\Hall ? $hall : null;
+        $floatingWaUrl = $floatingHall ? $floatingHall->getWhatsappUrl() : "https://wa.me/924235789000?text=" . urlencode("Assalamu Alaikum! I would like to inquire about wedding venue availability on EventHub.");
+        $floatingWaLabel = $floatingHall ? "WhatsApp " . $floatingHall->name : "WhatsApp Concierge";
+    @endphp
+    @if($floatingWaUrl)
+    <a href="{{ $floatingWaUrl }}"
        target="_blank"
        rel="noopener noreferrer"
-       aria-label="Chat with EventHub Concierge on WhatsApp"
+       aria-label="{{ $floatingWaLabel }}"
        class="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-[#171513] border border-[#C6A15B]/50 hover:border-[#C6A15B] text-[#F8F5EF] shadow-[0_12px_30px_rgba(0,0,0,0.5)] hover:-translate-y-0.5 transition-all duration-200">
-        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-        <span class="text-xs font-semibold tracking-wide font-sans">WhatsApp Concierge</span>
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-xs font-semibold tracking-wide font-sans">{{ $floatingWaLabel }}</span>
     </a>
+    @endif
 
     <!-- GDPR / PDPA Cookie & Privacy Consent Bar -->
     <div x-data="{ showCookieBar: !localStorage.getItem('EventHub_cookie_consent') }"
@@ -321,9 +332,6 @@
 
     <!-- Interactive Walk-in Booking Modal Component (Accessible across public site) -->
     <livewire:walk-in-booking-modal />
-
-    <!-- Universal Royal Luxury Alert & Notification Dialog -->
-    <x-luxury-alert-dialog />
 
     @livewireScripts
     <script>

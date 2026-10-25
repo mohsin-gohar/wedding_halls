@@ -2,6 +2,10 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+[x-cloak] {
+    display: none !important;
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
@@ -753,6 +757,93 @@ p, .prose {
 }
 
 /* Enterprise SaaS Data Tables */
+.table-wrapper-enterprise {
+    overflow-x: auto;
+    max-inline-size: 100%;
+    border-radius: 16px;
+    border: 1px solid var(--line-light);
+    background: #FFFFFF;
+    box-shadow: 0 4px 20px -4px rgba(23, 21, 19, 0.05);
+    container-type: inline-size;
+    position: relative;
+}
+
+.dark .table-wrapper-enterprise {
+    border-color: rgba(198, 161, 91, 0.22);
+    background: #1A1714;
+    box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.65);
+}
+
+.table-enterprise {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    text-align: left;
+}
+
+.table-enterprise thead {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 10;
+    background: #F8F5EF;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .table-enterprise thead {
+    background: #14120E;
+}
+
+.table-enterprise th {
+    padding: 14px 18px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #78716C;
+    border-bottom: 1px solid var(--line-light);
+    white-space: nowrap;
+}
+
+.dark .table-enterprise th {
+    color: #DCC796;
+    border-bottom-color: rgba(198, 161, 91, 0.2);
+}
+
+.table-enterprise td {
+    padding: 16px 18px;
+    border-bottom: 1px solid #F3EFE6;
+    color: var(--charcoal);
+    vertical-align: middle;
+    transition: background-color 0.15s ease;
+}
+
+.dark .table-enterprise td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #F8F5EF;
+}
+
+.table-enterprise tbody tr:hover td {
+    background-color: rgba(198, 161, 91, 0.04);
+}
+
+.dark .table-enterprise tbody tr:hover td {
+    background-color: rgba(198, 161, 91, 0.07);
+}
+
+.table-enterprise tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
 .table-luxury {
     width: 100%;
     border-collapse: separate;
@@ -1323,5 +1414,36 @@ html.dark :is(.public-page-content, .app-page-content, .auth-page-content) :is(i
 html.dark :is(.public-page-content, .app-page-content, .auth-page-content) select option {
   background-color: #211e1a;
   color: #f8f5ef;
+}
+
+
+/* ==========================================================================
+   ACCESSIBILITY & MOTION PREFERENCES
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+.skip-to-main {
+    position: absolute;
+    top: -100%;
+    left: 0;
+    z-index: 9999;
+    padding: 0.75rem 1.25rem;
+    background: var(--obsidian, #171513);
+    color: var(--ivory, #F8F5EF);
+    font-weight: 600;
+    border-radius: 0 0 8px 0;
+    transition: top 0.2s ease;
+}
+.skip-to-main:focus {
+    top: 0;
 }
 

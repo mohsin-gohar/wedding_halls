@@ -141,9 +141,19 @@
                                 <span class="text-[10px] uppercase font-semibold tracking-wider text-stone-500 dark:text-stone-400 block font-sans">Base Shift Rent</span>
                                 <strong class="font-cinzel text-lg sm:text-xl text-[#171513] dark:text-[#C6A15B] font-bold">PKR {{ number_format($hall->base_rent) }}</strong>
                             </div>
-                            <span class="btn-gold !h-9 !px-4 text-[11px] font-semibold uppercase rounded-lg shrink-0">
-                                Details &rarr;
-                            </span>
+                            <div class="flex items-center gap-2">
+                                @if($hallWaUrl = $hall->getWhatsappUrl())
+                                    <span onclick="event.preventDefault(); event.stopPropagation(); window.open('{{ $hallWaUrl }}', '_blank');"
+                                          title="Chat with {{ $hall->name }} on WhatsApp"
+                                          class="h-9 px-3 rounded-lg bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 text-xs font-bold font-sans flex items-center gap-1.5 transition cursor-pointer">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        <span>WhatsApp</span>
+                                    </span>
+                                @endif
+                                <span class="btn-gold !h-9 !px-4 text-[11px] font-semibold uppercase rounded-lg shrink-0">
+                                    Details &rarr;
+                                </span>
+                            </div>
                         </div>
                     </div>
                     </a>

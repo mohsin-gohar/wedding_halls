@@ -16,6 +16,10 @@ document.addEventListener('livewire:navigated', () => {
 });
 
 function initScrollEngine() {
+    // Auth pages (login, register) are compact forms and do not require heavy scroll/parallax listeners
+    if (document.querySelector('.auth-page-content')) {
+        return;
+    }
     initScrollProgress();
     initScrollReveal();
     initParallaxEngine();

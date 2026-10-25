@@ -142,8 +142,7 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-xs">
+        <div class="table-wrapper-enterprise" tabindex="0" role="region" aria-label="Operations Kharcha Tracker"><table class="table-enterprise">
                 <thead>
                     <tr class="border-b border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#171513] text-[#78716C] dark:text-[#C6A15B] uppercase font-mono tracking-wider text-[10px]">
                         <th class="py-3 px-6 font-bold">Expense Details</th>

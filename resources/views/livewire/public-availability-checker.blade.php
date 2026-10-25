@@ -73,13 +73,16 @@
                                     <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">12:00 PM – 4:00 PM</span>
                                 </div>
                                 @if($bAfternoon)
-                                    <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-[#171513]/10 dark:bg-white/10 text-[#171513] dark:text-stone-200 border border-[#C6A15B]/50 font-mono">
-                                        {{ $bAfternoon->status === 'CONFIRMED' ? 'Booked' : 'Hold' }}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-stone-100 dark:bg-white/5 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-white/10 font-mono rounded-md">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $bAfternoon->status === 'CONFIRMED' ? 'bg-stone-400' : 'bg-[#C6A15B]' }}"></span>
+                                        {{ $bAfternoon->status === 'CONFIRMED' ? 'Booked' : 'Reserved Hold' }}
                                     </span>
                                 @else
                                     <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}', event_date: '{{ $selectedDate }}', slot_type: 'AFTERNOON' })" 
-                                            class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-[#C6A15B] text-white hover:bg-[#8F7239] transition cursor-pointer font-mono">
-                                        Available &bull; Book
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
                                     </button>
                                 @endif
                             </div>
@@ -91,13 +94,16 @@
                                     <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">6:30 PM – 10:30 PM</span>
                                 </div>
                                 @if($bEvening)
-                                    <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-[#171513]/10 dark:bg-white/10 text-[#171513] dark:text-stone-200 border border-[#C6A15B]/50 font-mono">
-                                        {{ $bEvening->status === 'CONFIRMED' ? 'Booked' : 'Hold' }}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-stone-100 dark:bg-white/5 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-white/10 font-mono rounded-md">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $bEvening->status === 'CONFIRMED' ? 'bg-stone-400' : 'bg-[#C6A15B]' }}"></span>
+                                        {{ $bEvening->status === 'CONFIRMED' ? 'Booked' : 'Reserved Hold' }}
                                     </span>
                                 @else
                                     <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}', event_date: '{{ $selectedDate }}', slot_type: 'EVENING' })" 
-                                            class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-[#C6A15B] text-white hover:bg-[#8F7239] transition cursor-pointer font-mono">
-                                        Available &bull; Book
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
                                     </button>
                                 @endif
                             </div>
@@ -109,13 +115,16 @@
                                     <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">11:00 PM – 3:00 AM</span>
                                 </div>
                                 @if($bNight)
-                                    <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-[#171513]/10 dark:bg-white/10 text-[#171513] dark:text-stone-200 border border-[#C6A15B]/50 font-mono">
-                                        {{ $bNight->status === 'CONFIRMED' ? 'Booked' : 'Hold' }}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-stone-100 dark:bg-white/5 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-white/10 font-mono rounded-md">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $bNight->status === 'CONFIRMED' ? 'bg-stone-400' : 'bg-[#C6A15B]' }}"></span>
+                                        {{ $bNight->status === 'CONFIRMED' ? 'Booked' : 'Reserved Hold' }}
                                     </span>
                                 @else
                                     <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}', event_date: '{{ $selectedDate }}', slot_type: 'NIGHT' })" 
-                                            class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-[#C6A15B] text-white hover:bg-[#8F7239] transition cursor-pointer font-mono">
-                                        Available &bull; Book
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
                                     </button>
                                 @endif
                             </div>

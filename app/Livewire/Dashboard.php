@@ -16,8 +16,10 @@ use App\Models\UtilityLog;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
+#[Layout('components.layouts.app', ['title' => 'Hall Admin Dashboard — EventHub'])]
 class Dashboard extends Component
 {
     // Filter controls for Hall Owner
@@ -762,6 +764,8 @@ class Dashboard extends Component
             'operationsCashInflow' => $operationsCashInflow,
             'operationsNetBalance' => $operationsNetBalance,
             'operationsExpensePages' => $operationsExpensePages,
+            'waveData' => $this->buildWaveData($this->timeframe, $this->selectedHallId, $tenantHallIds, $tenantId),
+            'miniCalendar' => $this->buildMiniCalendar($tenantId, $tenantHallIds, $this->selectedHallId),
         ]);
     }
 
@@ -771,95 +775,352 @@ class Dashboard extends Component
         $points = [];
 
         if ($timeframe === 'WEEKLY') {
-            // 7 Days of the week (Monday to Sunday)
             $start = $now->copy()->startOfWeek();
             for ($i = 0; $i < 7; $i++) {
                 $day = $start->copy()->addDays($i);
-                $q = Booking::whereDate('event_date', $day->format('Y-m-d'))
+                $baseQ = Booking::whereDate('event_date', $day->format('Y-m-d'))
                     ->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD']);
 
                 if ($tenantId) {
-                    $q->where('tenant_id', $tenantId);
+                    $baseQ->where('tenant_id', $tenantId);
                 } else {
-                    $q->whereRaw('1 = 0');
+                    $baseQ->whereRaw('1 = 0');
                 }
 
                 if ($hallId !== 'ALL' && in_array($hallId, $allowedHallIds)) {
-                    $q->where('hall_id', $hallId);
+                    $baseQ->where('hall_id', $hallId);
                 } elseif (! empty($allowedHallIds)) {
-                    $q->whereIn('hall_id', $allowedHallIds);
+                    $baseQ->whereIn('hall_id', $allowedHallIds);
                 }
 
-                $val = ($metric === 'sales') ? (float) $q->sum('grand_total') : (int) $q->count();
+                $eveningQ = (clone $baseQ)->where('slot_type', 'EVENING');
+                $afternoonQ = (clone $baseQ)->where('slot_type', 'AFTERNOON');
+
+                $val = ($metric === 'sales') ? (float) $eveningQ->sum('grand_total') : (int) $eveningQ->count();
+                $secVal = ($metric === 'sales') ? (float) $afternoonQ->sum('grand_total') : (int) $afternoonQ->count();
+                $totalVal = ($metric === 'sales') ? (float) $baseQ->sum('grand_total') : (int) $baseQ->count();
+
                 $points[] = [
-                    'label' => $day->format('D (d)'),
+                    'label' => $day->format('D'),
+                    'fullLabel' => $day->format('D, d M'),
                     'value' => $val,
-                    'formatted' => ($metric === 'sales') ? 'PKR '.number_format($val) : $val.' Events',
+                    'secondaryValue' => $secVal,
+                    'totalValue' => $totalVal,
+                    'formatted' => ($metric === 'sales') ? 'PKR '.number_format($val) : $val.' Eve',
+                    'secondaryFormatted' => ($metric === 'sales') ? 'PKR '.number_format($secVal) : $secVal.' Aft',
                 ];
             }
         } elseif ($timeframe === 'YEARLY') {
-            // 12 Months
             for ($m = 1; $m <= 12; $m++) {
                 $mDate = Carbon::create($now->year, $m, 1);
-                $q = Booking::whereBetween('event_date', [$mDate->copy()->startOfMonth()->format('Y-m-d'), $mDate->copy()->endOfMonth()->format('Y-m-d')])
+                $baseQ = Booking::whereBetween('event_date', [$mDate->copy()->startOfMonth()->format('Y-m-d'), $mDate->copy()->endOfMonth()->format('Y-m-d')])
                     ->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD']);
 
                 if ($tenantId) {
-                    $q->where('tenant_id', $tenantId);
+                    $baseQ->where('tenant_id', $tenantId);
                 } else {
-                    $q->whereRaw('1 = 0');
+                    $baseQ->whereRaw('1 = 0');
                 }
 
                 if ($hallId !== 'ALL' && in_array($hallId, $allowedHallIds)) {
-                    $q->where('hall_id', $hallId);
+                    $baseQ->where('hall_id', $hallId);
                 } elseif (! empty($allowedHallIds)) {
-                    $q->whereIn('hall_id', $allowedHallIds);
+                    $baseQ->whereIn('hall_id', $allowedHallIds);
                 }
 
-                $val = ($metric === 'sales') ? (float) $q->sum('grand_total') : (int) $q->count();
+                $eveningQ = (clone $baseQ)->where('slot_type', 'EVENING');
+                $afternoonQ = (clone $baseQ)->where('slot_type', 'AFTERNOON');
+
+                $val = ($metric === 'sales') ? (float) $eveningQ->sum('grand_total') : (int) $eveningQ->count();
+                $secVal = ($metric === 'sales') ? (float) $afternoonQ->sum('grand_total') : (int) $afternoonQ->count();
+                $totalVal = ($metric === 'sales') ? (float) $baseQ->sum('grand_total') : (int) $baseQ->count();
+
                 $points[] = [
                     'label' => $mDate->format('M'),
+                    'fullLabel' => $mDate->format('F Y'),
                     'value' => $val,
-                    'formatted' => ($metric === 'sales') ? 'PKR '.number_format($val) : $val.' Events',
+                    'secondaryValue' => $secVal,
+                    'totalValue' => $totalVal,
+                    'formatted' => ($metric === 'sales') ? 'PKR '.number_format($val) : $val.' Eve',
+                    'secondaryFormatted' => ($metric === 'sales') ? 'PKR '.number_format($secVal) : $secVal.' Aft',
                 ];
             }
         } else {
-            // MONTHLY: 4 Weeks breakdown
             $start = $now->copy()->startOfMonth();
             for ($w = 1; $w <= 4; $w++) {
                 $wStart = $start->copy()->addDays(($w - 1) * 7);
                 $wEnd = ($w === 4) ? $now->copy()->endOfMonth() : $wStart->copy()->addDays(6);
 
-                $q = Booking::whereBetween('event_date', [$wStart->format('Y-m-d'), $wEnd->format('Y-m-d')])
+                $baseQ = Booking::whereBetween('event_date', [$wStart->format('Y-m-d'), $wEnd->format('Y-m-d')])
                     ->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD']);
 
                 if ($tenantId) {
-                    $q->where('tenant_id', $tenantId);
+                    $baseQ->where('tenant_id', $tenantId);
                 } else {
-                    $q->whereRaw('1 = 0');
+                    $baseQ->whereRaw('1 = 0');
                 }
 
                 if ($hallId !== 'ALL' && in_array($hallId, $allowedHallIds)) {
-                    $q->where('hall_id', $hallId);
+                    $baseQ->where('hall_id', $hallId);
                 } elseif (! empty($allowedHallIds)) {
-                    $q->whereIn('hall_id', $allowedHallIds);
+                    $baseQ->whereIn('hall_id', $allowedHallIds);
                 }
 
-                $val = ($metric === 'sales') ? (float) $q->sum('grand_total') : (int) $q->count();
+                $eveningQ = (clone $baseQ)->where('slot_type', 'EVENING');
+                $afternoonQ = (clone $baseQ)->where('slot_type', 'AFTERNOON');
+
+                $val = ($metric === 'sales') ? (float) $eveningQ->sum('grand_total') : (int) $eveningQ->count();
+                $secVal = ($metric === 'sales') ? (float) $afternoonQ->sum('grand_total') : (int) $afternoonQ->count();
+                $totalVal = ($metric === 'sales') ? (float) $baseQ->sum('grand_total') : (int) $baseQ->count();
+
                 $points[] = [
-                    'label' => 'Wk '.$w.' ('.$wStart->format('d M').')',
+                    'label' => 'Wk '.$w,
+                    'fullLabel' => 'Week '.$w.' ('.$wStart->format('d M').' - '.$wEnd->format('d M').')',
                     'value' => $val,
-                    'formatted' => ($metric === 'sales') ? 'PKR '.number_format($val) : $val.' Events',
+                    'secondaryValue' => $secVal,
+                    'totalValue' => $totalVal,
+                    'formatted' => ($metric === 'sales') ? 'PKR '.number_format($val) : $val.' Eve',
+                    'secondaryFormatted' => ($metric === 'sales') ? 'PKR '.number_format($secVal) : $secVal.' Aft',
                 ];
             }
         }
 
-        // Calculate max for SVG bar height scaling
-        $maxValue = max(1, ...array_column($points, 'value'));
-        foreach ($points as &$p) {
+        $allValues = [];
+        foreach ($points as $p) {
+            $allValues[] = $p['value'];
+            $allValues[] = $p['secondaryValue'];
+        }
+        $maxValue = max(1, ...$allValues);
+
+        $peakIndex = 0;
+        $highestCombined = -1;
+        foreach ($points as $idx => $p) {
+            $combined = $p['value'] + $p['secondaryValue'];
+            if ($combined > $highestCombined) {
+                $highestCombined = $combined;
+                $peakIndex = $idx;
+            }
+        }
+
+        foreach ($points as $idx => &$p) {
             $p['percentage'] = round(($p['value'] / $maxValue) * 100);
+            $p['secondaryPercentage'] = round(($p['secondaryValue'] / $maxValue) * 100);
+            $p['isPeak'] = ($idx === $peakIndex && $highestCombined > 0);
+            if ($metric === 'sales') {
+                $p['peakPill'] = 'PKR '.number_format($p['totalValue'] / 1000).'k';
+            } else {
+                $p['peakPill'] = $p['totalValue'].' Functions';
+            }
         }
 
         return $points;
+    }
+
+    private function buildWaveData(string $timeframe, string $hallId, array $allowedHallIds = [], ?string $tenantId = null): array
+    {
+        $now = Carbon::now();
+        $buckets = [];
+
+        if ($timeframe === 'WEEKLY') {
+            $start = $now->copy()->startOfWeek();
+            for ($i = 0; $i < 7; $i++) {
+                $day = $start->copy()->addDays($i);
+                $dStr = $day->format('Y-m-d');
+                $buckets[] = [
+                    'label' => $day->format('D'),
+                    'start' => $dStr,
+                    'end' => $dStr,
+                ];
+            }
+        } elseif ($timeframe === 'YEARLY') {
+            for ($m = 1; $m <= 12; $m++) {
+                $mDate = Carbon::create($now->year, $m, 1);
+                $buckets[] = [
+                    'label' => $mDate->format('M'),
+                    'start' => $mDate->copy()->startOfMonth()->format('Y-m-d'),
+                    'end' => $mDate->copy()->endOfMonth()->format('Y-m-d'),
+                ];
+            }
+        } else {
+            $start = $now->copy()->startOfMonth();
+            for ($w = 1; $w <= 4; $w++) {
+                $wStart = $start->copy()->addDays(($w - 1) * 7);
+                $wEnd = ($w === 4) ? $now->copy()->endOfMonth() : $wStart->copy()->addDays(6);
+                $buckets[] = [
+                    'label' => 'Wk '.$w,
+                    'start' => $wStart->format('Y-m-d'),
+                    'end' => $wEnd->format('Y-m-d'),
+                ];
+            }
+        }
+
+        $inflowVals = [];
+        $expenseVals = [];
+        $pointsCount = count($buckets);
+
+        foreach ($buckets as $b) {
+            $bQ = Booking::whereBetween('event_date', [$b['start'], $b['end']])
+                ->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD']);
+            if ($tenantId) {
+                $bQ->where('tenant_id', $tenantId);
+            } else {
+                $bQ->whereRaw('1 = 0');
+            }
+            if ($hallId !== 'ALL' && in_array($hallId, $allowedHallIds)) {
+                $bQ->where('hall_id', $hallId);
+            } elseif (! empty($allowedHallIds)) {
+                $bQ->whereIn('hall_id', $allowedHallIds);
+            }
+            $inf = (float) $bQ->sum('grand_total');
+
+            $eQ = Expense::whereBetween('expense_date', [$b['start'], $b['end']]);
+            if ($tenantId) {
+                $eQ->where('tenant_id', $tenantId);
+            } else {
+                $eQ->whereRaw('1 = 0');
+            }
+            if ($hallId !== 'ALL' && in_array($hallId, $allowedHallIds)) {
+                $eQ->where('hall_id', $hallId);
+            } elseif (! empty($allowedHallIds)) {
+                $eQ->whereIn('hall_id', $allowedHallIds);
+            }
+            $exp = (float) $eQ->sum('amount');
+
+            $inflowVals[] = $inf;
+            $expenseVals[] = $exp;
+        }
+
+        $maxVal = max(1, ...$inflowVals, ...$expenseVals);
+        $chartW = 600;
+        $topPad = 20;
+        $bottomBase = 120;
+        $usableH = $bottomBase - $topPad;
+        $stepX = ($pointsCount > 1) ? ($chartW - 60) / ($pointsCount - 1) : 0;
+
+        $inflowCoords = [];
+        $expenseCoords = [];
+
+        for ($i = 0; $i < $pointsCount; $i++) {
+            $x = round(30 + ($i * $stepX), 1);
+            $yInflow = round($bottomBase - (($inflowVals[$i] / $maxVal) * $usableH), 1);
+            $yExpense = round($bottomBase - (($expenseVals[$i] / $maxVal) * $usableH), 1);
+
+            $inflowCoords[] = [
+                'x' => $x,
+                'y' => $yInflow,
+                'val' => $inflowVals[$i],
+                'label' => $buckets[$i]['label'],
+                'formatted' => 'PKR '.number_format($inflowVals[$i]),
+            ];
+            $expenseCoords[] = [
+                'x' => $x,
+                'y' => $yExpense,
+                'val' => $expenseVals[$i],
+                'label' => $buckets[$i]['label'],
+                'formatted' => 'PKR '.number_format($expenseVals[$i]),
+            ];
+        }
+
+        $buildSpline = function (array $coords) use ($bottomBase) {
+            if (empty($coords)) {
+                return ['path' => '', 'area' => ''];
+            }
+            $path = "M {$coords[0]['x']} {$coords[0]['y']}";
+            for ($i = 1; $i < count($coords); $i++) {
+                $prev = $coords[$i - 1];
+                $curr = $coords[$i];
+                $cpx1 = round($prev['x'] + ($curr['x'] - $prev['x']) / 2, 1);
+                $cpy1 = $prev['y'];
+                $cpx2 = round($prev['x'] + ($curr['x'] - $prev['x']) / 2, 1);
+                $cpy2 = $curr['y'];
+                $path .= " C {$cpx1} {$cpy1}, {$cpx2} {$cpy2}, {$curr['x']} {$curr['y']}";
+            }
+            $lastX = end($coords)['x'];
+            $firstX = $coords[0]['x'];
+            $area = "{$path} L {$lastX} {$bottomBase} L {$firstX} {$bottomBase} Z";
+
+            return ['path' => $path, 'area' => $area];
+        };
+
+        $inflowSpline = $buildSpline($inflowCoords);
+        $expenseSpline = $buildSpline($expenseCoords);
+
+        return [
+            'inflowPath' => $inflowSpline['path'],
+            'inflowArea' => $inflowSpline['area'],
+            'expensePath' => $expenseSpline['path'],
+            'expenseArea' => $expenseSpline['area'],
+            'inflowCoords' => $inflowCoords,
+            'expenseCoords' => $expenseCoords,
+            'totalInflow' => array_sum($inflowVals),
+            'totalExpense' => array_sum($expenseVals),
+        ];
+    }
+
+    private function buildMiniCalendar(?string $tenantId = null, array $allowedHallIds = [], string $selectedHallId = 'ALL'): array
+    {
+        $now = Carbon::now();
+        $startOfMonth = $now->copy()->startOfMonth();
+        $endOfMonth = $now->copy()->endOfMonth();
+        $daysInMonth = $now->daysInMonth;
+
+        $leadBlanks = ($startOfMonth->dayOfWeekIso - 1);
+
+        $bookingsQ = Booking::whereBetween('event_date', [$startOfMonth->format('Y-m-d'), $endOfMonth->format('Y-m-d')])
+            ->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD']);
+        if ($tenantId) {
+            $bookingsQ->where('tenant_id', $tenantId);
+        } else {
+            $bookingsQ->whereRaw('1 = 0');
+        }
+        if ($selectedHallId !== 'ALL' && in_array($selectedHallId, $allowedHallIds)) {
+            $bookingsQ->where('hall_id', $selectedHallId);
+        } elseif (! empty($allowedHallIds)) {
+            $bookingsQ->whereIn('hall_id', $allowedHallIds);
+        }
+        $monthBookings = $bookingsQ->get();
+
+        $days = [];
+        for ($d = 1; $d <= $daysInMonth; $d++) {
+            $date = $startOfMonth->copy()->addDays($d - 1);
+            $dStr = $date->format('Y-m-d');
+            $dayBookings = $monthBookings->filter(fn ($b) => Carbon::parse($b->event_date)->format('Y-m-d') === $dStr);
+
+            $days[] = [
+                'day' => $d,
+                'date' => $dStr,
+                'isToday' => ($d === $now->day),
+                'hasEvening' => $dayBookings->contains('slot_type', 'EVENING'),
+                'hasAfternoon' => $dayBookings->contains('slot_type', 'AFTERNOON'),
+                'count' => $dayBookings->count(),
+            ];
+        }
+
+        $nextBookingQ = Booking::with('hall')
+            ->whereDate('event_date', '>=', $now->format('Y-m-d'))
+            ->whereIn('status', ['CONFIRMED', 'HOLD']);
+        if ($tenantId) {
+            $nextBookingQ->where('tenant_id', $tenantId);
+        } else {
+            $nextBookingQ->whereRaw('1 = 0');
+        }
+        if ($selectedHallId !== 'ALL' && in_array($selectedHallId, $allowedHallIds)) {
+            $nextBookingQ->where('hall_id', $selectedHallId);
+        } elseif (! empty($allowedHallIds)) {
+            $nextBookingQ->whereIn('hall_id', $allowedHallIds);
+        }
+        $nextBooking = $nextBookingQ->orderBy('event_date')->first();
+
+        return [
+            'monthName' => $now->format('F Y'),
+            'leadBlanks' => $leadBlanks,
+            'days' => $days,
+            'nextBooking' => $nextBooking ? [
+                'date' => Carbon::parse($nextBooking->event_date)->format('d M'),
+                'slot' => ucfirst(strtolower($nextBooking->slot_type ?? 'Evening')),
+                'hall' => $nextBooking->hall->name ?? 'Ballroom',
+                'client' => $nextBooking->customer_name ?? 'Client',
+            ] : null,
+        ];
     }
 }

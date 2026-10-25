@@ -157,33 +157,32 @@
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
+            <div class="table-wrapper-enterprise" tabindex="0" role="region"><table class="table-enterprise">
                     <thead>
                         <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
-                            <th class="p-3 border-r border-[#E7E5E4]">Staff Member</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Role / Designation</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Attendance Status</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Shift In</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Shift Out</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Overtime (Hours)</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Shift Notes</th>
+                            <th class="p-3">Staff Member</th>
+                            <th class="p-3">Role / Designation</th>
+                            <th class="p-3">Attendance Status</th>
+                            <th class="p-3">Shift In</th>
+                            <th class="p-3">Shift Out</th>
+                            <th class="p-3">Overtime (Hours)</th>
+                            <th class="p-3">Shift Notes</th>
                             <th class="p-3 text-right">Quick Edit</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#E7E5E4]">
                         @forelse($staff as $m)
                             <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition">
-                                <td class="p-3 border-r border-[#E7E5E4]">
+                                <td class="p-3">
                                     <div class="font-bold text-[#171513] text-sm">{{ $m->name }}</div>
                                     <span class="text-[10px] text-stone-500 font-mono block">{{ $m->phone ?: $m->email }}</span>
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-mono text-[11px] text-stone-600">
+                                <td class="p-3 font-mono text-[11px] text-stone-600">
                                     <span class="px-2 py-0.5 bg-stone-100 border border-stone-200 uppercase font-semibold">
                                         {{ str_replace('ROLE_', '', $m->role) }}
                                     </span>
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
+                                <td class="p-3">
                                     <select wire:model="attendanceData.{{ $m->id }}.status" 
                                             class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono font-bold px-2 py-1 outline-none focus:border-[#C6A15B]">
                                         <option value="PRESENT" class="text-[#8F7239]">PRESENT (HAZIR)</option>
@@ -193,19 +192,19 @@
                                         <option value="ON_LEAVE" class="text-[#8F7239]">ON LEAVE (RUKHSAT)</option>
                                     </select>
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
+                                <td class="p-3">
                                     <input type="time" wire:model="attendanceData.{{ $m->id }}.check_in" 
                                            class="w-24 bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono px-2 py-1 outline-none focus:border-[#C6A15B]">
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
+                                <td class="p-3">
                                     <input type="time" wire:model="attendanceData.{{ $m->id }}.check_out" 
                                            class="w-24 bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono px-2 py-1 outline-none focus:border-[#C6A15B]">
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
+                                <td class="p-3">
                                     <input type="number" step="0.5" min="0" max="12" wire:model="attendanceData.{{ $m->id }}.overtime_hours" 
                                            class="w-20 bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono px-2 py-1 text-center outline-none focus:border-[#C6A15B]">
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
+                                <td class="p-3">
                                     <input type="text" placeholder="e.g. Covered evening walima shift" wire:model="attendanceData.{{ $m->id }}.notes" 
                                            class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs px-2 py-1 outline-none focus:border-[#C6A15B]">
                                 </td>
@@ -250,41 +249,40 @@
                 </button>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
+            <div class="table-wrapper-enterprise" tabindex="0" role="region"><table class="table-enterprise">
                     <thead>
                         <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
-                            <th class="p-3 border-r border-[#E7E5E4]">Staff Member</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Leave Type</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Duration</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Days</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Reason</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Status</th>
+                            <th class="p-3">Staff Member</th>
+                            <th class="p-3">Leave Type</th>
+                            <th class="p-3">Duration</th>
+                            <th class="p-3">Days</th>
+                            <th class="p-3">Reason</th>
+                            <th class="p-3">Status</th>
                             <th class="p-3 text-right">Action</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#E7E5E4]">
                         @forelse($leaves as $lv)
                             <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition font-mono">
-                                <td class="p-3 border-r border-[#E7E5E4] font-sans">
+                                <td class="p-3 font-sans">
                                     <div class="font-bold text-stone-900">{{ $lv->user->name ?? 'Staff' }}</div>
                                     <span class="text-[10px] text-stone-500 font-mono">{{ $lv->user->role ?? '' }}</span>
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
+                                <td class="p-3">
                                     <span class="px-2 py-0.5 bg-stone-100 text-stone-800 font-semibold border border-stone-200">
                                         {{ $lv->leave_type }}
                                     </span>
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] text-stone-700">
+                                <td class="p-3 text-stone-700">
                                     {{ $lv->start_date->format('d M') }} — {{ $lv->end_date->format('d M Y') }}
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-bold text-stone-900">
+                                <td class="p-3 font-bold text-stone-900">
                                     {{ $lv->days }} day(s)
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-sans text-stone-600 max-w-xs truncate">
+                                <td class="p-3 font-sans text-stone-600 max-w-xs truncate">
                                     {{ $lv->reason }}
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
+                                <td class="p-3">
                                     @if($lv->status === 'APPROVED')
                                         <span class="px-2 py-0.5 bg-[#C6A15B]/20 text-[#8F7239] border border-[#C6A15B]/60 font-bold">APPROVED</span>
                                     @elseif($lv->status === 'REJECTED')
@@ -351,38 +349,37 @@
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
+            <div class="table-wrapper-enterprise" tabindex="0" role="region"><table class="table-enterprise">
                     <thead>
                         <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
-                            <th class="p-3 border-r border-[#E7E5E4]">Staff Member</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Designation</th>
-                            <th class="p-3 border-r border-[#E7E5E4] text-[#8F7239]">Present (Days)</th>
-                            <th class="p-3 border-r border-[#E7E5E4] text-[#8F7239]">Half Days</th>
-                            <th class="p-3 border-r border-[#E7E5E4] text-[#171513]">Absent (Days)</th>
-                            <th class="p-3 border-r border-[#E7E5E4] text-[#8F7239]">Approved Leaves</th>
+                            <th class="p-3">Staff Member</th>
+                            <th class="p-3">Designation</th>
+                            <th class="p-3 text-[#8F7239]">Present (Days)</th>
+                            <th class="p-3 text-[#8F7239]">Half Days</th>
+                            <th class="p-3 text-[#171513]">Absent (Days)</th>
+                            <th class="p-3 text-[#8F7239]">Approved Leaves</th>
                             <th class="p-3 text-right text-[#8F7239]">Total Overtime Hours</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#E7E5E4]">
                         @foreach($summary as $uId => $row)
                             <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition font-mono">
-                                <td class="p-3 border-r border-[#E7E5E4] font-sans font-bold text-stone-900">
+                                <td class="p-3 font-sans font-bold text-stone-900">
                                     {{ $row['name'] }}
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] text-[11px] text-stone-600">
+                                <td class="p-3 text-[11px] text-stone-600">
                                     {{ str_replace('ROLE_', '', $row['role']) }}
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-bold text-[#8F7239]">
+                                <td class="p-3 font-bold text-[#8F7239]">
                                     {{ $row['present'] }}
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-bold text-[#8F7239]">
+                                <td class="p-3 font-bold text-[#8F7239]">
                                     {{ $row['half_day'] }}
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-bold text-[#171513]">
+                                <td class="p-3 font-bold text-[#171513]">
                                     {{ $row['absent'] }}
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-bold text-[#8F7239]">
+                                <td class="p-3 font-bold text-[#8F7239]">
                                     {{ $row['leave'] }}
                                 </td>
                                 <td class="p-3 text-right font-bold text-[#8F7239]">

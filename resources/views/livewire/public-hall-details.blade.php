@@ -350,6 +350,7 @@
                         'is_complimentary' => true,
                         'category' => 'VIP Hospitality',
                         'description' => 'Private air-conditioned suite with illuminated Hollywood makeup mirror and dedicated dressing concierge.',
+                        'image' => 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=800&auto=format&fit=crop',
                         'icon' => 'sparkles'
                     ],
                     [
@@ -358,6 +359,7 @@
                         'is_complimentary' => true,
                         'category' => 'Infrastructure',
                         'description' => 'Zero-flicker automatic changeover with diesel backup covering 100% chiller AC load.',
+                        'image' => 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?q=80&w=800&auto=format&fit=crop',
                         'icon' => 'bolt'
                     ],
                     [
@@ -366,6 +368,7 @@
                         'is_complimentary' => false,
                         'category' => 'Decor & Ambience',
                         'description' => 'Fresh imported gladiolus, red roses, golden filigree stage sofa, and floral aisle runners.',
+                        'image' => 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop',
                         'icon' => 'star'
                     ],
                     [
@@ -374,62 +377,99 @@
                         'is_complimentary' => false,
                         'category' => 'Guest Logistics',
                         'description' => 'Dedicated 8-member uniformed valet team with electronic key logging and 250+ paved parking.',
+                        'image' => 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=800&auto=format&fit=crop',
                         'icon' => 'truck'
+                    ],
+                    [
+                        'title' => '4K Drone Aerial Cinematography & LED P3 Wall',
+                        'price' => 60000,
+                        'is_complimentary' => false,
+                        'category' => 'Multimedia & Video',
+                        'description' => 'Dual 16x10 ft P3 ultra-HD stage display screens with live dual-camera vision mixer for program broadcast.',
+                        'image' => 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?q=80&w=800&auto=format&fit=crop',
+                        'icon' => 'camera'
                     ]
                 ];
             @endphp
 
-            <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                 @foreach($catalogServices as $srv)
-                    <div class="rounded-xl p-5 sm:p-6 bg-white dark:bg-[#1a1714] border border-[#C6A15B]/30 hover:border-[#C6A15B] transition-all duration-300 shadow-sm hover:shadow-md flex flex-col md:flex-row md:items-center justify-between gap-6 group">
-                        <!-- Left & Middle: Icon + Meta + Details -->
-                        <div class="flex items-start sm:items-center gap-5 flex-1 min-w-0">
-                            <!-- Icon Box -->
-                            <div class="w-12 h-12 shrink-0 rounded-xl bg-stone-50 dark:bg-stone-900 border border-[#C6A15B]/40 text-[#C6A15B] flex items-center justify-center text-xl shadow-sm transition-all duration-300">
-                                @if(($srv['icon'] ?? '') === 'bolt') ⚡
-                                @elseif(($srv['icon'] ?? '') === 'camera') 🎥
-                                @elseif(($srv['icon'] ?? '') === 'truck') 🚗
-                                @elseif(($srv['icon'] ?? '') === 'star') ⭐
-                                @else ✨
-                                @endif
-                            </div>
+                    @php
+                        $srvImage = \App\Models\Hall::resolveServiceImage($srv);
+                        $isComplimentary = !empty($srv['is_complimentary']);
+                        $srvPrice = (float)($srv['price'] ?? 0);
+                    @endphp
+                    <div class="group relative rounded-2xl overflow-hidden bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-[#C6A15B]/25 hover:border-[#C6A15B] transition-all duration-300 shadow-sm hover:shadow-2xl hover:-translate-y-1.5 flex flex-col">
+                        <!-- Luxury Card Photo Header with Smooth Zoom & Badges -->
+                        <div class="relative aspect-[16/10] overflow-hidden bg-stone-900">
+                            <img src="{{ $srvImage }}" 
+                                 alt="{{ $srv['title'] ?? 'Venue Service' }}" 
+                                 class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out" 
+                                 loading="lazy">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/10"></div>
+                            
+                            <!-- Category Badge (Top Left) -->
+                            <span class="absolute top-3.5 left-3.5 text-[10px] font-sans font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#171513]/90 text-[#C6A15B] border border-[#C6A15B]/40 backdrop-blur-md shadow-md">
+                                {{ $srv['category'] ?? 'Service' }}
+                            </span>
 
-                            <!-- Details -->
-                            <div class="space-y-1.5 flex-1 min-w-0">
-                                <div class="flex flex-wrap items-center gap-2.5">
-                                    <h3 class="font-serif-luxury text-lg sm:text-xl text-[#171513] dark:text-white font-medium group-hover:text-[#8F7239] dark:group-hover:text-[#C6A15B] transition-colors truncate">
-                                        {{ $srv['title'] ?? 'Custom Service' }}
-                                    </h3>
-                                    <span class="text-[10px] font-sans uppercase px-2.5 py-0.5 rounded-full bg-[#C6A15B]/10 border border-[#C6A15B]/30 font-medium text-[#8F7239] dark:text-[#C6A15B] tracking-wide">
-                                        {{ $srv['category'] ?? 'Service' }}
-                                    </span>
-                                </div>
-                                <p class="text-xs sm:text-[13px] text-stone-600 dark:text-stone-300 font-normal leading-relaxed max-w-3xl">
-                                    {{ $srv['description'] ?? 'Premium wedding amenity customized by banquet management.' }}
-                                </p>
+                            <!-- Status Pill (Top Right) -->
+                            @if($isComplimentary)
+                                <span class="absolute top-3.5 right-3.5 text-[10px] font-sans font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-950/85 text-emerald-400 border border-emerald-500/50 backdrop-blur-md shadow-md flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    <span>Complimentary</span>
+                                </span>
+                            @else
+                                <span class="absolute top-3.5 right-3.5 text-[10px] font-sans font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full bg-black/65 text-[#F8F5EF] border border-white/20 backdrop-blur-md">
+                                    Add-on
+                                </span>
+                            @endif
+
+                            <!-- Bottom Image Subtle Label -->
+                            <div class="absolute bottom-3 left-4 right-4">
+                                <span class="text-[9px] uppercase tracking-[0.2em] font-sans font-semibold text-stone-300/90 block">
+                                    Exclusive Amenity
+                                </span>
                             </div>
                         </div>
 
-                        <!-- Right: Pricing & Action -->
-                        <div class="pt-4 md:pt-0 border-t md:border-t-0 md:border-l border-[#E7E5E4] dark:border-white/10 md:pl-7 flex items-center justify-between md:justify-end gap-6 shrink-0">
-                            <div class="text-left md:text-right">
-                                <span class="text-[10px] uppercase font-semibold text-stone-400 font-sans block tracking-wider">PRICING</span>
-                                @if(!empty($srv['is_complimentary']))
-                                    <span class="inline-block text-xs font-semibold font-sans text-[#8F7239] dark:text-[#C6A15B] bg-[#C6A15B]/15 dark:bg-[#171513] px-3 py-1 rounded-md border border-[#C6A15B]/50 tracking-wider">
-                                        COMPLIMENTARY
-                                    </span>
-                                @else
-                                    <strong class="font-cinzel text-lg sm:text-2xl text-[#171513] dark:text-[#C6A15B] tracking-wide">
-                                        PKR {{ number_format($srv['price'] ?? 0) }}
-                                    </strong>
-                                @endif
+                        <!-- Card Body (Title & Description) -->
+                        <div class="p-5 sm:p-6 flex-1 flex flex-col justify-between space-y-4">
+                            <div class="space-y-2">
+                                <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-medium group-hover:text-[#8F7239] dark:group-hover:text-[#C6A15B] transition-colors leading-snug">
+                                    {{ $srv['title'] ?? 'Custom Service' }}
+                                </h3>
+                                <p class="text-xs sm:text-[13px] text-stone-600 dark:text-stone-300 font-normal leading-relaxed line-clamp-3">
+                                    {{ $srv['description'] ?? 'Premium wedding amenity customized by banquet management.' }}
+                                </p>
                             </div>
 
-                            <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}' })" 
-                                    class="btn-gold !h-10 !px-5 text-xs font-sans font-semibold tracking-wide flex items-center gap-1.5 whitespace-nowrap rounded-lg">
-                                <span>Inquire</span>
-                                <span>&rarr;</span>
-                            </button>
+                            <!-- Card Footer: Pricing & Action Button -->
+                            <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 flex items-center justify-between gap-3">
+                                <div>
+                                    <span class="text-[9px] uppercase tracking-wider font-semibold text-stone-400 block font-sans">
+                                        Pricing
+                                    </span>
+                                    @if($isComplimentary)
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="font-cinzel text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                                INCLUDED
+                                            </span>
+                                            <span class="text-[10px] font-sans font-semibold text-stone-400">(Free)</span>
+                                        </div>
+                                    @else
+                                        <strong class="font-cinzel text-lg sm:text-xl text-[#171513] dark:text-[#C6A15B] tracking-wide block">
+                                            PKR {{ number_format($srvPrice) }}
+                                        </strong>
+                                    @endif
+                                </div>
+
+                                <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}' })" 
+                                        class="btn-gold !h-9 !px-4 text-xs font-sans font-semibold tracking-wide flex items-center gap-1.5 whitespace-nowrap rounded-lg shadow-sm hover:scale-[1.02] transition-transform">
+                                    <span>Inquire</span>
+                                    <span>&rarr;</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 @endforeach

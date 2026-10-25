@@ -36,8 +36,8 @@
                 <button class="slideshow-dot w-2 h-2 rounded-full bg-white/30 hover:bg-[#C6A15B] transition-all duration-300" onclick="setSlide(4)" aria-label="Slide 5"></button>
             </div>
 
-            <!-- Subtle overlay for text readability -->
-            <div class="absolute inset-0 bg-black/20 z-1"></div>
+            <!-- Rich obsidian gradient overlay for editorial text readability -->
+            <div class="absolute inset-0 bg-gradient-to-b from-[#171513]/85 via-[#171513]/65 to-[#171513]/92 z-[1]"></div>
         </div>
 
         <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24 text-center space-y-7 flex flex-col items-center">
@@ -278,7 +278,7 @@
                                      alt="{{ $hall->name }}" 
                                      loading="lazy"
                                      decoding="async"
-                                     class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700 opacity-90">
+                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90">
                                 <div class="absolute inset-0 bg-gradient-to-t from-[#1C1917] via-transparent to-black/30"></div>
 
                                 <!-- Location Badge -->
@@ -338,9 +338,19 @@
                                 <span class="text-[10px] uppercase font-semibold tracking-wider text-stone-400 block font-sans">Starting Shift Rate</span>
                                 <strong class="font-cinzel text-lg text-[#C6A15B]">PKR {{ number_format($hall->base_rent) }}</strong>
                             </div>
-                            <a href="{{ route('public.venue.details', $hall->slug) }}" class="btn-gold !h-9 !px-4 text-[11px] font-semibold uppercase tracking-wider rounded-lg">
-                                Reserve &rarr;
-                            </a>
+                            <div class="flex items-center gap-2">
+                                @if($hallWaUrl = $hall->getWhatsappUrl())
+                                    <a href="{{ $hallWaUrl }}" target="_blank"
+                                       title="Chat with {{ $hall->name }} on WhatsApp"
+                                       class="h-9 px-3 rounded-lg bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/40 text-emerald-400 text-xs font-bold font-sans flex items-center gap-1.5 transition">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                        <span>WhatsApp</span>
+                                    </a>
+                                @endif
+                                <a href="{{ route('public.venue.details', $hall->slug) }}" class="btn-gold !h-9 !px-4 text-[11px] font-semibold uppercase tracking-wider rounded-lg">
+                                    Reserve &rarr;
+                                </a>
+                            </div>
                         </div>
                     </div>
                 @empty

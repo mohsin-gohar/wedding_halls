@@ -118,33 +118,32 @@
                 </button>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
+            <div class="table-wrapper-enterprise" tabindex="0" role="region"><table class="table-enterprise">
                     <thead>
                         <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
-                            <th class="p-3 border-r border-[#E7E5E4]">Item Name</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Category</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Current Stock</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Min Threshold</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Unit Cost (PKR)</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Total Value</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Preferred Supplier</th>
+                            <th class="p-3">Item Name</th>
+                            <th class="p-3">Category</th>
+                            <th class="p-3">Current Stock</th>
+                            <th class="p-3">Min Threshold</th>
+                            <th class="p-3">Unit Cost (PKR)</th>
+                            <th class="p-3">Total Value</th>
+                            <th class="p-3">Preferred Supplier</th>
                             <th class="p-3 text-right">Quick Stock In / Out</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#E7E5E4]">
                         @forelse($items as $i)
                             <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition font-mono">
-                                <td class="p-3 border-r border-[#E7E5E4] font-sans">
+                                <td class="p-3 font-sans">
                                     <div class="font-bold text-[#171513] text-sm">{{ $i->name }}</div>
                                     <span class="text-[10px] text-stone-500 font-mono">Unit: {{ $i->unit }}</span>
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] text-stone-600 text-[10px]">
+                                <td class="p-3 text-stone-600 text-[10px]">
                                     <span class="px-2 py-0.5 bg-stone-100 border border-stone-200 uppercase font-semibold">
                                         {{ str_replace('_', ' ', $i->category) }}
                                     </span>
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
+                                <td class="p-3">
                                     <div class="text-sm font-bold {{ $i->isLowStock() ? 'text-[#171513]' : 'text-[#8F7239]' }}">
                                         {{ number_format($i->current_stock, 1) }} {{ $i->unit }}
                                     </div>
@@ -154,16 +153,16 @@
                                         </span>
                                     @endif
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] text-stone-600">
+                                <td class="p-3 text-stone-600">
                                     {{ number_format($i->min_threshold, 1) }} {{ $i->unit }}
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] text-stone-800">
+                                <td class="p-3 text-stone-800">
                                     PKR {{ number_format($i->unit_cost) }}
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-bold text-[#171513]">
+                                <td class="p-3 font-bold text-[#171513]">
                                     PKR {{ number_format($i->current_stock * $i->unit_cost) }}
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] text-stone-600 font-sans">
+                                <td class="p-3 text-stone-600 font-sans">
                                     {{ $i->supplier_name ?: 'Market Vendor' }}
                                 </td>
                                 <td class="p-3 text-right">
@@ -211,26 +210,25 @@
                 <p class="text-xs text-stone-500">Immutable audit log of all stock arrivals, event wedding consumption, and wastage.</p>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
+            <div class="table-wrapper-enterprise" tabindex="0" role="region"><table class="table-enterprise">
                     <thead>
                         <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
-                            <th class="p-3 border-r border-[#E7E5E4]">Timestamp</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Item</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Movement Type</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Quantity</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Unit Cost</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Total Value</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Event Reference / Notes</th>
+                            <th class="p-3">Timestamp</th>
+                            <th class="p-3">Item</th>
+                            <th class="p-3">Movement Type</th>
+                            <th class="p-3">Quantity</th>
+                            <th class="p-3">Unit Cost</th>
+                            <th class="p-3">Total Value</th>
+                            <th class="p-3">Event Reference / Notes</th>
                             <th class="p-3 text-right">Logged By</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#E7E5E4]">
                         @forelse($logs as $lg)
                             <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition font-mono">
-                                <td class="p-3 border-r border-[#E7E5E4] text-stone-500">{{ $lg->created_at->format('d M Y, H:i') }}</td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-sans font-bold text-stone-900">{{ $lg->item->name ?? 'Deleted Item' }}</td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
+                                <td class="p-3 text-stone-500">{{ $lg->created_at->format('d M Y, H:i') }}</td>
+                                <td class="p-3 font-sans font-bold text-stone-900">{{ $lg->item->name ?? 'Deleted Item' }}</td>
+                                <td class="p-3">
                                     @if($lg->type === 'STOCK_IN')
                                         <span class="px-2 py-0.5 bg-[#C6A15B]/20 text-[#8F7239] border border-[#C6A15B]/60 font-bold uppercase text-[10px]">+ STOCK IN</span>
                                     @elseif($lg->type === 'STOCK_OUT')
@@ -241,16 +239,16 @@
                                         <span class="px-2 py-0.5 bg-[#C6A15B]/15 text-[#8F7239] border border-[#C6A15B]/60 font-bold uppercase text-[10px]">ADJUSTMENT</span>
                                     @endif
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-bold text-stone-900">
+                                <td class="p-3 font-bold text-stone-900">
                                     {{ number_format($lg->quantity, 1) }} {{ $lg->item->unit ?? '' }}
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] text-stone-700">
+                                <td class="p-3 text-stone-700">
                                     PKR {{ number_format($lg->unit_price, 2) }}
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-bold text-[#171513]">
+                                <td class="p-3 font-bold text-[#171513]">
                                     PKR {{ number_format($lg->total_cost, 2) }}
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-sans text-stone-600 max-w-xs truncate">
+                                <td class="p-3 font-sans text-stone-600 max-w-xs truncate">
                                     {{ $lg->reference_note ?: 'Direct adjustment' }}
                                 </td>
                                 <td class="p-3 text-right text-stone-500 font-sans">
@@ -288,27 +286,26 @@
                 </button>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
+            <div class="table-wrapper-enterprise" tabindex="0" role="region"><table class="table-enterprise">
                     <thead>
                         <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
-                            <th class="p-3 border-r border-[#E7E5E4]">PO Number</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Order Date</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Supplier Name</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Total Amount (PKR)</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Status</th>
-                            <th class="p-3 border-r border-[#E7E5E4]">Notes</th>
+                            <th class="p-3">PO Number</th>
+                            <th class="p-3">Order Date</th>
+                            <th class="p-3">Supplier Name</th>
+                            <th class="p-3">Total Amount (PKR)</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3">Notes</th>
                             <th class="p-3 text-right">Settlement</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#E7E5E4]">
                         @forelse($orders as $po)
                             <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition font-mono">
-                                <td class="p-3 border-r border-[#E7E5E4] font-bold text-stone-900">{{ $po->po_number }}</td>
-                                <td class="p-3 border-r border-[#E7E5E4] text-stone-500">{{ $po->order_date->format('d M Y') }}</td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-sans font-bold text-stone-900">{{ $po->supplier_name }}</td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-bold text-base text-[#171513]">PKR {{ number_format($po->total_amount) }}</td>
-                                <td class="p-3 border-r border-[#E7E5E4]">
+                                <td class="p-3 font-bold text-stone-900">{{ $po->po_number }}</td>
+                                <td class="p-3 text-stone-500">{{ $po->order_date->format('d M Y') }}</td>
+                                <td class="p-3 font-sans font-bold text-stone-900">{{ $po->supplier_name }}</td>
+                                <td class="p-3 font-bold text-base text-[#171513]">PKR {{ number_format($po->total_amount) }}</td>
+                                <td class="p-3">
                                     @if($po->status === 'PAID')
                                         <span class="px-2 py-0.5 bg-[#C6A15B]/20 text-[#8F7239] border border-[#C6A15B]/60 font-bold uppercase text-[10px]">
                                             ✓ PAID (IN EXPENSES)
@@ -319,7 +316,7 @@
                                         </span>
                                     @endif
                                 </td>
-                                <td class="p-3 border-r border-[#E7E5E4] font-sans text-stone-600 max-w-xs truncate">
+                                <td class="p-3 font-sans text-stone-600 max-w-xs truncate">
                                     {{ $po->notes ?: 'General stock replenishment' }}
                                 </td>
                                 <td class="p-3 text-right">

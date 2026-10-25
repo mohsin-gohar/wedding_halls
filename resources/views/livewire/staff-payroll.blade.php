@@ -156,50 +156,49 @@
             <span class="text-xs font-mono text-stone-500">Auto-calculated Net Salary = Basic + OT + Allowances - Deductions</span>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-xs text-left border-collapse border border-[#E7E5E4]">
+        <div class="table-wrapper-enterprise" tabindex="0" role="region"><table class="table-enterprise">
                 <thead>
                     <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-stone-300 font-mono">
-                        <th class="p-3 border-r border-[#E7E5E4]">Employee Name</th>
-                        <th class="p-3 border-r border-[#E7E5E4]">Designation</th>
-                        <th class="p-3 border-r border-[#E7E5E4]">Basic Pay</th>
-                        <th class="p-3 border-r border-[#E7E5E4]">Overtime (OT)</th>
-                        <th class="p-3 border-r border-[#E7E5E4]">Allowances</th>
-                        <th class="p-3 border-r border-[#E7E5E4]">Deductions</th>
-                        <th class="p-3 border-r border-[#E7E5E4] text-[#8F7239]">Net Payable (PKR)</th>
-                        <th class="p-3 border-r border-[#E7E5E4]">Disbursement Status</th>
+                        <th class="p-3">Employee Name</th>
+                        <th class="p-3">Designation</th>
+                        <th class="p-3">Basic Pay</th>
+                        <th class="p-3">Overtime (OT)</th>
+                        <th class="p-3">Allowances</th>
+                        <th class="p-3">Deductions</th>
+                        <th class="p-3 text-[#8F7239]">Net Payable (PKR)</th>
+                        <th class="p-3">Disbursement Status</th>
                         <th class="p-3 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-[#E7E5E4]">
                     @forelse($payrolls as $p)
                         <tr class="hover:bg-[#F8F5EF] dark:hover:bg-white/5 transition font-mono">
-                            <td class="p-3 border-r border-[#E7E5E4] font-sans">
+                            <td class="p-3 font-sans">
                                 <div class="font-bold text-[#171513] text-sm">{{ $p->user->name ?? 'Staff' }}</div>
                                 <span class="text-[10px] text-stone-500 font-mono">{{ $p->user->phone ?: $p->user->email }}</span>
                             </td>
-                            <td class="p-3 border-r border-[#E7E5E4] text-stone-600">
+                            <td class="p-3 text-stone-600">
                                 <span class="px-2 py-0.5 bg-stone-100 border border-stone-200 uppercase font-semibold text-[10px]">
                                     {{ str_replace('ROLE_', '', $p->user->role ?? '') }}
                                 </span>
                             </td>
-                            <td class="p-3 border-r border-[#E7E5E4] text-stone-800">
+                            <td class="p-3 text-stone-800">
                                 PKR {{ number_format($p->basic_salary) }}
                             </td>
-                            <td class="p-3 border-r border-[#E7E5E4] text-stone-800">
+                            <td class="p-3 text-stone-800">
                                 <div>{{ number_format($p->overtime_hours, 1) }}h @ {{ number_format($p->overtime_rate) }}</div>
                                 <span class="text-[10px] text-[#8F7239] font-semibold">+ PKR {{ number_format($p->overtime_hours * $p->overtime_rate) }}</span>
                             </td>
-                            <td class="p-3 border-r border-[#E7E5E4] text-[#8F7239] font-semibold">
+                            <td class="p-3 text-[#8F7239] font-semibold">
                                 + PKR {{ number_format($p->allowances) }}
                             </td>
-                            <td class="p-3 border-r border-[#E7E5E4] text-[#171513] font-semibold">
+                            <td class="p-3 text-[#171513] font-semibold">
                                 - PKR {{ number_format($p->deductions) }}
                             </td>
-                            <td class="p-3 border-r border-[#E7E5E4] font-bold text-sm text-[#171513]">
+                            <td class="p-3 font-bold text-sm text-[#171513]">
                                 PKR {{ number_format($p->net_salary) }}
                             </td>
-                            <td class="p-3 border-r border-[#E7E5E4]">
+                            <td class="p-3">
                                 @if($p->status === 'PAID')
                                     <span class="px-2 py-0.5 bg-[#C6A15B]/20 text-[#8F7239] border border-[#C6A15B]/60 font-bold uppercase text-[10px]">
                                         ✓ PAID ({{ $p->payment_method }})

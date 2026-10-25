@@ -442,6 +442,10 @@ class PublicHallDetails extends Component
             'allowedYears' => $this->allowedYears,
             'selectedYear' => $this->selectedYear,
             'selectedMonthNumber' => $this->selectedMonthNumber,
+        ])->layout('components.layouts.public', [
+            'title' => $this->hall->name.' — EventHub Pakistan',
+            'metaDescription' => Str::limit(strip_tags($this->hall->description ?? ''), 155, '...'),
+            'ogImage' => $this->activePhoto,
         ]);
     }
 }

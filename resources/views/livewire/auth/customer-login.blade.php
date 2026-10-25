@@ -1,27 +1,25 @@
-<div class="w-full max-w-md mx-auto">
-    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 rounded-2xl p-8 sm:p-10 shadow-xl space-y-6 relative overflow-hidden">
+<div class="w-full max-w-md">
+    <!-- Card Container -->
+    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 rounded-2xl p-7 sm:p-9 shadow-xl space-y-6 relative overflow-hidden">
 
         <!-- Brand Logo -->
         <div class="flex justify-center -mb-1">
-            <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub Logo" class="h-14 w-auto object-contain rounded-xl border border-[#C6A15B]/40 bg-[#171513] shadow-sm p-1">
+            <img src="{{ asset('images/eventhub-logo.png') }}" width="56" height="56" fetchpriority="high" decoding="async" alt="EventHub Logo" class="h-14 w-14 object-contain rounded-xl border border-[#C6A15B]/40 bg-[#171513] shadow-sm p-1">
         </div>
 
-        <!-- Header -->
-        <div class="text-center space-y-2">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#C6A15B]/30 bg-[#C6A15B]/10 text-[#8F7239] dark:text-[#C6A15B] text-[10px] font-bold uppercase tracking-widest font-sans">
-                <span class="w-1.5 h-1.5 bg-[#C6A15B] rounded-full"></span>
-                Guest &amp; Host Portal
-            </span>
-            <h1 class="font-serif-luxury text-2xl sm:text-3xl text-[#171513] dark:text-white font-normal">
-                Customer Sign In
+        <!-- Heading Section (Clean, Universal Luxury Login) -->
+        <div class="text-center space-y-1.5">
+            <h1 class="font-serif-luxury text-2xl sm:text-3xl text-[#171513] dark:text-white font-normal tracking-tight">
+                Welcome Back
             </h1>
-            <p class="text-xs text-stone-500 dark:text-stone-400 font-sans leading-relaxed">
-                Track your wedding reservations, itemized quotations, and shift booking history.
+            <p class="text-xs text-stone-500 dark:text-stone-400 font-sans max-w-xs mx-auto leading-relaxed">
+                Please enter your credentials to sign in.
             </p>
         </div>
 
+        <!-- Flash Messages -->
         @if(session('message'))
-            <div class="p-3 rounded-lg bg-[#C6A15B]/15 border border-[#C6A15B]/60 text-[#8F7239] dark:text-[#C6A15B] text-xs text-center font-medium">
+            <div class="p-3 rounded-lg bg-[#C6A15B]/15 border border-[#C6A15B]/50 text-[#8F7239] dark:text-[#C6A15B] text-xs text-center font-medium">
                 {{ session('message') }}
             </div>
         @endif
@@ -32,67 +30,109 @@
             </div>
         @endif
 
-        <!-- Form -->
-        <form method="POST" action="{{ route('customer.login.perform') }}" class="space-y-4">
+        @auth
+            <div class="p-3 rounded-xl bg-[#C6A15B]/10 border border-[#C6A15B]/35 text-xs flex items-center justify-between gap-3">
+                <div class="text-stone-700 dark:text-stone-200">
+                    Signed in as <strong class="text-[#8F7239] dark:text-[#C6A15B]">{{ auth()->user()->name }}</strong>
+                </div>
+                <a href="{{ auth()->user()->isSuperAdmin() ? route('admin.dashboard') : (auth()->user()->isCustomer() ? route('customer.dashboard') : route('dashboard')) }}"
+                   class="px-3 py-1.5 rounded-lg bg-[#C6A15B] text-[#171513] font-bold uppercase tracking-wider text-[10px] shrink-0">
+                    Open Dashboard &rarr;
+                </a>
+            </div>
+        @endauth
+
+        <!-- Sign In Form (Supports both Livewire and Native POST) -->
+        <form wire:submit="login" method="POST" action="{{ route('customer.login.perform') }}" class="space-y-4">
             @csrf
+            <!-- Email -->
             <div>
-                <label for="customer-email" class="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5 font-sans">
+                <label for="customer-email" class="block text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5 font-sans">
                     Email Address
                 </label>
-                <input id="customer-email" name="email" type="email" value="{{ old('email', $email) }}" wire:model="email" required autofocus placeholder="your.name@example.com" 
+                <input id="customer-email" 
+                       name="email"
+                       type="email" 
+                       value="{{ old('email', $email) }}"
+                       wire:model="email" 
+                       required 
+                       autofocus
+                       autocomplete="email"
+                       placeholder="name@example.com"
                        class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm w-full">
-                @error('email') <span class="text-rose-500 text-xs mt-1 block font-sans">{{ $message }}</span> @enderror
+                @error('email') 
+                    <span class="text-rose-500 text-xs mt-1 block font-sans">{{ $message }}</span> 
+                @enderror
             </div>
 
+            <!-- Password -->
             <div>
-                <label for="customer-password" class="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5 font-sans">
-                    Password
-                </label>
-                <input id="customer-password" name="password" type="password" wire:model="password" required placeholder="••••••••" 
+                <div class="flex items-center justify-between mb-1.5">
+                    <label for="customer-password" class="block text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300 font-sans">
+                        Password
+                    </label>
+                </div>
+                <input id="customer-password" 
+                       name="password"
+                       type="password" 
+                       wire:model="password" 
+                       required 
+                       autocomplete="current-password"
+                       placeholder="••••••••"
                        class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm w-full">
-                @error('password') <span class="text-rose-500 text-xs mt-1 block font-sans">{{ $message }}</span> @enderror
+                @error('password') 
+                    <span class="text-rose-500 text-xs mt-1 block font-sans">{{ $message }}</span> 
+                @enderror
             </div>
 
-            <div class="flex items-center justify-between text-xs pt-1">
-                <label class="flex items-center gap-2 cursor-pointer text-stone-600 dark:text-stone-400">
+            <!-- Remember Me & Security -->
+            <div class="flex items-center justify-between text-xs pt-0.5">
+                <label class="flex items-center gap-2 cursor-pointer text-stone-600 dark:text-stone-400 select-none">
                     <input type="checkbox" name="remember" value="1" wire:model="remember" class="accent-[#C6A15B] rounded">
                     <span>Remember me</span>
                 </label>
-                <a href="{{ route('login') }}" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline font-sans text-[11px] font-semibold">
-                    Unified Sign In &rarr;
-                </a>
+                <span class="inline-flex items-center gap-1 text-stone-400 dark:text-stone-500 text-[11px] font-sans">
+                    <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    256-bit Encrypted
+                </span>
             </div>
 
-            <div class="pt-2">
+            <!-- Submit Button -->
+            <div class="pt-1.5">
                 <button type="submit" 
-                        class="btn-gold !w-full !h-12 text-xs font-bold uppercase tracking-wider font-sans rounded-lg shadow-sm transition-all duration-200">
-                    Sign In &rarr;
+                        class="btn-gold !w-full !h-11 text-xs font-bold uppercase tracking-wider font-sans rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
+                    <span>Sign In</span>
                 </button>
             </div>
         </form>
 
-        <!-- 1-Click Customer Demo Login -->
-        <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10">
-            <form method="POST" action="{{ route('customer.login.perform') }}">
-                @csrf
-                <input type="hidden" name="email" value="customer@example.com">
-                <input type="hidden" name="password" value="password">
-                <input type="hidden" name="remember" value="1">
-                <button type="submit" class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border border-[#C6A15B]/35 hover:border-[#C6A15B] bg-[#C6A15B]/10 hover:bg-[#C6A15B]/20 transition-all text-left">
-                    <div>
-                        <span class="block text-[11px] font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#F2DE9A]">1-Click Customer Demo Sign In</span>
-                        <span class="block text-[10px] text-stone-500 dark:text-stone-400">customer@example.com · password</span>
-                    </div>
-                    <span class="text-xs font-bold text-[#8F7239] dark:text-[#C6A15B]">&rarr;</span>
-                </button>
-            </form>
+        <!-- Clean Footer Link -->
+        <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 text-center text-xs text-stone-500 dark:text-stone-400">
+            <span>Don't have an account?</span>
+            <a href="{{ route('customer.register') }}" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline font-semibold ml-1">
+                Sign up &rarr;
+            </a>
         </div>
 
-        <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 text-center text-xs text-stone-500 dark:text-stone-400">
-            <span>Don't have an account yet?</span>
-            <a href="{{ route('customer.register') }}" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline font-bold ml-1 font-sans">
-                Create Account &rarr;
-            </a>
+        <!-- Discreet Demo Quick-Fill for Testing -->
+        <div class="pt-1 text-center">
+            <details class="text-[11px] text-stone-400 dark:text-stone-500 cursor-pointer group">
+                <summary class="hover:text-[#8F7239] dark:hover:text-[#C6A15B] transition-colors py-0.5 select-none inline-flex items-center gap-1 font-sans text-[10px]">
+                    <span>Demo Accounts</span>
+                    <svg class="w-3 h-3 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </summary>
+                <div class="mt-2 flex flex-wrap justify-center gap-1.5 pt-1">
+                    <button type="button" @click="$wire.set('email', 'customer@example.com'); $wire.set('password', 'password'); document.getElementById('customer-email').value = 'customer@example.com'; document.getElementById('customer-password').value = 'password';" class="px-2.5 py-1 rounded-md bg-stone-100 dark:bg-white/5 hover:bg-[#C6A15B]/15 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] text-[10px] font-sans border border-stone-200 dark:border-white/10 transition cursor-pointer">
+                        Customer
+                    </button>
+                    <button type="button" @click="$wire.set('email', 'owner@venuecloud.pk'); $wire.set('password', 'password'); document.getElementById('customer-email').value = 'owner@venuecloud.pk'; document.getElementById('customer-password').value = 'password';" class="px-2.5 py-1 rounded-md bg-stone-100 dark:bg-white/5 hover:bg-[#C6A15B]/15 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] text-[10px] font-sans border border-stone-200 dark:border-white/10 transition cursor-pointer">
+                        Hall Owner
+                    </button>
+                    <button type="button" @click="$wire.set('email', 'admin@venuecloud.pk'); $wire.set('password', 'password'); document.getElementById('customer-email').value = 'admin@venuecloud.pk'; document.getElementById('customer-password').value = 'password';" class="px-2.5 py-1 rounded-md bg-stone-100 dark:bg-white/5 hover:bg-[#C6A15B]/15 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] text-[10px] font-sans border border-stone-200 dark:border-white/10 transition cursor-pointer">
+                        Super Admin
+                    </button>
+                </div>
+            </details>
         </div>
 
     </div>

@@ -342,12 +342,22 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-[10px] font-mono uppercase tracking-wider text-white/70 mb-1">
-                            Service Highlights / Description
-                        </label>
-                        <input type="text" wire:model="newServiceDescription" placeholder="Brief explanation displayed on your hall's public website..."
-                               class="w-full bg-[#171513] border border-white/15 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-mono uppercase tracking-wider text-white/70 mb-1">
+                                Service Highlights / Description
+                            </label>
+                            <input type="text" wire:model="newServiceDescription" placeholder="Brief explanation displayed on your hall's public website..."
+                                   class="w-full bg-[#171513] border border-white/15 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-mono uppercase tracking-wider text-white/70 mb-1">
+                                Service Photo URL <span class="text-white/40 font-normal">(Optional - auto-assigned if blank)</span>
+                            </label>
+                            <input type="url" wire:model="newServiceImage" placeholder="https://images.unsplash.com/... (or leave blank)"
+                                   class="w-full bg-[#171513] border border-white/15 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
+                        </div>
                     </div>
 
                     <div class="pt-1 flex justify-end">
@@ -362,28 +372,30 @@
                     <span class="text-[10px] font-mono uppercase tracking-wider text-white/60 block">Current Catalog Items:</span>
                     
                     @forelse($services as $sIdx => $srv)
-                        <div class="bg-[#171513] border border-white/10 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-white/20 transition">
-                            <div class="space-y-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[#C6A15B] font-bold text-sm">
-                                        @if(($srv['icon'] ?? '') === 'bolt') ⚡
-                                        @elseif(($srv['icon'] ?? '') === 'camera') 🎥
-                                        @elseif(($srv['icon'] ?? '') === 'truck') 🚗
-                                        @elseif(($srv['icon'] ?? '') === 'star') ⭐
-                                        @else ✨
-                                        @endif
-                                    </span>
-                                    <h4 class="font-bold text-white text-xs">{{ $srv['title'] ?? 'Custom Service' }}</h4>
-                                    <span class="text-[9px] font-mono uppercase px-1.5 py-0.5 bg-white/10 text-white/80">
-                                        {{ $srv['category'] ?? 'General' }}
-                                    </span>
-                                    @if(!empty($srv['is_complimentary']))
-                                        <span class="text-[9px] font-mono uppercase px-1.5 py-0.5 bg-[#171513] text-[#C6A15B] border border-[#C6A15B]/45">
-                                            Complimentary
-                                        </span>
-                                    @endif
+                        <div class="bg-[#171513] border border-white/10 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-white/20 transition rounded-lg">
+                            <div class="flex items-start sm:items-center gap-3.5 min-w-0">
+                                <!-- Service Thumbnail Image -->
+                                <div class="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-stone-900 border border-white/15 relative">
+                                    <img src="{{ \App\Models\Hall::resolveServiceImage($srv) }}" 
+                                         alt="{{ $srv['title'] ?? 'Service' }}" 
+                                         class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-black/15"></div>
                                 </div>
-                                <p class="text-[11px] text-white/60 font-sans max-w-xl">{{ $srv['description'] ?? '' }}</p>
+
+                                <div class="space-y-1 min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <h4 class="font-bold text-white text-xs truncate">{{ $srv['title'] ?? 'Custom Service' }}</h4>
+                                        <span class="text-[9px] font-mono uppercase px-2 py-0.5 rounded bg-white/10 text-white/80">
+                                            {{ $srv['category'] ?? 'General' }}
+                                        </span>
+                                        @if(!empty($srv['is_complimentary']))
+                                            <span class="text-[9px] font-mono uppercase px-2 py-0.5 rounded bg-[#171513] text-[#C6A15B] border border-[#C6A15B]/45 font-semibold">
+                                                Complimentary
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <p class="text-[11px] text-white/60 font-sans max-w-xl line-clamp-1">{{ $srv['description'] ?? '' }}</p>
+                                </div>
                             </div>
 
                             <div class="flex items-center gap-3 shrink-0">

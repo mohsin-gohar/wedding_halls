@@ -1,23 +1,19 @@
-<div class="w-full max-w-md mx-auto">
+<div class="w-full max-w-md">
     <!-- Card Container -->
-    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 rounded-2xl p-8 sm:p-10 shadow-xl space-y-6 relative overflow-hidden">
+    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 rounded-2xl p-7 sm:p-9 shadow-xl space-y-6 relative overflow-hidden">
 
         <!-- Brand Logo -->
         <div class="flex justify-center -mb-1">
-            <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub Logo" class="h-14 w-auto object-contain rounded-xl border border-[#C6A15B]/40 bg-[#171513] shadow-sm p-1">
+            <img src="{{ asset('images/eventhub-logo.png') }}" width="56" height="56" fetchpriority="high" decoding="async" alt="EventHub Logo" class="h-14 w-14 object-contain rounded-xl border border-[#C6A15B]/40 bg-[#171513] shadow-sm p-1">
         </div>
 
-        <!-- Heading Section -->
-        <div class="text-center space-y-2">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#C6A15B]/30 bg-[#C6A15B]/10 text-[#8F7239] dark:text-[#C6A15B] text-[10px] font-bold uppercase tracking-widest font-sans">
-                <span class="w-1.5 h-1.5 bg-[#C6A15B] rounded-full"></span>
-                Secure Access
-            </span>
-            <h1 class="font-serif-luxury text-2xl sm:text-3xl text-[#171513] dark:text-white font-normal">
-                Sign In to EventHub
+        <!-- Heading Section (Clean, Universal Luxury Login) -->
+        <div class="text-center space-y-1.5">
+            <h1 class="font-serif-luxury text-2xl sm:text-3xl text-[#171513] dark:text-white font-normal tracking-tight">
+                Welcome Back
             </h1>
             <p class="text-xs text-stone-500 dark:text-stone-400 font-sans max-w-xs mx-auto leading-relaxed">
-                Enter your credentials to access your dashboard, bookings, and reservations.
+                Please enter your credentials to sign in.
             </p>
         </div>
 
@@ -35,23 +31,23 @@
         @endif
 
         @auth
-            <div class="p-3.5 rounded-xl bg-[#C6A15B]/10 border border-[#C6A15B]/35 text-xs flex items-center justify-between gap-3">
+            <div class="p-3 rounded-xl bg-[#C6A15B]/10 border border-[#C6A15B]/35 text-xs flex items-center justify-between gap-3">
                 <div class="text-stone-700 dark:text-stone-200">
                     Signed in as <strong class="text-[#8F7239] dark:text-[#C6A15B]">{{ auth()->user()->name }}</strong>
                 </div>
                 <a href="{{ auth()->user()->isSuperAdmin() ? route('admin.dashboard') : (auth()->user()->isCustomer() ? route('customer.dashboard') : route('dashboard')) }}"
                    class="px-3 py-1.5 rounded-lg bg-[#C6A15B] text-[#171513] font-bold uppercase tracking-wider text-[10px] shrink-0">
-                    Open Portal &rarr;
+                    Open Dashboard &rarr;
                 </a>
             </div>
         @endauth
 
-        <!-- Login Form -->
-        <form method="POST" action="{{ route('login.perform') }}" class="space-y-4">
+        <!-- Sign In Form (Supports both Livewire and Native POST) -->
+        <form wire:submit="login" method="POST" action="{{ route('login.perform') }}" class="space-y-4">
             @csrf
             <!-- Email -->
             <div>
-                <label for="email" class="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5 font-sans">
+                <label for="email" class="block text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5 font-sans">
                     Email Address
                 </label>
                 <input id="email" 
@@ -62,7 +58,7 @@
                        required 
                        autofocus
                        autocomplete="email"
-                       placeholder="your-email@example.com"
+                       placeholder="name@example.com"
                        class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm w-full">
                 @error('email') 
                     <span class="text-rose-500 text-xs mt-1 block font-sans">{{ $message }}</span> 
@@ -72,7 +68,7 @@
             <!-- Password -->
             <div>
                 <div class="flex items-center justify-between mb-1.5">
-                    <label for="password" class="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 font-sans">
+                    <label for="password" class="block text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300 font-sans">
                         Password
                     </label>
                 </div>
@@ -90,10 +86,10 @@
             </div>
 
             <!-- Remember Me & Security -->
-            <div class="flex items-center justify-between text-xs pt-1">
+            <div class="flex items-center justify-between text-xs pt-0.5">
                 <label class="flex items-center gap-2 cursor-pointer text-stone-600 dark:text-stone-400 select-none">
                     <input type="checkbox" name="remember" value="1" wire:model="remember" class="accent-[#C6A15B] rounded">
-                    <span>Keep me signed in</span>
+                    <span>Remember me</span>
                 </label>
                 <span class="inline-flex items-center gap-1 text-stone-400 dark:text-stone-500 text-[11px] font-sans">
                     <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
@@ -102,91 +98,41 @@
             </div>
 
             <!-- Submit Button -->
-            <div class="pt-2">
+            <div class="pt-1.5">
                 <button type="submit" 
-                        class="btn-gold !w-full !h-12 text-xs font-bold uppercase tracking-wider font-sans rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
-                    <span>Sign In &rarr;</span>
+                        class="btn-gold !w-full !h-11 text-xs font-bold uppercase tracking-wider font-sans rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
+                    <span>Sign In</span>
                 </button>
             </div>
         </form>
 
-        <!-- 1-Click Instant Portal Sign-In (Executive Demo Access) -->
-        <div class="border-t border-[#E7E5E4] dark:border-white/10 pt-5 space-y-3">
-            <div class="flex items-center justify-between">
-                <span class="text-[10px] font-bold uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B] font-sans">
-                    Instant 1-Click Portal Access
-                </span>
-                <span class="text-[10px] text-stone-400 dark:text-stone-500 font-sans">
-                    Password: <code class="text-stone-600 dark:text-stone-300">password</code>
-                </span>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <!-- Super Admin -->
-                <form method="POST" action="{{ route('login.perform') }}">
-                    @csrf
-                    <input type="hidden" name="email" value="admin@venuecloud.pk">
-                    <input type="hidden" name="password" value="password">
-                    <input type="hidden" name="remember" value="1">
-                    <button type="submit" class="w-full text-left px-3 py-2.5 rounded-xl border border-[#C6A15B]/35 hover:border-[#C6A15B] bg-[#C6A15B]/10 hover:bg-[#C6A15B]/20 transition-all group">
-                        <span class="block text-[11px] font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#F2DE9A] group-hover:text-[#C6A15B]">Super Admin &rarr;</span>
-                        <span class="block text-[10px] text-stone-500 dark:text-stone-400 truncate">admin@venuecloud.pk</span>
-                    </button>
-                </form>
-
-                <!-- Hall Owner -->
-                <form method="POST" action="{{ route('login.perform') }}">
-                    @csrf
-                    <input type="hidden" name="email" value="owner@venuecloud.pk">
-                    <input type="hidden" name="password" value="password">
-                    <input type="hidden" name="remember" value="1">
-                    <button type="submit" class="w-full text-left px-3 py-2.5 rounded-xl border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B]/60 bg-stone-50 dark:bg-white/[0.03] hover:bg-[#C6A15B]/10 transition-all group">
-                        <span class="block text-[11px] font-bold uppercase tracking-wider text-[#171513] dark:text-white group-hover:text-[#C6A15B]">Hall Owner ERP &rarr;</span>
-                        <span class="block text-[10px] text-stone-500 dark:text-stone-400 truncate">owner@venuecloud.pk</span>
-                    </button>
-                </form>
-
-                <!-- Customer Portal -->
-                <form method="POST" action="{{ route('login.perform') }}">
-                    @csrf
-                    <input type="hidden" name="email" value="customer@example.com">
-                    <input type="hidden" name="password" value="password">
-                    <input type="hidden" name="remember" value="1">
-                    <button type="submit" class="w-full text-left px-3 py-2.5 rounded-xl border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B]/60 bg-stone-50 dark:bg-white/[0.03] hover:bg-[#C6A15B]/10 transition-all group">
-                        <span class="block text-[11px] font-bold uppercase tracking-wider text-[#171513] dark:text-white group-hover:text-[#C6A15B]">Customer Portal &rarr;</span>
-                        <span class="block text-[10px] text-stone-500 dark:text-stone-400 truncate">customer@example.com</span>
-                    </button>
-                </form>
-
-                <!-- Front Desk / Kitchen -->
-                <form method="POST" action="{{ route('login.perform') }}">
-                    @csrf
-                    <input type="hidden" name="email" value="reception@venuecloud.pk">
-                    <input type="hidden" name="password" value="password">
-                    <input type="hidden" name="remember" value="1">
-                    <button type="submit" class="w-full text-left px-3 py-2.5 rounded-xl border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B]/60 bg-stone-50 dark:bg-white/[0.03] hover:bg-[#C6A15B]/10 transition-all group">
-                        <span class="block text-[11px] font-bold uppercase tracking-wider text-[#171513] dark:text-white group-hover:text-[#C6A15B]">Front Desk / Shift &rarr;</span>
-                        <span class="block text-[10px] text-stone-500 dark:text-stone-400 truncate">reception@venuecloud.pk</span>
-                    </button>
-                </form>
-            </div>
+        <!-- Clean Footer Link -->
+        <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 text-center text-xs text-stone-500 dark:text-stone-400">
+            <span>Don't have an account?</span>
+            <a href="{{ route('customer.register') }}" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline font-semibold ml-1">
+                Sign up &rarr;
+            </a>
         </div>
 
-        <!-- Alternative Options / Registration Links -->
-        <div class="border-t border-[#E7E5E4] dark:border-white/10 pt-5 space-y-3">
-            <p class="text-[11px] text-center text-stone-500 dark:text-stone-400 font-sans">
-                Don't have an account yet?
-            </p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-center text-xs">
-                <a href="{{ route('register') }}" 
-                   class="p-2.5 rounded-lg border border-[#C6A15B]/30 hover:border-[#C6A15B] bg-[#C6A15B]/5 hover:bg-[#C6A15B]/10 text-[#8F7239] dark:text-[#C6A15B] font-sans text-[11px] font-bold uppercase tracking-wider transition-colors">
-                    Register Venue
-                </a>
-                <a href="{{ route('customer.register') }}" 
-                   class="p-2.5 rounded-lg border border-stone-200 dark:border-white/10 hover:border-stone-400 dark:hover:border-white/30 bg-stone-50 dark:bg-white/5 text-stone-700 dark:text-stone-300 font-sans text-[11px] font-bold uppercase tracking-wider transition-colors">
-                    Customer Sign Up
-                </a>
-            </div>
+        <!-- Discreet Demo Quick-Fill for Testing -->
+        <div class="pt-1 text-center">
+            <details class="text-[11px] text-stone-400 dark:text-stone-500 cursor-pointer group">
+                <summary class="hover:text-[#8F7239] dark:hover:text-[#C6A15B] transition-colors py-0.5 select-none inline-flex items-center gap-1 font-sans text-[10px]">
+                    <span>Demo Accounts</span>
+                    <svg class="w-3 h-3 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </summary>
+                <div class="mt-2 flex flex-wrap justify-center gap-1.5 pt-1">
+                    <button type="button" @click="$wire.set('email', 'customer@example.com'); $wire.set('password', 'password'); document.getElementById('email').value = 'customer@example.com'; document.getElementById('password').value = 'password';" class="px-2.5 py-1 rounded-md bg-stone-100 dark:bg-white/5 hover:bg-[#C6A15B]/15 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] text-[10px] font-sans border border-stone-200 dark:border-white/10 transition cursor-pointer">
+                        Customer
+                    </button>
+                    <button type="button" @click="$wire.set('email', 'owner@venuecloud.pk'); $wire.set('password', 'password'); document.getElementById('email').value = 'owner@venuecloud.pk'; document.getElementById('password').value = 'password';" class="px-2.5 py-1 rounded-md bg-stone-100 dark:bg-white/5 hover:bg-[#C6A15B]/15 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] text-[10px] font-sans border border-stone-200 dark:border-white/10 transition cursor-pointer">
+                        Hall Owner
+                    </button>
+                    <button type="button" @click="$wire.set('email', 'admin@venuecloud.pk'); $wire.set('password', 'password'); document.getElementById('email').value = 'admin@venuecloud.pk'; document.getElementById('password').value = 'password';" class="px-2.5 py-1 rounded-md bg-stone-100 dark:bg-white/5 hover:bg-[#C6A15B]/15 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] text-[10px] font-sans border border-stone-200 dark:border-white/10 transition cursor-pointer">
+                        Super Admin
+                    </button>
+                </div>
+            </details>
         </div>
 
     </div>

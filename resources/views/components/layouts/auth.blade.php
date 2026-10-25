@@ -12,10 +12,14 @@
     <link rel="icon" type="image/png" href="{{ asset('images/eventhub-logo.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/eventhub-logo.png') }}">
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts: Preconnect & Asynchronous Loading (High Performance & Zero Render-Blocking) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+    </noscript>
 
     <!-- Styles & Livewire -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -49,7 +53,7 @@
       }">
 
     <!-- Minimal Auth Header: Back to Home + Brand Mark + Theme Toggle -->
-    <header class="w-full py-4 px-4 sm:px-8 flex items-center justify-between border-b border-[#E7E5E4] dark:border-white/10 bg-white/70 dark:bg-[#171513]/70 backdrop-blur-md sticky top-0 z-50">
+    <header class="w-full py-3.5 px-4 sm:px-8 flex items-center justify-between border-b border-[#E7E5E4] dark:border-white/10 bg-white/70 dark:bg-[#171513]/70 backdrop-blur-md sticky top-0 z-50">
         <!-- Back Button -->
         <a href="{{ route('home') }}" 
            class="inline-flex items-center gap-2 text-xs font-sans uppercase tracking-wider text-stone-600 dark:text-stone-300 hover:text-[#8F7239] dark:hover:text-[#C6A15B] transition-colors group">
@@ -61,7 +65,7 @@
 
         <!-- Center Brand Logo -->
         <a href="{{ route('home') }}" class="flex items-center gap-2.5 group">
-            <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub Logo" class="h-9 w-auto object-contain rounded-lg border border-[#C6A15B]/50 bg-[#171513] shadow-sm">
+            <img src="{{ asset('images/eventhub-logo.png') }}" width="36" height="36" alt="EventHub Logo" class="h-9 w-9 object-contain rounded-lg border border-[#C6A15B]/50 bg-[#171513] shadow-sm">
             <span class="font-cinzel text-sm sm:text-base font-bold tracking-[0.16em] text-[#171513] dark:text-white group-hover:text-[#C6A15B] transition-colors">
                 EventHub
             </span>
@@ -70,7 +74,7 @@
         <!-- Dark / Light Theme Toggle -->
         <button type="button" 
                 @click="toggleTheme()" 
-                class="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E7E5E4] dark:border-white/15 bg-stone-50 dark:bg-white/5 text-stone-600 dark:text-stone-300 hover:text-[#8F7239] dark:hover:text-[#C6A15B] transition-colors"
+                class="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E7E5E4] dark:border-white/15 bg-stone-50 dark:bg-white/5 text-stone-600 dark:text-stone-300 hover:text-[#8F7239] dark:hover:text-[#C6A15B] transition-colors cursor-pointer"
                 aria-label="Toggle color theme"
                 title="Toggle Theme">
             <svg x-show="!darkMode" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -82,9 +86,11 @@
         </button>
     </header>
 
-    <!-- Main Content Slot (No Navbar, No Footer) -->
-    <main class="auth-page-content flex-1 flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6">
-        {{ $slot }}
+    <!-- Main Content Slot (Perfect Vertical Centering Without Clipping) -->
+    <main class="auth-page-content flex-1 flex flex-col justify-center py-6 sm:py-10 px-4 sm:px-6 min-h-[calc(100vh-4.5rem)]">
+        <div class="w-full flex justify-center my-auto">
+            {{ $slot }}
+        </div>
     </main>
 
     @livewireScripts

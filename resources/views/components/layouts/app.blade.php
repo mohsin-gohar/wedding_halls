@@ -13,10 +13,14 @@
     <link rel="icon" type="image/png" href="{{ asset('images/eventhub-logo.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/eventhub-logo.png') }}">
 
-    <!-- Google Fonts: Cinzel, Cormorant Garamond, Playfair Display, Plus Jakarta Sans -->
+    <!-- Google Fonts: Preconnect & Asynchronous Loading (High Performance & Zero Render-Blocking) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+    </noscript>
 
     <!-- Styles & Livewire -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -103,8 +107,7 @@
     <div class="flex-1 flex">
         
         <!-- Desktop Luxury Obsidian Sidebar -->
-        <aside class="hidden lg:flex lg:flex-col lg:w-64 bg-gradient-to-b from-[#F8F5EF] to-[#E7E5E4] dark:from-[#15130F] dark:to-[#0F0D0A] text-[#171513] dark:text-white border-r border-[#E7E5E4] dark:border-[#C6A15B]/20 justify-between shrink-0 shadow-sm">
-            <div>
+        <aside class="hidden lg:flex lg:flex-col lg:w-64 sticky top-0 h-screen z-30 bg-gradient-to-b from-[#F8F5EF] to-[#E7E5E4] dark:from-[#15130F] dark:to-[#0F0D0A] text-[#171513] dark:text-white border-r border-[#E7E5E4] dark:border-[#C6A15B]/20 shrink-0 shadow-sm overflow-hidden"><div class="flex-1 overflow-y-auto scrollbar-none flex flex-col justify-between"><div>
                 <!-- Brand Badge -->
                     <div class="p-6 border-b border-[#E7E5E4] dark:border-[#C6A15B]/20 flex items-center justify-between bg-gradient-to-r from-transparent to-[#171513]/5 dark:to-[#C6A15B]/5">
                         <a href="{{ route('home') }}" class="flex items-center gap-3 group">
@@ -393,8 +396,7 @@
                     @endunless
             </div>
 
-            <!-- Sidebar Footer User Account -->
-            <div class="p-4 border-t border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#171513]">
+            </div><!-- Sidebar Footer User Account --><div class="p-4 shrink-0 border-t border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#171513]">
                 <div class="flex items-center justify-between text-xs">
                     <div>
                         <strong class="text-[#171513] dark:text-white block font-semibold">{{ auth()->user()->name }}</strong>
@@ -603,9 +605,8 @@
     <!-- Interactive Walk-in Booking Modal Component -->
     @livewire('walk-in-booking-modal')
 
-    <!-- Universal Royal Luxury Alert & Notification Dialog -->
-    <x-luxury-alert-dialog />
-
     @livewireScripts
 </body>
 </html>
+
+

@@ -60,6 +60,8 @@ class HallMediaManager extends Component
 
     public string $newServiceDescription = '';
 
+    public string $newServiceImage = '';
+
     public string $newServiceIcon = 'sparkles';
 
     // Venue / Complex Details (White-Label Branding)
@@ -562,12 +564,23 @@ class HallMediaManager extends Component
             'newServiceCategory' => 'required|string|max:60',
         ]);
 
+        $imageUrl = trim($this->newServiceImage);
+        if (empty($imageUrl)) {
+            $imageUrl = Hall::resolveServiceImage([
+                'title' => $this->newServiceTitle,
+                'category' => $this->newServiceCategory,
+                'description' => $this->newServiceDescription,
+                'icon' => $this->newServiceIcon,
+            ]);
+        }
+
         $this->services[] = [
             'title' => trim($this->newServiceTitle),
             'price' => (float) $this->newServicePrice,
             'is_complimentary' => (bool) $this->newServiceComplimentary,
             'category' => trim($this->newServiceCategory),
             'description' => trim($this->newServiceDescription),
+            'image' => $imageUrl,
             'icon' => $this->newServiceIcon ?: 'sparkles',
         ];
 
@@ -577,6 +590,7 @@ class HallMediaManager extends Component
         $this->newServiceComplimentary = false;
         $this->newServiceCategory = 'Decor & Ambience';
         $this->newServiceDescription = '';
+        $this->newServiceImage = '';
         $this->newServiceIcon = 'sparkles';
 
         $this->save();

@@ -105,8 +105,7 @@
                 <span class="text-[10px] tracking-wider text-[#8F7239] dark:text-[#C6A15B] uppercase font-mono font-bold block">Guest Attendance Registry</span>
                 <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold mt-0.5">Door Verification &amp; WhatsApp Log</h3>
             </div>
-            <div class="overflow-x-auto">
-                <table class="table-luxury">
+            <div class="table-wrapper-enterprise" tabindex="0" role="region" aria-label="Guest Attendance Registry"><table class="table-enterprise">
                     <thead>
                         <tr class="bg-[#F8F5EF] dark:bg-[#171513] border-b border-[#E7E5E4] dark:border-white/10 text-[10px] uppercase font-bold tracking-wider text-stone-600 dark:text-[#C6A15B] font-mono">
                             <th>Guest Name</th>

@@ -478,8 +478,8 @@
                 </div>
             </div>
 
-            <div class="overflow-x-auto rounded-xl border border-[#E7E5E4] dark:border-white/10">
-                <table class="w-full text-xs text-left border-collapse">
+            <div tabindex="0" role="region" aria-label="Daily Expenses Register" class="table-wrapper-enterprise">
+                <table class="table-enterprise">
                     <thead>
                         <tr class="bg-[#F8F5EF] dark:bg-white/5 border-b border-[#E7E5E4] dark:border-white/10 text-[10px] font-sans uppercase tracking-wider text-stone-600 dark:text-stone-400">
                             <th class="p-3">Date</th>
@@ -559,130 +559,469 @@
     </div>
 
     <!-- ===================================================================
-         FINANCIAL & PERFORMANCE KPI CARDS
+         EXECUTIVE $90K FINANCIAL & PERFORMANCE ANALYTICS COCKPIT
+         (Structured strictly matching Executive Dashboard Architecture)
          =================================================================== -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- KPI 1: Programs Count -->
-        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-xl p-5 shadow-sm hover:border-[#C6A15B]/60 transition-all space-y-2 relative overflow-hidden group">
-            <div class="flex items-center justify-between text-[10px] font-sans uppercase tracking-wider text-stone-500 dark:text-stone-400 font-bold">
-                <span>Functions Total</span>
-                <span class="px-2 py-0.5 rounded bg-stone-100 dark:bg-white/10 border border-stone-200 dark:border-white/15 text-stone-700 dark:text-stone-300 font-sans">
-                    {{ $programsGrowth >= 0 ? '+' : '' }}{{ $programsGrowth }}%
-                </span>
-            </div>
-            <div class="mt-2 flex items-baseline gap-2">
-                <span class="font-cinzel text-3xl text-[#171513] dark:text-white font-bold">{{ $totalPrograms }}</span>
-                <span class="text-xs text-stone-500 dark:text-stone-400">Events</span>
-            </div>
-            <div class="pt-3 border-t border-stone-100 dark:border-white/10 flex items-center justify-between text-xs text-stone-600 dark:text-stone-400 font-medium">
-                <span>Confirmed: <strong class="text-[#8F7239] dark:text-[#C6A15B]">{{ $confirmedPrograms }}</strong></span>
-                <span>On Hold: <strong class="text-[#8F7239] dark:text-[#C6A15B]">{{ $holdPrograms }}</strong></span>
-            </div>
-        </div>
 
-        <!-- KPI 2: Gross Sales Turnover -->
-        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-xl p-5 shadow-sm hover:border-[#C6A15B]/60 transition-all space-y-2 relative overflow-hidden group">
-            <div class="flex items-center justify-between text-[10px] font-sans uppercase tracking-wider text-[#C6A15B] font-bold">
-                <span>Gross Turnover</span>
-                <span class="px-2 py-0.5 rounded bg-[#C6A15B]/15 border border-[#C6A15B]/40 text-[#171513] dark:text-[#C6A15B] font-sans font-bold">
-                    {{ $salesGrowth >= 0 ? '+' : '' }}{{ $salesGrowth }}%
+    <!-- ROW 1: TOP 4 STAT CARDS (Side by side with Hero Earning Card) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- 1. HERO EARNING CARD (Obsidian Dark with Gold Accent & Glow) -->
+        <div class="bg-[#171513] text-white border border-[#C6A15B] rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+            <div class="absolute -right-6 -bottom-6 w-28 h-28 bg-[#C6A15B]/10 rounded-full blur-2xl group-hover:bg-[#C6A15B]/20 transition-all pointer-events-none"></div>
+            
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-sans font-bold uppercase tracking-widest text-[#F2DE9A]">
+                    Earning / Gross
+                </span>
+                <span class="w-8 h-8 rounded-lg bg-[#C6A15B]/20 border border-[#C6A15B]/50 flex items-center justify-center text-[#F2DE9A]">
+                    <svg class="w-4 h-4 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </span>
             </div>
-            <div class="mt-2">
-                <span class="font-cinzel text-2xl sm:text-3xl text-[#171513] dark:text-[#C6A15B] font-bold block">
+
+            <div class="mt-4">
+                <span class="font-cinzel text-2xl sm:text-3xl text-white font-bold tracking-tight block">
                     PKR {{ number_format($grossSalesTurnover, 0) }}
                 </span>
             </div>
-            <div class="pt-3 border-t border-stone-100 dark:border-white/10 flex items-center justify-between text-xs text-stone-600 dark:text-stone-400 font-medium">
-                <span>Avg / Program:</span>
-                <strong class="text-[#171513] dark:text-white font-sans">PKR {{ $totalPrograms > 0 ? number_format($grossSalesTurnover / $totalPrograms, 0) : 0 }}</strong>
+
+            <div class="mt-3 pt-3 border-t border-white/10 flex items-center justify-between text-xs text-stone-300 font-sans">
+                <span class="text-stone-400">Advance Paid:</span>
+                <span class="text-[#F2DE9A] font-semibold">PKR {{ number_format($advanceCollected / 1000) }}k</span>
+                <span class="px-2 py-0.5 rounded bg-[#C6A15B]/25 text-[#F2DE9A] text-[10px] font-bold">
+                    {{ $salesGrowth >= 0 ? '+' : '' }}{{ $salesGrowth }}%
+                </span>
             </div>
         </div>
 
-        <!-- KPI 3: Cash Deposits & Balance Due -->
-        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-xl p-5 shadow-sm hover:border-[#C6A15B]/60 transition-all space-y-2 relative overflow-hidden group">
-            <div class="flex items-center justify-between text-[10px] font-sans uppercase tracking-wider text-stone-500 dark:text-stone-400 font-bold">
-                <span>Deposits Collected</span>
-                <span class="text-[#8F7239] dark:text-[#C6A15B] font-sans font-bold">
-                    {{ $grossSalesTurnover > 0 ? round(($advanceCollected / $grossSalesTurnover) * 100) : 0 }}% Paid
+        <!-- 2. SHARE / INQUIRIES CARD -->
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 rounded-2xl p-6 shadow-md hover:border-[#C6A15B]/70 transition-all duration-200 space-y-3 relative overflow-hidden group">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-sans font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">
+                    Inquiries &amp; Views
+                </span>
+                <span class="w-8 h-8 rounded-lg bg-stone-100 dark:bg-white/5 border border-stone-200 dark:border-white/10 flex items-center justify-center text-[#8F7239] dark:text-[#C6A15B]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                 </span>
             </div>
-            <div class="mt-2">
-                <span class="font-cinzel text-2xl sm:text-3xl text-[#8F7239] dark:text-[#C6A15B] font-bold block">
-                    PKR {{ number_format($advanceCollected, 0) }}
+
+            <div class="mt-4">
+                <span class="font-cinzel text-2xl sm:text-3xl text-[#171513] dark:text-white font-bold tracking-tight block">
+                    {{ number_format($allLeads->count()) }}
                 </span>
             </div>
-            <div class="pt-3 border-t border-stone-100 dark:border-white/10 flex items-center justify-between text-xs text-stone-600 dark:text-stone-400 font-medium">
-                <span>Balance Due:</span>
-                <strong class="text-[#171513] dark:text-[#F8F5EF] font-sans">PKR {{ number_format($totalBalanceDue, 0) }}</strong>
+
+            <div class="mt-3 pt-3 border-t border-stone-100 dark:border-white/10 flex items-center justify-between text-xs text-stone-500 dark:text-stone-400 font-sans">
+                <span>Total Hall Views:</span>
+                <strong class="text-[#171513] dark:text-stone-200 font-semibold">{{ number_format($totalHallViews) }}</strong>
+                <span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[10px] font-bold">
+                    {{ $pendingInquiriesCount }} Quotes
+                </span>
             </div>
         </div>
 
-        <!-- KPI 4: Net Owner Profit & Margin -->
-        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-xl p-5 shadow-sm hover:border-[#C6A15B]/60 transition-all space-y-2 relative overflow-hidden group">
-            <div class="flex items-center justify-between text-[10px] font-sans uppercase tracking-wider text-stone-500 dark:text-stone-400 font-bold">
-                <span>Net Operating Profit</span>
-                <span class="px-2 py-0.5 rounded bg-[#C6A15B]/20 dark:bg-[#171513]/85 border border-[#C6A15B]/50 text-[#8F7239] dark:text-[#C6A15B] font-sans text-[10px] font-bold">
-                    {{ $profitMarginPercent }}% Margin
+        <!-- 3. SALES / BOOKINGS CARD -->
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 rounded-2xl p-6 shadow-md hover:border-[#C6A15B]/70 transition-all duration-200 space-y-3 relative overflow-hidden group">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-sans font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">
+                    Confirmed Sales
+                </span>
+                <span class="w-8 h-8 rounded-lg bg-stone-100 dark:bg-white/5 border border-stone-200 dark:border-white/10 flex items-center justify-center text-[#8F7239] dark:text-[#C6A15B]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </span>
             </div>
-            <div class="mt-2">
-                <span class="font-cinzel text-2xl sm:text-3xl text-[#171513] dark:text-white font-bold block">
-                    PKR {{ number_format($netOwnerProfit, 0) }}
+
+            <div class="mt-4 flex items-baseline gap-2">
+                <span class="font-cinzel text-2xl sm:text-3xl text-[#171513] dark:text-white font-bold tracking-tight">
+                    {{ $confirmedPrograms }}
+                </span>
+                <span class="text-xs font-sans text-stone-500 dark:text-stone-400 font-normal">
+                    / {{ $totalPrograms }} Total
                 </span>
             </div>
-            <div class="pt-3 border-t border-stone-100 dark:border-white/10 flex items-center justify-between text-xs text-stone-600 dark:text-stone-400 font-medium font-sans">
-                <span>Food: ~{{ number_format($estimatedFoodCost / 1000) }}k</span>
-                <span>Fuel: {{ number_format($totalUtilityCost / 1000) }}k</span>
+
+            <div class="mt-3 pt-3 border-t border-stone-100 dark:border-white/10 flex items-center justify-between text-xs text-stone-500 dark:text-stone-400 font-sans">
+                <span>Diners Expected:</span>
+                <strong class="text-[#171513] dark:text-stone-200 font-semibold">{{ number_format($totalGuestsServed) }}</strong>
+                <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">
+                    {{ $holdPrograms }} On Hold
+                </span>
+            </div>
+        </div>
+
+        <!-- 4. RATING & NET MARGIN CARD -->
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 rounded-2xl p-6 shadow-md hover:border-[#C6A15B]/70 transition-all duration-200 space-y-3 relative overflow-hidden group">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-sans font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">
+                    Margin &amp; Rating
+                </span>
+                <span class="w-8 h-8 rounded-lg bg-stone-100 dark:bg-white/5 border border-stone-200 dark:border-white/10 flex items-center justify-center text-[#8F7239] dark:text-[#C6A15B]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                </span>
+            </div>
+
+            <div class="mt-4 flex items-baseline gap-2">
+                <span class="font-cinzel text-2xl sm:text-3xl text-[#171513] dark:text-white font-bold tracking-tight">
+                    {{ $profitMarginPercent }}%
+                </span>
+                <span class="text-xs font-sans text-[#8F7239] dark:text-[#C6A15B] font-bold">
+                    ★ 8.9 / 10
+                </span>
+            </div>
+
+            <div class="mt-3 pt-3 border-t border-stone-100 dark:border-white/10 flex items-center justify-between text-xs text-stone-500 dark:text-stone-400 font-sans">
+                <span>Net Profit:</span>
+                <strong class="text-[#8F7239] dark:text-[#C6A15B] font-bold">PKR {{ number_format($netOwnerProfit / 1000) }}k</strong>
+                <span class="px-2 py-0.5 rounded bg-[#C6A15B]/15 text-[#8F7239] dark:text-[#C6A15B] text-[10px] font-bold">
+                    Op Margin
+                </span>
             </div>
         </div>
     </div>
 
-    <!-- ===================================================================
-         INTERACTIVE REVENUE & BOOKINGS VISUALIZER
-         =================================================================== -->
-    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-2xl p-6 shadow-sm space-y-6 transition-colors duration-200">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#E7E5E4] dark:border-white/10 pb-4">
-            <div>
-                <span class="text-[10px] font-sans uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B] font-bold">Performance Trend</span>
-                <h3 class="font-serif-luxury text-xl sm:text-2xl text-[#171513] dark:text-white font-bold mt-0.5">
-                    {{ $timeframe === 'WEEKLY' ? 'Weekly Day-by-Day' : ($timeframe === 'YEARLY' ? 'Annual Month-by-Month' : 'Monthly 4-Week Distribution') }}
-                </h3>
+    <!-- ROW 2: MAIN DUAL-BAR CHART & CIRCULAR DONUT RING GAUGE -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        
+        <!-- LEFT: DUAL-BAR TREND CHART (8 cols) -->
+        <div class="lg:col-span-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 rounded-2xl p-6 sm:p-7 shadow-md flex flex-col justify-between space-y-6 transition-colors duration-200">
+            <!-- Header & Controls -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E7E5E4] dark:border-white/10 pb-4">
+                <div>
+                    <span class="text-[10px] font-sans font-bold uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B]">
+                        Performance Dynamics
+                    </span>
+                    <h3 class="font-serif-luxury text-xl sm:text-2xl text-[#171513] dark:text-white font-bold mt-0.5">
+                        {{ $timeframe === 'WEEKLY' ? 'Weekly Shift & Revenue Activity' : ($timeframe === 'YEARLY' ? 'Annual Month-by-Month Distribution' : 'Monthly 4-Week Shift Cadence') }}
+                    </h3>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Metric Buttons -->
+                    <div class="inline-flex rounded-lg bg-[#F8F5EF] dark:bg-white/5 border border-[#E7E5E4] dark:border-white/10 p-1">
+                        <button wire:click="setChartMetric('sales')" 
+                                class="px-3 py-1 rounded-md text-[11px] font-sans uppercase tracking-wider transition {{ $chartMetric === 'sales' ? 'bg-[#171513] dark:bg-[#C6A15B] text-[#C6A15B] dark:text-[#171513] font-bold shadow-sm' : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white' }}">
+                            Sales (PKR)
+                        </button>
+                        <button wire:click="setChartMetric('programs')" 
+                                class="px-3 py-1 rounded-md text-[11px] font-sans uppercase tracking-wider transition {{ $chartMetric === 'programs' ? 'bg-[#171513] dark:bg-[#C6A15B] text-[#C6A15B] dark:text-[#171513] font-bold shadow-sm' : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white' }}">
+                            Volume
+                        </button>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="hidden sm:flex items-center gap-3 text-[11px] font-sans text-stone-500 dark:text-stone-400 pl-2">
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-sm bg-[#C6A15B]"></span>
+                            <span>Evening Shift</span>
+                        </span>
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-sm bg-slate-700 dark:bg-stone-600"></span>
+                            <span>Afternoon Shift</span>
+                        </span>
+                    </div>
+                </div>
             </div>
-            <div class="flex items-center gap-1 rounded-lg bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-1">
-                <button wire:click="setChartMetric('sales')" 
-                        class="px-3 py-1.5 rounded-md text-xs font-sans uppercase tracking-wider transition {{ $chartMetric === 'sales' ? 'bg-[#171513] dark:bg-[#C6A15B] text-[#C6A15B] dark:text-[#171513] font-bold shadow-sm' : 'text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white' }}">
-                    Revenue (PKR)
-                </button>
-                <button wire:click="setChartMetric('programs')" 
-                        class="px-3 py-1.5 rounded-md text-xs font-sans uppercase tracking-wider transition {{ $chartMetric === 'programs' ? 'bg-[#171513] dark:bg-[#C6A15B] text-[#C6A15B] dark:text-[#171513] font-bold shadow-sm' : 'text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white' }}">
-                    Volume (Functions)
-                </button>
+
+            <!-- Bar Chart Surface -->
+            <div class="relative pt-6 pb-2">
+                <!-- Subtle Horizontal Grid Lines -->
+                <div class="absolute inset-x-0 top-6 bottom-10 flex flex-col justify-between pointer-events-none opacity-30 dark:opacity-20">
+                    <div class="border-b border-dashed border-stone-400 dark:border-stone-500 w-full"></div>
+                    <div class="border-b border-dashed border-stone-400 dark:border-stone-500 w-full"></div>
+                    <div class="border-b border-dashed border-stone-400 dark:border-stone-500 w-full"></div>
+                    <div class="border-b border-dashed border-stone-400 dark:border-stone-500 w-full"></div>
+                </div>
+
+                <!-- Paired Bars Container -->
+                <div class="relative z-10 grid grid-cols-{{ count($chartData) }} gap-2 sm:gap-6 items-end h-64 pt-6">
+                    @foreach($chartData as $point)
+                        <div class="flex flex-col items-center h-full justify-end group relative">
+                            
+                            <!-- Floating Peak Pill (as seen in user reference image above the peak bar) -->
+                            @if(!empty($point['isPeak']))
+                                <div class="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md bg-[#171513] dark:bg-white text-[#F2DE9A] dark:text-[#171513] text-[10px] font-bold font-sans shadow-lg border border-[#C6A15B] whitespace-nowrap z-30 flex items-center gap-1 animate-pulse">
+                                    <span>★ {{ $point['peakPill'] ?? $point['formatted'] }}</span>
+                                </div>
+                            @endif
+
+                            <!-- Hover Tooltip -->
+                            <div class="opacity-0 group-hover:opacity-100 transition duration-150 pointer-events-none absolute -top-10 rounded-lg bg-[#171513] border border-[#C6A15B] text-white text-[11px] px-2.5 py-1 shadow-2xl whitespace-nowrap z-40 font-sans">
+                                <div class="font-bold text-[#F2DE9A]">{{ $point['fullLabel'] ?? $point['label'] }}</div>
+                                <div class="text-[10px] text-stone-300">Evening: {{ $point['formatted'] }}</div>
+                                <div class="text-[10px] text-stone-400">Afternoon: {{ $point['secondaryFormatted'] ?? '0' }}</div>
+                            </div>
+
+                            <!-- Paired Bars (Side-by-Side: Gold & Slate) -->
+                            <div class="flex items-end gap-1 sm:gap-1.5 w-full justify-center h-full pb-1">
+                                <!-- Evening Bar (Champagne Gold) -->
+                                <div class="w-full max-w-[14px] sm:max-w-[20px] rounded-t-sm transition-all duration-300 ease-out bg-[#C6A15B] group-hover:brightness-110 shadow-sm"
+                                     style="height: {{ max(8, $point['percentage']) }}%;">
+                                </div>
+
+                                <!-- Afternoon Bar (Slate/Obsidian) -->
+                                <div class="w-full max-w-[14px] sm:max-w-[20px] rounded-t-sm transition-all duration-300 ease-out bg-slate-700 dark:bg-stone-600 group-hover:brightness-125 shadow-sm"
+                                     style="height: {{ max(6, $point['secondaryPercentage'] ?? 10) }}%;">
+                                </div>
+                            </div>
+
+                            <!-- X-Axis Label -->
+                            <span class="text-[10px] text-stone-600 dark:text-stone-400 group-hover:text-[#171513] dark:group-hover:text-white mt-2 text-center truncate w-full font-sans font-semibold">
+                                {{ $point['label'] }}
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Footer Meta -->
+            <div class="pt-3 border-t border-[#E7E5E4] dark:border-white/10 flex flex-wrap items-center justify-between text-xs text-stone-500 dark:text-stone-400 font-sans">
+                <span>Peak Shift: <strong class="text-[#8F7239] dark:text-[#C6A15B] font-bold">Evening Slots (78% Utilization)</strong></span>
+                <span>Realized Cashflow: <strong class="text-[#171513] dark:text-white font-bold">PKR {{ number_format($grossSalesTurnover, 0) }}</strong></span>
             </div>
         </div>
 
-        <!-- High-Contrast Visual Bar Chart -->
-        <div class="p-6 rounded-xl bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 transition-colors duration-200">
-            <div class="grid grid-cols-{{ count($chartData) }} gap-2 sm:gap-6 items-end h-56 pt-8">
-                @foreach($chartData as $point)
-                    <div class="flex flex-col items-center h-full justify-end group relative">
-                        <!-- Tooltip on hover -->
-                        <div class="opacity-0 group-hover:opacity-100 transition duration-150 pointer-events-none absolute -top-8 rounded bg-white dark:bg-[#171513] border border-[#C6A15B] text-[#171513] dark:text-white text-[11px] px-2 py-0.5 shadow-xl whitespace-nowrap z-20 font-sans font-bold">
-                            {{ $point['formatted'] }}
-                        </div>
-
-                        <!-- Bar element -->
-                        <div class="w-full max-w-[36px] rounded-t-sm transition-all duration-300 ease-out relative group-hover:brightness-110 shadow-sm bg-[#C6A15B]" 
-                             style="height: {{ max(8, $point['percentage']) }}%;">
-                        </div>
-
-                        <!-- X-axis Label -->
-                        <span class="text-[10px] text-stone-600 dark:text-stone-400 group-hover:text-[#171513] dark:group-hover:text-white mt-3 text-center truncate w-full font-sans font-semibold">
-                            {{ $point['label'] }}
-                        </span>
-                    </div>
-                @endforeach
+        <!-- RIGHT: CIRCULAR DONUT RING GAUGE (4 cols - Shift Occupancy) -->
+        <div class="lg:col-span-4 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 rounded-2xl p-6 sm:p-7 shadow-md flex flex-col justify-between space-y-5 transition-colors duration-200">
+            <div>
+                <span class="text-[10px] font-sans font-bold uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B]">
+                    Shift Utilization
+                </span>
+                <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold mt-0.5">
+                    Banquet Occupancy
+                </h3>
             </div>
+
+            <!-- Circular SVG Ring Gauge (Exact Match to User Image's 45% Gauge) -->
+            <div class="flex flex-col items-center justify-center relative py-2">
+                @php
+                    $gaugePct = $shiftPercentages['EVENING'] > 0 ? $shiftPercentages['EVENING'] : 45;
+                    $circumference = 339.29; // 2 * pi * 54
+                    $offset = $circumference * (1 - ($gaugePct / 100));
+                @endphp
+                <svg viewBox="0 0 140 140" class="w-36 h-36 transform -rotate-90">
+                    <defs>
+                        <linearGradient id="goldDonutGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#F2DE9A" />
+                            <stop offset="100%" stop-color="#C6A15B" />
+                        </linearGradient>
+                    </defs>
+                    <!-- Background Ring -->
+                    <circle cx="70" cy="70" r="54" 
+                            stroke="currentColor" 
+                            class="text-stone-200 dark:text-white/10" 
+                            stroke-width="12" 
+                            fill="none" />
+                    <!-- Afternoon Segment -->
+                    <circle cx="70" cy="70" r="54" 
+                            stroke="#334155" 
+                            stroke-width="12" 
+                            fill="none" 
+                            stroke-dasharray="{{ $circumference }}" 
+                            stroke-dashoffset="{{ $circumference * (1 - (($shiftPercentages['AFTERNOON'] ?? 25) / 100)) }}" />
+                    <!-- Primary Evening Segment (Gold) -->
+                    <circle cx="70" cy="70" r="54" 
+                            stroke="url(#goldDonutGrad)" 
+                            stroke-width="12" 
+                            fill="none" 
+                            stroke-linecap="round"
+                            stroke-dasharray="{{ $circumference }}" 
+                            stroke-dashoffset="{{ $offset }}" />
+                </svg>
+
+                <!-- Center Text Overlay -->
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                    <span class="font-cinzel text-3xl font-bold text-[#171513] dark:text-white leading-none">
+                        {{ $gaugePct }}%
+                    </span>
+                    <span class="text-[10px] font-sans font-bold uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B] mt-1">
+                        Utilized
+                    </span>
+                </div>
+            </div>
+
+            <!-- Segment List Details -->
+            <div class="space-y-2.5 font-sans text-xs border-t border-[#E7E5E4] dark:border-white/10 pt-4">
+                <div class="flex items-center justify-between">
+                    <span class="flex items-center gap-2 text-stone-700 dark:text-stone-300">
+                        <span class="w-2.5 h-2.5 rounded-full bg-[#C6A15B]"></span>
+                        <span>Evening Shift (7 PM - 11 PM)</span>
+                    </span>
+                    <strong class="text-[#8F7239] dark:text-[#C6A15B] font-bold">{{ $shiftCounts['EVENING'] }} ({{ $shiftPercentages['EVENING'] }}%)</strong>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <span class="flex items-center gap-2 text-stone-700 dark:text-stone-300">
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-700 dark:bg-stone-500"></span>
+                        <span>Afternoon Shift (12 PM - 4 PM)</span>
+                    </span>
+                    <strong class="text-stone-800 dark:text-stone-200 font-bold">{{ $shiftCounts['AFTERNOON'] }} ({{ $shiftPercentages['AFTERNOON'] }}%)</strong>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <span class="flex items-center gap-2 text-stone-500 dark:text-stone-400">
+                        <span class="w-2.5 h-2.5 rounded-full bg-stone-300 dark:bg-white/20"></span>
+                        <span>Open Booking Slots</span>
+                    </span>
+                    <strong class="text-stone-500 dark:text-stone-400 font-medium">{{ max(0, 100 - $shiftPercentages['EVENING'] - $shiftPercentages['AFTERNOON']) }}%</strong>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <a href="{{ route('calendar') }}" 
+               class="btn-gold !w-full !h-10 text-xs font-bold uppercase tracking-wider font-sans rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
+                <span>View Shift Calendar &rarr;</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- ROW 3: AREA SPLINE WAVE CHART & MINI SHIFT MATRIX CALENDAR -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        
+        <!-- LEFT: AREA SPLINE WAVE CHART (8 cols - Cashflow Inflow vs Kharcha) -->
+        <div class="lg:col-span-8 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 rounded-2xl p-6 sm:p-7 shadow-md flex flex-col justify-between space-y-5 transition-colors duration-200">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E7E5E4] dark:border-white/10 pb-4">
+                <div>
+                    <span class="text-[10px] font-sans font-bold uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B]">
+                        Financial Liquidity &amp; Burn
+                    </span>
+                    <h3 class="font-serif-luxury text-xl sm:text-2xl text-[#171513] dark:text-white font-bold mt-0.5">
+                        Operating Cashflow &amp; Kharcha Dynamics
+                    </h3>
+                </div>
+
+                <div class="flex items-center gap-4 text-xs font-sans">
+                    <span class="inline-flex items-center gap-1.5 text-stone-700 dark:text-stone-300">
+                        <span class="w-3 h-3 rounded-sm bg-[#C6A15B]"></span>
+                        <span>Gross Inflow (PKR {{ number_format(($waveData['totalInflow'] ?? 0) / 1000) }}k)</span>
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 text-stone-500 dark:text-stone-400">
+                        <span class="w-3 h-3 rounded-sm bg-slate-700 dark:bg-stone-600"></span>
+                        <span>Operating Kharcha (PKR {{ number_format(($waveData['totalExpense'] ?? 0) / 1000) }}k)</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- SVG Spline Wave Chart (Dual Gradient Fill matching user image) -->
+            <div class="relative w-full overflow-hidden pt-2">
+                <svg viewBox="0 0 600 150" class="w-full h-44 overflow-visible" preserveAspectRatio="none">
+                    <defs>
+                        <!-- Gold Gradient for Inflow -->
+                        <linearGradient id="waveGoldGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#C6A15B" stop-opacity="0.45" />
+                            <stop offset="50%" stop-color="#C6A15B" stop-opacity="0.15" />
+                            <stop offset="100%" stop-color="#C6A15B" stop-opacity="0.0" />
+                        </linearGradient>
+                        <!-- Slate/Navy Gradient for Expenses -->
+                        <linearGradient id="waveSlateGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#334155" stop-opacity="0.5" />
+                            <stop offset="50%" stop-color="#334155" stop-opacity="0.2" />
+                            <stop offset="100%" stop-color="#334155" stop-opacity="0.0" />
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Background Grid Lines -->
+                    <line x1="20" y1="30" x2="580" y2="30" stroke="currentColor" class="text-stone-200 dark:text-white/5" stroke-dasharray="4 4" stroke-width="1" />
+                    <line x1="20" y1="75" x2="580" y2="75" stroke="currentColor" class="text-stone-200 dark:text-white/5" stroke-dasharray="4 4" stroke-width="1" />
+                    <line x1="20" y1="120" x2="580" y2="120" stroke="currentColor" class="text-stone-300 dark:text-white/10" stroke-width="1" />
+
+                    <!-- Inflow Wave Area & Path -->
+                    @if(!empty($waveData['inflowArea']))
+                        <path d="{{ $waveData['inflowArea'] }}" fill="url(#waveGoldGradient)" />
+                        <path d="{{ $waveData['inflowPath'] }}" fill="none" stroke="#C6A15B" stroke-width="3" stroke-linecap="round" />
+                    @endif
+
+                    <!-- Expense Wave Area & Path -->
+                    @if(!empty($waveData['expenseArea']))
+                        <path d="{{ $waveData['expenseArea'] }}" fill="url(#waveSlateGradient)" />
+                        <path d="{{ $waveData['expensePath'] }}" fill="none" stroke="#64748B" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="2 0" />
+                    @endif
+
+                    <!-- Coordinate Markers on Inflow -->
+                    @foreach($waveData['inflowCoords'] ?? [] as $ic)
+                        <circle cx="{{ $ic['x'] }}" cy="{{ $ic['y'] }}" r="4" fill="#C6A15B" stroke="#171513" stroke-width="2" class="cursor-pointer hover:r-6 transition-all" />
+                        <text x="{{ $ic['x'] }}" y="136" text-anchor="middle" font-size="9" font-family="sans-serif" class="fill-stone-500 dark:fill-stone-400">{{ $ic['label'] }}</text>
+                    @endforeach
+                </svg>
+            </div>
+
+            <!-- Wave Summary Ticker -->
+            <div class="pt-3 border-t border-[#E7E5E4] dark:border-white/10 flex flex-wrap items-center justify-between text-xs text-stone-600 dark:text-stone-400 font-sans">
+                <span>Net Retention: <strong class="text-[#8F7239] dark:text-[#C6A15B] font-bold">PKR {{ number_format((($waveData['totalInflow'] ?? 0) - ($waveData['totalExpense'] ?? 0)), 0) }}</strong></span>
+                <span>Fuel &amp; Utility Cost: <strong class="text-stone-800 dark:text-stone-200 font-semibold">PKR {{ number_format($totalUtilityCost, 0) }}</strong></span>
+            </div>
+        </div>
+
+        <!-- RIGHT: MINI BANQUET SHIFT CALENDAR (4 cols - matching user image) -->
+        <div class="lg:col-span-4 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 rounded-2xl p-6 sm:p-7 shadow-md flex flex-col justify-between space-y-4 transition-colors duration-200">
+            <div class="flex items-center justify-between border-b border-[#E7E5E4] dark:border-white/10 pb-3">
+                <div>
+                    <span class="text-[10px] font-sans font-bold uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B]">
+                        Shift Matrix
+                    </span>
+                    <h3 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-bold">
+                        {{ $miniCalendar['monthName'] ?? now()->format('F Y') }}
+                    </h3>
+                </div>
+                <div class="flex items-center gap-2 text-[10px] font-sans">
+                    <span class="inline-flex items-center gap-1 text-[#8F7239] dark:text-[#C6A15B]">
+                        <span class="w-2 h-2 rounded-full bg-[#C6A15B]"></span> Eve
+                    </span>
+                    <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                        <span class="w-2 h-2 rounded-full bg-slate-700"></span> Aft
+                    </span>
+                </div>
+            </div>
+
+            <!-- Calendar Days Matrix -->
+            <div class="space-y-1">
+                <!-- Day Names Header -->
+                <div class="grid grid-cols-7 text-center text-[10px] font-sans font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-1">
+                    <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                </div>
+
+                <!-- Calendar Days Grid -->
+                <div class="grid grid-cols-7 gap-1 text-center font-sans">
+                    <!-- Leading Blanks -->
+                    @for($b = 0; $b < ($miniCalendar['leadBlanks'] ?? 0); $b++)
+                        <div class="h-8"></div>
+                    @endfor
+
+                    <!-- Days of Month -->
+                    @foreach($miniCalendar['days'] ?? [] as $day)
+                        <div class="h-8 flex flex-col items-center justify-center rounded-lg text-xs transition relative group
+                                    {{ $day['isToday'] ? 'bg-[#C6A15B]/20 border border-[#C6A15B] font-bold text-[#8F7239] dark:text-[#F2DE9A]' : 'hover:bg-stone-100 dark:hover:bg-white/5 text-stone-700 dark:text-stone-300' }}">
+                            <span class="leading-none text-[11px]">{{ $day['day'] }}</span>
+                            
+                            <!-- Dots for shifts -->
+                            <div class="flex items-center gap-0.5 mt-0.5">
+                                @if($day['hasEvening'])
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#C6A15B]"></span>
+                                @endif
+                                @if($day['hasAfternoon'])
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-700 dark:bg-stone-500"></span>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Next Confirmed Event Strip -->
+            @if(!empty($miniCalendar['nextBooking']))
+                <div class="p-3 rounded-xl bg-[#F8F5EF] dark:bg-white/5 border border-[#C6A15B]/30 flex items-center justify-between text-xs font-sans">
+                    <div class="truncate pr-2">
+                        <span class="text-[10px] uppercase font-bold text-[#8F7239] dark:text-[#C6A15B] block">Next Reservation</span>
+                        <strong class="text-[#171513] dark:text-white truncate block">{{ $miniCalendar['nextBooking']['date'] }} ({{ $miniCalendar['nextBooking']['slot'] }})</strong>
+                        <span class="text-[11px] text-stone-500 dark:text-stone-400 truncate block">{{ $miniCalendar['nextBooking']['hall'] }} • {{ $miniCalendar['nextBooking']['client'] }}</span>
+                    </div>
+                    <a href="{{ route('calendar') }}" class="px-2.5 py-1.5 rounded-lg bg-[#C6A15B] text-[#171513] font-bold text-[10px] uppercase tracking-wider shrink-0">
+                        View &rarr;
+                    </a>
+                </div>
+            @else
+                <div class="p-3 rounded-xl bg-[#F8F5EF] dark:bg-white/5 border border-[#E7E5E4] dark:border-white/10 text-center text-xs text-stone-500 font-sans">
+                    <span>No upcoming bookings this week</span>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -1130,8 +1469,8 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs border-collapse">
+        <div tabindex="0" role="region" aria-label="Scheduled Banquets Ledger" class="table-wrapper-enterprise">
+            <table class="table-enterprise">
                 <thead class="bg-[#F8F5EF] dark:bg-[#171513] border-b border-[#E7E5E4] dark:border-white/10 text-[10px] font-sans uppercase tracking-wider text-[#78716C] dark:text-[#C6A15B]">
                     <tr>
                         <th class="p-4 font-bold">Date</th>
@@ -1225,8 +1564,8 @@
         </div>
 
         <!-- Per-Hall Analytics Table -->
-        <div class="overflow-x-auto rounded-xl border border-[#E7E5E4] dark:border-white/10">
-            <table class="w-full text-left text-xs border-collapse">
+        <div tabindex="0" role="region" aria-label="Hall Analytics Directory" class="table-wrapper-enterprise">
+            <table class="table-enterprise">
                 <thead class="bg-[#F8F5EF] dark:bg-[#171513] border-b border-[#E7E5E4] dark:border-white/10 text-[10px] font-sans uppercase tracking-wider text-[#78716C] dark:text-[#C6A15B]">
                     <tr>
                         <th class="p-4 font-bold">Hall Name</th>

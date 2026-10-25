@@ -6,7 +6,7 @@ use App\Models\GuestRsvp;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.public')]
+#[Layout('components.layouts.public', ['title' => 'RSVP Your Invitation — EventHub Pakistan'])]
 class PublicGuestRsvp extends Component
 {
     public string $phone = '';

@@ -92,10 +92,10 @@
                     <p class="text-xs text-stone-300 font-light leading-relaxed">
                         For immediate shift checks, walk-in appointment scheduling, or urgent inquiries, message our 24/7 dedicated concierge desk.
                     </p>
-                    <a href="https://wa.me/923008472910?text=Hello%20EventHub%20Concierge,%20I%20have%20an%20inquiry%20regarding%20wedding%20venue%20booking" 
+                    <a href="https://wa.me/924235789000?text=Hello%20EventHub%20Concierge,%20I%20have%20an%20inquiry%20regarding%20wedding%20venue%20booking" 
                        target="_blank" 
                        class="btn-gold !w-full !h-11 text-xs font-bold font-sans tracking-wide flex items-center justify-center gap-2 rounded-xl shadow-sm">
-                        <span>Message on WhatsApp (+92 300 8472910)</span>
+                        <span>Message on WhatsApp (+92 42 35789000)</span>
                     </a>
                 </div>
 

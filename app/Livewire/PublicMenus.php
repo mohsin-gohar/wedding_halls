@@ -6,7 +6,7 @@ use App\Models\Package;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.public')]
+#[Layout('components.layouts.public', ['title' => 'Catering Packages & Menus — EventHub Pakistan'])]
 class PublicMenus extends Component
 {
     public int $calculatorGuests = 450;

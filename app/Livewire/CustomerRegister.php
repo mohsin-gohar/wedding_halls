@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.auth', ['title' => 'Create Customer Account — EventHub'])]
+#[Layout('components.layouts.auth', ['title' => 'Create Account — EventHub'])]
 class CustomerRegister extends Component
 {
     public string $name = '';

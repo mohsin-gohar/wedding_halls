@@ -12,7 +12,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('components.layouts.public')]
+#[Layout('components.layouts.public', ['title' => 'Wedding Venues Marketplace — EventHub Pakistan'])]
 class PublicVenues extends Component
 {
     use WithPagination;

@@ -9,7 +9,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('components.layouts.public')]
+#[Layout('components.layouts.public', ['title' => 'Check Hall Availability — EventHub Pakistan'])]
 class PublicAvailabilityChecker extends Component
 {
     use WithPagination;
