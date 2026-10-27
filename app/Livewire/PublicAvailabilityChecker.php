@@ -4,7 +4,9 @@ namespace App\Livewire;
 
 use App\Models\Booking;
 use App\Models\Hall;
+use App\Support\CalendarWindow;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -23,17 +25,42 @@ class PublicAvailabilityChecker extends Component
 
     public function setDate(string $dateStr)
     {
-        if (! Carbon::hasFormat($dateStr, 'Y-m-d')) {
+        $date = CalendarWindow::parseDate($dateStr);
+
+        if (! $date || ! CalendarWindow::contains($date)) {
             return;
         }
 
-        $this->selectedDate = $dateStr;
+        $this->selectedDate = $date->format('Y-m-d');
         $this->resetPage();
     }
 
     public function updatedSelectedDate(): void
     {
+        $this->normalizeSelectedDate();
         $this->resetPage();
+    }
+
+    /**
+     * Clamp client-supplied state to a real, upcoming date inside the booking
+     * horizon. Rendering also calls this so a corrupted payload can never
+     * trigger a parse error or expose an elapsed date.
+     */
+    private function normalizeSelectedDate(): Carbon
+    {
+        $date = CalendarWindow::parseDate($this->selectedDate);
+
+        if ($date === null) {
+            $date = Carbon::tomorrow();
+        } elseif (! CalendarWindow::contains($date)) {
+            $date = $date->lt(Carbon::today())
+                ? Carbon::today()
+                : CalendarWindow::lastMonth()->endOfMonth();
+        }
+
+        $this->selectedDate = $date->format('Y-m-d');
+
+        return $date;
     }
 
     public function render()
@@ -46,12 +73,20 @@ class PublicAvailabilityChecker extends Component
             })
             ->orderBy('name')
             ->paginate(12);
-        $date = Carbon::parse($this->selectedDate);
+        $date = $this->normalizeSelectedDate();
 
-        // Fetch bookings for the selected date
-        $bookingRows = Booking::whereDate('event_date', $this->selectedDate)
-            ->whereIn('status', ['CONFIRMED', 'HOLD'])
-            ->get(['id', 'hall_id', 'event_date', 'slot_type', 'status']);
+        // Fetch bookings for the selected date. The result is cached for one
+        // minute and keyed by the latest booking mutation so newly confirmed
+        // reservations are reflected immediately.
+        $dateString = $date->format('Y-m-d');
+        $bookingStamp = md5((string) Booking::max('updated_at').'|'.Booking::count());
+        $bookingRows = Cache::remember(
+            "public:availability:{$dateString}:{$bookingStamp}",
+            now()->addMinute(),
+            fn () => Booking::whereDate('event_date', $dateString)
+                ->whereIn('status', ['CONFIRMED', 'HOLD'])
+                ->get(['id', 'hall_id', 'event_date', 'slot_type', 'status'])
+        );
 
         $bookings = collect();
         foreach ($bookingRows as $booking) {
@@ -84,6 +119,8 @@ class PublicAvailabilityChecker extends Component
             'date' => $date,
             'bookings' => $bookings,
             'shortcuts' => $shortcuts,
+            'minDate' => Carbon::today()->format('Y-m-d'),
+            'maxDate' => CalendarWindow::lastMonth()->endOfMonth()->format('Y-m-d'),
         ]);
     }
 }

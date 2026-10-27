@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureActiveAccount;
 use App\Http\Middleware\EnsurePortalRole;
+use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\EnsureTenantStaff;
 use App\Http\Middleware\ForceHttps;
 use App\Http\Middleware\SecurityHeaders;
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenant.staff' => EnsureTenantStaff::class,
             'portal.role' => EnsurePortalRole::class,
+            'super.admin' => EnsureSuperAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\PageVisit;
 use App\Models\Venue;
+use App\Support\CalendarWindow;
 use Carbon\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -29,19 +30,30 @@ class PublicVenues extends Component
 
     public ?string $calendarHallId = null;
 
-    public int $selectedYear = 2026;
+    public int $selectedYear = 0;
 
-    public int $selectedMonthNumber = 10;
+    public int $selectedMonthNumber = 1;
 
-    public array $allowedYears = [2026, 2027, 2028, 2029, 2030];
+    public array $allowedYears = [];
 
     public function mount(): void
     {
         $now = now();
+        $this->allowedYears = CalendarWindow::years();
         $this->calendarMonth = $now->format('Y-m');
         $this->selectedCalendarDate = $now->format('Y-m-d');
-        $this->selectedYear = max(2026, min(2030, (int) $now->format('Y')));
-        $this->selectedMonthNumber = (int) $now->format('n');
+        $this->selectedYear = CalendarWindow::clampYear((int) $now->format('Y'));
+        $this->selectedMonthNumber = CalendarWindow::clampMonth((int) $now->format('n'));
+
+        // Record the visit once per page load rather than on every Livewire
+        // interaction (filtering, calendar navigation, pagination).
+        PageVisit::record(
+            request()->path(),
+            request()->route()?->getName(),
+            auth()->id() ? (string) auth()->id() : null,
+            request()->ip(),
+            request()->userAgent() ?? ''
+        );
     }
 
     public function updatingSearch()
@@ -73,29 +85,36 @@ class PublicVenues extends Component
 
     public function updatedSelectedYear(): void
     {
-        $this->selectedYear = max(2026, min(2030, (int) $this->selectedYear));
+        $this->selectedYear = CalendarWindow::clampYear((int) $this->selectedYear);
         $this->syncCalendarMonth();
     }
 
     public function updatedSelectedMonthNumber(): void
     {
-        $this->selectedMonthNumber = max(1, min(12, (int) $this->selectedMonthNumber));
+        $this->selectedMonthNumber = CalendarWindow::clampMonth((int) $this->selectedMonthNumber);
         $this->syncCalendarMonth();
     }
 
     private function syncCalendarMonth(): void
     {
+        $this->selectedYear = CalendarWindow::clampYear($this->selectedYear);
+        $this->selectedMonthNumber = CalendarWindow::clampMonth($this->selectedMonthNumber);
+
+        $firstNavigable = CalendarWindow::firstNavigableMonth();
+        if ($this->selectedYear === $firstNavigable->year) {
+            $this->selectedMonthNumber = max($this->selectedMonthNumber, $firstNavigable->month);
+        }
+
         $this->calendarMonth = sprintf('%04d-%02d', $this->selectedYear, $this->selectedMonthNumber);
         $this->selectedCalendarDate = sprintf('%04d-%02d-01', $this->selectedYear, $this->selectedMonthNumber);
     }
 
     public function previousMonth(): void
     {
-        $current = Carbon::createFromFormat('Y-m', $this->calendarMonth)->startOfMonth();
-        $prev = $current->subMonth();
+        $current = CalendarWindow::normalizeMonth($this->calendarMonth);
+        $prev = $current->copy()->subMonth();
 
-        // Support calendar navigation between 2026 and 2030
-        if ($prev->year < 2026) {
+        if ($prev->lt(CalendarWindow::firstNavigableMonth())) {
             return;
         }
 
@@ -107,11 +126,10 @@ class PublicVenues extends Component
 
     public function nextMonth(): void
     {
-        $current = Carbon::createFromFormat('Y-m', $this->calendarMonth)->startOfMonth();
-        $next = $current->addMonth();
+        $current = CalendarWindow::normalizeMonth($this->calendarMonth);
+        $next = $current->copy()->addMonth();
 
-        // Support calendar navigation up to 2030-12
-        if ($next->year > 2030) {
+        if ($next->year > CalendarWindow::endYear()) {
             return;
         }
 
@@ -123,18 +141,58 @@ class PublicVenues extends Component
 
     public function selectCalendarDate(string $date): void
     {
-        $this->selectedCalendarDate = $date;
+        $parsed = CalendarWindow::parseDate($date);
+
+        if (! $parsed || ! CalendarWindow::contains($parsed)) {
+            return;
+        }
+
+        if ($parsed->format('Y-m') !== $this->calendarMonth) {
+            $this->calendarMonth = $parsed->format('Y-m');
+            $this->selectedYear = (int) $parsed->format('Y');
+            $this->selectedMonthNumber = (int) $parsed->format('n');
+        }
+
+        $this->selectedCalendarDate = $parsed->format('Y-m-d');
     }
 
     public function triggerBooking(string $slotType, bool $isBooked): void
     {
+        $selectedDate = CalendarWindow::parseDate($this->selectedCalendarDate);
+
+        if (! $selectedDate || ! CalendarWindow::contains($selectedDate)) {
+            $this->dispatch('luxury-alert', [
+                'title' => 'Select a Valid Date',
+                'message' => 'Please choose an upcoming event date from the availability calendar before reserving a shift.',
+                'type' => 'gold',
+                'confirmText' => 'Choose Date',
+            ]);
+
+            return;
+        }
+
+        if (! in_array($slotType, ['AFTERNOON', 'EVENING', 'NIGHT'], true)) {
+            return;
+        }
+
         if ($isBooked) {
-            $formattedDate = Carbon::parse($this->selectedCalendarDate)->format('l, M jS, Y');
+            $formattedDate = $selectedDate->format('l, M jS, Y');
             $this->dispatch('luxury-alert', [
                 'title' => 'Shift Already Booked',
                 'message' => "The {$slotType} shift on {$formattedDate} has already been reserved and locked for another royal celebration. In strict compliance with our single-host protocol, double bookings are prohibited. Please choose another shift or date.",
                 'type' => 'gold',
                 'confirmText' => 'Acknowledge',
+            ]);
+
+            return;
+        }
+
+        if (empty($this->calendarHallId)) {
+            $this->dispatch('luxury-alert', [
+                'title' => 'Select a Hall First',
+                'message' => 'The availability matrix is currently showing all certified halls. Choose a specific hall from the "Hall Filter" selector above so we can reserve the correct venue for your event.',
+                'type' => 'gold',
+                'confirmText' => 'Choose Hall',
             ]);
 
             return;
@@ -199,14 +257,20 @@ class PublicVenues extends Component
         // ==========================================
         // CALENDAR SHIFT MATRIX (Month View as in Image 2)
         // ==========================================
-        if (empty($this->calendarMonth)) {
-            $this->calendarMonth = now()->format('Y-m');
-        }
-        if (empty($this->selectedCalendarDate)) {
-            $this->selectedCalendarDate = now()->format('Y-m-d');
+        $this->allowedYears = CalendarWindow::years();
+        $monthCarbon = CalendarWindow::normalizeMonth($this->calendarMonth);
+        $this->calendarMonth = $monthCarbon->format('Y-m');
+        $this->selectedYear = (int) $monthCarbon->format('Y');
+        $this->selectedMonthNumber = (int) $monthCarbon->format('n');
+
+        $selectedDate = CalendarWindow::parseDate($this->selectedCalendarDate);
+        if (! $selectedDate
+            || ! CalendarWindow::contains($selectedDate)
+            || ! $selectedDate->isSameMonth($monthCarbon)) {
+            $selectedDate = $monthCarbon->isSameMonth(now()) ? Carbon::today() : $monthCarbon->copy()->startOfMonth();
+            $this->selectedCalendarDate = $selectedDate->format('Y-m-d');
         }
 
-        $monthCarbon = Carbon::createFromFormat('Y-m', $this->calendarMonth)->startOfMonth();
         $monthTitle = $monthCarbon->format('F Y');
         $daysInMonth = $monthCarbon->daysInMonth;
         $startDayOfWeek = $monthCarbon->dayOfWeek; // 0 for Sun, 1 for Mon, ..., 6 for Sat
@@ -225,6 +289,12 @@ class PublicVenues extends Component
 
         $calendarHallsList = $calendarHallsQuery->orderBy('name')->get();
         $totalScopeHalls = max(1, $calendarHallsList->count());
+
+        // When exactly one hall is in scope, preselect it so the "Book Now"
+        // action always targets a real venue instead of passing a null hall.
+        if ($calendarHallsList->count() === 1 && empty($this->calendarHallId)) {
+            $this->calendarHallId = $calendarHallsList->first()->id;
+        }
 
         $monthBookingsQuery = Booking::whereIn('status', ['HOLD', 'CONFIRMED'])
             ->whereBetween('event_date', [$startOfMonth, $endOfMonth]);
@@ -248,11 +318,11 @@ class PublicVenues extends Component
             $dateStr = $dayCarbon->format('Y-m-d');
 
             $dayBookings = $monthBookings->filter(fn ($b) => $b->event_date->format('Y-m-d') === $dateStr);
-            $fullDayCount = (int) ($dayBookings->firstWhere('slot_type', 'FULL_DAY')->booked_count ?? 0);
+            $fullDayCount = (int) ($dayBookings->firstWhere('slot_type', 'FULL_DAY')?->booked_count ?? 0);
 
-            $aBooked = ((int) ($dayBookings->firstWhere('slot_type', 'AFTERNOON')->booked_count ?? 0)) + $fullDayCount;
-            $eBooked = ((int) ($dayBookings->firstWhere('slot_type', 'EVENING')->booked_count ?? 0)) + $fullDayCount;
-            $nBooked = ((int) ($dayBookings->firstWhere('slot_type', 'NIGHT')->booked_count ?? 0)) + $fullDayCount;
+            $aBooked = ((int) ($dayBookings->firstWhere('slot_type', 'AFTERNOON')?->booked_count ?? 0)) + $fullDayCount;
+            $eBooked = ((int) ($dayBookings->firstWhere('slot_type', 'EVENING')?->booked_count ?? 0)) + $fullDayCount;
+            $nBooked = ((int) ($dayBookings->firstWhere('slot_type', 'NIGHT')?->booked_count ?? 0)) + $fullDayCount;
 
             $aAvailable = $aBooked < $effectiveCapacity;
             $eAvailable = $eBooked < $effectiveCapacity;
@@ -277,11 +347,11 @@ class PublicVenues extends Component
         $selCarbon = Carbon::parse($this->selectedCalendarDate);
         $selDateStr = $selCarbon->format('Y-m-d');
         $selDayBookings = $monthBookings->filter(fn ($b) => $b->event_date->format('Y-m-d') === $selDateStr);
-        $selFullDay = (int) ($selDayBookings->firstWhere('slot_type', 'FULL_DAY')->booked_count ?? 0);
+        $selFullDay = (int) ($selDayBookings->firstWhere('slot_type', 'FULL_DAY')?->booked_count ?? 0);
 
-        $selAfternoonBooked = (((int) ($selDayBookings->firstWhere('slot_type', 'AFTERNOON')->booked_count ?? 0)) + $selFullDay) >= $effectiveCapacity;
-        $selEveningBooked = (((int) ($selDayBookings->firstWhere('slot_type', 'EVENING')->booked_count ?? 0)) + $selFullDay) >= $effectiveCapacity;
-        $selNightBooked = (((int) ($selDayBookings->firstWhere('slot_type', 'NIGHT')->booked_count ?? 0)) + $selFullDay) >= $effectiveCapacity;
+        $selAfternoonBooked = (((int) ($selDayBookings->firstWhere('slot_type', 'AFTERNOON')?->booked_count ?? 0)) + $selFullDay) >= $effectiveCapacity;
+        $selEveningBooked = (((int) ($selDayBookings->firstWhere('slot_type', 'EVENING')?->booked_count ?? 0)) + $selFullDay) >= $effectiveCapacity;
+        $selNightBooked = (((int) ($selDayBookings->firstWhere('slot_type', 'NIGHT')?->booked_count ?? 0)) + $selFullDay) >= $effectiveCapacity;
 
         $selectedDayDetails = [
             'date' => $selDateStr,
@@ -305,15 +375,6 @@ class PublicVenues extends Component
                 'isBooked' => $selNightBooked,
             ],
         ];
-
-        // Track page visit for venues listing
-        PageVisit::record(
-            request()->path(),
-            request()->route()->getName(),
-            auth()->id() ? (string) auth()->id() : null,
-            request()->ip(),
-            request()->userAgent() ?? ''
-        );
 
         return view('livewire.public-venues', [
             'halls' => $halls,

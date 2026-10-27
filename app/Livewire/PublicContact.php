@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\ContactInquiry;
 use App\Models\PlatformTask;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -36,7 +37,15 @@ class PublicContact extends Component
 
     public function submitInquiry()
     {
+        $throttleKey = 'contact-submit:'.request()->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $this->addError('message', 'Too many inquiries submitted. Please wait a minute and try again.');
+
+            return;
+        }
+
         $this->validate();
+        RateLimiter::hit($throttleKey, 60);
 
         ContactInquiry::create([
             'name' => trim($this->name),

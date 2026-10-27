@@ -700,6 +700,25 @@ class Dashboard extends Component
         $todayGeneratorHours = (float) UtilityLog::where('tenant_id', $tenantId)->whereDate('created_at', $today)->sum('generator_run_hours');
         $todayWapdaUnits = (float) UtilityLog::where('tenant_id', $tenantId)->whereDate('created_at', $today)->sum('wapda_units_consumed');
 
+        // Period-aware workforce & utility aggregates (follow the selected
+        // timeframe so monthly/yearly views are not stuck on "today" only).
+        $periodStaffPresentCount = (int) StaffAttendance::where('tenant_id', $tenantId)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->whereIn('status', ['PRESENT', 'HALF_DAY'])
+            ->count();
+        $periodOvertimeHours = (float) StaffAttendance::where('tenant_id', $tenantId)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->sum('overtime_hours');
+        $periodGeneratorHours = (float) UtilityLog::where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+            ->sum('generator_run_hours');
+        $periodDieselLiters = (float) UtilityLog::where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+            ->sum('diesel_liters_consumed');
+        $periodWapdaUnits = (float) UtilityLog::where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+            ->sum('wapda_units_consumed');
+
         return view('livewire.dashboard', [
             'todayKitchenKotsCount' => $todayKitchenKotsCount,
             'todayTotalDiners' => $todayTotalDiners,
@@ -712,6 +731,11 @@ class Dashboard extends Component
             'todayOvertimeHours' => $todayOvertimeHours,
             'todayGeneratorHours' => $todayGeneratorHours,
             'todayWapdaUnits' => $todayWapdaUnits,
+            'periodStaffPresentCount' => $periodStaffPresentCount,
+            'periodOvertimeHours' => $periodOvertimeHours,
+            'periodGeneratorHours' => $periodGeneratorHours,
+            'periodDieselLiters' => $periodDieselLiters,
+            'periodWapdaUnits' => $periodWapdaUnits,
             'halls' => $halls,
             'periodLabel' => $periodLabel,
             'allPeriodBookings' => $allPeriodBookings,

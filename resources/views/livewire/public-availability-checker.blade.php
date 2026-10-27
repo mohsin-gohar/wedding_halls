@@ -20,7 +20,7 @@
         <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 sm:p-8 shadow-sm space-y-4 max-w-3xl mx-auto">
             <div class="flex flex-col sm:flex-row items-center gap-4 justify-center">
                 <label class="text-xs uppercase font-bold tracking-wider text-stone-700 dark:text-stone-300 font-mono">Select Event Date:</label>
-                <input type="date" wire:model.live="selectedDate" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm font-semibold max-w-xs">
+                <input type="date" wire:model.live="selectedDate" min="{{ $minDate }}" max="{{ $maxDate }}" aria-label="Select event date" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm font-semibold max-w-xs">
             </div>
 
             <!-- Date Shortcuts -->

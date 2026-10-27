@@ -83,7 +83,7 @@ Route::get('/', function () {
     });
 
     return view('welcome', compact('halls', 'packages'));
-})->name('home');
+})->middleware('throttle:public-pages')->name('home');
 
 // Dynamic XML Sitemap for Search Engines
 Route::get('/sitemap.xml', function () {
@@ -138,32 +138,32 @@ Route::get('/sitemap.xml', function () {
         'Content-Type' => 'application/xml; charset=UTF-8',
         'Cache-Control' => 'public, max-age=3600',
     ]);
-})->name('sitemap');
+})->middleware('throttle:public-pages')->name('sitemap');
 
 // Vendor Hall Media (defined before /hall/{id} wildcard)
 Route::middleware(['auth', 'tenant.staff', 'portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER'])->get('/hall/media', HallMediaManager::class)->name('hall.media');
 
 // Venue Exploration & Showcase
-Route::get('/venues', PublicVenues::class)->name('public.venues');
-Route::get('/marketplace', PublicMarketplace::class)->name('marketplace');
-Route::get('/venues/{slug}', PublicHallDetails::class)->name('public.venue.details');
-Route::get('/hall/{slug}', PublicHallDetails::class)->name('hall.showcase');
+Route::get('/venues', PublicVenues::class)->middleware('throttle:public-pages')->name('public.venues');
+Route::get('/marketplace', PublicMarketplace::class)->middleware('throttle:public-pages')->name('marketplace');
+Route::get('/venues/{slug}', PublicHallDetails::class)->middleware('throttle:public-pages')->name('public.venue.details');
+Route::get('/hall/{slug}', PublicHallDetails::class)->middleware('throttle:public-pages')->name('hall.showcase');
 
 // Visual Gallery, Packages & Menus
-Route::get('/gallery', PublicGallery::class)->name('public.gallery');
-Route::get('/packages', PublicMenus::class)->name('public.packages');
-Route::get('/menus', PublicMenus::class)->name('public.menus');
-Route::get('/services', PublicServices::class)->name('public.services');
+Route::get('/gallery', PublicGallery::class)->middleware('throttle:public-pages')->name('public.gallery');
+Route::get('/packages', PublicMenus::class)->middleware('throttle:public-pages')->name('public.packages');
+Route::get('/menus', PublicMenus::class)->middleware('throttle:public-pages')->name('public.menus');
+Route::get('/services', PublicServices::class)->middleware('throttle:public-pages')->name('public.services');
 
 // Company & Customer Assistance
-Route::get('/about', PublicAbout::class)->name('public.about');
+Route::get('/about', PublicAbout::class)->middleware('throttle:public-pages')->name('public.about');
 Route::get('/contact', PublicContact::class)->name('public.contact')->middleware('throttle:30,1');
-Route::get('/faqs', PublicFaqs::class)->name('public.faqs');
-Route::get('/check-availability', PublicAvailabilityChecker::class)->name('public.availability');
+Route::get('/faqs', PublicFaqs::class)->middleware('throttle:public-pages')->name('public.faqs');
+Route::get('/check-availability', PublicAvailabilityChecker::class)->name('public.availability')->middleware('throttle:public-availability');
 Route::get('/rsvp', PublicGuestRsvp::class)->name('public.rsvp')->middleware('throttle:30,1');
 
 // Legal Policies
-Route::get('/policies/{policy?}', PublicPolicies::class)->name('public.policies');
+Route::get('/policies/{policy?}', PublicPolicies::class)->middleware('throttle:public-pages')->name('public.policies');
 Route::get('/policies/terms', [PublicPolicies::class, '__invoke'])->name('public.policies.terms');
 Route::get('/policies/privacy', [PublicPolicies::class, '__invoke'])->name('public.policies.privacy');
 Route::get('/policies/cancellation', [PublicPolicies::class, '__invoke'])->name('public.policies.cancellation');
@@ -304,7 +304,7 @@ Route::middleware(['auth', 'tenant.staff'])->group(function () {
 | 5. Platform Super Administration Console (Protected by Auth)
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->prefix('admin')->group(function () {
+Route::middleware(['auth', 'super.admin'])->prefix('admin')->group(function () {
     Route::get('/', AdminDashboard::class)->name('admin.dashboard');
     Route::get('/dashboard', AdminDashboard::class);
 });

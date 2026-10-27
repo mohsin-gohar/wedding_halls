@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PlatformMetrics;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +11,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AuditLog extends Model
 {
     use HasFactory, HasUuids;
+
+    protected static function booted(): void
+    {
+        // Any privileged mutation that is audited must also invalidate the
+        // cached Super Admin counters immediately.
+        static::created(static function (): void {
+            PlatformMetrics::flush();
+        });
+    }
 
     protected $fillable = [
         'tenant_id',

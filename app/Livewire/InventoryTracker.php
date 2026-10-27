@@ -9,6 +9,7 @@ use App\Models\InventoryLog;
 use App\Models\PurchaseOrder;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -285,7 +286,7 @@ class InventoryTracker extends Component
         ]);
 
         $tenantId = Auth::user()->tenant_id;
-        $poNumber = 'PO-'.date('Ymd').'-'.rand(100, 999);
+        $poNumber = 'PO-'.now()->format('Ymd').'-'.Str::upper((string) Str::ulid());
 
         PurchaseOrder::create([
             'tenant_id' => $tenantId,

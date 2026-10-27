@@ -633,7 +633,7 @@
             <!-- Header matching Image 2 -->
             <div class="text-center space-y-2 max-w-2xl mx-auto">
                 <span class="text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.28em] text-[#C6A15B] font-bold block">
-                    Upcoming 14-Day Shift Availability • Multi-Year Engine (2026–2030)
+                    Upcoming 14-Day Shift Availability • Multi-Year Engine ({{ min($allowedYears) }}-{{ max($allowedYears) }})
                 </span>
                 <h3 class="font-serif-luxury text-3xl sm:text-5xl text-white font-normal tracking-wide">
                     Check Hall Availability
@@ -650,7 +650,7 @@
                     <!-- LEFT COLUMN: The Monthly Calendar + Legend (8 cols) -->
                     <div class="lg:col-span-8 space-y-6">
                         
-                        <!-- Year Jump Quick Pills (2026 to 2030) -->
+                        <!-- Year Jump Quick Pills (Dynamic Range) -->
                         <div class="flex items-center justify-between flex-wrap gap-2.5 pb-1">
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 <span class="text-[10px] font-mono text-[#C6A15B] uppercase font-bold tracking-wider">Year:</span>
@@ -662,7 +662,7 @@
                                     </button>
                                 @endforeach
                             </div>
-                            <span class="text-[10px] font-mono text-stone-400">Multi-Year Engine (2026–2030)</span>
+                            <span class="text-[10px] font-mono text-stone-400">Multi-Year Engine ({{ min($allowedYears) }}-{{ max($allowedYears) }})</span>
                         </div>
 
                         <!-- Month Header Golden Banner (Brushed Gold with Arrows & Year/Month Selectors) -->
@@ -670,7 +670,8 @@
                             <div class="bg-gradient-to-r from-[#9e7633] via-[#e2c178] to-[#9e7633] text-[#16120b] py-3.5 px-4 sm:px-6 flex items-center justify-between gap-2">
                                 <button type="button" 
                                         wire:click="previousMonth" 
-                                        @if($selectedYear === 2026 && $selectedMonthNumber === 1) disabled @endif
+                                        @if($selectedYear === now()->year && $selectedMonthNumber === now()->month) disabled @endif
+                                        aria-label="Previous month"
                                         class="w-9 h-9 rounded-full flex items-center justify-center text-xl font-bold hover:bg-black/10 active:scale-95 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                                         title="Previous Month">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
@@ -694,8 +695,9 @@
                                         <option value="12">December</option>
                                     </select>
 
-                                    <!-- Year Dropdown (Up to 2030) -->
+                                    <!-- Year Dropdown (Up to {{ max($allowedYears) }}) -->
                                     <select wire:model.live="selectedYear" 
+                                            aria-label="Select calendar year"
                                             class="bg-black/10 hover:bg-black/20 text-[#16120b] font-serif-luxury font-black text-base sm:text-2xl uppercase tracking-wider border-none rounded-md px-2 py-0.5 focus:ring-0 cursor-pointer">
                                         @foreach($allowedYears as $yr)
                                             <option value="{{ $yr }}">{{ $yr }}</option>
@@ -705,77 +707,59 @@
 
                                 <button type="button" 
                                         wire:click="nextMonth" 
-                                        @if($selectedYear === 2030 && $selectedMonthNumber === 12) disabled @endif
+                                        @if($selectedYear === max($allowedYears) && $selectedMonthNumber === 12) disabled @endif
+                                        aria-label="Next month"
                                         class="w-9 h-9 rounded-full flex items-center justify-center text-xl font-bold hover:bg-black/10 active:scale-95 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                                         title="Next Month">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                                 </button>
                             </div>
 
-                            <!-- Calendar Grid Container -->
-                            <div class="bg-[#18140f] p-3 sm:p-5">
-                                <!-- Day Names Row (Sun Mon Tue Wed Thu Fri Sat) -->
-                                <div class="grid grid-cols-7 gap-1.5 sm:gap-2 mb-2 text-center">
-                                    <span class="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-stone-300">Sun</span>
-                                    <span class="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-stone-300">Mon</span>
-                                    <span class="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-stone-300">Tue</span>
-                                    <span class="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-stone-300">Wed</span>
-                                    <span class="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-stone-300">Thu</span>
-                                    <span class="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-stone-300">Fri</span>
-                                    <span class="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-stone-300">Sat</span>
+                            <!-- Calendar Grid Container (Premium) -->
+                            <div class="bg-gradient-to-b from-[#1a1610] to-[#120f0b] p-3 sm:p-5 rounded-2xl border border-[#C6A15B]/20 shadow-[inset_0_1px_0_rgba(198,161,91,0.08)]">
+                                <!-- Day Names Row -->
+                                <div class="grid grid-cols-7 gap-1 sm:gap-1.5 mb-2.5 text-center">
+                                    @foreach(['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] as $dow)
+                                        <span class="text-[10px] sm:text-[11px] font-mono font-semibold tracking-[0.18em] text-[#C6A15B]/70 uppercase py-1">{{ $dow }}</span>
+                                    @endforeach
                                 </div>
 
-                                <!-- Days Grid (7 columns) -->
-                                <div class="grid grid-cols-7 gap-1.5 sm:gap-2">
-                                    <!-- Leading blank days before 1st of month -->
+                                <!-- Days Grid -->
+                                <div class="grid grid-cols-7 gap-1 sm:gap-1.5">
+                                    <!-- Leading blank days -->
                                     @for($i = 0; $i < $startDayOfWeek; $i++)
-                                        <div class="min-h-[58px] sm:min-h-[70px] rounded-lg border border-transparent"></div>
+                                        <div class="min-h-[60px] sm:min-h-[72px] rounded-xl border border-transparent"></div>
                                     @endfor
 
-                                    <!-- Actual Days in Month -->
+                                    <!-- Actual Days -->
                                     @foreach($monthGrid as $cell)
                                         @php
                                             $isSelected = ($selectedDate === $cell['date']);
                                         @endphp
-                                        <button type="button" 
+                                        <button type="button"
                                                 wire:click="selectCalendarDate('{{ $cell['date'] }}')"
-                                                class="min-h-[58px] sm:min-h-[70px] rounded-lg p-1.5 sm:p-2 flex flex-col justify-between items-center text-center transition cursor-pointer select-none relative group
-                                                    {{ $isSelected 
-                                                        ? 'border-2 border-[#fcedaa] bg-[#2a2217] shadow-[0_0_18px_rgba(240,210,140,0.45)] ring-2 ring-[#C6A15B]/60' 
-                                                        : 'border border-[#C6A15B]/25 bg-[#17130e] hover:border-[#dfbe74]/80 hover:bg-[#221c15]' 
+                                                class="group min-h-[60px] sm:min-h-[72px] rounded-xl p-2 flex flex-col items-center justify-between text-center transition-all duration-200 cursor-pointer select-none
+                                                    {{ $isSelected
+                                                        ? 'border-2 border-[#C6A15B] bg-gradient-to-b from-[#2a2217] to-[#1a1610] shadow-[0_0_20px_rgba(198,161,91,0.35)] scale-[1.02]'
+                                                        : 'border border-white/5 bg-[#17130e] hover:border-[#C6A15B]/50 hover:bg-[#221c14] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.4)]'
                                                     }}">
-                                            
                                             <!-- Date Number -->
-                                            <span class="text-xs sm:text-sm font-semibold {{ $isSelected ? 'text-white font-bold' : 'text-stone-300' }}">
+                                            <span class="text-sm sm:text-base font-semibold leading-none {{ $isSelected ? 'text-[#fcedaa]' : 'text-stone-200 group-hover:text-white' }}">
                                                 {{ $cell['day'] }}
                                             </span>
 
-                                            <!-- 3 Shift Indicators as shown in Image 2 -->
+                                            <!-- Shift Indicators -->
                                             @if($cell['all_booked'])
-                                                <!-- When all 3 booked (like Day 22 in Image 2): 3 red bars -->
-                                                <div class="flex items-center justify-center gap-1 my-1">
-                                                    <span class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-600 rounded-xs shadow-xs" title="Afternoon: Booked"></span>
-                                                    <span class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-600 rounded-xs shadow-xs" title="Evening: Booked"></span>
-                                                    <span class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-600 rounded-xs shadow-xs" title="Night: Booked"></span>
+                                                <div class="flex items-center justify-center gap-0.5 mt-1">
+                                                    <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500"></span>
+                                                    <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500"></span>
+                                                    <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500"></span>
                                                 </div>
                                             @else
-                                                <!-- Individual Shift Icons + Availability Dots -->
-                                                <div class="flex items-center justify-center gap-1 sm:gap-1.5 my-1">
-                                                    <!-- Afternoon ☀️ -->
-                                                    <span class="flex flex-col items-center leading-none" title="Afternoon: {{ $cell['afternoon_available'] ? 'Available' : 'Booked' }}">
-                                                        <span class="text-[9px] sm:text-[10px]">☀️</span>
-                                                        <span class="w-1.5 h-1.5 rounded-full mt-0.5 {{ $cell['afternoon_available'] ? 'bg-emerald-400 ring-1 ring-emerald-300/60' : 'bg-red-500' }}"></span>
-                                                    </span>
-                                                    <!-- Evening 🌅 -->
-                                                    <span class="flex flex-col items-center leading-none" title="Evening: {{ $cell['evening_available'] ? 'Available' : 'Booked' }}">
-                                                        <span class="text-[9px] sm:text-[10px]">🌄</span>
-                                                        <span class="w-1.5 h-1.5 rounded-full mt-0.5 {{ $cell['evening_available'] ? 'bg-emerald-400 ring-1 ring-emerald-300/60' : 'bg-red-500' }}"></span>
-                                                    </span>
-                                                    <!-- Night 🌙 -->
-                                                    <span class="flex flex-col items-center leading-none" title="Night: {{ $cell['night_available'] ? 'Available' : 'Booked' }}">
-                                                        <span class="text-[9px] sm:text-[10px]">🌙</span>
-                                                        <span class="w-1.5 h-1.5 rounded-full mt-0.5 {{ $cell['night_available'] ? 'bg-emerald-400 ring-1 ring-emerald-300/60' : 'bg-red-500' }}"></span>
-                                                    </span>
+                                                <div class="flex items-center justify-center gap-1 mt-1">
+                                                    <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full {{ $cell['afternoon_available'] ? 'bg-emerald-400' : 'bg-red-500' }}" title="Afternoon"></span>
+                                                    <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full {{ $cell['evening_available'] ? 'bg-emerald-400' : 'bg-red-500' }}" title="Evening"></span>
+                                                    <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full {{ $cell['night_available'] ? 'bg-emerald-400' : 'bg-red-500' }}" title="Night"></span>
                                                 </div>
                                             @endif
                                         </button>

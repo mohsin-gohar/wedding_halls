@@ -568,7 +568,7 @@
                 class="px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap flex items-center gap-2 {{ $activeTab === 'vendors' ? 'bg-[#C6A15B] text-[#171513] shadow-md shadow-[#C6A15B]/25 border border-[#F2DE9A]/50' : 'text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] hover:bg-black/5 dark:hover:bg-white/5' }}">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
             <span>Vendors &amp; Subscriptions</span>
-            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $activeTab === 'vendors' ? 'bg-[#171513]/20 text-[#171513]' : 'bg-black/10 dark:bg-white/10 text-stone-500 dark:text-stone-400' }}">{{ $tenants->count() }}</span>
+            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $activeTab === 'vendors' ? 'bg-[#171513]/20 text-[#171513]' : 'bg-black/10 dark:bg-white/10 text-stone-500 dark:text-stone-400' }}">{{ $totalTenants }}</span>
         </button>
 
         <button wire:click="setTab('tasks')" 
@@ -592,28 +592,28 @@
                 class="px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap flex items-center gap-2 {{ $activeTab === 'plans' ? 'bg-[#C6A15B] text-[#171513] shadow-md shadow-[#C6A15B]/25 border border-[#F2DE9A]/50' : 'text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] hover:bg-black/5 dark:hover:bg-white/5' }}">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span>SaaS Plans</span>
-            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $activeTab === 'plans' ? 'bg-[#171513]/20 text-[#171513]' : 'bg-black/10 dark:bg-white/10 text-stone-500 dark:text-stone-400' }}">{{ $plans->count() }}</span>
+            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $activeTab === 'plans' ? 'bg-[#171513]/20 text-[#171513]' : 'bg-black/10 dark:bg-white/10 text-stone-500 dark:text-stone-400' }}">{{ $totalPlans }}</span>
         </button>
 
         <button wire:click="setTab('payments')" 
                 class="px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap flex items-center gap-2 {{ $activeTab === 'payments' ? 'bg-[#C6A15B] text-[#171513] shadow-md shadow-[#C6A15B]/25 border border-[#F2DE9A]/50' : 'text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] hover:bg-black/5 dark:hover:bg-white/5' }}">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
             <span>Payment Approvals</span>
-            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $activeTab === 'payments' ? 'bg-[#171513]/20 text-[#171513]' : 'bg-black/10 dark:bg-white/10 text-stone-500 dark:text-stone-400' }}">{{ $subscriptionPayments->count() }}</span>
+            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $activeTab === 'payments' ? 'bg-[#171513]/20 text-[#171513]' : 'bg-black/10 dark:bg-white/10 text-stone-500 dark:text-stone-400' }}">{{ $totalSubscriptionPayments }}</span>
         </button>
 
         <button wire:click="setTab('halls')" 
                 class="px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap flex items-center gap-2 {{ $activeTab === 'halls' ? 'bg-[#C6A15B] text-[#171513] shadow-md shadow-[#C6A15B]/25 border border-[#F2DE9A]/50' : 'text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] hover:bg-black/5 dark:hover:bg-white/5' }}">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M4 18h16M6 18V9m4 9V9m4 9V9m4 9V9M3 9l9-5 9 5H3z"/></svg>
             <span>Halls Catalog</span>
-            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $activeTab === 'halls' ? 'bg-[#171513]/20 text-[#171513]' : 'bg-black/10 dark:bg-white/10 text-stone-500 dark:text-stone-400' }}">{{ $halls->count() }}</span>
+            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $activeTab === 'halls' ? 'bg-[#171513]/20 text-[#171513]' : 'bg-black/10 dark:bg-white/10 text-stone-500 dark:text-stone-400' }}">{{ $totalHalls }}</span>
         </button>
 
         <button wire:click="setTab('bookings')" 
                 class="px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap flex items-center gap-2 {{ $activeTab === 'bookings' ? 'bg-[#C6A15B] text-[#171513] shadow-md shadow-[#C6A15B]/25 border border-[#F2DE9A]/50' : 'text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] hover:bg-black/5 dark:hover:bg-white/5' }}">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             <span>All Bookings</span>
-            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $activeTab === 'bookings' ? 'bg-[#171513]/20 text-[#171513]' : 'bg-black/10 dark:bg-white/10 text-stone-500 dark:text-stone-400' }}">{{ $recentBookings->count() }}</span>
+            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $activeTab === 'bookings' ? 'bg-[#171513]/20 text-[#171513]' : 'bg-black/10 dark:bg-white/10 text-stone-500 dark:text-stone-400' }}">{{ $totalBookings }}</span>
         </button>
 
         <button wire:click="setTab('users')" 
@@ -627,7 +627,7 @@
                 class="px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap flex items-center gap-2 {{ $activeTab === 'audit' ? 'bg-[#C6A15B] text-[#171513] shadow-md shadow-[#C6A15B]/25 border border-[#F2DE9A]/50' : 'text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] hover:bg-black/5 dark:hover:bg-white/5' }}">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
             <span>Security Audit Log</span>
-            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $activeTab === 'audit' ? 'bg-[#171513]/20 text-[#171513]' : 'bg-black/10 dark:bg-white/10 text-stone-500 dark:text-stone-400' }}">{{ $auditLogs->count() }}</span>
+            <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $activeTab === 'audit' ? 'bg-[#171513]/20 text-[#171513]' : 'bg-black/10 dark:bg-white/10 text-stone-500 dark:text-stone-400' }}">{{ $totalAuditLogs }}</span>
         </button>
     </div>
 
@@ -689,7 +689,7 @@
                         </span>
                     </div>
                     <div class="text-2xl font-cinzel font-bold text-[#171513] dark:text-white">
-                        {{ $platformTasks->count() }} Total Tasks
+                        {{ $totalPlatformTasks }} Total Tasks
                     </div>
                     <p class="text-xs text-stone-500 dark:text-stone-400 font-sans">
                         Operational to-do items and custom reminders for the platform owner.
@@ -979,7 +979,7 @@
                         Wedding Hall Vendors &amp; SaaS Subscriptions
                     </h3>
                     <p class="text-xs text-stone-500 dark:text-stone-400 mt-1">
-                        Displaying {{ $tenants->count() }} active banquet groups with tenant credentials, plan expiries, and capacity metrics.
+                        Displaying {{ $totalTenants }} active banquet groups with tenant credentials, plan expiries, and capacity metrics.
                     </p>
                 </div>
                 <button wire:click="openProvisionModal" class="btn-gold !h-10 !px-5 text-xs font-bold uppercase font-mono shadow-md shrink-0 flex items-center gap-2">
@@ -1427,7 +1427,7 @@
                         Functions &amp; Banquets Directory
                     </h3>
                     <p class="text-xs text-stone-500 dark:text-stone-400 mt-1">
-                        Displaying {{ $recentBookings->count() }} reservations with shift occupancy, guest volume, and legal contracts.
+                        Displaying {{ $totalBookings }} reservations with shift occupancy, guest volume, and legal contracts.
                     </p>
                 </div>
                 <div class="flex items-center gap-3">
@@ -1850,7 +1850,7 @@
                                                     Suspend
                                                 </button>
                                             @endif
-                                            <button wire:click="resetUserPassword({{ $u->id }})" wire:confirm="Reset password for {{ $u->name }} to 'Password123!'?" 
+                                            <button wire:click="resetUserPassword({{ $u->id }})" wire:confirm="Reset the password for {{ $u->name }}? A new random password will be generated and shown once."
                                                     class="px-2.5 py-1 rounded-lg border border-stone-200 dark:border-white/10 hover:border-[#C6A15B] text-stone-700 dark:text-stone-300 hover:text-[#C6A15B] text-[10px] font-bold uppercase transition">
                                                 Reset Pwd
                                             </button>

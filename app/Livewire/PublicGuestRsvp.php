@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\GuestRsvp;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -25,6 +26,15 @@ class PublicGuestRsvp extends Component
     {
         $this->feedbackMessage = null;
         $this->foundRsvp = null;
+
+        $throttleKey = 'rsvp-search:'.request()->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 10)) {
+            $this->feedbackMessage = 'Too many lookup attempts. Please wait a minute and try again.';
+
+            return;
+        }
+        RateLimiter::hit($throttleKey, 60);
+
         $cleanPhone = preg_replace('/[^0-9]/', '', $this->phone);
 
         if (strlen($cleanPhone) < 10) {
@@ -54,6 +64,14 @@ class PublicGuestRsvp extends Component
         if (! $this->foundRsvp) {
             return;
         }
+
+        $throttleKey = 'rsvp-submit:'.request()->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 10)) {
+            $this->feedbackMessage = 'Too many RSVP updates. Please wait a minute and try again.';
+
+            return;
+        }
+        RateLimiter::hit($throttleKey, 60);
 
         $this->validate([
             'statusResponse' => 'required|in:ATTENDING,DECLINED',

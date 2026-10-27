@@ -5,8 +5,6 @@ namespace App\Livewire;
 use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\Hall;
-use App\Models\HallView;
-use App\Models\HallWishlist;
 use App\Models\PageVisit;
 use App\Models\PlatformTask;
 use App\Models\SubscriptionPayment;
@@ -14,6 +12,8 @@ use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Venue;
+use App\Services\PlatformAnalyticsService;
+use App\Support\PlatformMetrics;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -173,10 +173,7 @@ class AdminDashboard extends Component
 
     public function mount()
     {
-        $user = Auth::user();
-        if (! $user || ! $user->isSuperAdmin()) {
-            abort(403, 'Access denied. You do not possess Super Admin administrative privileges.');
-        }
+        $this->ensureSuperAdmin();
 
         if (request()->has('tab')) {
             $this->activeTab = request()->query('tab');
@@ -186,6 +183,26 @@ class AdminDashboard extends Component
         $this->marketplaceEnabled = Cache::get('platform_marketplace_enabled', true);
         $this->announcementBanner = Cache::get('platform_announcement', '');
         $this->newTaskDueDate = Carbon::now()->addDays(2)->format('Y-m-d');
+    }
+
+    /**
+     * Livewire actions are sent to the shared /livewire/update endpoint, which
+     * is not covered by the admin route middleware. Re-checking the role on
+     * every hydration closes the window where a demoted account could keep
+     * using an already-loaded console.
+     */
+    public function hydrate(): void
+    {
+        $this->ensureSuperAdmin();
+    }
+
+    private function ensureSuperAdmin(): void
+    {
+        $user = Auth::user();
+
+        if (! $user || ! $user->isSuperAdmin()) {
+            abort(403, 'Access denied. You do not possess Super Admin administrative privileges.');
+        }
     }
 
     #[On('set-admin-tab')]
@@ -203,8 +220,9 @@ class AdminDashboard extends Component
     {
         $this->validate([
             'newTaskTitle' => 'required|string|min:3|max:180',
-            'newTaskCategory' => 'required|string',
+            'newTaskCategory' => 'required|string|max:60',
             'newTaskPriority' => 'required|in:HIGH,MEDIUM,LOW',
+            'newTaskDueDate' => 'nullable|date',
         ]);
 
         PlatformTask::create([
@@ -263,6 +281,10 @@ class AdminDashboard extends Component
 
     public function saveAnnouncement(): void
     {
+        $this->validate([
+            'announcementBanner' => 'nullable|string|max:500',
+        ]);
+
         Cache::put('platform_announcement', trim($this->announcementBanner));
         AuditLog::log('UPDATE_ANNOUNCEMENT', "Updated platform announcement banner: {$this->announcementBanner}");
         $this->feedbackMessage = 'Platform announcement updated.';
@@ -302,15 +324,16 @@ class AdminDashboard extends Component
     public function provisionHallAccount()
     {
         $this->validate([
+            'newPlanId' => 'nullable|exists:subscription_plans,id',
             'newBusinessName' => 'required|string|min:3|max:120',
             'newCity' => 'required|string|max:60',
             'newAddress' => 'nullable|string|max:255',
             'newMinCapacity' => 'required|integer|min:20',
-            'newMaxCapacity' => 'required|integer|min:50',
+            'newMaxCapacity' => 'required|integer|min:50|gte:newMinCapacity',
             'newBaseRent' => 'required|numeric|min:10000',
             'newOwnerName' => 'required|string|min:3|max:100',
             'newOwnerEmail' => 'required|email|unique:users,email',
-            'newOwnerPassword' => 'required|string|min:6',
+            'newOwnerPassword' => 'required|string|min:8',
             'newOwnerPhone' => 'required|string|min:8|max:30',
         ]);
 
@@ -331,7 +354,7 @@ class AdminDashboard extends Component
             $subdomain = $baseSubdomain.'-'.$subCounter++;
         }
 
-        // 4. Default 2026 Luxury Services Catalog from config
+        // 4. Default luxury services catalog from config
         $defaultServices = config('hall.default_services');
 
         [$tenant, $hall] = DB::transaction(function () use ($plan, $slug, $subdomain, $defaultServices) {
@@ -434,7 +457,7 @@ class AdminDashboard extends Component
             'phone' => $this->newOwnerPhone,
             'login_url' => url('/login'),
             'hall_id' => $hall->id,
-            'hall_url' => route('hall.showcase', $hall->id),
+            'hall_url' => route('hall.showcase', $hall->slug),
         ];
 
         // Clear password field for security
@@ -474,7 +497,9 @@ class AdminDashboard extends Component
         $this->validate([
             'editVendorName' => 'required|string|min:3|max:120',
             'editVendorEmail' => 'required|email',
-            'editVendorPhone' => 'required|string|min:8',
+            'editVendorPhone' => 'required|string|min:8|max:30',
+            'editVendorPlanId' => 'nullable|exists:subscription_plans,id',
+            'editVendorExpiresAt' => 'nullable|date',
         ]);
 
         $tenant = Tenant::findOrFail($this->editingVendorId);
@@ -633,12 +658,22 @@ class AdminDashboard extends Component
             'planPriceWeekly' => 'required|numeric|min:0',
             'planPriceMonthly' => 'required|numeric|min:0',
             'planPriceYearly' => 'required|numeric|min:0',
-            'planMaxHalls' => 'required|integer',
-            'planMaxStaff' => 'required|integer',
-            'planMaxBookings' => 'required|integer',
+            'planMaxHalls' => 'required|integer|min:0',
+            'planMaxStaff' => 'required|integer|min:0',
+            'planMaxBookings' => 'required|integer|min:0',
         ]);
 
-        $slug = $this->planSlug ?: Str::slug($this->planName);
+        $slug = Str::slug($this->planSlug ?: $this->planName);
+
+        $slugQuery = SubscriptionPlan::where('slug', $slug);
+        if ($this->isEditingPlan && $this->editingPlanId) {
+            $slugQuery->where('id', '!=', $this->editingPlanId);
+        }
+        if ($slugQuery->exists()) {
+            $this->addError('planName', 'Another subscription plan already uses this name/slug.');
+
+            return;
+        }
 
         if ($this->isEditingPlan && $this->editingPlanId) {
             $plan = SubscriptionPlan::findOrFail($this->editingPlanId);
@@ -656,11 +691,12 @@ class AdminDashboard extends Component
                 'has_whatsapp_automation' => $this->planHasWhatsapp,
                 'has_accounting_reports' => $this->planHasAccounting,
             ]);
+            AuditLog::log('PLAN_UPDATED', "Super Admin updated SaaS plan [{$plan->name}].", null, 'SubscriptionPlan', (string) $plan->id);
             $this->feedbackMessage = "Subscription Plan [{$plan->name}] updated successfully.";
         } else {
             $plan = SubscriptionPlan::create([
                 'name' => $this->planName,
-                'slug' => $slug.'-'.rand(100, 999),
+                'slug' => $slug,
                 'description' => $this->planDescription,
                 'price_weekly' => $this->planPriceWeekly,
                 'price_monthly' => $this->planPriceMonthly,
@@ -673,6 +709,7 @@ class AdminDashboard extends Component
                 'has_accounting_reports' => $this->planHasAccounting,
                 'is_active' => true,
             ]);
+            AuditLog::log('PLAN_CREATED', "Super Admin created SaaS plan [{$plan->name}].", null, 'SubscriptionPlan', (string) $plan->id);
             $this->feedbackMessage = "New SaaS Plan [{$plan->name}] created successfully.";
         }
 
@@ -689,7 +726,9 @@ class AdminDashboard extends Component
         }
 
         $name = $plan->name;
+        $planId = $plan->id;
         $plan->delete();
+        AuditLog::log('PLAN_DELETED', "Super Admin deleted SaaS plan [{$name}].", null, 'SubscriptionPlan', (string) $planId);
         $this->feedbackMessage = "Plan [{$name}] deleted successfully.";
     }
 
@@ -720,7 +759,7 @@ class AdminDashboard extends Component
         $this->validate([
             'editHallName' => 'required|string|min:3|max:120',
             'editHallMinCapacity' => 'required|integer|min:10',
-            'editHallMaxCapacity' => 'required|integer|min:20',
+            'editHallMaxCapacity' => 'required|integer|min:20|gte:editHallMinCapacity',
             'editHallBaseRent' => 'required|numeric|min:5000',
         ]);
 
@@ -733,6 +772,14 @@ class AdminDashboard extends Component
             'is_active' => $this->editHallIsActive,
         ]);
 
+        AuditLog::log(
+            'HALL_UPDATED',
+            "Super Admin updated hall [{$hall->name}].",
+            $hall->tenant_id,
+            'Hall',
+            $hall->id
+        );
+
         $this->showEditHallModal = false;
         $this->feedbackMessage = "Hall [{$hall->name}] updated successfully.";
     }
@@ -740,9 +787,19 @@ class AdminDashboard extends Component
     public function deleteHall(string $hallId)
     {
         $hall = Hall::findOrFail($hallId);
+
+        if ($hall->bookings()->whereIn('status', ['HOLD', 'CONFIRMED'])->exists()) {
+            $this->errorMessage = "Hall [{$hall->name}] has active or confirmed bookings. Cancel or complete those reservations before deleting the hall.";
+
+            return;
+        }
+
         $name = $hall->name;
+        $tenantId = $hall->tenant_id;
         $hall->bookings()->delete();
         $hall->delete();
+
+        AuditLog::log('HALL_DELETED', "Super Admin deleted hall [{$name}].", $tenantId, 'Hall', $hallId);
 
         $this->feedbackMessage = "Hall [{$name}] deleted successfully.";
     }
@@ -753,6 +810,15 @@ class AdminDashboard extends Component
         $hall->update([
             'is_active' => ! $hall->is_active,
         ]);
+
+        AuditLog::log(
+            'HALL_STATUS_TOGGLED',
+            "Super Admin changed hall [{$hall->name}] visibility to ".($hall->is_active ? 'PUBLISHED' : 'HIDDEN').'.',
+            $hall->tenant_id,
+            'Hall',
+            $hall->id
+        );
+
         $this->feedbackMessage = "Hall [{$hall->name}] status changed to ".($hall->is_active ? 'Published' : 'Hidden').'.';
     }
 
@@ -762,6 +828,12 @@ class AdminDashboard extends Component
     public function approveSubscriptionPayment(string $paymentId)
     {
         $payment = SubscriptionPayment::with(['tenant', 'plan'])->findOrFail($paymentId);
+
+        if ($payment->status !== 'PENDING') {
+            $this->errorMessage = 'This subscription payment has already been processed.';
+
+            return;
+        }
 
         $tenant = $payment->tenant;
 
@@ -802,6 +874,13 @@ class AdminDashboard extends Component
     public function rejectSubscriptionPayment(string $paymentId)
     {
         $payment = SubscriptionPayment::with('tenant')->findOrFail($paymentId);
+
+        if ($payment->status !== 'PENDING') {
+            $this->errorMessage = 'This subscription payment has already been processed.';
+
+            return;
+        }
+
         $payment->update([
             'status' => 'REJECTED',
             'approved_by_user_id' => Auth::id(),
@@ -824,8 +903,25 @@ class AdminDashboard extends Component
     // ==========================================
     public function updateBookingStatus(string $bookingId, string $status)
     {
+        $status = strtoupper($status);
+        if (! in_array($status, ['INQUIRY', 'HOLD', 'CONFIRMED', 'COMPLETED', 'CANCELLED'], true)) {
+            $this->errorMessage = 'Invalid booking status supplied.';
+
+            return;
+        }
+
         $booking = Booking::findOrFail($bookingId);
+        $previousStatus = $booking->status;
         $booking->update(['status' => $status]);
+
+        AuditLog::log(
+            'BOOKING_STATUS_UPDATED',
+            "Super Admin changed booking [{$booking->booking_reference}] status from {$previousStatus} to {$status}.",
+            $booking->tenant_id,
+            'Booking',
+            $booking->id
+        );
+
         $this->feedbackMessage = "Booking [{$booking->booking_reference}] updated to {$status}.";
     }
 
@@ -833,8 +929,12 @@ class AdminDashboard extends Component
     {
         $booking = Booking::findOrFail($bookingId);
         $ref = $booking->booking_reference;
+        $tenantId = $booking->tenant_id;
         $booking->payments()->delete();
         $booking->delete();
+
+        AuditLog::log('BOOKING_DELETED', "Super Admin deleted booking [{$ref}].", $tenantId, 'Booking', $bookingId);
+
         $this->feedbackMessage = "Booking [{$ref}] deleted.";
     }
 
@@ -867,7 +967,7 @@ class AdminDashboard extends Component
     public function resetUserPassword(int $userId): void
     {
         $user = User::findOrFail($userId);
-        $tempPassword = 'Password123!';
+        $tempPassword = Str::password(12);
         $user->update(['password' => Hash::make($tempPassword)]);
 
         AuditLog::log(
@@ -883,40 +983,7 @@ class AdminDashboard extends Component
 
     public function render()
     {
-        $totalTenants = Tenant::count();
-        $pendingTenants = Tenant::where('verification_status', 'PENDING')->count();
-        $totalHalls = Hall::count();
-        $totalBookings = Booking::count();
-        $totalGmv = Booking::sum('grand_total');
-
-        // Website Analytics & Traffic
-        $totalPageVisits = PageVisit::count();
-        $totalHallViews = HallView::count();
-        $totalWishlists = HallWishlist::count();
-        $totalRegisteredUsers = User::count();
-        $todayVisits = PageVisit::whereDate('visited_at', today())->count();
-        $todayHallViews = HallView::whereDate('viewed_at', today())->count();
-
-        // Real-time Active Sessions & Unique Visitors
-        try {
-            $activeSessionsCount = DB::table('sessions')
-                ->where('last_activity', '>=', now()->subMinutes(15)->getTimestamp())
-                ->count();
-        } catch (\Throwable $e) {
-            $activeSessionsCount = 0;
-        }
-
-        if ($activeSessionsCount === 0) {
-            $activeSessionsCount = PageVisit::where('visited_at', '>=', now()->subMinutes(15))->distinct('ip_address')->count('ip_address');
-            if ($activeSessionsCount === 0) {
-                $activeSessionsCount = 1;
-            }
-        }
-
-        $uniqueVisitorsCount = PageVisit::distinct('ip_address')->count('ip_address');
-        if ($uniqueVisitorsCount === 0) {
-            $uniqueVisitorsCount = max(1, $totalRegisteredUsers);
-        }
+        $metrics = PlatformMetrics::snapshot();
 
         // User Directory query with filters
         $usersQuery = User::with('tenant');
@@ -936,11 +1003,6 @@ class AdminDashboard extends Component
         }
         $users = $usersQuery->latest()->take(100)->get();
 
-        $totalCustomers = User::whereIn('role', ['CUSTOMER', 'ROLE_CUSTOMER'])->count();
-        $totalVendors = User::whereIn('role', ['VENDOR', 'HALL_OWNER', 'ADMIN', 'ROLE_TENANT_OWNER'])->count();
-        $totalStaff = User::whereNotIn('role', ['CUSTOMER', 'ROLE_CUSTOMER', 'VENDOR', 'HALL_OWNER', 'ADMIN', 'ROLE_TENANT_OWNER', 'SUPER_ADMIN', 'ROLE_SUPER_ADMIN'])->count();
-        $totalSuspendedUsers = User::where('status', 'SUSPENDED')->count();
-
         $topHallsByViews = Hall::with(['venue', 'tenant'])
             ->withCount('hallViews as total_views')
             ->orderByDesc('total_views')
@@ -958,52 +1020,19 @@ class AdminDashboard extends Component
             ->take(20)
             ->get();
 
-        $tenants = Tenant::with(['subscriptionPlan'])->withCount(['halls', 'bookings', 'users'])->latest()->get();
+        $tenants = Tenant::with(['subscriptionPlan'])->withCount(['halls', 'bookings', 'users'])->latest()->take(200)->get();
         $plans = SubscriptionPlan::withCount('tenants')->get();
-        $subscriptionPayments = SubscriptionPayment::with(['tenant', 'plan'])->latest()->get();
-        $halls = Hall::with(['venue', 'tenant'])->latest()->get();
+        $subscriptionPayments = SubscriptionPayment::with(['tenant', 'plan'])->latest()->take(200)->get();
+        $halls = Hall::with(['venue', 'tenant'])->latest()->take(200)->get();
         $recentBookings = Booking::with(['hall.venue', 'tenant'])->latest()->take(30)->get();
         $auditLogs = AuditLog::with(['tenant', 'user'])->latest()->take(30)->get();
 
         // Platform Tasks & Action Items
-        $platformTasks = PlatformTask::with('creator')->latest()->get();
-        $pendingTasksCount = PlatformTask::where('is_completed', false)->count();
-        $completedTasksCount = PlatformTask::where('is_completed', true)->count();
-        $pendingApprovalsCount = Tenant::where('verification_status', 'PENDING')->count();
-        $pendingSubscriptionPaymentsCount = SubscriptionPayment::where('status', 'PENDING')->count();
+        $platformTasks = PlatformTask::with('creator')->latest()->take(200)->get();
+        $analytics = app(PlatformAnalyticsService::class);
 
-        // Platform Shift Breakdown across nationwide bookings
-        $adminShiftCounts = [
-            'EVENING' => Booking::where('slot_type', 'EVENING')->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD'])->count(),
-            'AFTERNOON' => Booking::where('slot_type', 'AFTERNOON')->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD'])->count(),
-            'NIGHT' => Booking::where('slot_type', 'NIGHT')->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD'])->count(),
-        ];
-        $totalAdminShifts = max(1, array_sum($adminShiftCounts));
-        $adminShiftPercentages = [
-            'EVENING' => round(($adminShiftCounts['EVENING'] / $totalAdminShifts) * 100),
-            'AFTERNOON' => round(($adminShiftCounts['AFTERNOON'] / $totalAdminShifts) * 100),
-            'NIGHT' => round(($adminShiftCounts['NIGHT'] / $totalAdminShifts) * 100),
-        ];
-
-        return view('livewire.admin-dashboard', [
-            'totalTenants' => $totalTenants,
-            'pendingTenants' => $pendingTenants,
-            'totalHalls' => $totalHalls,
-            'totalBookings' => $totalBookings,
-            'totalGmv' => $totalGmv,
-            'totalPageVisits' => $totalPageVisits,
-            'totalHallViews' => $totalHallViews,
-            'totalWishlists' => $totalWishlists,
-            'totalRegisteredUsers' => $totalRegisteredUsers,
-            'todayVisits' => $todayVisits,
-            'todayHallViews' => $todayHallViews,
-            'activeSessionsCount' => $activeSessionsCount,
-            'uniqueVisitorsCount' => $uniqueVisitorsCount,
+        return view('livewire.admin-dashboard', array_merge($metrics, [
             'users' => $users,
-            'totalCustomers' => $totalCustomers,
-            'totalVendors' => $totalVendors,
-            'totalStaff' => $totalStaff,
-            'totalSuspendedUsers' => $totalSuspendedUsers,
             'topHallsByViews' => $topHallsByViews,
             'topHallsByWishlists' => $topHallsByWishlists,
             'recentVisits' => $recentVisits,
@@ -1014,296 +1043,9 @@ class AdminDashboard extends Component
             'recentBookings' => $recentBookings,
             'auditLogs' => $auditLogs,
             'platformTasks' => $platformTasks,
-            'pendingTasksCount' => $pendingTasksCount,
-            'completedTasksCount' => $completedTasksCount,
-            'pendingApprovalsCount' => $pendingApprovalsCount,
-            'pendingSubscriptionPaymentsCount' => $pendingSubscriptionPaymentsCount,
-            'adminShiftCounts' => $adminShiftCounts,
-            'adminShiftPercentages' => $adminShiftPercentages,
-            'adminChartData' => $this->buildAdminChartData($this->chartTimeframe, $this->chartMetric),
-            'adminWaveData' => $this->buildAdminWaveData($this->chartTimeframe),
-            'adminMiniCalendar' => $this->buildAdminMiniCalendar(),
-        ]);
-    }
-
-    private function buildAdminChartData(string $timeframe, string $metric): array
-    {
-        $now = Carbon::now();
-        $points = [];
-
-        if ($timeframe === 'WEEKLY') {
-            $start = $now->copy()->startOfWeek();
-            for ($i = 0; $i < 7; $i++) {
-                $day = $start->copy()->addDays($i);
-                $baseQ = Booking::whereDate('event_date', $day->format('Y-m-d'))
-                    ->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD']);
-
-                $eveningQ = (clone $baseQ)->where('slot_type', 'EVENING');
-                $afternoonQ = (clone $baseQ)->where('slot_type', 'AFTERNOON');
-
-                $val = ($metric === 'gmv') ? (float) $eveningQ->sum('grand_total') : (int) $eveningQ->count();
-                $secVal = ($metric === 'gmv') ? (float) $afternoonQ->sum('grand_total') : (int) $afternoonQ->count();
-                $totalVal = ($metric === 'gmv') ? (float) $baseQ->sum('grand_total') : (int) $baseQ->count();
-
-                $points[] = [
-                    'label' => $day->format('D'),
-                    'fullLabel' => $day->format('D, d M'),
-                    'value' => $val,
-                    'secondaryValue' => $secVal,
-                    'totalValue' => $totalVal,
-                    'formatted' => ($metric === 'gmv') ? 'PKR '.number_format($val) : $val.' Eve',
-                    'secondaryFormatted' => ($metric === 'gmv') ? 'PKR '.number_format($secVal) : $secVal.' Aft',
-                ];
-            }
-        } elseif ($timeframe === 'YEARLY') {
-            for ($m = 1; $m <= 12; $m++) {
-                $mDate = Carbon::create($now->year, $m, 1);
-                $baseQ = Booking::whereBetween('event_date', [$mDate->copy()->startOfMonth()->format('Y-m-d'), $mDate->copy()->endOfMonth()->format('Y-m-d')])
-                    ->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD']);
-
-                $eveningQ = (clone $baseQ)->where('slot_type', 'EVENING');
-                $afternoonQ = (clone $baseQ)->where('slot_type', 'AFTERNOON');
-
-                $val = ($metric === 'gmv') ? (float) $eveningQ->sum('grand_total') : (int) $eveningQ->count();
-                $secVal = ($metric === 'gmv') ? (float) $afternoonQ->sum('grand_total') : (int) $afternoonQ->count();
-                $totalVal = ($metric === 'gmv') ? (float) $baseQ->sum('grand_total') : (int) $baseQ->count();
-
-                $points[] = [
-                    'label' => $mDate->format('M'),
-                    'fullLabel' => $mDate->format('F Y'),
-                    'value' => $val,
-                    'secondaryValue' => $secVal,
-                    'totalValue' => $totalVal,
-                    'formatted' => ($metric === 'gmv') ? 'PKR '.number_format($val) : $val.' Eve',
-                    'secondaryFormatted' => ($metric === 'gmv') ? 'PKR '.number_format($secVal) : $secVal.' Aft',
-                ];
-            }
-        } else {
-            $start = $now->copy()->startOfMonth();
-            for ($w = 1; $w <= 4; $w++) {
-                $wStart = $start->copy()->addDays(($w - 1) * 7);
-                $wEnd = ($w === 4) ? $now->copy()->endOfMonth() : $wStart->copy()->addDays(6);
-
-                $baseQ = Booking::whereBetween('event_date', [$wStart->format('Y-m-d'), $wEnd->format('Y-m-d')])
-                    ->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD']);
-
-                $eveningQ = (clone $baseQ)->where('slot_type', 'EVENING');
-                $afternoonQ = (clone $baseQ)->where('slot_type', 'AFTERNOON');
-
-                $val = ($metric === 'gmv') ? (float) $eveningQ->sum('grand_total') : (int) $eveningQ->count();
-                $secVal = ($metric === 'gmv') ? (float) $afternoonQ->sum('grand_total') : (int) $afternoonQ->count();
-                $totalVal = ($metric === 'gmv') ? (float) $baseQ->sum('grand_total') : (int) $baseQ->count();
-
-                $points[] = [
-                    'label' => 'Wk '.$w,
-                    'fullLabel' => 'Week '.$w.' ('.$wStart->format('d M').' - '.$wEnd->format('d M').')',
-                    'value' => $val,
-                    'secondaryValue' => $secVal,
-                    'totalValue' => $totalVal,
-                    'formatted' => ($metric === 'gmv') ? 'PKR '.number_format($val) : $val.' Eve',
-                    'secondaryFormatted' => ($metric === 'gmv') ? 'PKR '.number_format($secVal) : $secVal.' Aft',
-                ];
-            }
-        }
-
-        $allValues = [];
-        foreach ($points as $p) {
-            $allValues[] = $p['value'];
-            $allValues[] = $p['secondaryValue'];
-        }
-        $maxValue = max(1, ...$allValues);
-
-        $peakIndex = 0;
-        $highestCombined = -1;
-        foreach ($points as $idx => $p) {
-            $combined = $p['value'] + $p['secondaryValue'];
-            if ($combined > $highestCombined) {
-                $highestCombined = $combined;
-                $peakIndex = $idx;
-            }
-        }
-
-        foreach ($points as $idx => &$p) {
-            $p['percentage'] = round(($p['value'] / $maxValue) * 100);
-            $p['secondaryPercentage'] = round(($p['secondaryValue'] / $maxValue) * 100);
-            $p['isPeak'] = ($idx === $peakIndex && $highestCombined > 0);
-            if ($metric === 'gmv') {
-                $p['peakPill'] = 'PKR '.number_format($p['totalValue'] / 1000).'k';
-            } else {
-                $p['peakPill'] = $p['totalValue'].' Functions';
-            }
-        }
-
-        return $points;
-    }
-
-    private function buildAdminWaveData(string $timeframe): array
-    {
-        $now = Carbon::now();
-        $buckets = [];
-
-        if ($timeframe === 'WEEKLY') {
-            $start = $now->copy()->startOfWeek();
-            for ($i = 0; $i < 7; $i++) {
-                $day = $start->copy()->addDays($i);
-                $dStr = $day->format('Y-m-d');
-                $buckets[] = [
-                    'label' => $day->format('D'),
-                    'start' => $dStr,
-                    'end' => $dStr,
-                ];
-            }
-        } elseif ($timeframe === 'YEARLY') {
-            for ($m = 1; $m <= 12; $m++) {
-                $mDate = Carbon::create($now->year, $m, 1);
-                $buckets[] = [
-                    'label' => $mDate->format('M'),
-                    'start' => $mDate->copy()->startOfMonth()->format('Y-m-d'),
-                    'end' => $mDate->copy()->endOfMonth()->format('Y-m-d'),
-                ];
-            }
-        } else {
-            $start = $now->copy()->startOfMonth();
-            for ($w = 1; $w <= 4; $w++) {
-                $wStart = $start->copy()->addDays(($w - 1) * 7);
-                $wEnd = ($w === 4) ? $now->copy()->endOfMonth() : $wStart->copy()->addDays(6);
-                $buckets[] = [
-                    'label' => 'Wk '.$w,
-                    'start' => $wStart->format('Y-m-d'),
-                    'end' => $wEnd->format('Y-m-d'),
-                ];
-            }
-        }
-
-        $inflowVals = [];
-        $subscriptionVals = [];
-        $pointsCount = count($buckets);
-
-        foreach ($buckets as $b) {
-            $bQ = Booking::whereBetween('event_date', [$b['start'], $b['end']])
-                ->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD']);
-            $inf = (float) $bQ->sum('grand_total');
-
-            $sQ = SubscriptionPayment::whereBetween('created_at', [$b['start'].' 00:00:00', $b['end'].' 23:59:59'])
-                ->where('status', 'APPROVED');
-            $sub = (float) $sQ->sum('amount');
-
-            $inflowVals[] = $inf;
-            $subscriptionVals[] = $sub;
-        }
-
-        $maxVal = max(1, ...$inflowVals, ...$subscriptionVals);
-        $chartW = 600;
-        $topPad = 20;
-        $bottomBase = 120;
-        $usableH = $bottomBase - $topPad;
-        $stepX = ($pointsCount > 1) ? ($chartW - 60) / ($pointsCount - 1) : 0;
-
-        $inflowCoords = [];
-        $subscriptionCoords = [];
-
-        for ($i = 0; $i < $pointsCount; $i++) {
-            $x = round(30 + ($i * $stepX), 1);
-            $yInflow = round($bottomBase - (($inflowVals[$i] / $maxVal) * $usableH), 1);
-            $ySub = round($bottomBase - (($subscriptionVals[$i] / $maxVal) * $usableH), 1);
-
-            $inflowCoords[] = [
-                'x' => $x,
-                'y' => $yInflow,
-                'val' => $inflowVals[$i],
-                'label' => $buckets[$i]['label'],
-                'formatted' => 'PKR '.number_format($inflowVals[$i]),
-            ];
-            $subscriptionCoords[] = [
-                'x' => $x,
-                'y' => $ySub,
-                'val' => $subscriptionVals[$i],
-                'label' => $buckets[$i]['label'],
-                'formatted' => 'PKR '.number_format($subscriptionVals[$i]),
-            ];
-        }
-
-        $buildSpline = function (array $coords) use ($bottomBase) {
-            if (empty($coords)) {
-                return ['path' => '', 'area' => ''];
-            }
-            $path = "M {$coords[0]['x']} {$coords[0]['y']}";
-            for ($i = 1; $i < count($coords); $i++) {
-                $prev = $coords[$i - 1];
-                $curr = $coords[$i];
-                $cpx1 = round($prev['x'] + ($curr['x'] - $prev['x']) / 2, 1);
-                $cpy1 = $prev['y'];
-                $cpx2 = round($prev['x'] + ($curr['x'] - $prev['x']) / 2, 1);
-                $cpy2 = $curr['y'];
-                $path .= " C {$cpx1} {$cpy1}, {$cpx2} {$cpy2}, {$curr['x']} {$curr['y']}";
-            }
-            $lastX = end($coords)['x'];
-            $firstX = $coords[0]['x'];
-            $area = "{$path} L {$lastX} {$bottomBase} L {$firstX} {$bottomBase} Z";
-
-            return ['path' => $path, 'area' => $area];
-        };
-
-        $inflowSpline = $buildSpline($inflowCoords);
-        $subSpline = $buildSpline($subscriptionCoords);
-
-        return [
-            'inflowPath' => $inflowSpline['path'],
-            'inflowArea' => $inflowSpline['area'],
-            'subscriptionPath' => $subSpline['path'],
-            'subscriptionArea' => $subSpline['area'],
-            'inflowCoords' => $inflowCoords,
-            'subscriptionCoords' => $subscriptionCoords,
-            'totalInflow' => array_sum($inflowVals),
-            'totalSubscription' => array_sum($subscriptionVals),
-        ];
-    }
-
-    private function buildAdminMiniCalendar(): array
-    {
-        $now = Carbon::now();
-        $startOfMonth = $now->copy()->startOfMonth();
-        $endOfMonth = $now->copy()->endOfMonth();
-        $daysInMonth = $now->daysInMonth;
-
-        $leadBlanks = ($startOfMonth->dayOfWeekIso - 1);
-
-        $monthBookings = Booking::whereBetween('event_date', [$startOfMonth->format('Y-m-d'), $endOfMonth->format('Y-m-d')])
-            ->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD'])
-            ->get();
-
-        $days = [];
-        for ($d = 1; $d <= $daysInMonth; $d++) {
-            $date = $startOfMonth->copy()->addDays($d - 1);
-            $dStr = $date->format('Y-m-d');
-            $dayBookings = $monthBookings->filter(fn ($b) => Carbon::parse($b->event_date)->format('Y-m-d') === $dStr);
-
-            $days[] = [
-                'day' => $d,
-                'date' => $dStr,
-                'isToday' => ($d === $now->day),
-                'hasEvening' => $dayBookings->contains('slot_type', 'EVENING'),
-                'hasAfternoon' => $dayBookings->contains('slot_type', 'AFTERNOON'),
-                'count' => $dayBookings->count(),
-            ];
-        }
-
-        $nextBooking = Booking::with('hall')
-            ->whereDate('event_date', '>=', $now->format('Y-m-d'))
-            ->whereIn('status', ['CONFIRMED', 'HOLD'])
-            ->orderBy('event_date')
-            ->first();
-
-        return [
-            'monthName' => $now->format('F Y'),
-            'leadBlanks' => $leadBlanks,
-            'days' => $days,
-            'nextBooking' => $nextBooking ? [
-                'date' => Carbon::parse($nextBooking->event_date)->format('d M'),
-                'slot' => ucfirst(strtolower($nextBooking->slot_type ?? 'Evening')),
-                'hall' => $nextBooking->hall->name ?? 'Ballroom',
-                'client' => $nextBooking->customer_name ?? 'Client',
-            ] : null,
-        ];
+            'adminChartData' => $analytics->chartData($this->chartTimeframe, $this->chartMetric),
+            'adminWaveData' => $analytics->waveData($this->chartTimeframe),
+            'adminMiniCalendar' => $analytics->miniCalendar(),
+        ]));
     }
 }

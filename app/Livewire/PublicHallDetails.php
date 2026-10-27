@@ -8,6 +8,7 @@ use App\Models\HallView;
 use App\Models\HallWishlist;
 use App\Models\Package;
 use App\Models\PageVisit;
+use App\Support\CalendarWindow;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -85,20 +86,21 @@ class PublicHallDetails extends Component
         $this->isWishlisted = HallWishlist::isWishlisted($this->hall->id, $userId, $sessionId);
         $this->wishlistCount = HallWishlist::countWishlists($this->hall->id);
         $now = now();
+        $this->allowedYears = CalendarWindow::years();
         $this->calendarMonth = $now->format('Y-m');
-        $this->selectedYear = max(2026, min(2030, (int) $now->format('Y')));
-        $this->selectedMonthNumber = (int) $now->format('n');
+        $this->selectedYear = CalendarWindow::clampYear((int) $now->format('Y'));
+        $this->selectedMonthNumber = CalendarWindow::clampMonth((int) $now->format('n'));
 
         $this->selectFirstBookableDateForCurrentMonth();
     }
 
     public string $calendarMonth = '';
 
-    public int $selectedYear = 2026;
+    public int $selectedYear = 0;
 
-    public int $selectedMonthNumber = 10;
+    public int $selectedMonthNumber = 1;
 
-    public array $allowedYears = [2026, 2027, 2028, 2029, 2030];
+    public array $allowedYears = [];
 
     public int $monthOffset = 0; // 0 = current month, 1 = +1 month, 2 = +2 month
 
@@ -112,18 +114,26 @@ class PublicHallDetails extends Component
 
     public function updatedSelectedYear(): void
     {
-        $this->selectedYear = max(2026, min(2030, (int) $this->selectedYear));
+        $this->selectedYear = CalendarWindow::clampYear((int) $this->selectedYear);
         $this->syncCalendarMonth();
     }
 
     public function updatedSelectedMonthNumber(): void
     {
-        $this->selectedMonthNumber = max(1, min(12, (int) $this->selectedMonthNumber));
+        $this->selectedMonthNumber = CalendarWindow::clampMonth((int) $this->selectedMonthNumber);
         $this->syncCalendarMonth();
     }
 
     private function syncCalendarMonth(): void
     {
+        $this->selectedYear = CalendarWindow::clampYear($this->selectedYear);
+        $this->selectedMonthNumber = CalendarWindow::clampMonth($this->selectedMonthNumber);
+
+        $firstNavigable = CalendarWindow::firstNavigableMonth();
+        if ($this->selectedYear === $firstNavigable->year) {
+            $this->selectedMonthNumber = max($this->selectedMonthNumber, $firstNavigable->month);
+        }
+
         $this->calendarMonth = sprintf('%04d-%02d', $this->selectedYear, $this->selectedMonthNumber);
         $today = Carbon::today()->startOfMonth();
         $target = Carbon::createFromFormat('Y-m', $this->calendarMonth)->startOfMonth();
@@ -138,10 +148,10 @@ class PublicHallDetails extends Component
 
     public function previousMonth(): void
     {
-        $current = Carbon::createFromFormat('Y-m', $this->calendarMonth)->startOfMonth();
-        $prev = $current->subMonth();
+        $current = CalendarWindow::normalizeMonth($this->calendarMonth);
+        $prev = $current->copy()->subMonth();
 
-        if ($prev->year < 2026) {
+        if ($prev->lt(CalendarWindow::firstNavigableMonth())) {
             return;
         }
 
@@ -155,10 +165,10 @@ class PublicHallDetails extends Component
 
     public function nextMonth(): void
     {
-        $current = Carbon::createFromFormat('Y-m', $this->calendarMonth)->startOfMonth();
-        $next = $current->addMonth();
+        $current = CalendarWindow::normalizeMonth($this->calendarMonth);
+        $next = $current->copy()->addMonth();
 
-        if ($next->year > 2030) {
+        if ($next->year > CalendarWindow::endYear()) {
             return;
         }
 
@@ -172,8 +182,10 @@ class PublicHallDetails extends Component
 
     public function setMonth(int $offset): void
     {
-        $this->monthOffset = $offset;
-        $target = Carbon::today()->addMonths($offset);
+        $today = Carbon::today()->startOfMonth();
+        $maxOffset = ((CalendarWindow::endYear() - $today->year) * 12) + (12 - $today->month);
+        $this->monthOffset = max(0, min($maxOffset, $offset));
+        $target = $today->copy()->addMonths($this->monthOffset);
         $this->calendarMonth = $target->format('Y-m');
         $this->selectedYear = (int) $target->format('Y');
         $this->selectedMonthNumber = (int) $target->format('n');
@@ -187,8 +199,25 @@ class PublicHallDetails extends Component
 
     public function triggerBooking(string $slotType, bool $isBooked): void
     {
+        $selectedDate = CalendarWindow::parseDate($this->selectedDate);
+
+        if (! $selectedDate || ! CalendarWindow::contains($selectedDate)) {
+            $this->dispatch('luxury-alert', [
+                'title' => 'Select a Valid Date',
+                'message' => 'Please choose an upcoming event date from the availability calendar before reserving a shift.',
+                'type' => 'gold',
+                'confirmText' => 'Choose Date',
+            ]);
+
+            return;
+        }
+
+        if (! in_array($slotType, ['AFTERNOON', 'EVENING', 'NIGHT'], true)) {
+            return;
+        }
+
         if ($isBooked) {
-            $formattedDate = Carbon::parse($this->selectedDate)->format('l, M jS, Y');
+            $formattedDate = $selectedDate->format('l, M jS, Y');
             $this->dispatch('luxury-alert', [
                 'title' => 'Shift Already Booked',
                 'message' => "The {$slotType} shift on {$formattedDate} for {$this->hall->name} has already been reserved and locked for an event. In strict compliance with our single-host protocol, double bookings are prohibited. Please choose another shift or date.",
@@ -219,16 +248,15 @@ class PublicHallDetails extends Component
 
     public function setSelectedDate(string $date): void
     {
-        if (! Carbon::hasFormat($date, 'Y-m-d')) {
+        $selectedDate = CalendarWindow::parseDate($date);
+
+        if (! $selectedDate || ! CalendarWindow::contains($selectedDate)) {
             return;
         }
 
-        $selectedDate = Carbon::createFromFormat('Y-m-d', $date)->startOfDay();
-        $today = Carbon::today();
-        $targetMonth = Carbon::createFromFormat('Y-m', $this->calendarMonth)->startOfMonth();
+        $targetMonth = CalendarWindow::normalizeMonth($this->calendarMonth);
 
-        if ($selectedDate->lt($today)
-            || ! $selectedDate->isSameMonth($targetMonth)
+        if (! $selectedDate->isSameMonth($targetMonth)
             || ! $this->dateHasAvailableShift($selectedDate)) {
             return;
         }
@@ -239,7 +267,7 @@ class PublicHallDetails extends Component
     private function selectFirstBookableDateForCurrentMonth(): void
     {
         $today = Carbon::today();
-        $targetMonth = Carbon::createFromFormat('Y-m', $this->calendarMonth)->startOfMonth();
+        $targetMonth = CalendarWindow::normalizeMonth($this->calendarMonth);
         $startDate = $targetMonth->isSameMonth($today)
             ? $today
             : $targetMonth->copy()->startOfMonth();
@@ -298,11 +326,20 @@ class PublicHallDetails extends Component
     {
         $today = Carbon::today();
 
-        if (empty($this->calendarMonth)) {
-            $this->calendarMonth = now()->format('Y-m');
+        $this->allowedYears = CalendarWindow::years();
+        $targetDate = CalendarWindow::normalizeMonth($this->calendarMonth);
+        $this->calendarMonth = $targetDate->format('Y-m');
+        $this->selectedYear = (int) $targetDate->format('Y');
+        $this->selectedMonthNumber = (int) $targetDate->format('n');
+
+        $selectedDate = CalendarWindow::parseDate($this->selectedDate);
+        if (! $selectedDate
+            || ! CalendarWindow::contains($selectedDate)
+            || ! $selectedDate->isSameMonth($targetDate)) {
+            $selectedDate = $targetDate->isSameMonth($today) ? $today : $targetDate->copy()->startOfMonth();
+            $this->selectedDate = $selectedDate->format('Y-m-d');
         }
 
-        $targetDate = Carbon::createFromFormat('Y-m', $this->calendarMonth)->startOfMonth();
         $monthTitle = $targetDate->format('F Y');
         $monthName = strtoupper($targetDate->format('F'));
         $year = $targetDate->format('Y');

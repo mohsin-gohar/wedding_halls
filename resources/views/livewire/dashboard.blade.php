@@ -297,12 +297,12 @@
                             <span>Workforce Duty</span>
                         </span>
                         <span class="text-stone-500 dark:text-stone-400 font-sans text-[10px] font-bold">
-                            {{ $todayStaffPresentCount }} / {{ $todayStaffTotalCount }} Present
+                            {{ $periodStaffPresentCount }} Present-days / {{ $todayStaffTotalCount }} Staff
                         </span>
                     </div>
                     <div>
                         <div class="text-2xl font-cinzel font-bold text-[#171513] dark:text-white">
-                            {{ $todayOvertimeHours }} <span class="text-xs font-sans font-normal text-stone-500">OT Hours Today</span>
+                            {{ $periodOvertimeHours }} <span class="text-xs font-sans font-normal text-stone-500">OT Hours ({{ $periodLabel }})</span>
                         </div>
                         <p class="text-xs text-stone-600 dark:text-stone-300 font-sans mt-1">
                             Chefs, waitstaff, and cleaners. 1-click filter for individual attendance &amp; salary slips.
@@ -328,15 +328,15 @@
                             <span>Utility Fleet</span>
                         </span>
                         <span class="text-[#8F7239] dark:text-[#C6A15B] font-sans text-[10px] font-bold">
-                            {{ number_format($todayDieselLiters, 1) }}L Diesel
+                            {{ number_format($periodDieselLiters, 1) }}L Diesel (period)
                         </span>
                     </div>
                     <div>
                         <div class="text-2xl font-cinzel font-bold text-[#171513] dark:text-white">
-                            {{ $todayGeneratorHours }} <span class="text-xs font-sans font-normal text-stone-500">Gen Hours</span>
+                            {{ $periodGeneratorHours }} <span class="text-xs font-sans font-normal text-stone-500">Gen Hours ({{ $periodLabel }})</span>
                         </div>
                         <p class="text-xs text-stone-600 dark:text-stone-300 font-sans mt-1">
-                            Commercial WAPDA units &amp; backup heavy generator fuel logging per wedding function.
+                            Period total: {{ number_format($periodWapdaUnits, 1) }} WAPDA units • {{ number_format($periodDieselLiters, 1) }}L diesel.
                         </p>
                     </div>
                 </div>
