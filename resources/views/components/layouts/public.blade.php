@@ -37,7 +37,14 @@
     </noscript>
 
     <!-- Styles & Livewire -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Defensive Baseline Styles (Prevent Unstyled Image Blowout & Layout Shift) -->
+    <style>
+        img { max-width: 100%; height: auto; }
+        .site-header img, header img, aside img { max-height: 48px; width: auto; }
+    </style>
+
+    <!-- Styles & Livewire -->
+    @vite(['resources/js/app.js'])
     @livewireStyles
 
     <!-- Theme State Initializer (Default: Dark Luxury Palace) -->
@@ -80,7 +87,7 @@
                 
                 <!-- Brand Identity -->
                 <a href="{{ route('home') }}" class="group flex shrink-0 items-center gap-3 max-sm:gap-2.5">
-                    <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub" class="h-10 sm:h-12 w-auto object-contain rounded-lg border border-[#C6A15B]/35 bg-[#171513] shadow-sm group-hover:border-[#C6A15B] transition-all duration-300">
+                    <img src="{{ asset('images/eventhub-logo.png') }}" width="48" height="48" alt="EventHub" style="max-height: 48px; width: auto;" class="h-10 sm:h-12 w-auto object-contain rounded-lg border border-[#C6A15B]/35 bg-[#171513] shadow-sm group-hover:border-[#C6A15B] transition-all duration-300">
                     <span class="flex flex-col leading-none">
                         <span class="font-cinzel text-base font-bold tracking-[0.16em] text-white transition-colors duration-300 group-hover:text-[#F2DE9A] sm:text-lg">
                             EventHub
@@ -226,7 +233,7 @@
                 <!-- Brand Info -->
                 <div class="lg:col-span-2 space-y-5">
                     <a href="{{ route('home') }}" class="flex items-center gap-3 group">
-                        <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub Logo" class="h-12 w-auto object-contain rounded-lg border border-[#C6A15B]/35 bg-[#171513] shadow-sm">
+                        <img src="{{ asset('images/eventhub-logo.png') }}" width="48" height="48" alt="EventHub Logo" style="max-height: 48px; width: auto;" class="h-12 w-auto object-contain rounded-lg border border-[#C6A15B]/35 bg-[#171513] shadow-sm">
                         <div>
                             <span class="font-cinzel text-2xl font-bold tracking-[0.16em] text-white group-hover:text-[#F2DE9A] transition block">EventHub</span>
                             <span class="block text-[9px] uppercase tracking-[0.22em] text-[#C6A15B]/80 font-sans font-medium mt-0.5">Pakistan's Venue Platform</span>

@@ -413,7 +413,11 @@ class Dashboard extends Component
             $prevQuery->where('hall_id', $this->selectedHallId);
         }
 
-        $allPeriodBookings = (clone $bookingsQuery)->with(['hall', 'package', 'payments', 'kitchenKot', 'utilityLog'])->get();
+        $kitchenEnabled = (bool) config('platform.kitchen_module_enabled', false);
+        $bookingWithRelations = $kitchenEnabled
+            ? ['hall', 'package', 'payments', 'kitchenKot', 'utilityLog']
+            : ['hall', 'package', 'payments', 'utilityLog'];
+        $allPeriodBookings = (clone $bookingsQuery)->with($bookingWithRelations)->get();
 
         $prevProgramsCount = (clone $prevQuery)->count();
         $prevSalesTurnover = (float) (clone $prevQuery)->sum('grand_total');
@@ -517,7 +521,10 @@ class Dashboard extends Component
 
         // 9. Today's active functions (Strictly Scoped to Owner's Tenant)
         $today = $now->format('Y-m-d');
-        $todayQuery = Booking::with(['hall.venue', 'payments', 'kitchenKot', 'utilityLog'])
+        $todayWithRelations = $kitchenEnabled
+            ? ['hall.venue', 'payments', 'kitchenKot', 'utilityLog']
+            : ['hall.venue', 'payments', 'utilityLog'];
+        $todayQuery = Booking::with($todayWithRelations)
             ->whereDate('event_date', $today)
             ->whereIn('status', ['CONFIRMED', 'HOLD']);
 
@@ -593,6 +600,25 @@ class Dashboard extends Component
         $totalHallViews = HallView::where('tenant_id', $tenantId)->count();
         $totalHallWishlists = HallWishlist::where('tenant_id', $tenantId)->count();
         $totalHallBookings = Booking::where('tenant_id', $tenantId)->count();
+
+        // 12b. Traffic Pulse — public hall views per day for the last 14 days
+        // (rendered as a premium bar graph in the marketing analytics card).
+        $trafficPulseStart = $now->copy()->subDays(13)->startOfDay();
+        $trafficPulseRows = HallView::where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$trafficPulseStart, $now->copy()->endOfDay()])
+            ->get(['created_at']);
+        $trafficPulseByDate = $trafficPulseRows->groupBy(
+            fn ($row) => optional($row->created_at)->format('Y-m-d')
+        );
+        $trafficPulse = [];
+        for ($pulseOffset = 13; $pulseOffset >= 0; $pulseOffset--) {
+            $pulseDay = $now->copy()->subDays($pulseOffset);
+            $trafficPulse[] = [
+                'date' => $pulseDay->format('Y-m-d'),
+                'label' => $pulseDay->format('d M'),
+                'views' => (int) ($trafficPulseByDate->get($pulseDay->format('Y-m-d'), collect())->count()),
+            ];
+        }
 
         // 13. Interactive Kanban CRM Leads (Strictly Scoped to Tenant)
         $crmLeadsQuery = Booking::with(['hall', 'package', 'payments'])
@@ -683,12 +709,20 @@ class Dashboard extends Component
             ->get();
 
         // 15. Real-Time ERP Modular Health Matrix
-        $todayKotsQuery = KitchenKot::where('tenant_id', $tenantId)
-            ->whereHas('booking', fn ($q) => $q->whereDate('event_date', $today));
-        $todayKitchenKotsCount = (clone $todayKotsQuery)->count();
-        $todayTotalDiners = (int) (clone $todayKotsQuery)->sum('guest_count');
-        $todayMeatNeeded = (float) (clone $todayKotsQuery)->sum('raw_meat_kg');
-        $todayRiceNeeded = (float) (clone $todayKotsQuery)->sum('raw_rice_kg');
+        // Kitchen/KOT engine is toggleable — zero DB work while switched off.
+        if ((bool) config('platform.kitchen_module_enabled', false)) {
+            $todayKotsQuery = KitchenKot::where('tenant_id', $tenantId)
+                ->whereHas('booking', fn ($q) => $q->whereDate('event_date', $today));
+            $todayKitchenKotsCount = (clone $todayKotsQuery)->count();
+            $todayTotalDiners = (int) (clone $todayKotsQuery)->sum('guest_count');
+            $todayMeatNeeded = (float) (clone $todayKotsQuery)->sum('raw_meat_kg');
+            $todayRiceNeeded = (float) (clone $todayKotsQuery)->sum('raw_rice_kg');
+        } else {
+            $todayKitchenKotsCount = 0;
+            $todayTotalDiners = 0;
+            $todayMeatNeeded = 0.0;
+            $todayRiceNeeded = 0.0;
+        }
 
         $totalInventoryItems = InventoryItem::where('tenant_id', $tenantId)->where('is_active', true)->count();
         $lowStockInventoryCount = InventoryItem::where('tenant_id', $tenantId)->where('is_active', true)->whereColumn('current_stock', '<=', 'min_threshold')->count();
@@ -768,6 +802,7 @@ class Dashboard extends Component
             'totalHallViews' => $totalHallViews,
             'totalHallWishlists' => $totalHallWishlists,
             'totalHallBookings' => $totalHallBookings,
+            'trafficPulse' => $trafficPulse,
             'kanbanColumns' => $kanbanColumns,
             'allLeads' => $allLeads,
             'selectedLead' => $selectedLead,

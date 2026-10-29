@@ -272,7 +272,7 @@
                 </div>
 
                 <!-- Paired Bars Container -->
-                <div class="relative z-10 grid grid-cols-{{ count($adminChartData) }} gap-2 sm:gap-6 items-end h-64 pt-6">
+                <div class="relative z-10 grid gap-2 sm:gap-6 items-end h-64 pt-6" style="grid-template-columns: repeat({{ max(1, count($adminChartData)) }}, minmax(0, 1fr));">
                     @foreach($adminChartData as $point)
                         <div class="flex flex-col items-center h-full justify-end group relative">
                             

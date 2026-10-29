@@ -839,13 +839,20 @@
         function startInterval() { slideInterval = setInterval(() => { nextSlide(); }, 3500); }
         function resetInterval() { clearInterval(slideInterval); startInterval(); }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            startInterval();
+        function initHeroSlideshow() {
+            if (slideInterval) clearInterval(slideInterval);
             const slideshow = document.querySelector('.hero-slideshow');
-            if (slideshow) {
+            if (!slideshow) return;
+            showSlide(currentSlide);
+            startInterval();
+            if (!slideshow.dataset.listenerAttached) {
+                slideshow.dataset.listenerAttached = 'true';
                 slideshow.addEventListener('mouseenter', () => clearInterval(slideInterval));
                 slideshow.addEventListener('mouseleave', () => startInterval());
             }
-        });
+        }
+
+        document.addEventListener('DOMContentLoaded', initHeroSlideshow);
+        document.addEventListener('livewire:navigated', initHeroSlideshow);
     </script>
 </x-layouts.public>

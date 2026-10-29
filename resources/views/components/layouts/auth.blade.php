@@ -22,7 +22,14 @@
     </noscript>
 
     <!-- Styles & Livewire -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Defensive Baseline Styles (Prevent Unstyled Image Blowout & Layout Shift) -->
+    <style>
+        img { max-width: 100%; height: auto; }
+        .site-header img, header img, aside img { max-height: 48px; width: auto; }
+    </style>
+
+    <!-- Styles & Livewire -->
+    @vite(['resources/js/app.js'])
     @livewireStyles
 
     <!-- Theme State Initializer (Default: Dark) -->

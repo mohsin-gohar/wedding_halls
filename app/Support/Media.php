@@ -16,9 +16,9 @@ class Media
 
         // Already an embed / direct file
         if (str_contains($url, '/embed/') || preg_match('/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i', $url)) {
-            // YouTube embed passthrough
-            if (str_contains($url, 'youtube.com/embed/')) {
-                return $url;
+            // YouTube embed passthrough (normalize to a clean embed URL)
+            if (preg_match('#youtube(?:-nocookie)?\.com/embed/([a-zA-Z0-9_-]+)#', $url, $m)) {
+                return 'https://www.youtube.com/embed/'.$m[1].'?rel=0';
             }
             // Direct file
             if (preg_match('/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i', $url)) {
@@ -32,17 +32,22 @@ class Media
             if (str_contains($url, 'youtu.be/')) {
                 $path = parse_url($url, PHP_URL_PATH) ?? '';
                 $id = trim($path, '/');
-                // strip query
+                $id = explode('/', $id)[0];
                 $id = explode('?', $id)[0];
+            } elseif (preg_match('#youtube\.com/(?:watch|embed|v|e|live)/?#', $url)) {
+                if (str_contains($url, 'youtube.com/watch')) {
+                    parse_str(parse_url($url, PHP_URL_QUERY) ?? '', $q);
+                    $id = $q['v'] ?? '';
+                } elseif (preg_match('#youtube\.com/(?:embed|v|e|live)/([a-zA-Z0-9_-]+)#', $url, $m)) {
+                    $id = $m[1] ?? '';
+                }
             } elseif (str_contains($url, 'youtube.com/shorts/')) {
                 preg_match('#shorts/([a-zA-Z0-9_-]+)#', $url, $m);
                 $id = $m[1] ?? '';
-            } elseif (str_contains($url, 'youtube.com/watch')) {
-                parse_str(parse_url($url, PHP_URL_QUERY) ?? '', $q);
-                $id = $q['v'] ?? '';
-            } elseif (str_contains($url, 'youtube.com/embed/')) {
-                preg_match('#embed/([a-zA-Z0-9_-]+)#', $url, $m);
-                $id = $m[1] ?? '';
+            }
+            // Fallback: regex any 11-char id
+            if ($id === '' && preg_match('#[?&/]([a-zA-Z0-9_-]{11})(?:[?&]|$)#', $url, $m)) {
+                $id = $m[1];
             }
             if ($id !== '') {
                 return 'https://www.youtube.com/embed/'.$id.'?rel=0';

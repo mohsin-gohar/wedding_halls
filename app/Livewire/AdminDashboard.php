@@ -176,10 +176,21 @@ class AdminDashboard extends Component
         $this->ensureSuperAdmin();
 
         if (request()->has('tab')) {
-            $this->activeTab = request()->query('tab');
+            $requestedTab = (string) request()->query('tab');
+
+            // SaaS billing tabs are hidden while the launch promotion keeps
+            // the platform free for hall owners.
+            if (in_array($requestedTab, ['plans', 'payments'], true) && ! $this->billingEnabled()) {
+                $requestedTab = 'vendors';
+            }
+
+            $this->activeTab = $requestedTab;
         }
 
-        $this->vendorRegistrationOpen = Cache::get('platform_vendor_registration_open', true);
+        $this->vendorRegistrationOpen = Cache::get(
+            'platform_vendor_registration_open',
+            (bool) config('platform.vendor_registration_open', true)
+        );
         $this->marketplaceEnabled = Cache::get('platform_marketplace_enabled', true);
         $this->announcementBanner = Cache::get('platform_announcement', '');
         $this->newTaskDueDate = Carbon::now()->addDays(2)->format('Y-m-d');
@@ -205,9 +216,25 @@ class AdminDashboard extends Component
         }
     }
 
+    /**
+     * The launch promotion runs the whole platform on a complimentary basis
+     * for hall owners. While that window is active the SaaS plan engine and
+     * its payment approvals are withheld from the console.
+     */
+    private function billingEnabled(): bool
+    {
+        return (bool) config('platform.billing_enabled', false);
+    }
+
     #[On('set-admin-tab')]
     public function setTab(string $tab)
     {
+        if (in_array($tab, ['plans', 'payments'], true) && ! $this->billingEnabled()) {
+            $this->feedbackMessage = 'SaaS billing is disabled during the free launch period — every hall ships at no charge.';
+
+            return;
+        }
+
         $this->activeTab = $tab;
         $this->feedbackMessage = null;
         $this->errorMessage = null;
@@ -419,15 +446,9 @@ class AdminDashboard extends Component
                 'description' => 'Grand wedding banquet marquee ballroom featuring Austrian crystal chandeliers, climate control, VIP bridal suites, and standby CAT generators.',
                 'operating_hours' => 'Morning: 11:30 AM - 3:30 PM | Evening: 7:00 PM - 12:00 AM',
                 'policies' => "1. 50% Token advance required to atomically secure wedding date.\n2. Music permissible till 10:00 PM per city banquet bylaws.\n3. Outside catering permitted with kitchen NOC.",
-                'cover_image' => 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
-                'images' => [
-                    'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
-                    'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200&auto=format&fit=crop',
-                    'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?q=80&w=1200&auto=format&fit=crop',
-                ],
-                'videos' => [
-                    'https://www.youtube.com/embed/7wtfhZwyrcc',
-                ],
+                'cover_image' => null,
+                'images' => [],
+                'videos' => [],
                 'services' => $defaultServices,
                 'has_air_conditioning' => true,
                 'has_generator_backup' => true,

@@ -23,7 +23,14 @@
     </noscript>
 
     <!-- Styles & Livewire -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Defensive Baseline Styles (Prevent Unstyled Image Blowout & Layout Shift) -->
+    <style>
+        img { max-width: 100%; height: auto; }
+        .site-header img, header img, aside img { max-height: 48px; width: auto; }
+    </style>
+
+    <!-- Styles & Livewire -->
+    @vite(['resources/js/app.js'])
     @livewireStyles
 
     <!-- Theme State Initializer (Default: Dark Luxury Palace) -->
@@ -111,7 +118,7 @@
                 <!-- Brand Badge -->
                     <div class="p-6 border-b border-[#E7E5E4] dark:border-[#C6A15B]/20 flex items-center justify-between bg-gradient-to-r from-transparent to-[#171513]/5 dark:to-[#C6A15B]/5">
                         <a href="{{ route('home') }}" class="flex items-center gap-3 group">
-                            <img src="{{ asset('images/eventhub-logo.png') }}" alt="EventHub Logo" class="h-10 w-auto object-contain rounded-lg border border-[#C6A15B]/40 bg-[#171513] shadow-sm">
+                            <img src="{{ asset('images/eventhub-logo.png') }}" width="48" height="48" alt="EventHub Logo" style="max-height: 48px; width: auto;" class="h-10 w-auto object-contain rounded-lg border border-[#C6A15B]/40 bg-[#171513] shadow-sm">
                             <div>
                                 <span class="font-cinzel text-lg font-bold tracking-[0.15em] text-[#171513] dark:text-white block group-hover:text-[#C6A15B] transition">EventHub</span>
                                 @if(auth()->user()->isSuperAdmin())

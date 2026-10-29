@@ -732,7 +732,7 @@
                 </div>
 
                 <!-- Paired Bars Container -->
-                <div class="relative z-10 grid grid-cols-{{ count($chartData) }} gap-2 sm:gap-6 items-end h-64 pt-6">
+                <div class="relative z-10 grid gap-2 sm:gap-6 items-end h-64 pt-6" style="grid-template-columns: repeat({{ max(1, count($chartData)) }}, minmax(0, 1fr));">
                     @foreach($chartData as $point)
                         <div class="flex flex-col items-center h-full justify-end group relative">
                             
@@ -1192,9 +1192,13 @@
                             <a href="{{ route('documents.agreement', $tb->id) }}" target="_blank" class="text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] underline">
                                 Contract
                             </a>
-                            <a href="{{ route('documents.receipt', $tb->id) }}" target="_blank" class="text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] underline">
-                                Receipt
-                            </a>
+@if($tb->payments->isNotEmpty())
+                                <a href="{{ route('documents.receipt', $tb->payments->first()->id) }}" target="_blank" class="text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] underline">
+                                    Receipt
+                                </a>
+                            @else
+                                <span class="text-stone-400 dark:text-stone-500">No Receipt</span>
+                            @endif
                         </div>
                     </div>
                 @endforeach

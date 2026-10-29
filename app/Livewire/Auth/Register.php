@@ -47,7 +47,10 @@ class Register extends Component
 
     public function mount()
     {
-        $isOpen = Cache::get('platform_vendor_registration_open', true);
+        $isOpen = Cache::get(
+            'platform_vendor_registration_open',
+            (bool) config('platform.vendor_registration_open', true)
+        );
         if (! $isOpen) {
             session()->flash('error', 'Vendor self-registration is currently paused by platform administrators.');
         }
@@ -55,7 +58,10 @@ class Register extends Component
 
     public function register()
     {
-        $isOpen = Cache::get('platform_vendor_registration_open', true);
+        $isOpen = Cache::get(
+            'platform_vendor_registration_open',
+            (bool) config('platform.vendor_registration_open', true)
+        );
         if (! $isOpen) {
             $this->addError('hallName', 'Vendor self-registration is currently paused. Please contact platform concierge.');
 
@@ -82,7 +88,9 @@ class Register extends Component
                 'subscription_status' => 'TRIAL',
                 'billing_cycle' => 'MONTHLY',
                 'subscription_starts_at' => now(),
-                'subscription_expires_at' => now()->addDays($defaultPlan?->trial_days ?? 14),
+                'subscription_expires_at' => now()->addDays(
+                    (int) config('platform.free_access_days', 30)
+                ),
                 'verification_status' => 'PENDING',
                 'currency' => 'PKR',
                 'is_active' => true,
@@ -109,14 +117,9 @@ class Register extends Component
                 'max_capacity' => $this->capacity,
                 'base_rent' => $this->baseRent,
                 'description' => 'Luxury banqueting hall space with central climate control, power backup, and VIP bridal room.',
-                'cover_image' => 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
-                'images' => [
-                    'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
-                    'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200&auto=format&fit=crop',
-                ],
-                'videos' => [
-                    'https://www.youtube.com/embed/7wtfhZwyrcc',
-                ],
+                'cover_image' => null,
+                'images' => [],
+                'videos' => [],
                 'has_air_conditioning' => true,
                 'has_generator_backup' => true,
                 'has_bridal_room' => true,
@@ -142,7 +145,11 @@ class Register extends Component
 
         Auth::login($user);
         session()->regenerate();
-        session()->flash('message', 'Congratulations! Your hall has been registered. You can now add your images & videos.');
+        session()->flash(
+            'message',
+            'Congratulations! Your hall has been registered and is now under platform review. '
+            .'The moment EventHub approves it, your hall goes live publicly. Meanwhile you can complete your images & videos.'
+        );
 
         return redirect()->route('hall.media');
     }

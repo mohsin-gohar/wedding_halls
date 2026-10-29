@@ -160,6 +160,7 @@ Route::get('/about', PublicAbout::class)->middleware('throttle:public-pages')->n
 Route::get('/contact', PublicContact::class)->name('public.contact')->middleware('throttle:30,1');
 Route::get('/faqs', PublicFaqs::class)->middleware('throttle:public-pages')->name('public.faqs');
 Route::get('/check-availability', PublicAvailabilityChecker::class)->name('public.availability')->middleware('throttle:public-availability');
+Route::redirect('/availability', '/check-availability', 301);
 Route::get('/rsvp', PublicGuestRsvp::class)->name('public.rsvp')->middleware('throttle:30,1');
 
 // Legal Policies
