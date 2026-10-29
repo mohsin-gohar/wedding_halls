@@ -553,7 +553,7 @@
         $hasLocation = !empty($latitude) && !empty($longitude);
     @endphp
 
-    @if($hasLocation || !empty($googleMapsUrl))
+    @if($venue)
     <section class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-4 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
@@ -568,8 +568,10 @@
             <div class="aspect-[16/9] rounded-2xl overflow-hidden border border-[#E7E5E4] dark:border-white/10 shadow-xl bg-[#171513]">
                 @if(!empty($googleMapsUrl))
                     <iframe class="w-full h-full" src="{{ $googleMapsUrl }}" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                @elseif(!empty($latitude) && !empty($longitude))
+                    <iframe class="w-full h-full" src="https://www.google.com/maps?q={{ $latitude }},{{ $longitude }}&z=15&output=embed" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                 @else
-                    <iframe class="w-full h-full" src="https://www.google.com/maps/embed/v1/place?key=AIzaSyAJ8niE3hXLhBX0niwdZv8p1mDz3bq3Qqs&q={{ urlencode($venue->city ?? 'Lahore') }},+{{ urlencode($venue->address ?? 'Pakistan') }}" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    <iframe class="w-full h-full" src="https://www.google.com/maps?q={{ urlencode($venue->city ?? 'Lahore') }},+{{ urlencode($venue->address ?? 'Pakistan') }}&output=embed" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                 @endif
             </div>
 
