@@ -54,8 +54,8 @@
 
         <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full space-y-6">
             
-            <!-- Breadcrumbs & Venue Owner Edit Link -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+            <!-- Breadcrumbs -->
+            <div class="flex items-center gap-4 border-b border-white/10 pb-4">
                 <nav class="flex items-center gap-2 text-xs font-sans tracking-wide text-stone-400">
                     <a href="{{ route('home') }}" class="hover:text-white transition">Home</a>
                     <span>/</span>
@@ -63,30 +63,11 @@
                     <span>/</span>
                     <span class="text-[#C6A15B] font-medium">{{ $hall->name }}</span>
                 </nav>
-
-                @auth
-                    @if(auth()->user()->tenant_id === $hall->tenant_id || auth()->user()->isSuperAdmin())
-                        <div class="flex items-center gap-3">
-                            <span class="text-[11px] font-sans font-semibold uppercase tracking-wider text-[#C6A15B] bg-[#C6A15B]/15 px-3 py-1 rounded-full border border-[#C6A15B]/40">
-                                Rent Admin Mode
-                            </span>
-                            <a href="{{ route('hall.media') }}" class="btn-gold !h-8 !px-3.5 text-xs font-sans font-semibold">
-                                Edit Photos &amp; Services Catalog &rarr;
-                            </a>
-                        </div>
-                    @endif
-                @endauth
             </div>
 
             <!-- Hall Title & Badges -->
             <div class="space-y-4 max-w-4xl">
                 <div class="flex flex-wrap items-center gap-2.5">
-                    <span class="px-3.5 py-1 rounded-full bg-[#C6A15B] text-[#171513] text-[11px] font-bold uppercase tracking-wider font-sans">
-                        Verified Luxury Banquet
-                    </span>
-                    <span class="px-3.5 py-1 rounded-full bg-white/10 text-stone-200 text-[11px] font-sans tracking-wide border border-white/15">
-                        {{ $hall->venue->city ?? 'Lahore' }} • {{ $hall->venue->area ?? 'Gulberg' }}
-                    </span>
                     @if(!empty($videos) && count($videos) > 0)
                         <span class="px-3.5 py-1 rounded-full bg-[#171513]/90 text-[#F8F5EF] text-[11px] font-sans tracking-wide border border-[#C6A15B]/45 flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-[#C6A15B] animate-pulse"></span>
