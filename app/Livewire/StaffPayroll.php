@@ -86,8 +86,7 @@ class StaffPayroll extends Component
         $this->authorizePayrollManager();
         validator(['selectedMonth' => $this->selectedMonth], ['selectedMonth' => 'required|date_format:Y-m'])->validate();
         $tenantId = Auth::user()->tenant_id;
-        $staffQuery = User::where('tenant_id', $tenantId)
-            ->where('role', '!=', 'ROLE_CUSTOMER')
+        $staffQuery = User::hallStaff($tenantId)
             ->where('status', '!=', 'SUSPENDED');
         if ($this->selectedStaffId !== 'ALL') {
             $staffQuery->whereKey($this->selectedStaffId);
@@ -309,8 +308,7 @@ class StaffPayroll extends Component
             $payrollQuery->where('user_id', $this->selectedStaffId);
         }
         $payrolls = $payrollQuery->get();
-        $staffMembers = User::where('tenant_id', $tenantId)
-            ->where('role', '!=', 'ROLE_CUSTOMER')
+        $staffMembers = User::hallStaff($tenantId)
             ->where('status', '!=', 'SUSPENDED')
             ->orderBy('name')
             ->get();

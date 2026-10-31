@@ -19,7 +19,7 @@
         <!-- Contact Form & Direct Details Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
             
-            <!-- Left: Contact & WhatsApp Form (7 cols) -->
+            <!-- Left: Contact Form (7 cols) -->
             <div class="lg:col-span-7 bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-[#C6A15B]/30 rounded-2xl p-8 sm:p-10 shadow-sm space-y-6">
                 <div>
                     <span class="text-[11px] uppercase font-semibold tracking-[0.16em] text-[#8F7239] dark:text-[#C6A15B] block font-sans">Direct Inquiry Form</span>
@@ -83,19 +83,19 @@
                 @endif
             </div>
 
-            <!-- Right: Direct WhatsApp & Office Locations (5 cols) -->
+            <!-- Right: Direct Concierge & Office Locations (5 cols) -->
             <div class="lg:col-span-5 space-y-6">
-                <!-- Direct WhatsApp Box -->
+                <!-- Direct Concierge Chatbot Box -->
                 <div class="bg-[#171513] text-white p-8 rounded-2xl border border-[#C6A15B]/35 shadow-md space-y-4">
                     <span class="text-[11px] uppercase font-semibold tracking-[0.16em] text-[#C6A15B] block font-sans">Instant VIP Response</span>
-                    <h3 class="font-serif-luxury text-2xl font-normal text-white">WhatsApp Direct Concierge</h3>
+                    <h3 class="font-serif-luxury text-2xl font-normal text-white">Live Concierge Chatbot</h3>
                     <p class="text-xs text-stone-300 font-light leading-relaxed">
                         For immediate shift checks, walk-in appointment scheduling, or urgent inquiries, message our 24/7 dedicated concierge desk.
                     </p>
-                    <a href="https://wa.me/924235789000?text=Hello%20EventHub%20Concierge,%20I%20have%20an%20inquiry%20regarding%20wedding%20venue%20booking" 
+                    <a href="{{ route('public.concierge') }}" 
                        target="_blank" 
                        class="btn-gold !w-full !h-11 text-xs font-bold font-sans tracking-wide flex items-center justify-center gap-2 rounded-xl shadow-sm">
-                        <span>Message on WhatsApp (+92 42 35789000)</span>
+                        <span>Launch 24/7 AI Concierge Chatbot &rarr;</span>
                     </a>
                 </div>
 

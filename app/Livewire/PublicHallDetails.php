@@ -91,7 +91,16 @@ class PublicHallDetails extends Component
         $this->selectedYear = CalendarWindow::clampYear((int) $now->format('Y'));
         $this->selectedMonthNumber = CalendarWindow::clampMonth((int) $now->format('n'));
 
-        $this->selectFirstBookableDateForCurrentMonth();
+        $requestedDate = CalendarWindow::parseDate((string) request()->query('date', ''));
+        if ($requestedDate && CalendarWindow::contains($requestedDate)) {
+            $this->calendarMonth = $requestedDate->format('Y-m');
+            $this->selectedYear = (int) $requestedDate->format('Y');
+            $this->selectedMonthNumber = (int) $requestedDate->format('n');
+            $this->selectedDate = $requestedDate->format('Y-m-d');
+            $this->monthOffset = (int) Carbon::today()->startOfMonth()->diffInMonths($requestedDate->copy()->startOfMonth(), false);
+        } else {
+            $this->selectFirstBookableDateForCurrentMonth();
+        }
     }
 
     public string $calendarMonth = '';

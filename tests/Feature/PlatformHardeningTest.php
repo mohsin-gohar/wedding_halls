@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\AdminDashboard;
+use App\Livewire\Dashboard;
 use App\Livewire\PublicAvailabilityChecker;
 use App\Livewire\PublicHallDetails;
 use App\Livewire\PublicVenues;
@@ -339,6 +340,109 @@ class PlatformHardeningTest extends TestCase
 
         Livewire::test(AdminDashboard::class)
             ->assertStatus(403);
+    }
+
+    public function test_homepage_search_filters_capacity_and_books_the_requested_date(): void
+    {
+        Carbon::setTestNow('2026-10-29 10:00:00');
+
+        try {
+            $intimate = Hall::create([
+                'tenant_id' => $this->tenant->id,
+                'venue_id' => $this->hall->venue_id,
+                'name' => 'Intimate Lawn',
+                'slug' => 'intimate-lawn',
+                'min_capacity' => 20,
+                'max_capacity' => 80,
+                'base_rent' => 50000,
+                'is_active' => true,
+            ]);
+
+            Livewire::withQueryParams([
+                'city' => 'Lahore',
+                'guests' => '250',
+                'date' => '2026-11-15',
+                'shift' => 'EVENING',
+            ])->test(PublicVenues::class)
+                ->assertSee('Hardening Ballroom')
+                ->assertDontSee('Intimate Lawn')
+                ->assertSee('250+ guests', false)
+                ->assertSet('selectedCalendarDate', '2026-11-15');
+
+            Booking::create([
+                'tenant_id' => $this->tenant->id,
+                'hall_id' => $this->hall->id,
+                'customer_name' => 'Booked Shift',
+                'customer_phone' => '+92 300 1111111',
+                'event_type' => 'Barat',
+                'event_date' => '2026-11-15',
+                'slot_type' => 'EVENING',
+                'guest_count' => 300,
+                'status' => 'CONFIRMED',
+            ]);
+
+            Livewire::withQueryParams([
+                'city' => 'Lahore',
+                'guests' => '250',
+                'date' => '2026-11-15',
+                'shift' => 'EVENING',
+            ])->test(PublicVenues::class)
+                ->assertDontSee('Hardening Ballroom')
+                ->assertDontSee($intimate->name);
+
+            Livewire::withQueryParams(['date' => '2026-11-15'])
+                ->test(PublicHallDetails::class, ['slug' => $this->hall->slug])
+                ->assertSet('selectedDate', '2026-11-15')
+                ->assertSet('calendarMonth', '2026-11');
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_billing_disabled_hides_saas_tabs_and_blocks_direct_plan_navigation(): void
+    {
+        config(['platform.billing_enabled' => false]);
+
+        Livewire::actingAs($this->superAdmin)
+            ->test(AdminDashboard::class)
+            ->assertDontSee('SaaS Plans')
+            ->assertDontSee('Payment Approvals')
+            ->assertDontSee('New SaaS Plan')
+            ->assertDontSee('Assigned SaaS Plan')
+            ->call('setTab', 'plans')
+            ->assertSet('activeTab', 'vendors')
+            ->assertSet('feedbackMessage', 'SaaS billing is disabled during the free launch period — every hall ships at no charge.');
+    }
+
+    public function test_vendor_dashboard_shows_free_launch_access_and_hides_kitchen_module(): void
+    {
+        config([
+            'platform.billing_enabled' => false,
+            'platform.kitchen_module_enabled' => false,
+            'platform.free_access_days' => 30,
+        ]);
+
+        $owner = User::create([
+            'tenant_id' => $this->tenant->id,
+            'name' => 'Hardening Owner',
+            'email' => 'hardening-owner@example.com',
+            'password' => Hash::make('secret123'),
+            'role' => 'ROLE_TENANT_OWNER',
+            'status' => 'ACTIVE',
+        ]);
+
+        Livewire::actingAs($owner)
+            ->test(Dashboard::class)
+            ->assertSee('Free Launch Access')
+            ->assertSee('30 Days Complimentary')
+            ->assertSee('Traffic Pulse')
+            ->assertDontSee('Current SaaS Plan')
+            ->assertDontSee('Kitchen KOTs')
+            ->assertDontSee('Chef KOT Board');
+
+        $this->get('/services')
+            ->assertOk()
+            ->assertDontSee('Kitchen KOT Order Slips');
     }
 
     private function createBooking(string $status): Booking

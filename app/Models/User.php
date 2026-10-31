@@ -73,6 +73,15 @@ class User extends Authenticatable
         return $this->belongsTo(Tenant::class);
     }
 
+    /**
+     * Hall-side workforce for a tenant (excludes platform admins and customers).
+     */
+    public function scopeHallStaff($query, ?string $tenantId)
+    {
+        return $query->where('tenant_id', $tenantId)
+            ->whereNotIn('role', ['ROLE_SUPER_ADMIN', 'ROLE_CUSTOMER']);
+    }
+
     public function isSuperAdmin(): bool
     {
         return $this->role === 'ROLE_SUPER_ADMIN' || $this->hasRole('ROLE_SUPER_ADMIN');
@@ -106,6 +115,34 @@ class User extends Authenticatable
     public function isCustomer(): bool
     {
         return $this->role === 'ROLE_CUSTOMER' || $this->hasRole('ROLE_CUSTOMER');
+    }
+
+    /**
+     * Named route this user should land on after login or a portal-role bounce.
+     */
+    public function portalHomeRoute(): string
+    {
+        if ($this->isSuperAdmin()) {
+            return 'admin.dashboard';
+        }
+
+        if ($this->isCustomer()) {
+            return 'customer.dashboard';
+        }
+
+        if ($this->isAccountant()) {
+            return 'expenses';
+        }
+
+        if ($this->isChef()) {
+            return config('platform.kitchen_module_enabled') ? 'kitchen.board' : 'inventory';
+        }
+
+        if ($this->isFrontDesk() || $this->role === 'ROLE_FLOOR_STAFF' || $this->hasRole('ROLE_FLOOR_STAFF')) {
+            return 'calendar';
+        }
+
+        return 'dashboard';
     }
 
     public function customerBookings(): HasMany

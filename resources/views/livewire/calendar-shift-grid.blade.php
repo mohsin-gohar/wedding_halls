@@ -239,7 +239,7 @@
                     @else
                         <span class="px-3 py-2 bg-stone-100 dark:bg-white/5 text-stone-400 text-center">No Receipt</span>
                     @endif
-                    @if($viewingBooking->kitchenKot)
+                    @if(config('platform.kitchen_module_enabled') && $viewingBooking->kitchenKot)
                         <a href="{{ route('documents.kot', $viewingBooking->kitchenKot->id) }}" target="_blank" 
                            class="px-3 py-2 bg-[#F8F5EF] dark:bg-white/10 border border-[#C6A15B]/60 dark:border-[#C6A15B]/70 text-[#8F7239] dark:text-[#C6A15B] text-center font-bold hover:bg-[#C6A15B]/15 dark:hover:bg-[#171513]/85 transition">
                             🍳 Chef KOT

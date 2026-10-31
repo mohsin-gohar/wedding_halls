@@ -20,7 +20,7 @@
             </h1>
 
             <p class="text-sm sm:text-base text-stone-300 max-w-2xl mx-auto font-light leading-relaxed">
-                Browse verified wedding halls by city or search directly by hall name.
+                Browse verified wedding halls by city, guest count, and live shift availability.
             </p>
         </div>
     </section>
@@ -51,6 +51,24 @@
          SECTION 3: VERIFIED HALLS DIRECTORY & REAL-TIME AVAILABILITY
          =================================================================== -->
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-6">
+        @if($searchDate || $searchShift || $searchGuests > 0)
+            <div class="rounded-xl border border-[#C6A15B]/40 bg-[#C6A15B]/10 px-4 py-3 text-sm text-[#171513] dark:text-[#F8F5EF] font-sans flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <p>
+                    Matching halls
+                    @if($searchGuests > 0)
+                        for <strong>{{ number_format($searchGuests) }}+ guests</strong>
+                    @endif
+                    @if($searchDate)
+                        on <strong>{{ $searchDate->format('l, d M Y') }}</strong>
+                    @endif
+                    @if($searchShift)
+                        during the <strong>{{ ucfirst(strtolower($searchShift)) }}</strong> shift
+                    @endif
+                </p>
+                <button type="button" wire:click="resetFilters" class="text-xs font-semibold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B] hover:underline">Clear search</button>
+            </div>
+        @endif
+
         <div class="flex items-center justify-between text-xs text-stone-500 border-b border-[#E7E5E4] dark:border-white/10 pb-3 font-sans">
             <span>Showing <strong>{{ $halls->total() }}</strong> verified banquet halls</span>
         </div>
@@ -67,7 +85,8 @@
                     if ($hall->has_generator_backup) { $amenities[] = '100% Generator'; }
                     if ($hall->has_bridal_room) { $amenities[] = 'Bridal Lounge'; }
                 @endphp
-                <a href="{{ route('public.venue.details', $hall->slug) }}"
+                <a href="{{ route('public.venue.details', array_filter(['slug' => $hall->slug, 'date' => $searchDate?->format('Y-m-d')])) }}"
+                   wire:navigate.hover
                    class="group flex flex-col rounded-2xl overflow-hidden bg-white dark:bg-[#1C1917] border border-stone-200/80 dark:border-white/10 hover:border-[#C6A15B]/60 shadow-xs hover:shadow-[0_12px_30px_-8px_rgba(23,21,19,0.12)] hover:-translate-y-0.5 transition-all duration-300">
                     <!-- Image Banner (16:10) -->
                     <div class="relative aspect-[16/10] overflow-hidden bg-stone-900">
@@ -108,8 +127,8 @@
                                 <p class="text-xs text-[#8F7239] dark:text-[#C6A15B] font-medium font-sans">{{ $hall->tagline }}</p>
                             @endif
                             @php
-                                $rCount = \App\Models\Review::countForHall($hall->id);
-                                $rAvg = \App\Models\Review::averageForHall($hall->id);
+                                $rCount = (int) ($hall->approved_reviews_count ?? 0);
+                                $rAvg = (float) ($hall->approved_reviews_avg_rating ?? 0);
                             @endphp
                             @if($rCount > 0)
                                 <div class="flex items-center gap-1 text-xs text-[#C6A15B]">
@@ -142,14 +161,6 @@
                                 <strong class="font-cinzel text-lg sm:text-xl text-[#171513] dark:text-[#C6A15B] font-bold">PKR {{ number_format($hall->base_rent) }}</strong>
                             </div>
                             <div class="flex items-center gap-2">
-                                @if($hallWaUrl = $hall->getWhatsappUrl())
-                                    <span onclick="event.preventDefault(); event.stopPropagation(); window.open('{{ $hallWaUrl }}', '_blank');"
-                                          title="Chat with {{ $hall->name }} on WhatsApp"
-                                          class="h-9 px-3 rounded-lg bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 text-xs font-bold font-sans flex items-center gap-1.5 transition cursor-pointer">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                        <span>WhatsApp</span>
-                                    </span>
-                                @endif
                                 <span class="btn-gold !h-9 !px-4 text-[11px] font-semibold uppercase rounded-lg shrink-0">
                                     Details &rarr;
                                 </span>

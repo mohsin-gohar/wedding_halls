@@ -63,7 +63,7 @@
                     <span>Your hall registration is currently pending Super Admin verification. You can configure your profile, halls, and photos, and it will be visible in the public marketplace once approved.</span>
                 </div>
             </div>
-            <span class="px-2.5 py-1 rounded-md bg-[#C6A15B]/20 border border-[#C6A15B]/40 font-sans text-[11px] uppercase tracking-wider font-bold whitespace-nowrap self-start sm:self-auto">14-Day Free Trial Active</span>
+            <span class="px-2.5 py-1 rounded-md bg-[#C6A15B]/20 border border-[#C6A15B]/40 font-sans text-[11px] uppercase tracking-wider font-bold whitespace-nowrap self-start sm:self-auto">{{ (int) config('platform.free_access_days', 30) }}-Day Free Access Active</span>
         </div>
     @endif
 
@@ -111,8 +111,9 @@
     @endif
 
     <!-- ===================================================================
-         SAAS SUBSCRIPTION STATUS & ERP LIMITS RIBBON
+         SaaS SUBSCRIPTION STATUS & ERP LIMITS RIBBON
          =================================================================== -->
+    @if(config('platform.billing_enabled'))
     @php
         $tenant = auth()->user()->tenant;
         $plan = $tenant ? $tenant->subscriptionPlan : null;
@@ -172,6 +173,33 @@
             </a>
         </div>
     </div>
+    @else
+    <!-- Launch Promo: Complimentary Access Ribbon (billing disabled) -->
+    <div class="relative overflow-hidden bg-[#171513] border border-[#C6A15B]/40 rounded-xl p-5 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs font-sans">
+        <div class="absolute inset-0 opacity-20 pointer-events-none" style="background: radial-gradient(circle at 15% 20%, #C6A15B 0%, transparent 45%), radial-gradient(circle at 85% 80%, #8F7239 0%, transparent 50%);"></div>
+        <div class="relative z-10 flex items-start sm:items-center gap-4">
+            <span class="w-11 h-11 shrink-0 rounded-xl bg-[#C6A15B]/15 border border-[#C6A15B]/40 flex items-center justify-center text-lg">🎁</span>
+            <div class="space-y-1">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="px-2 py-0.5 rounded bg-[#C6A15B] text-[#171513] font-sans text-[9px] font-extrabold uppercase tracking-widest">Launch Offer</span>
+                    <span class="text-[#C6A15B] font-bold uppercase tracking-wider text-[11px]">Free Launch Access — {{ (int) config('platform.free_access_days', 30) }} Days Complimentary</span>
+                </div>
+                <p class="text-stone-300 text-[11px] leading-relaxed max-w-xl">
+                    Full platform access with zero subscription charges. Publish your halls, receive bookings and manage your team — completely free during our launch period.
+                </p>
+            </div>
+        </div>
+        <div class="relative z-10 flex items-center gap-3">
+            <div class="text-right hidden sm:block">
+                <span class="block text-[9px] uppercase tracking-wider text-stone-400 font-bold">Access Status</span>
+                <span class="text-[#C6A15B] font-bold text-xs">● Active &amp; Unlimited</span>
+            </div>
+            <a href="{{ route('staff') }}" class="px-3.5 py-2 rounded-lg border border-[#C6A15B]/50 text-[#C6A15B] hover:bg-[#C6A15B] hover:text-[#171513] transition font-sans text-xs font-bold uppercase tracking-wider">
+                Manage Team
+            </a>
+        </div>
+    </div>
+    @endif
 
     <!-- ===================================================================
          OPERATIONAL SNAPSHOT BAR (4 PILLARS)
@@ -229,6 +257,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             
             <!-- 1. Culinary & Kitchen KOT Engine -->
+            @if($kitchenEnabled)
             <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-xl p-5 shadow-sm space-y-4 hover:border-[#C6A15B]/60 transition duration-200 flex flex-col justify-between">
                 <div class="space-y-2">
                     <div class="flex items-center justify-between border-b border-[#E7E5E4] dark:border-white/10 pb-2">
@@ -259,6 +288,7 @@
                     <span>Chef KOT Board ↗</span>
                 </a>
             </div>
+            @endif
 
             <!-- 2. Bawarchi Pantry & Inventory Health -->
             <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-xl p-5 shadow-sm space-y-4 hover:border-[#C6A15B]/60 transition duration-200 flex flex-col justify-between">
@@ -529,9 +559,9 @@
                                     Rs {{ number_format($exp->amount) }}
                                 </td>
                                 <td class="p-3 text-right">
-                                    <button wire:click="deleteDailyExpense('{{ $exp->id }}')" 
+                                    <button wire:click="deleteDailyExpense('{{ $exp->id }}')"
                                             onclick="return confirm('Delete this expense record?')"
-                                            class="text-rose-500 hover:text-rose-700 font-sans text-[11px] hover:underline">
+                                            class="tbtn tbtn-red">
                                         Delete
                                     </button>
                                 </td>
@@ -1186,9 +1216,11 @@
                         </div>
 
                         <div class="pt-2 border-t border-stone-200 dark:border-white/10 flex items-center justify-between gap-2 text-[11px] font-sans font-bold">
+                            @if($kitchenEnabled)
                             <a href="{{ route('kitchen.board') }}" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline flex items-center gap-1">
                                 <span>KOT Slip</span>
                             </a>
+                            @endif
                             <a href="{{ route('documents.agreement', $tb->id) }}" target="_blank" class="text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] underline">
                                 Contract
                             </a>
@@ -1315,10 +1347,10 @@
                                 <div class="font-bold text-[#8F7239] dark:text-[#C6A15B]">PKR {{ number_format($lead->grand_total) }}</div>
                             </div>
                             <div class="pt-2 border-t border-stone-100 dark:border-white/10 flex items-center justify-between text-[11px] font-sans">
-                                <button wire:click="openCustomerDetails('{{ $lead->id }}')" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline font-bold">
+                                <button wire:click="openCustomerDetails('{{ $lead->id }}')" class="tbtn tbtn-outline">
                                     Details &rarr;
                                 </button>
-                                <button wire:click="updateLeadStage('{{ $lead->id }}', 'SITE_VISIT')" class="px-2 py-1 rounded bg-[#171513] text-[#C6A15B] hover:bg-black font-bold uppercase text-[10px] transition">
+                                <button wire:click="updateLeadStage('{{ $lead->id }}', 'SITE_VISIT')" class="tbtn tbtn-dark">
                                     Visit &rarr;
                                 </button>
                             </div>
@@ -1352,14 +1384,14 @@
                                 <div class="font-bold text-[#8F7239] dark:text-[#C6A15B]">PKR {{ number_format($lead->grand_total) }}</div>
                             </div>
                             <div class="pt-2 border-t border-stone-100 dark:border-white/10 flex items-center justify-between text-[11px] font-sans">
-                                <button wire:click="openCustomerDetails('{{ $lead->id }}')" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline font-bold">
+                                <button wire:click="openCustomerDetails('{{ $lead->id }}')" class="tbtn tbtn-outline">
                                     Details &rarr;
                                 </button>
                                 <div class="flex items-center gap-1">
-                                    <button wire:click="updateLeadStage('{{ $lead->id }}', 'NEW_INQUIRY')" title="Move Back" class="px-1.5 py-1 text-stone-500 hover:text-stone-800 dark:hover:text-white font-bold">
+                                    <button wire:click="updateLeadStage('{{ $lead->id }}', 'NEW_INQUIRY')" title="Move Back" class="tbtn tbtn-icon tbtn-outline">
                                         &larr;
                                     </button>
-                                    <button wire:click="updateLeadStage('{{ $lead->id }}', 'QUOTATION')" class="px-2 py-1 rounded bg-[#171513] text-[#C6A15B] hover:bg-black font-bold uppercase text-[10px] transition">
+                                    <button wire:click="updateLeadStage('{{ $lead->id }}', 'QUOTATION')" class="tbtn tbtn-dark">
                                         Quote &rarr;
                                     </button>
                                 </div>
@@ -1394,14 +1426,14 @@
                                 <div class="font-bold text-[#8F7239] dark:text-[#C6A15B]">PKR {{ number_format($lead->grand_total) }}</div>
                             </div>
                             <div class="pt-2 border-t border-stone-100 dark:border-white/10 flex items-center justify-between text-[11px] font-sans">
-                                <button wire:click="openCustomerDetails('{{ $lead->id }}')" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline font-bold">
+                                <button wire:click="openCustomerDetails('{{ $lead->id }}')" class="tbtn tbtn-outline">
                                     Details &rarr;
                                 </button>
                                 <div class="flex items-center gap-1">
-                                    <button wire:click="updateLeadStage('{{ $lead->id }}', 'SITE_VISIT')" title="Move Back" class="px-1.5 py-1 text-stone-500 hover:text-stone-800 dark:hover:text-white font-bold">
+                                    <button wire:click="updateLeadStage('{{ $lead->id }}', 'SITE_VISIT')" title="Move Back" class="tbtn tbtn-icon tbtn-outline">
                                         &larr;
                                     </button>
-                                    <button wire:click="updateLeadStage('{{ $lead->id }}', 'CONFIRMED')" class="px-2 py-1 rounded bg-[#C6A15B] text-[#171513] hover:bg-[#b08d4a] font-bold uppercase text-[10px] transition">
+                                    <button wire:click="updateLeadStage('{{ $lead->id }}', 'CONFIRMED')" class="tbtn tbtn-gold">
                                         Confirm ✓
                                     </button>
                                 </div>
@@ -1438,7 +1470,7 @@
                                 </div>
                             </div>
                             <div class="pt-2 border-t border-stone-100 dark:border-white/10 flex items-center justify-between text-[11px] font-sans">
-                                <button wire:click="openCustomerDetails('{{ $lead->id }}')" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline font-bold">
+                                <button wire:click="openCustomerDetails('{{ $lead->id }}')" class="tbtn tbtn-outline">
                                     Details &rarr;
                                 </button>
                                 <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-300 text-[10px] font-bold font-sans uppercase">
@@ -1456,7 +1488,78 @@
     </div>
 
     <!-- ===================================================================
-         FULL RESERVATION & FINANCIAL LEDGER
+         LIVE GUEST CONCIERGE INQUIRIES & CHATBOT LEADS (Hall Owner Messenger)
+         =================================================================== -->
+    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 rounded-2xl p-6 shadow-sm space-y-4 transition-colors duration-200">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#E7E5E4] dark:border-white/10 pb-4">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-[10px] font-sans uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B] font-bold">
+                        Live Digital Concierge
+                    </span>
+                </div>
+                <h3 class="font-serif-luxury text-xl sm:text-2xl text-[#171513] dark:text-white font-bold mt-0.5">
+                    Live Guest Inquiries &amp; Chatbot Messages
+                </h3>
+                <p class="text-xs text-stone-600 dark:text-stone-400 font-sans mt-0.5">
+                    Direct inquiries submitted by visitors via your venue showcase page chatbot. Reply instantly to convert prospects into confirmed bookings.
+                </p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="px-3 py-1.5 rounded-lg bg-[#C6A15B]/15 border border-[#C6A15B]/40 text-[#8F7239] dark:text-[#C6A15B] text-xs font-sans font-bold">
+                    {{ $liveChatInquiries->count() }} Active Inquiries
+                </span>
+            </div>
+        </div>
+
+        @if($liveChatInquiries->isNotEmpty())
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($liveChatInquiries as $inquiry)
+                    <div class="bg-[#F8F5EF] dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 rounded-xl p-4 space-y-3 hover:border-[#C6A15B]/60 transition shadow-sm flex flex-col justify-between">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="font-serif-luxury text-sm font-bold text-[#171513] dark:text-white truncate">
+                                    {{ $inquiry->hall->name ?? 'Venue Inquiry' }}
+                                </span>
+                                <span class="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 font-sans text-[10px] font-bold shrink-0">
+                                    {{ $inquiry->message_count }} msg{{ $inquiry->message_count > 1 ? 's' : '' }}
+                                </span>
+                            </div>
+
+                            <div class="text-[11px] font-sans text-stone-600 dark:text-stone-400 space-y-1">
+                                <div class="flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5 text-stone-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                    <span class="truncate">Guest (IP: {{ $inquiry->ip_address }})</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5 text-stone-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span>{{ \Carbon\Carbon::parse($inquiry->last_message_at)->diffForHumans() }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t border-stone-200 dark:border-white/10 flex items-center justify-between">
+                            <button wire:click="openChatModal('{{ $inquiry->hall_id }}', '{{ $inquiry->ip_address }}', '{{ $inquiry->session_id }}')"
+                                    class="w-full btn-gold !h-8 !px-3 rounded-lg text-xs font-sans uppercase tracking-wider font-bold flex items-center justify-center gap-1.5 shadow-sm">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                <span>Open Chat &amp; Reply &rarr;</span>
+                            </button>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="p-8 rounded-xl text-center bg-[#F8F5EF] dark:bg-white/[0.02] border border-dashed border-stone-300 dark:border-white/10 space-y-2">
+                <div class="w-10 h-10 mx-auto rounded-full bg-[#C6A15B]/15 text-[#8F7239] dark:text-[#C6A15B] flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                </div>
+                <p class="text-xs text-stone-600 dark:text-stone-400 font-sans font-medium">
+                    No active chatbot inquiries right now. Inquiries initiated by visitors on your hall showcase page will appear here instantly.
+                </p>
+            </div>
+        @endif
+    </div>
          =================================================================== -->
     <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-2xl shadow-sm overflow-hidden transition-colors duration-200">
         <div class="p-6 border-b border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#171513] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -1515,7 +1618,7 @@
                                     <span class="text-stone-300 dark:text-stone-600">•</span>
                                     <a href="{{ route('documents.receipt', $b->payments->first()->id) }}" target="_blank" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline font-bold">Receipt</a>
                                  @endif
-                                @if($b->kitchenKot)
+                                @if($kitchenEnabled && $b->kitchenKot)
                                     <span class="text-stone-300 dark:text-stone-600">•</span>
                                     <a href="{{ route('documents.kot', $b->kitchenKot->id) }}" target="_blank" class="text-[#171513] dark:text-[#C6A15B] hover:underline font-bold">KOT</a>
                                 @endif
@@ -1564,6 +1667,34 @@
                 <strong class="font-cinzel text-xl text-[#171513] dark:text-[#C6A15B] block font-bold">
                     {{ $totalHallViews > 0 ? round(($totalHallBookings / $totalHallViews) * 100, 1) : 0 }}%</strong>
                 <span class="text-[10px] text-stone-500 dark:text-stone-400 block font-sans">View to Booking</span>
+            </div>
+        </div>
+
+        <!-- Traffic Pulse: 14-Day Hall View Graph -->
+        <div class="bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-xl p-5 shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-[#8F7239] dark:text-[#C6A15B] block font-sans">Traffic Pulse</span>
+                    <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-bold">Guest Visits — Last 14 Days</h4>
+                </div>
+                @php
+                    $pulseTotal = collect($trafficPulse)->sum('views');
+                    $pulsePeak = max(1, (int) collect($trafficPulse)->max('views'));
+                @endphp
+                <div class="text-right">
+                    <span class="font-cinzel text-xl text-[#171513] dark:text-white font-bold">{{ number_format($pulseTotal) }}</span>
+                    <span class="block text-[10px] uppercase tracking-wider text-stone-500 dark:text-stone-400 font-sans font-bold">Total Visits</span>
+                </div>
+            </div>
+            <div class="flex items-end gap-1.5 sm:gap-2 h-40 pt-2">
+                @foreach($trafficPulse as $pulse)
+                    @php $barHeight = max(4, (int) round(($pulse['views'] / $pulsePeak) * 100)); @endphp
+                    <div class="flex-1 h-full flex flex-col items-center justify-end gap-1.5 group" title="{{ $pulse['date'] }} — {{ $pulse['views'] }} visits">
+                        <span class="text-[9px] font-sans font-bold text-stone-500 dark:text-stone-400 opacity-0 group-hover:opacity-100 transition">{{ $pulse['views'] }}</span>
+                        <div class="w-full rounded-t bg-gradient-to-t from-[#8F7239] to-[#C6A15B] hover:from-[#C6A15B] hover:to-[#F2DE9A] transition-all duration-200" style="height: {{ $barHeight }}%;"></div>
+                        <span class="text-[8px] sm:text-[9px] font-sans uppercase tracking-tight text-stone-400 whitespace-nowrap">{{ $pulse['label'] }}</span>
+                    </div>
+                @endforeach
             </div>
         </div>
 
@@ -1931,6 +2062,102 @@
                                 class="btn-gold !h-10 !px-6 rounded-lg text-xs font-bold uppercase font-sans shadow-sm transition">
                             Save Daily Kharcha Record &rarr;
                         </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
+    <!-- ===================================================================
+         MODAL: CONCIERGE CHAT INQUIRY & REAL-TIME REPLY
+         =================================================================== -->
+    @if($showChatModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+            <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/60 rounded-2xl max-w-2xl w-full p-6 sm:p-7 space-y-4 shadow-2xl relative my-8">
+                <button wire:click="closeChatModal" class="absolute top-4 right-4 text-stone-400 hover:text-stone-700 dark:hover:text-white text-xl font-sans">&times;</button>
+
+                <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span class="text-[10px] font-sans uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B] font-bold">
+                            Live Guest Inquiry Transcript
+                        </span>
+                    </div>
+                    <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold mt-0.5">
+                        Guest Communication Desk
+                    </h3>
+                    <p class="text-[11px] font-sans text-stone-500 dark:text-stone-400">
+                        IP: <code class="text-[#8F7239] dark:text-[#C6A15B]">{{ $selectedChatIp }}</code>
+                    </p>
+                </div>
+
+                <!-- Chat transcript messages -->
+                <div class="space-y-3 max-h-96 overflow-y-auto p-3 bg-stone-50 dark:bg-[#11100e] rounded-xl border border-stone-200 dark:border-white/10">
+                    @forelse($chatMessages as $msg)
+                        @php
+                            $msgSender = is_array($msg) ? ($msg['sender_type'] ?? '') : $msg->sender_type;
+                            $msgType = is_array($msg) ? ($msg['message_type'] ?? 'text') : $msg->message_type;
+                            $msgText = is_array($msg) ? ($msg['message'] ?? '') : $msg->message;
+                            $msgVoice = is_array($msg) ? ($msg['voice_file'] ?? null) : $msg->voice_file;
+                            $msgTime = is_array($msg) 
+                                ? (isset($msg['created_at']) ? \Carbon\Carbon::parse($msg['created_at'])->format('h:i A') : '') 
+                                : ($msg->created_at ? $msg->created_at->format('h:i A') : '');
+                        @endphp
+                        <div class="flex flex-col {{ $msgSender === 'hall_owner' ? 'items-end' : 'items-start' }}">
+                            <div class="flex items-center gap-1.5 text-[10px] text-stone-400 font-sans mb-0.5">
+                                @if($msgSender === 'hall_owner')
+                                    <span class="font-bold text-[#8F7239] dark:text-[#C6A15B]">Hall Admin (You)</span>
+                                @elseif($msgSender === 'bot' || $msgSender === 'ai_concierge')
+                                    <span class="font-bold text-amber-600 dark:text-amber-400">AI Concierge</span>
+                                @else
+                                    <span class="font-bold text-stone-600 dark:text-stone-300">Guest Customer</span>
+                                @endif
+                                @if($msgTime)
+                                    <span>• {{ $msgTime }}</span>
+                                @endif
+                            </div>
+
+                            <div class="max-w-[85%] rounded-2xl p-3 text-xs font-sans {{ $msgSender === 'hall_owner' ? 'bg-[#C6A15B] text-[#171513] font-medium' : (($msgSender === 'bot' || $msgSender === 'ai_concierge') ? 'bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-stone-800 dark:text-stone-200' : 'bg-white dark:bg-[#1f1c18] border border-stone-200 dark:border-white/10 text-[#171513] dark:text-stone-200 shadow-sm') }}">
+                                @if($msgType === 'voice' && $msgVoice)
+                                    <div class="space-y-1">
+                                        <audio controls class="w-full max-w-xs h-8">
+                                            <source src="{{ asset('storage/' . $msgVoice) }}" type="audio/webm">
+                                            Your browser does not support the audio element.
+                                        </audio>
+                                        @if($msgText)
+                                            <p class="text-[11px] italic mt-1">{{ $msgText }}</p>
+                                        @endif
+                                    </div>
+                                @else
+                                    <p class="whitespace-pre-wrap leading-relaxed">{{ $msgText }}</p>
+                                @endif
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center py-6 text-stone-400 text-xs font-sans">
+                            No messages in this inquiry thread yet.
+                        </div>
+                    @endforelse
+                </div>
+
+                <!-- Reply Composer -->
+                <form wire:submit.prevent="sendChatReply" class="space-y-3 pt-2">
+                    <div class="flex items-center gap-2">
+                        <textarea wire:model="chatReplyText"
+                                  rows="2"
+                                  placeholder="Type your official reply to this customer..."
+                                  class="w-full text-xs font-sans rounded-xl border border-stone-300 dark:border-white/15 bg-white dark:bg-[#171513] text-[#171513] dark:text-white p-3 focus:outline-none focus:border-[#C6A15B]"></textarea>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] text-stone-400 font-sans">Reply is instantly delivered to the guest's venue chat widget.</span>
+                        <div class="flex items-center gap-2">
+                            <button type="button" wire:click="closeChatModal" class="px-3.5 py-1.5 rounded-lg border border-stone-300 dark:border-white/20 text-xs font-sans font-bold text-stone-600 dark:text-stone-300">
+                                Close
+                            </button>
+                            <button type="submit" class="btn-gold !h-8 !px-4 rounded-lg text-xs font-sans uppercase tracking-wider font-bold flex items-center gap-1.5 shadow-sm">
+                                <span>Send Reply &rarr;</span>
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>

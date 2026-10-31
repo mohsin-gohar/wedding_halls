@@ -11,6 +11,7 @@ use App\Models\KitchenKot;
 use App\Models\MenuItem;
 use App\Models\Package;
 use App\Models\Payment;
+use App\Models\PlatformTask;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use App\Models\User;
@@ -116,8 +117,8 @@ class DatabaseSeeder extends Seeder
 
         // 3. Staff Users
         $adminUser = User::create([
-            'tenant_id' => $tenant->id,
-            'name' => 'Sheikh Ahsan (Director)',
+            'tenant_id' => null,
+            'name' => 'Sheikh Ahsan (Platform Director)',
             'email' => 'admin@eventhub.com',
             'phone' => '+92 42 35789000',
             'role' => 'ROLE_SUPER_ADMIN',
@@ -403,10 +404,11 @@ class DatabaseSeeder extends Seeder
             'package_id' => $pkgBarat->id,
             'booking_reference' => 'VC-BK-202610-001',
             'created_by_user_id' => $frontDeskUser->id,
-            'customer_name' => 'Chaudhry Muhammad Tariq Gujjar',
+            'customer_id' => $customerUser->id,
+            'customer_name' => 'Hamza Ali (Client)',
             'customer_phone' => '+92 300 8471122',
             'customer_cnic' => '35201-1234567-1',
-            'customer_email' => 'tariq.gujjar@example.com',
+            'customer_email' => 'customer@example.com',
             'event_type' => 'Barat',
             'event_date' => $today,
             'slot_type' => 'EVENING',
@@ -657,6 +659,44 @@ class DatabaseSeeder extends Seeder
             'receipt_number' => 'LESCO-202610-8912',
             'notes' => 'Monthly electricity demand charges and peak-hour units.',
             'created_by_user_id' => $adminUser->id,
+        ]);
+
+        // Platform Super Admin work queue (marketplace ops — not hall kitchen/payroll)
+        PlatformTask::create([
+            'title' => 'Review pending hall KYC and approve marketplace listings',
+            'category' => 'VENDOR_ONBOARDING',
+            'priority' => 'HIGH',
+            'due_date' => Carbon::now()->addDay()->toDateString(),
+            'notes' => 'Verify CNIC/NTN, hall photos, and city listing quality before making a venue public.',
+            'created_by_user_id' => $adminUser->id,
+            'is_completed' => false,
+        ]);
+        PlatformTask::create([
+            'title' => 'Follow up EventHub contact-form and concierge inquiries',
+            'category' => 'CUSTOMER_INQUIRY',
+            'priority' => 'HIGH',
+            'due_date' => Carbon::now()->addDay()->toDateString(),
+            'notes' => 'Call or WhatsApp couples who submitted the public contact form. Do not treat these as hall walk-ins.',
+            'created_by_user_id' => $adminUser->id,
+            'is_completed' => false,
+        ]);
+        PlatformTask::create([
+            'title' => 'Spot-check public venue search, hall pages, and shift calendars',
+            'category' => 'TRAFFIC_MONITOR',
+            'priority' => 'MEDIUM',
+            'due_date' => Carbon::now()->addDays(2)->toDateString(),
+            'notes' => 'Confirm Lahore/Karachi listings load, prices display, and no broken gallery links.',
+            'created_by_user_id' => $adminUser->id,
+            'is_completed' => false,
+        ]);
+        PlatformTask::create([
+            'title' => 'Confirm vendor self-registration is open for the launch window',
+            'category' => 'GENERAL',
+            'priority' => 'MEDIUM',
+            'due_date' => Carbon::now()->addDays(3)->toDateString(),
+            'notes' => 'Traffic & Controls: marketplace browse and /register should stay open while halls onboard free.',
+            'created_by_user_id' => $adminUser->id,
+            'is_completed' => false,
         ]);
 
         // 9. System Audit Logs

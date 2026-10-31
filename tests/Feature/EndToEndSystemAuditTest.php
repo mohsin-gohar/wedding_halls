@@ -130,7 +130,11 @@ class EndToEndSystemAuditTest extends TestCase
         $this->get('/seating-planner')->assertStatus(200);
 
         // Kitchen KOTs
-        $this->get('/kitchen-kots')->assertStatus(200);
+        if (config('platform.kitchen_module_enabled')) {
+            $this->get('/kitchen-kots')->assertStatus(200);
+        } else {
+            $this->get('/kitchen-kots')->assertRedirect();
+        }
 
         // Utility & Fuel Tracking
         $this->get('/utility-fuel')->assertStatus(200);

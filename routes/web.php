@@ -12,6 +12,7 @@ use App\Livewire\CustomerRegister;
 use App\Livewire\Dashboard;
 use App\Livewire\ExpenseTracker;
 use App\Livewire\FloorPlanDesigner;
+use App\Livewire\HallChat;
 use App\Livewire\HallMediaManager;
 use App\Livewire\InventoryTracker;
 use App\Livewire\KitchenKotBoard;
@@ -48,17 +49,9 @@ use Illuminate\Support\Str;
 | 1. Public Marketplace & Guest Experience Routes
 |--------------------------------------------------------------------------
 */
-// Cinematic Homepage (Cached for 5 minutes with automatic state invalidation)
+// Cinematic Homepage (Cached with automatic fallback)
 Route::get('/', function () {
-    $cacheStamp = md5(implode('|', [
-        (string) Hall::max('updated_at'),
-        (string) Hall::count(),
-        (string) Tenant::max('updated_at'),
-        (string) Package::max('updated_at'),
-        (string) Package::count(),
-    ]));
-
-    [$halls, $packages] = Cache::remember("home.featured.{$cacheStamp}", 300, function () {
+    [$halls, $packages] = Cache::remember('home.featured.v2', 120, function () {
         $featuredHalls = Hall::with(['venue', 'tenant'])
             ->where('is_active', true)
             ->whereHas('tenant', function ($q) {
@@ -148,6 +141,9 @@ Route::get('/venues', PublicVenues::class)->middleware('throttle:public-pages')-
 Route::get('/marketplace', PublicMarketplace::class)->middleware('throttle:public-pages')->name('marketplace');
 Route::get('/venues/{slug}', PublicHallDetails::class)->middleware('throttle:public-pages')->name('public.venue.details');
 Route::get('/hall/{slug}', PublicHallDetails::class)->middleware('throttle:public-pages')->name('hall.showcase');
+Route::get('/venues/{slug}/chat', HallChat::class)->middleware('throttle:public-pages')->name('public.venue.chat');
+Route::get('/hall/{slug}/chat', HallChat::class)->middleware('throttle:public-pages')->name('hall.chat');
+Route::get('/concierge', HallChat::class)->middleware('throttle:public-pages')->name('public.concierge');
 
 // Visual Gallery, Packages & Menus
 Route::get('/gallery', PublicGallery::class)->middleware('throttle:public-pages')->name('public.gallery');
@@ -164,10 +160,10 @@ Route::redirect('/availability', '/check-availability', 301);
 Route::get('/rsvp', PublicGuestRsvp::class)->name('public.rsvp')->middleware('throttle:30,1');
 
 // Legal Policies
+Route::get('/policies/terms', PublicPolicies::class)->middleware('throttle:public-pages')->name('public.policies.terms');
+Route::get('/policies/privacy', PublicPolicies::class)->middleware('throttle:public-pages')->name('public.policies.privacy');
+Route::get('/policies/cancellation', PublicPolicies::class)->middleware('throttle:public-pages')->name('public.policies.cancellation');
 Route::get('/policies/{policy?}', PublicPolicies::class)->middleware('throttle:public-pages')->name('public.policies');
-Route::get('/policies/terms', [PublicPolicies::class, '__invoke'])->name('public.policies.terms');
-Route::get('/policies/privacy', [PublicPolicies::class, '__invoke'])->name('public.policies.privacy');
-Route::get('/policies/cancellation', [PublicPolicies::class, '__invoke'])->name('public.policies.cancellation');
 Route::get('/terms', function () {
     return redirect()->route('public.policies', ['policy' => 'terms']);
 })->name('terms');
@@ -191,7 +187,7 @@ Route::prefix('customer')->group(function () {
     Route::get('/register', CustomerRegister::class)->name('customer.register')->middleware('throttle:60,1');
 });
 
-Route::middleware('auth')->prefix('customer')->group(function () {
+Route::middleware(['auth', 'portal.role:ROLE_CUSTOMER'])->prefix('customer')->group(function () {
     Route::get('/dashboard', CustomerDashboard::class)->name('customer.dashboard');
     Route::get('/bookings', CustomerDashboard::class)->name('customer.bookings');
 });
@@ -239,23 +235,7 @@ $authenticatePortalRequest = function (Request $request) {
 
         $user->recordLogin();
 
-        if ($user->role === 'ROLE_SUPER_ADMIN' || $user->isSuperAdmin()) {
-            return redirect()->route('admin.dashboard')->with('message', "Welcome back, {$user->name}!");
-        }
-
-        if ($user->isCustomer()) {
-            return redirect()->route('customer.dashboard')->with('message', "Welcome back, {$user->name}!");
-        }
-
-        if ($user->role === 'ROLE_CHEF') {
-            return redirect()->route('kitchen.board')->with('message', "Welcome back, {$user->name}!");
-        }
-
-        if (in_array($user->role, ['ROLE_FRONT_DESK', 'ROLE_FLOOR_STAFF'], true)) {
-            return redirect()->route('calendar')->with('message', "Welcome back, {$user->name}!");
-        }
-
-        return redirect()->route('dashboard')->with('message', "Welcome back, {$user->name}!");
+        return redirect()->route($user->portalHomeRoute())->with('message', "Welcome back, {$user->name}!");
     }
 
     RateLimiter::hit($throttleKey, 60);
@@ -315,7 +295,7 @@ Route::middleware(['auth', 'super.admin'])->prefix('admin')->group(function () {
 | 6. Authoritative Printable & Downloadable Documents
 |--------------------------------------------------------------------------
 */
-Route::prefix('documents')->name('documents.')->group(function () {
+Route::middleware('auth')->prefix('documents')->name('documents.')->group(function () {
     Route::get('/agreement/{id}', [DocumentController::class, 'bookingAgreement'])->name('agreement');
     Route::get('/receipt/{id}', [DocumentController::class, 'paymentReceipt'])->name('receipt');
     Route::get('/kot/{id}', [DocumentController::class, 'kitchenKot'])->name('kot');

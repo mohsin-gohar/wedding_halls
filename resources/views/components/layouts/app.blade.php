@@ -71,10 +71,14 @@
         <div class="flex items-center gap-3">
             <span class="inline-block w-1.5 h-1.5 rounded-full bg-[#C6A15B]"></span>
             <span class="text-stone-300">
-                VENUE: <strong class="text-white">{{ auth()->user()->tenant->name ?? 'EventHub Host' }}</strong>
+                @if(auth()->user()->isSuperAdmin())
+                    PLATFORM: <strong class="text-white">EventHub Pakistan</strong>
+                @else
+                    VENUE: <strong class="text-white">{{ auth()->user()->tenant->name ?? 'EventHub Host' }}</strong>
+                @endif
             </span>
             <span class="text-stone-600 hidden sm:inline">|</span>
-            <span class="text-stone-400 hidden sm:inline">Enterprise Banquet Suite</span>
+            <span class="text-stone-400 hidden sm:inline">{{ auth()->user()->isSuperAdmin() ? 'Platform Super Admin' : 'Enterprise Banquet Suite' }}</span>
         </div>
         <div class="flex items-center gap-4 text-stone-400 text-[11px]">
             <button type="button" @click="toggleTheme()" aria-label="Toggle dark mode" class="hover:text-[#C6A15B] transition flex items-center gap-1.5 font-sans cursor-pointer" title="Toggle Light / Dark Mode">
@@ -97,7 +101,7 @@
     </div>
 
     <!-- Subscription Status Banners -->
-    @if(auth()->user()->tenant && auth()->user()->tenant->subscription_status === 'EXPIRED')
+    @if(config('platform.billing_enabled') && auth()->user()->tenant && auth()->user()->tenant->subscription_status === 'EXPIRED')
         <div class="bg-[#171513] border-b border-[#C6A15B]/60 text-[#F8F5EF] px-4 py-3 text-xs text-center font-medium shadow-md">
             <strong>Subscription Notice:</strong> Your EventHub SaaS subscription expired on {{ auth()->user()->tenant->subscription_expires_at?->format('d M Y') ?? 'recently' }}. All your halls, bookings, client records, and finances are 100% safe and preserved. Please submit your renewal payment to unlock operations.
         </div>
@@ -179,7 +183,7 @@
                                        class="flex items-center justify-between px-3 py-2 rounded-lg border text-xs transition {{ request('tab') === 'users' ? 'bg-[#C6A15B]/20 text-[#171513] dark:text-[#C6A15B] border-[#C6A15B]/60' : 'border-transparent text-stone-600 dark:text-stone-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#C6A15B]' }}">
                                         <div class="flex items-center gap-2.5">
                                             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                            <span>Users &amp; Staff</span>
+                                            <span>Users Directory</span>
                                         </div>
                                         <span class="text-[10px] font-sans font-bold px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 text-stone-600 dark:text-stone-300">
                                             {{ \App\Models\User::count() }}
@@ -188,6 +192,7 @@
                                 </div>
                             </div>
 
+                            @if(config('platform.billing_enabled'))
                             <!-- Section: Commercial SaaS & Pricing -->
                             <div>
                                 <div class="text-[10px] text-[#C6A15B] font-bold px-3 py-1 uppercase tracking-[0.2em] font-sans">Commercial &amp; SaaS</div>
@@ -222,6 +227,7 @@
                                     </a>
                                 </div>
                             </div>
+                            @endif
 
                             <!-- Section: Operations & Security -->
                             <div>
@@ -356,7 +362,7 @@
                     </a>
                     @endif
 
-                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isChef() || auth()->user()->role === 'ROLE_FLOOR_STAFF')
+                    @if(config('platform.kitchen_module_enabled') && (auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isChef() || auth()->user()->role === 'ROLE_FLOOR_STAFF'))
                     <a href="{{ route('kitchen.board') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition {{ request()->routeIs('kitchen.board') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/40 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/40' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-white' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
@@ -443,6 +449,7 @@
                             @elseif(request()->routeIs('utility.fuel')) Fuel Run-Hours Tracker
                             @elseif(request()->routeIs('seating.planner')) Banquet Seating Designer
                             @elseif(request()->routeIs('whatsapp.rsvp')) WhatsApp RSVP Automation
+                            @elseif(request()->routeIs('admin.dashboard')) Platform Super Admin Console
                             @else Vendor Console
                             @endif
                         </span>
@@ -517,12 +524,14 @@
                                     <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                                     <span>Add Stock / Inventory</span>
                                 </a>
+                                @if(config('platform.kitchen_module_enabled'))
                                 <a href="{{ route('kitchen.board') }}" 
                                    @click="quickMenuOpen = false"
                                    class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">
                                     <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                                     <span>Live Kitchen KOTs</span>
                                 </a>
+                                @endif
                                 <a href="{{ route('seating.planner') }}" 
                                    @click="quickMenuOpen = false"
                                    class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">
@@ -554,8 +563,10 @@
                     @if(auth()->user()->isSuperAdmin())
                         <a href="{{ route('admin.dashboard', ['tab' => 'vendors']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'vendors' })" class="py-2 hover:text-[#C6A15B]">Vendors</a>
                         <a href="{{ route('admin.dashboard', ['tab' => 'halls']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'halls' })" class="py-2 hover:text-[#C6A15B]">Halls</a>
+                        @if(config('platform.billing_enabled'))
                         <a href="{{ route('admin.dashboard', ['tab' => 'plans']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'plans' })" class="py-2 hover:text-[#C6A15B]">SaaS Plans</a>
                         <a href="{{ route('admin.dashboard', ['tab' => 'payments']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'payments' })" class="py-2 hover:text-[#C6A15B]">Payments</a>
+                        @endif
                         <a href="{{ route('admin.dashboard', ['tab' => 'bookings']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'bookings' })" class="py-2 hover:text-[#C6A15B]">Bookings</a>
                         <a href="{{ route('admin.dashboard', ['tab' => 'users']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'users' })" class="py-2 hover:text-[#C6A15B]">Users</a>
                         <a href="{{ route('admin.dashboard', ['tab' => 'tasks']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'tasks' })" class="py-2 hover:text-[#C6A15B]">Tasks</a>
@@ -581,7 +592,7 @@
                             <a href="{{ route('inventory') }}" class="py-2 hover:text-[#C6A15B]">Inventory</a>
                             <a href="{{ route('packages.manager') }}" class="py-2 hover:text-[#C6A15B]">Catering Menus</a>
                         @endif
-                        @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isChef() || auth()->user()->role === 'ROLE_FLOOR_STAFF')
+                        @if(config('platform.kitchen_module_enabled') && (auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isChef() || auth()->user()->role === 'ROLE_FLOOR_STAFF'))
                             <a href="{{ route('kitchen.board') }}" class="py-2 hover:text-[#C6A15B]">Kitchen KOT</a>
                         @endif
                         @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isFrontDesk())

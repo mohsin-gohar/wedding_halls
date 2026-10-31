@@ -24,6 +24,15 @@ class PublicVenues extends Component
     #[Url]
     public string $search = '';
 
+    #[Url]
+    public string $date = '';
+
+    #[Url]
+    public string $shift = '';
+
+    #[Url]
+    public string $guests = '';
+
     public string $calendarMonth = '';
 
     public string $selectedCalendarDate = '';
@@ -44,6 +53,14 @@ class PublicVenues extends Component
         $this->selectedCalendarDate = $now->format('Y-m-d');
         $this->selectedYear = CalendarWindow::clampYear((int) $now->format('Y'));
         $this->selectedMonthNumber = CalendarWindow::clampMonth((int) $now->format('n'));
+
+        $requestedDate = $this->normalizedEventDate();
+        if ($requestedDate) {
+            $this->calendarMonth = $requestedDate->format('Y-m');
+            $this->selectedCalendarDate = $requestedDate->format('Y-m-d');
+            $this->selectedYear = (int) $requestedDate->format('Y');
+            $this->selectedMonthNumber = (int) $requestedDate->format('n');
+        }
 
         // Record the visit once per page load rather than on every Livewire
         // interaction (filtering, calendar navigation, pagination).
@@ -71,8 +88,34 @@ class PublicVenues extends Component
     {
         $this->city = 'All';
         $this->search = '';
+        $this->date = '';
+        $this->shift = '';
+        $this->guests = '';
         $this->calendarHallId = null;
         $this->resetPage();
+    }
+
+    public function normalizedGuestCount(): int
+    {
+        $guests = (int) $this->guests;
+
+        return ($guests >= 1 && $guests <= 20000) ? $guests : 0;
+    }
+
+    public function normalizedShift(): ?string
+    {
+        return in_array($this->shift, ['AFTERNOON', 'EVENING', 'NIGHT'], true) ? $this->shift : null;
+    }
+
+    public function normalizedEventDate(): ?Carbon
+    {
+        $date = CalendarWindow::parseDate($this->date);
+
+        if (! $date || ! CalendarWindow::contains($date)) {
+            return null;
+        }
+
+        return $date;
     }
 
     public function jumpToYear(int $year): void
@@ -233,21 +276,10 @@ class PublicVenues extends Component
             ->pluck('city');
 
         $query = clone $publicHalls;
-
-        // 2. Filter by city
-        if ($this->city !== 'All' && ! empty($this->city)) {
-            $query->whereHas('venue', function ($q) {
-                $q->where('city', $this->city);
-            });
-        }
-
-        // Keep the directory search focused on venue names.
-        if (! empty($this->search)) {
-            $searchTerm = '%'.trim($this->search).'%';
-            $query->where('name', 'like', $searchTerm);
-        }
-
-        $query->orderBy('name');
+        $this->applyDiscoveryFilters($query);
+        $query->withAvg('approvedReviews', 'rating')
+            ->withCount('approvedReviews')
+            ->orderBy('name');
 
         // Count BEFORE pagination (pagination mutates the query)
         $totalHalls = (clone $query)->count();
@@ -283,9 +315,7 @@ class PublicVenues extends Component
             ->whereHas('venue', fn ($venueQuery) => $venueQuery->where('is_active', true))
             ->whereHas('tenant', fn ($t) => $t->where('is_active', true)->where('verification_status', 'APPROVED'));
 
-        if ($this->city !== 'All' && ! empty($this->city)) {
-            $calendarHallsQuery->whereHas('venue', fn ($q) => $q->where('city', $this->city));
-        }
+        $this->applyDiscoveryFilters($calendarHallsQuery);
 
         $calendarHallsList = $calendarHallsQuery->orderBy('name')->get();
         $totalScopeHalls = max(1, $calendarHallsList->count());
@@ -377,6 +407,9 @@ class PublicVenues extends Component
         ];
 
         return view('livewire.public-venues', [
+            'searchDate' => $this->normalizedEventDate(),
+            'searchShift' => $this->normalizedShift(),
+            'searchGuests' => $this->normalizedGuestCount(),
             'halls' => $halls,
             'totalHalls' => $totalHalls,
             'cities' => $cities,
@@ -387,5 +420,36 @@ class PublicVenues extends Component
             'selectedDayDetails' => $selectedDayDetails,
             'calendarHallsList' => $calendarHallsList,
         ]);
+    }
+
+    private function applyDiscoveryFilters($query): void
+    {
+        if ($this->city !== 'All' && $this->city !== '') {
+            $query->whereHas('venue', function ($q) {
+                $q->where('city', $this->city);
+            });
+        }
+
+        if (trim($this->search) !== '') {
+            $query->where('name', 'like', '%'.trim($this->search).'%');
+        }
+
+        $guests = $this->normalizedGuestCount();
+        if ($guests > 0) {
+            $query->where('max_capacity', '>=', $guests);
+        }
+
+        $eventDate = $this->normalizedEventDate();
+        $shift = $this->normalizedShift();
+        if ($eventDate && $shift) {
+            $query->whereDoesntHave('bookings', function ($booking) use ($eventDate, $shift) {
+                $booking->whereIn('status', ['HOLD', 'CONFIRMED'])
+                    ->whereDate('event_date', $eventDate->toDateString())
+                    ->where(function ($slot) use ($shift) {
+                        $slot->where('slot_type', $shift)
+                            ->orWhere('slot_type', 'FULL_DAY');
+                    });
+            });
+        }
     }
 }

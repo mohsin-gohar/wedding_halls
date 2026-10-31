@@ -164,7 +164,7 @@ class SaaSSubscriptionAndErpTest extends TestCase
 
         // Chef is returned to the dashboard they are allowed to use.
         $this->actingAs($chef);
-        $this->get(route('staff'))->assertRedirect(route('kitchen.board'));
+        $this->get(route('staff'))->assertRedirect(route($chef->portalHomeRoute()));
 
         // Owner accesses StaffManager -> 200 OK
         $owner = User::where('tenant_id', $chef->tenant_id)->where('role', 'ROLE_TENANT_OWNER')->firstOrFail();

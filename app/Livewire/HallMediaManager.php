@@ -133,7 +133,7 @@ class HallMediaManager extends Component
 
     protected $rules = [
         'name' => 'required|string|min:3|max:120',
-        'venue_name' => 'required|string|min:3|max:120',
+        'venue_name' => 'nullable|string|min:3|max:120',
         'city' => 'required|string|max:80',
         'address' => 'nullable|string|max:255',
         'phone' => 'nullable|string|max:50',
@@ -496,7 +496,7 @@ class HallMediaManager extends Component
             // Update venue record as well
             if ($this->hall->venue) {
                 $this->hall->venue->update([
-                    'name' => $this->venue_name,
+                    'name' => ! empty($this->venue_name) ? $this->venue_name : $this->name,
                     'city' => $this->city,
                     'address' => $this->address,
                     'phone' => $this->phone,

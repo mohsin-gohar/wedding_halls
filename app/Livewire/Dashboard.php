@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Booking;
 use App\Models\Expense;
 use App\Models\Hall;
+use App\Models\HallChatMessage;
 use App\Models\HallView;
 use App\Models\HallWishlist;
 use App\Models\InventoryItem;
@@ -81,6 +82,19 @@ class Dashboard extends Component
     public ?string $expenseFeedback = null;
 
     public ?string $expenseError = null;
+
+    // Live Guest Concierge Chat Inquiries & Tracking
+    public bool $showChatModal = false;
+
+    public ?string $selectedChatHallId = null;
+
+    public ?string $selectedChatIp = null;
+
+    public ?string $selectedChatSession = null;
+
+    public array $chatMessages = [];
+
+    public string $chatReplyText = '';
 
     public function mount()
     {
@@ -339,6 +353,54 @@ class Dashboard extends Component
 
         $this->leadNoteText = '';
         $this->crmFeedback = 'Interaction note recorded successfully.';
+    }
+
+    public function openChatModal(string $hallId, string $ip, string $session): void
+    {
+        $this->selectedChatHallId = $hallId;
+        $this->selectedChatIp = $ip;
+        $this->selectedChatSession = $session;
+        $this->chatReplyText = '';
+        $this->chatMessages = HallChatMessage::getConversation($hallId, $ip, $session);
+        HallChatMessage::markAsRead($hallId, $ip, $session);
+        $this->showChatModal = true;
+    }
+
+    public function closeChatModal(): void
+    {
+        $this->showChatModal = false;
+        $this->selectedChatHallId = null;
+        $this->selectedChatIp = null;
+        $this->selectedChatSession = null;
+        $this->chatMessages = [];
+        $this->chatReplyText = '';
+    }
+
+    public function sendChatReply(): void
+    {
+        $reply = trim($this->chatReplyText);
+        if (empty($reply) || ! $this->selectedChatHallId) {
+            return;
+        }
+
+        HallChatMessage::create([
+            'hall_id' => $this->selectedChatHallId,
+            'user_id' => Auth::id(),
+            'ip_address' => $this->selectedChatIp,
+            'session_id' => $this->selectedChatSession,
+            'sender_type' => 'hall_owner',
+            'message_type' => 'text',
+            'message' => $reply,
+            'voice_file' => null,
+            'is_read' => false,
+        ]);
+
+        $this->chatReplyText = '';
+        $this->chatMessages = HallChatMessage::getConversation(
+            $this->selectedChatHallId,
+            $this->selectedChatIp,
+            $this->selectedChatSession
+        );
     }
 
     public function render()
@@ -638,6 +700,17 @@ class Dashboard extends Component
             'CONFIRMED' => $allLeads->filter(fn ($b) => $b->crm_stage === 'CONFIRMED' || $b->status === 'CONFIRMED'),
         ];
 
+        // 14. Live Guest Concierge Chat Inquiries (Strictly Scoped to Tenant's Halls)
+        $liveChatInquiries = HallChatMessage::with('hall')
+            ->whereIn('hall_id', $tenantHallIds)
+            ->where('sender_type', 'customer')
+            ->select('ip_address', 'session_id', 'hall_id')
+            ->selectRaw('COUNT(*) as message_count, MAX(created_at) as last_message_at')
+            ->groupBy('ip_address', 'session_id', 'hall_id')
+            ->orderByDesc('last_message_at')
+            ->take(8)
+            ->get();
+
         $selectedLead = null;
         if ($this->showCustomerModal && $this->selectedBookingId) {
             $selectedLead = Booking::with(['hall', 'package', 'payments'])
@@ -728,7 +801,7 @@ class Dashboard extends Component
         $lowStockInventoryCount = InventoryItem::where('tenant_id', $tenantId)->where('is_active', true)->whereColumn('current_stock', '<=', 'min_threshold')->count();
 
         $todayStaffPresentCount = StaffAttendance::where('tenant_id', $tenantId)->whereDate('date', $today)->whereIn('status', ['PRESENT', 'HALF_DAY'])->count();
-        $todayStaffTotalCount = User::where('tenant_id', $tenantId)->where('status', 'ACTIVE')->where('role', '!=', 'ROLE_SUPER_ADMIN')->count();
+        $todayStaffTotalCount = User::hallStaff($tenantId)->where('status', 'ACTIVE')->count();
         $todayOvertimeHours = (float) StaffAttendance::where('tenant_id', $tenantId)->whereDate('date', $today)->sum('overtime_hours');
 
         $todayGeneratorHours = (float) UtilityLog::where('tenant_id', $tenantId)->whereDate('created_at', $today)->sum('generator_run_hours');
@@ -754,6 +827,7 @@ class Dashboard extends Component
             ->sum('wapda_units_consumed');
 
         return view('livewire.dashboard', [
+            'kitchenEnabled' => (bool) config('platform.kitchen_module_enabled', false),
             'todayKitchenKotsCount' => $todayKitchenKotsCount,
             'todayTotalDiners' => $todayTotalDiners,
             'todayMeatNeeded' => $todayMeatNeeded,
@@ -806,6 +880,7 @@ class Dashboard extends Component
             'kanbanColumns' => $kanbanColumns,
             'allLeads' => $allLeads,
             'selectedLead' => $selectedLead,
+            'liveChatInquiries' => $liveChatInquiries,
             'todayExpensesSum' => $todayExpensesSum,
             'todayDieselLiters' => $todayDieselLiters,
             'todayDieselCost' => $todayDieselCost,

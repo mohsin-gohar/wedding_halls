@@ -61,7 +61,7 @@ class PublicContact extends Component
         try {
             PlatformTask::create([
                 'title' => "Customer Inquiry: {$this->name} ({$this->city})",
-                'category' => 'GENERAL',
+                'category' => 'CUSTOMER_INQUIRY',
                 'priority' => 'HIGH',
                 'due_date' => now()->addDay(),
                 'notes' => "Phone: {$this->phone} | Email: {$this->email} | Message: ".Str::limit($this->message, 120),

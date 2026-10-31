@@ -54,15 +54,7 @@ class CustomerLogin extends Component
             session()->forget('url.intended');
             session()->flash('message', 'Welcome back! Signed in to your portal.');
 
-            if ($user->role === 'ROLE_SUPER_ADMIN' || $user->isSuperAdmin()) {
-                return redirect()->to(route('admin.dashboard'));
-            }
-
-            if (! $user->isCustomer()) {
-                return redirect()->to(route('dashboard'));
-            }
-
-            return redirect()->to(route('customer.dashboard'));
+            return redirect()->to(route($user->portalHomeRoute()));
         }
 
         RateLimiter::hit($throttleKey, 60);

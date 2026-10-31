@@ -40,7 +40,7 @@
             <div class="absolute inset-0 bg-gradient-to-b from-[#171513]/85 via-[#171513]/65 to-[#171513]/92 z-[1]"></div>
         </div>
 
-        <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24 text-center space-y-7 flex flex-col items-center">
+        <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-24 text-center space-y-4 sm:space-y-7 flex flex-col items-center">
             
             <!-- Prestige Eyebrow Badge -->
             <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-[#C6A15B]/30 bg-[#171513]/85 text-[#F2DE9A] text-[11px] font-medium tracking-[0.18em] uppercase backdrop-blur-md">
@@ -77,7 +77,7 @@
             </div>
 
             <!-- Trust Metrics Bar -->
-            <div class="pt-10 mt-6 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 text-left w-full max-w-3xl">
+            <div class="pt-4 mt-2 border-t border-white/10 grid grid-cols-2 gap-4 text-left w-full max-w-3xl sm:mt-6 sm:grid-cols-4 sm:gap-8 sm:pt-10">
                 <div class="border-l-2 border-[#C6A15B] pl-4">
                     <span class="font-cinzel text-2xl font-bold text-white block">100%</span>
                     <span class="text-[11px] uppercase tracking-wider text-stone-300 mt-1 block font-medium font-sans">Single-Host Exclusivity</span>
@@ -95,6 +95,7 @@
                     <span class="text-[11px] uppercase tracking-wider text-stone-300 mt-1 block font-medium font-sans">Verified Hall Showcases</span>
                 </div>
             </div>
+            <div class="h-8 w-full sm:hidden" aria-hidden="true"></div>
 
         </div>
     </section>
@@ -127,7 +128,7 @@
                 <!-- Event Date -->
                 <div>
                     <label for="date" class="block text-[11px] font-semibold uppercase tracking-[0.06em] text-stone-700 dark:text-stone-300 mb-1.5 font-sans">Event Date</label>
-                    <input type="date" name="date" id="date" value="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/15 text-sm focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25 rounded-lg">
+                    <input type="date" name="date" id="date" min="{{ now()->toDateString() }}" max="{{ \App\Support\CalendarWindow::lastMonth()->endOfMonth()->toDateString() }}" value="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/15 text-sm focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25 rounded-lg">
                 </div>
 
                 <!-- Shift -->
@@ -300,7 +301,7 @@
                                 
                                 <!-- View Details Overlay -->
                                 <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <a href="{{ route('public.venue.details', $hall->slug) }}" class="btn-gold !h-10 !px-6 text-xs font-semibold uppercase tracking-wider shadow-lg">
+                                    <a href="{{ route('public.venue.details', $hall->slug) }}" wire:navigate.hover class="btn-gold !h-10 !px-6 text-xs font-semibold uppercase tracking-wider shadow-lg">
                                         View Details &rarr;
                                     </a>
                                 </div>
@@ -309,7 +310,7 @@
                             <!-- Content Block -->
                             <div class="p-6 space-y-3">
                                 <h3 class="font-serif-luxury text-2xl text-[#F8F5EF] font-medium leading-snug group-hover:text-[#E8DCBE] transition-colors duration-200">
-                                    <a href="{{ route('public.venue.details', $hall->slug) }}">
+                                    <a href="{{ route('public.venue.details', $hall->slug) }}" wire:navigate.hover>
                                         {{ $hall->name }}
                                     </a>
                                 </h3>
@@ -339,16 +340,8 @@
                                 <strong class="font-cinzel text-lg text-[#C6A15B]">PKR {{ number_format($hall->base_rent) }}</strong>
                             </div>
                             <div class="flex items-center gap-2">
-                                @if($hallWaUrl = $hall->getWhatsappUrl())
-                                    <a href="{{ $hallWaUrl }}" target="_blank"
-                                       title="Chat with {{ $hall->name }} on WhatsApp"
-                                       class="h-9 px-3 rounded-lg bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/40 text-emerald-400 text-xs font-bold font-sans flex items-center gap-1.5 transition">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                                        <span>WhatsApp</span>
-                                    </a>
-                                @endif
-                                <a href="{{ route('public.venue.details', $hall->slug) }}" class="btn-gold !h-9 !px-4 text-[11px] font-semibold uppercase tracking-wider rounded-lg">
-                                    Reserve &rarr;
+                                <a href="{{ route('public.venue.details', $hall->slug) }}" wire:navigate.hover class="btn-gold !h-9 !px-4 text-[11px] font-semibold uppercase tracking-wider rounded-lg">
+                                    View Venue &rarr;
                                 </a>
                             </div>
                         </div>

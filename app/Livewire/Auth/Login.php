@@ -53,26 +53,7 @@ class Login extends Component
             session()->forget('url.intended');
             session()->flash('message', "Welcome back, {$user->name}!");
 
-            // Website Owner / Super Admin → Platform Admin Dashboard
-            if ($user->role === 'ROLE_SUPER_ADMIN' || $user->isSuperAdmin()) {
-                return redirect()->to(route('admin.dashboard'));
-            }
-
-            // Customer / Guest Client → Customer Booking Dashboard
-            if ($user->isCustomer()) {
-                return redirect()->to(route('customer.dashboard'));
-            }
-
-            if ($user->role === 'ROLE_CHEF') {
-                return redirect()->to(route('kitchen.board'));
-            }
-
-            if (in_array($user->role, ['ROLE_FRONT_DESK', 'ROLE_FLOOR_STAFF'], true)) {
-                return redirect()->to(route('calendar'));
-            }
-
-            // Hall Admin / Tenant Owner / Staff → Hall Operations Dashboard
-            return redirect()->to(route('dashboard'));
+            return redirect()->to(route($user->portalHomeRoute()));
         }
 
         RateLimiter::hit($throttleKey, 60);

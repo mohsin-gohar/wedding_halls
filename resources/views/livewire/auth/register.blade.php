@@ -15,6 +15,12 @@
             <p class="text-xs text-stone-500 dark:text-stone-400 font-sans max-w-md mx-auto leading-relaxed">
                 List your ballrooms and manage banquet operations on Pakistan's premier venue network.
             </p>
+            @if(! config('platform.billing_enabled'))
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#C6A15B]/10 border border-[#C6A15B]/40 text-[#8F7239] dark:text-[#C6A15B] text-[10px] font-sans font-bold uppercase tracking-wider">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#C6A15B]"></span>
+                    Free Launch Access — {{ (int) config('platform.free_access_days', 30) }} Days Complimentary
+                </div>
+            @endif
         </div>
 
         <!-- Flash Messages -->

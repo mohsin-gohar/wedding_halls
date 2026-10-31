@@ -128,7 +128,7 @@
                     <button type="button" @click="$wire.set('email', 'owner@venuecloud.pk'); $wire.set('password', 'password'); document.getElementById('customer-email').value = 'owner@venuecloud.pk'; document.getElementById('customer-password').value = 'password';" class="px-2.5 py-1 rounded-md bg-stone-100 dark:bg-white/5 hover:bg-[#C6A15B]/15 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] text-[10px] font-sans border border-stone-200 dark:border-white/10 transition cursor-pointer">
                         Hall Owner
                     </button>
-                    <button type="button" @click="$wire.set('email', 'admin@venuecloud.pk'); $wire.set('password', 'password'); document.getElementById('customer-email').value = 'admin@venuecloud.pk'; document.getElementById('customer-password').value = 'password';" class="px-2.5 py-1 rounded-md bg-stone-100 dark:bg-white/5 hover:bg-[#C6A15B]/15 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] text-[10px] font-sans border border-stone-200 dark:border-white/10 transition cursor-pointer">
+                    <button type="button" @click="$wire.set('email', 'admin@eventhub.com'); $wire.set('password', 'admin1235'); document.getElementById('customer-email').value = 'admin@eventhub.com'; document.getElementById('customer-password').value = 'admin1235';" class="px-2.5 py-1 rounded-md bg-stone-100 dark:bg-white/5 hover:bg-[#C6A15B]/15 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] text-[10px] font-sans border border-stone-200 dark:border-white/10 transition cursor-pointer">
                         Super Admin
                     </button>
                 </div>

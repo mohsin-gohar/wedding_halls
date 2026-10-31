@@ -87,8 +87,12 @@ class PortalRoutesTest extends TestCase
         // 2. Shift Calendar Grid
         $this->get('/calendar')->assertStatus(200);
 
-        // 3. Chef Kitchen KOTs
-        $this->get('/kitchen-kots')->assertStatus(200);
+        // 3. Chef Kitchen KOTs (hidden when the kitchen module flag is off)
+        if (config('platform.kitchen_module_enabled')) {
+            $this->get('/kitchen-kots')->assertStatus(200);
+        } else {
+            $this->get('/kitchen-kots')->assertRedirect();
+        }
 
         // 4. Utility & Fuel Logs
         $this->get('/utility-fuel')->assertStatus(200);

@@ -12,7 +12,7 @@
                 Super Admin Console
             </h1>
             <p class="text-xs text-stone-600 dark:text-stone-300 font-sans max-w-2xl leading-relaxed">
-                Nationwide vendor onboarding, SaaS pricing tiers, offline payment clearances, hall catalogs, and security audit log.
+                Nationwide vendor onboarding, hall catalog quality, public marketplace controls, concierge inquiries, and security audit log.
             </p>
         </div>
 
@@ -20,9 +20,11 @@
             <button wire:click="openProvisionModal" class="btn-gold !h-10 !px-5 text-xs font-bold font-sans tracking-wide rounded-lg shadow-sm transition-all duration-200">
                 <span>+ Register &amp; Provision Hall</span>
             </button>
+            @if($billingEnabled)
             <button wire:click="openCreatePlanModal" class="px-4 py-2 rounded-lg bg-stone-100 dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/20 hover:border-[#C6A15B] text-[#171513] dark:text-white text-xs font-sans transition font-semibold">
                 + New SaaS Plan
             </button>
+            @endif
         </div>
     </div>
 
@@ -424,7 +426,7 @@
                         Platform Liquidity &amp; Clearances
                     </span>
                     <h3 class="font-serif-luxury text-xl sm:text-2xl text-[#171513] dark:text-white font-bold mt-0.5">
-                        Booking Volume vs Subscription Revenue
+                        {{ $billingEnabled ? 'Booking Volume vs Subscription Revenue' : 'Nationwide Booking Volume' }}
                     </h3>
                 </div>
 
@@ -433,10 +435,12 @@
                         <span class="w-3 h-3 rounded-sm bg-[#C6A15B]"></span>
                         <span>Gross GMV (PKR {{ number_format(($adminWaveData['totalInflow'] ?? 0) / 1000) }}k)</span>
                     </span>
+                    @if($billingEnabled)
                     <span class="inline-flex items-center gap-1.5 text-stone-500 dark:text-stone-400">
                         <span class="w-3 h-3 rounded-sm bg-slate-700 dark:bg-stone-600"></span>
                         <span>SaaS Clearances (PKR {{ number_format(($adminWaveData['totalSubscription'] ?? 0) / 1000) }}k)</span>
                     </span>
+                    @endif
                 </div>
             </div>
 
@@ -486,7 +490,14 @@
             <!-- Wave Summary Ticker -->
             <div class="pt-3 border-t border-[#E7E5E4] dark:border-white/10 flex flex-wrap items-center justify-between text-xs text-stone-600 dark:text-stone-400 font-sans">
                 <span>Platform Flow: <strong class="text-[#8F7239] dark:text-[#C6A15B] font-bold">PKR {{ number_format($adminWaveData['totalInflow'] ?? 0) }}</strong></span>
-                <span>SaaS Subscriptions Collected: <strong class="text-stone-800 dark:text-stone-200 font-semibold">PKR {{ number_format($adminWaveData['totalSubscription'] ?? 0) }}</strong></span>
+                @if($billingEnabled)
+                    <span>SaaS Subscriptions Collected: <strong class="text-stone-800 dark:text-stone-200 font-semibold">PKR {{ number_format($adminWaveData['totalSubscription'] ?? 0) }}</strong></span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 font-semibold text-emerald-600 dark:text-emerald-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        Free Launch Period — No Subscription Charges
+                    </span>
+                @endif
             </div>
         </div>
 
@@ -588,6 +599,7 @@
             </span>
         </button>
 
+        @if($billingEnabled)
         <button wire:click="setTab('plans')" 
                 class="px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap flex items-center gap-2 {{ $activeTab === 'plans' ? 'bg-[#C6A15B] text-[#171513] shadow-md shadow-[#C6A15B]/25 border border-[#F2DE9A]/50' : 'text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] hover:bg-black/5 dark:hover:bg-white/5' }}">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -601,6 +613,7 @@
             <span>Payment Approvals</span>
             <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $activeTab === 'payments' ? 'bg-[#171513]/20 text-[#171513]' : 'bg-black/10 dark:bg-white/10 text-stone-500 dark:text-stone-400' }}">{{ $totalSubscriptionPayments }}</span>
         </button>
+        @endif
 
         <button wire:click="setTab('halls')" 
                 class="px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap flex items-center gap-2 {{ $activeTab === 'halls' ? 'bg-[#C6A15B] text-[#171513] shadow-md shadow-[#C6A15B]/25 border border-[#F2DE9A]/50' : 'text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] hover:bg-black/5 dark:hover:bg-white/5' }}">
@@ -621,6 +634,12 @@
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             <span>Users Directory</span>
             <span class="px-1.5 py-0.5 rounded-full text-[10px] {{ $activeTab === 'users' ? 'bg-[#171513]/20 text-[#171513]' : 'bg-black/10 dark:bg-white/10 text-stone-500 dark:text-stone-400' }}">{{ $totalRegisteredUsers }}</span>
+        </button>
+
+        <button wire:click="setTab('analytics')" 
+                class="px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap flex items-center gap-2 {{ $activeTab === 'analytics' ? 'bg-[#C6A15B] text-[#171513] shadow-md shadow-[#C6A15B]/25 border border-[#F2DE9A]/50' : 'text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] hover:bg-black/5 dark:hover:bg-white/5' }}">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            <span>Visitor Analytics</span>
         </button>
 
         <button wire:click="setTab('audit')" 
@@ -659,7 +678,8 @@
                     @endif
                 </div>
 
-                <!-- Alert 2: Pending Subscription Payments -->
+                <!-- Alert 2: Public concierge inquiries (or SaaS receipts when billing is on) -->
+                @if($billingEnabled)
                 <div class="bg-white dark:bg-[#171513] border {{ $pendingSubscriptionPaymentsCount > 0 ? 'border-[#C6A15B]/70 shadow-sm' : 'border-[#E7E5E4] dark:border-white/10' }} p-5 shadow-sm space-y-2">
                     <div class="flex items-center justify-between text-xs font-mono uppercase font-bold text-stone-600 dark:text-stone-400">
                         <span>💳 Subscription Receipts</span>
@@ -675,10 +695,26 @@
                     </p>
                     @if($pendingSubscriptionPaymentsCount > 0)
                         <button wire:click="setTab('payments')" class="text-xs text-[#8F7239] dark:text-[#C6A15B] font-mono font-bold hover:underline block pt-1">
-                            Verify Bank Transfers &rarr;
+                            Verify Bank Transfers →
                         </button>
                     @endif
                 </div>
+                @else
+                <div class="bg-white dark:bg-[#171513] border {{ $newContactInquiriesCount > 0 ? 'border-[#C6A15B]/70 shadow-sm' : 'border-[#E7E5E4] dark:border-white/10' }} p-5 shadow-sm space-y-2">
+                    <div class="flex items-center justify-between text-xs font-mono uppercase font-bold text-stone-600 dark:text-stone-400">
+                        <span>Concierge Inquiries</span>
+                        <span class="px-2.5 py-0.5 rounded-md font-bold text-[10px] {{ $newContactInquiriesCount > 0 ? 'bg-[#C6A15B]/20 text-[#8F7239] dark:text-[#F2DE9A] border border-[#C6A15B]/40' : 'bg-stone-100 dark:bg-white/5 text-stone-500' }}">
+                            {{ $newContactInquiriesCount }} New
+                        </span>
+                    </div>
+                    <div class="text-2xl font-cinzel font-bold text-[#171513] dark:text-white">
+                        {{ $newContactInquiriesCount }} Couples
+                    </div>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 font-sans">
+                        Public contact-form leads waiting for EventHub concierge follow-up.
+                    </p>
+                </div>
+                @endif
 
                 <!-- Alert 3: Task Completion Rate -->
                 <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-5 shadow-sm space-y-2">
@@ -704,7 +740,7 @@
                         Super Admin Platform To-Do &amp; Task Desk
                     </h3>
                     <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
-                        Assign yourself platform tasks such as vendor phone calls, marketing campaigns, server maintenance, or legal contract audits.
+                        Platform owner work only: hall KYC, marketplace quality, concierge inquiries, and site controls. Hall kitchen, payroll, and seating stay on the Rent Admin dashboard.
                     </p>
                 </div>
 
@@ -715,7 +751,7 @@
                             <label class="block text-[11px] font-mono font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1">
                                 Task Title / Action Item *
                             </label>
-                            <input type="text" wire:model="newTaskTitle" required placeholder="e.g. Call Margalla Marquee owner for onboarding, Verify SSL renewal..."
+                            <input type="text" wire:model="newTaskTitle" required placeholder="e.g. Call new hall owner for KYC, Reply to Lahore concierge inquiry..."
                                    class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
                             @error('newTaskTitle') <span class="text-rose-500 text-xs font-mono">{{ $message }}</span> @enderror
                         </div>
@@ -727,8 +763,11 @@
                             <select wire:model="newTaskCategory" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
                                 <option value="GENERAL">General Platform</option>
                                 <option value="VENDOR_ONBOARDING">Vendor Onboarding</option>
+                                <option value="CUSTOMER_INQUIRY">Customer Inquiry</option>
                                 <option value="TRAFFIC_MONITOR">Traffic &amp; SEO</option>
+                                @if($billingEnabled)
                                 <option value="PAYMENT_REVIEW">Payment Review</option>
+                                @endif
                             </select>
                         </div>
 
@@ -776,6 +815,9 @@
                                     <div class="font-bold text-sm {{ $task->is_completed ? 'line-through text-stone-500' : 'text-[#171513] dark:text-white' }} truncate">
                                         {{ $task->title }}
                                     </div>
+                                    @if($task->notes)
+                                        <p class="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-2">{{ $task->notes }}</p>
+                                    @endif
                                     <div class="flex items-center gap-2 text-[10px] text-stone-500 dark:text-stone-400 mt-0.5">
                                         <span>Category: {{ str_replace('_', ' ', $task->category) }}</span>
                                         <span>•</span>
@@ -800,9 +842,9 @@
                                     {{ $task->priority }}
                                 </span>
 
-                                <button wire:click="deleteTask('{{ $task->id }}')" 
+                                <button wire:click="deleteTask('{{ $task->id }}')"
                                         onclick="return confirm('Delete this task?')"
-                                        class="text-stone-400 hover:text-rose-500 text-base font-bold">
+                                        class="tbtn tbtn-icon tbtn-red">
                                     &times;
                                 </button>
                             </div>
@@ -995,7 +1037,9 @@
                         <tr>
                             <th>Business / Venue Complex</th>
                             <th>Owner Contact</th>
-                            <th>Assigned SaaS Plan</th>
+                            @if($billingEnabled)
+                                <th>Assigned SaaS Plan</th>
+                            @endif
                             <th>Capacity Specs</th>
                             <th>Status</th>
                             <th class="text-right">Actions</th>
@@ -1038,6 +1082,7 @@
                                 </td>
 
                                 <!-- SaaS Plan -->
+                                @if($billingEnabled)
                                 <td>
                                     <div class="font-bold text-xs text-[#8F7239] dark:text-[#C6A15B] flex items-center gap-1.5">
                                         <span>💎</span>
@@ -1053,6 +1098,7 @@
                                         @endif
                                     </div>
                                 </td>
+                                @endif
 
                                 <!-- Capacity Specs -->
                                 <td>
@@ -1088,32 +1134,28 @@
 
                                 <!-- Actions -->
                                 <td class="text-right">
-                                    <div class="flex items-center justify-end gap-1.5 font-sans">
-                                        <button wire:click="openEditVendorModal('{{ $t->id }}')" 
-                                                class="btn-gold !h-7 !px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                                    <div class="flex flex-wrap items-center justify-end gap-1.5 font-sans">
+                                        <button wire:click="openEditVendorModal('{{ $t->id }}')" class="tbtn tbtn-gold">
                                             Edit
                                         </button>
 
                                         @if($t->verification_status !== 'APPROVED')
-                                            <button wire:click="approveVendor('{{ $t->id }}')" 
-                                                    class="px-2.5 py-1 rounded-lg border border-emerald-500/50 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white text-[10px] font-bold uppercase transition">
+                                            <button wire:click="approveVendor('{{ $t->id }}')" class="tbtn tbtn-green">
                                                 Approve
                                             </button>
                                         @else
-                                            <button wire:click="suspendVendor('{{ $t->id }}')" 
-                                                    class="px-2.5 py-1 rounded-lg border border-stone-200 dark:border-white/10 hover:border-amber-600/50 hover:bg-amber-500/10 text-stone-600 dark:text-stone-300 hover:text-amber-600 text-[10px] font-bold uppercase transition">
+                                            <button wire:click="suspendVendor('{{ $t->id }}')" class="tbtn tbtn-amber">
                                                 Suspend
                                             </button>
                                         @endif
 
-                                        <button wire:click="toggleTenantStatus('{{ $t->id }}')" 
-                                                class="px-2.5 py-1 rounded-lg border border-stone-200 dark:border-white/10 hover:border-[#C6A15B] text-stone-700 dark:text-stone-300 hover:text-[#C6A15B] text-[10px] font-bold uppercase transition">
+                                        <button wire:click="toggleTenantStatus('{{ $t->id }}')" class="tbtn tbtn-outline">
                                             {{ $t->is_active ? 'Disable' : 'Enable' }}
                                         </button>
 
-                                        <button wire:click="deleteVendor('{{ $t->id }}')" 
+                                        <button wire:click="deleteVendor('{{ $t->id }}')"
                                                 onclick="return confirm('Are you sure you want to delete this vendor and all its halls?') || event.stopImmediatePropagation()"
-                                                class="px-2.5 py-1 rounded-lg border border-stone-200 dark:border-white/10 hover:border-red-500/50 hover:bg-red-500/10 text-stone-600 dark:text-stone-400 hover:text-red-500 text-[10px] font-bold uppercase transition">
+                                                class="tbtn tbtn-red">
                                             Del
                                         </button>
                                     </div>
@@ -1121,7 +1163,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="p-10 text-center text-stone-400 font-sans">
+                                <td colspan="{{ $billingEnabled ? 6 : 5 }}" class="p-10 text-center text-stone-400 font-sans">
                                     No banquet vendors registered on the platform yet.
                                 </td>
                             </tr>
@@ -1135,7 +1177,7 @@
     <!-- ===================================================================
          TAB 2: SAAS PRICING PLANS (Full CRUD)
          =================================================================== -->
-    @if($activeTab === 'plans')
+    @if($activeTab === 'plans' && $billingEnabled)
         <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-6 space-y-6 shadow-sm dark:shadow-xl">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E7E5E4] dark:border-white/10 gap-4">
                 <div>
@@ -1185,12 +1227,12 @@
                         </div>
 
                         <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 flex items-center justify-between gap-2 font-mono text-xs">
-                            <button wire:click="openEditPlanModal({{ $p->id }})" class="px-3 py-1.5 bg-[#171513] text-[#C6A15B] border border-[#C6A15B] font-bold hover:bg-[#C6A15B] hover:text-[#171513] transition">
+                            <button wire:click="openEditPlanModal({{ $p->id }})" class="tbtn tbtn-dark">
                                 Edit Plan
                             </button>
-                            <button wire:click="deletePlan({{ $p->id }})" 
+                            <button wire:click="deletePlan({{ $p->id }})"
                                     onclick="return confirm('Delete this subscription plan?') || event.stopImmediatePropagation()"
-                                    class="px-2.5 py-1.5 rounded-md border border-stone-200 dark:border-white/10 hover:border-red-500/50 hover:bg-red-500/10 text-stone-600 dark:text-stone-400 hover:text-red-500 transition font-semibold text-xs">
+                                    class="tbtn tbtn-red">
                                 Delete
                             </button>
                         </div>
@@ -1203,7 +1245,7 @@
     <!-- ===================================================================
          TAB 3: SUBSCRIPTION PAYMENT CLEARANCE
          =================================================================== -->
-    @if($activeTab === 'payments')
+    @if($activeTab === 'payments' && $billingEnabled)
         <div class="space-y-4">
             <div class="bg-white dark:bg-[#1A1714] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors">
                 <div>
@@ -1280,13 +1322,11 @@
                                 </td>
                                 <td class="text-right">
                                     @if($sp->status === 'PENDING')
-                                        <div class="flex items-center justify-end gap-2 font-sans">
-                                            <button wire:click="approveSubscriptionPayment('{{ $sp->id }}')" 
-                                                    class="btn-gold !h-7 !px-3 rounded-lg text-[10px] font-bold uppercase shadow-sm">
+                                        <div class="flex flex-wrap items-center justify-end gap-2 font-sans">
+                                            <button wire:click="approveSubscriptionPayment('{{ $sp->id }}')" class="tbtn tbtn-green">
                                                 Approve
                                             </button>
-                                            <button wire:click="rejectSubscriptionPayment('{{ $sp->id }}')" 
-                                                    class="px-2.5 py-1 rounded-lg border border-stone-200 dark:border-white/10 hover:border-red-500/50 hover:bg-red-500/10 text-stone-600 dark:text-stone-400 hover:text-red-500 text-[10px] font-bold uppercase transition">
+                                            <button wire:click="rejectSubscriptionPayment('{{ $sp->id }}')" class="tbtn tbtn-red">
                                                 Reject
                                             </button>
                                         </div>
@@ -1382,22 +1422,19 @@
                                     </span>
                                 </td>
                                 <td class="text-right">
-                                    <div class="flex items-center justify-end gap-1.5 font-sans text-xs">
-                                         <a href="{{ route('hall.showcase', $hl->slug) }}" target="_blank" 
-                                            class="btn-outline-gold !h-7 !px-2.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition">
+                                    <div class="flex flex-wrap items-center justify-end gap-1.5 font-sans text-xs">
+                                         <a href="{{ route('hall.showcase', $hl->slug) }}" target="_blank" class="tbtn tbtn-outline">
                                              View ↗
                                          </a>
-                                         <button wire:click="openEditHallModal('{{ $hl->id }}')" 
-                                                 class="btn-gold !h-7 !px-2.5 rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                                         <button wire:click="openEditHallModal('{{ $hl->id }}')" class="tbtn tbtn-gold">
                                              Edit
                                          </button>
-                                         <button wire:click="toggleHallStatus('{{ $hl->id }}')" 
-                                                 class="px-2.5 py-1 rounded-lg border border-stone-200 dark:border-white/10 hover:border-[#C6A15B] text-stone-700 dark:text-stone-300 hover:text-[#C6A15B] text-[10px] font-bold uppercase transition">
+                                         <button wire:click="toggleHallStatus('{{ $hl->id }}')" class="tbtn {{ $hl->is_active ? 'tbtn-amber' : 'tbtn-green' }}">
                                              {{ $hl->is_active ? 'Hide' : 'Publish' }}
                                          </button>
-                                         <button wire:click="deleteHall('{{ $hl->id }}')" 
+                                         <button wire:click="deleteHall('{{ $hl->id }}')"
                                                  onclick="return confirm('Delete hall {{ $hl->name }}?') || event.stopImmediatePropagation()"
-                                                 class="px-2.5 py-1 rounded-lg border border-stone-200 dark:border-white/10 hover:border-red-500/50 hover:bg-red-500/10 text-stone-600 dark:text-stone-400 hover:text-red-500 text-[10px] font-bold uppercase transition">
+                                                 class="tbtn tbtn-red">
                                              Del
                                          </button>
                                      </div>
@@ -1559,26 +1596,23 @@
 
                                 <!-- Legal Actions -->
                                 <td class="text-right">
-                                    <div class="flex items-center justify-end gap-2 font-sans">
-                                        <a href="{{ route('documents.agreement', $b->id) }}" target="_blank" 
-                                           class="btn-outline-gold !h-7 !px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition shadow-sm inline-flex items-center gap-1">
+                                    <div class="flex flex-wrap items-center justify-end gap-2 font-sans">
+                                        <a href="{{ route('documents.agreement', $b->id) }}" target="_blank" class="tbtn tbtn-outline">
                                             <span>A4 Agreement</span>
                                             <span>↗</span>
                                         </a>
-                                        <a href="{{ route('documents.invoice', $b->id) }}" target="_blank" 
-                                           class="px-2.5 py-1 rounded-lg border border-stone-200 dark:border-white/10 hover:border-[#C6A15B] text-stone-700 dark:text-stone-300 hover:text-[#C6A15B] text-[10px] font-bold uppercase transition inline-flex items-center gap-1">
+                                        <a href="{{ route('documents.invoice', $b->id) }}" target="_blank" class="tbtn tbtn-outline">
                                             <span>Tax Invoice</span>
                                             <span>↗</span>
                                         </a>
                                         @if($b->status !== 'CONFIRMED')
-                                            <button wire:click="updateBookingStatus('{{ $b->id }}', 'CONFIRMED')" 
-                                                    class="btn-gold !h-7 !px-2.5 rounded-lg text-[10px] font-bold uppercase shadow-sm">
+                                            <button wire:click="updateBookingStatus('{{ $b->id }}', 'CONFIRMED')" class="tbtn tbtn-gold">
                                                 Confirm
                                             </button>
                                         @endif
-                                        <button wire:click="deleteBooking('{{ $b->id }}')" 
+                                        <button wire:click="deleteBooking('{{ $b->id }}')"
                                                 onclick="return confirm('Delete booking {{ $b->booking_reference }}?') || event.stopImmediatePropagation()"
-                                                class="px-2.5 py-1 rounded-lg border border-stone-200 dark:border-white/10 hover:border-red-500/50 hover:bg-red-500/10 text-stone-600 dark:text-stone-400 hover:text-red-500 transition font-bold text-[10px] uppercase">
+                                                class="tbtn tbtn-red">
                                             Del
                                         </button>
                                     </div>
@@ -1730,7 +1764,9 @@
                         <option value="ROLE_MANAGER">Hall Manager</option>
                         <option value="ROLE_ACCOUNTANT">Accountant</option>
                         <option value="ROLE_FRONT_DESK">Front Desk</option>
-                        <option value="ROLE_CHEF">Chef</option>
+                        @if(config('platform.kitchen_module_enabled'))
+                            <option value="ROLE_CHEF">Chef</option>
+                        @endif
                         <option value="ROLE_FLOOR_STAFF">Floor Staff</option>
                         <option value="ROLE_SUPER_ADMIN">Super Admin</option>
                     </select>
@@ -2183,6 +2219,7 @@
                             </div>
                         </div>
 
+                        @if($billingEnabled)
                         <div>
                             <label class="block text-[10px] font-mono uppercase tracking-wider text-stone-300 mb-1">
                                 Initial SaaS Subscription Tier
@@ -2193,6 +2230,7 @@
                                 @endforeach
                             </select>
                         </div>
+                        @endif
                     </div>
                 </div>
 
@@ -2244,6 +2282,7 @@
                         <input type="email" wire:model="editVendorEmail" class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3.5 py-2.5 outline-none focus:border-[#C6A15B]">
                     </div>
 
+                    @if($billingEnabled)
                     <div>
                         <label class="block text-[11px] font-mono uppercase tracking-wider text-[#C6A15B] mb-1 font-semibold">Assigned Plan</label>
                         <select wire:model="editVendorPlanId" class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3.5 py-2.5 outline-none focus:border-[#C6A15B]">
@@ -2257,6 +2296,7 @@
                         <label class="block text-[11px] font-mono uppercase tracking-wider text-[#C6A15B] mb-1 font-semibold">Subscription Expiry Date</label>
                         <input type="date" wire:model="editVendorExpiresAt" class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3.5 py-2.5 outline-none focus:border-[#C6A15B]">
                     </div>
+                    @endif
                 </div>
 
                 <div class="border-t border-white/10 pt-4 flex items-center justify-end gap-3 font-mono">
@@ -2272,7 +2312,7 @@
     <!-- ===================================================================
          MODAL 3: CREATE / EDIT SAAS SUBSCRIPTION PLAN
          =================================================================== -->
-    @if($showPlanModal)
+    @if($showPlanModal && config('platform.billing_enabled'))
         <div class="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 overflow-y-auto">
             <div class="bg-[#171513] border-2 border-[#C6A15B] max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl text-white my-8">
                 <div class="border-b border-white/10 pb-4 flex items-center justify-between">

@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\AuditLog;
 use App\Models\Booking;
+use App\Models\ContactInquiry;
 use App\Models\Hall;
 use App\Models\PageVisit;
 use App\Models\PlatformTask;
@@ -194,6 +195,48 @@ class AdminDashboard extends Component
         $this->marketplaceEnabled = Cache::get('platform_marketplace_enabled', true);
         $this->announcementBanner = Cache::get('platform_announcement', '');
         $this->newTaskDueDate = Carbon::now()->addDays(2)->format('Y-m-d');
+        $this->syncInboxTasks();
+    }
+
+    /**
+     * Keep the Super Admin task desk filled with platform work only:
+     * hall KYC and public concierge inquiries — never kitchen, payroll, or seating.
+     */
+    private function syncInboxTasks(): void
+    {
+        Tenant::where('verification_status', 'PENDING')->each(function (Tenant $tenant) {
+            $title = 'KYC: Verify '.$tenant->name;
+            if (PlatformTask::where('title', $title)->where('is_completed', false)->exists()) {
+                return;
+            }
+
+            PlatformTask::create([
+                'title' => $title,
+                'category' => 'VENDOR_ONBOARDING',
+                'priority' => 'HIGH',
+                'due_date' => now()->addDay()->toDateString(),
+                'notes' => 'Pending marketplace listing for '.$tenant->city.'. Approve only after documents and photos check out.',
+                'created_by_user_id' => Auth::id(),
+                'is_completed' => false,
+            ]);
+        });
+
+        ContactInquiry::where('status', 'NEW')->latest()->take(50)->get()->each(function (ContactInquiry $inquiry) {
+            $title = "Customer Inquiry: {$inquiry->name} ({$inquiry->city})";
+            if (PlatformTask::where('title', $title)->exists()) {
+                return;
+            }
+
+            PlatformTask::create([
+                'title' => $title,
+                'category' => 'CUSTOMER_INQUIRY',
+                'priority' => 'HIGH',
+                'due_date' => now()->addDay()->toDateString(),
+                'notes' => "Phone: {$inquiry->phone} | Email: {$inquiry->email} | ".Str::limit((string) $inquiry->message, 140),
+                'created_by_user_id' => Auth::id(),
+                'is_completed' => false,
+            ]);
+        });
     }
 
     /**
@@ -629,6 +672,12 @@ class AdminDashboard extends Component
     // ==========================================
     public function openCreatePlanModal()
     {
+        if (! $this->billingEnabled()) {
+            $this->feedbackMessage = 'SaaS billing is disabled during the free launch period — every hall ships at no charge.';
+
+            return;
+        }
+
         $this->isEditingPlan = false;
         $this->editingPlanId = null;
         $this->planName = '';
@@ -1042,8 +1091,11 @@ class AdminDashboard extends Component
             ->get();
 
         $tenants = Tenant::with(['subscriptionPlan'])->withCount(['halls', 'bookings', 'users'])->latest()->take(200)->get();
-        $plans = SubscriptionPlan::withCount('tenants')->get();
-        $subscriptionPayments = SubscriptionPayment::with(['tenant', 'plan'])->latest()->take(200)->get();
+        $billingEnabled = $this->billingEnabled();
+        $plans = $billingEnabled ? SubscriptionPlan::withCount('tenants')->get() : collect();
+        $subscriptionPayments = $billingEnabled
+            ? SubscriptionPayment::with(['tenant', 'plan'])->latest()->take(200)->get()
+            : collect();
         $halls = Hall::with(['venue', 'tenant'])->latest()->take(200)->get();
         $recentBookings = Booking::with(['hall.venue', 'tenant'])->latest()->take(30)->get();
         $auditLogs = AuditLog::with(['tenant', 'user'])->latest()->take(30)->get();
@@ -1064,6 +1116,8 @@ class AdminDashboard extends Component
             'recentBookings' => $recentBookings,
             'auditLogs' => $auditLogs,
             'platformTasks' => $platformTasks,
+            'billingEnabled' => $this->billingEnabled(),
+            'newContactInquiriesCount' => ContactInquiry::where('status', 'NEW')->count(),
             'adminChartData' => $analytics->chartData($this->chartTimeframe, $this->chartMetric),
             'adminWaveData' => $analytics->waveData($this->chartTimeframe),
             'adminMiniCalendar' => $analytics->miniCalendar(),

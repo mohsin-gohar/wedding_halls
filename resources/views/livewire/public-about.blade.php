@@ -31,7 +31,7 @@
                     <ul class="text-xs text-stone-600 dark:text-stone-300 space-y-1.5 font-normal">
                         <li>✓ Venue discovery with filters, gallery &amp; packages</li>
                         <li>✓ Real-time availability calendar with zero double-booking</li>
-                        <li>✓ Online reservations, WhatsApp concierge &amp; RSVP portal</li>
+                        <li>✓ Online reservations, 24/7 AI concierge chatbot &amp; guest RSVP portal</li>
                     </ul>
                 </div>
                 <div class="space-y-3">

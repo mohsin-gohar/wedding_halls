@@ -24,7 +24,7 @@
             <label class="block text-[10px] uppercase font-mono tracking-wider text-[#8F7239] dark:text-[#C6A15B] mb-1 font-bold">Active Function</label>
             <select wire:model.live="selectedBookingId" class="bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/50 text-[#171513] dark:text-stone-200 text-xs px-3.5 py-2 font-mono focus:border-[#C6A15B] outline-none">
                 @foreach($bookings as $b)
-                    <option value="{{ $b->id }}">{{ $b->customer_name }} ({{ $b->event_type }} - {{ $b->event_date }})</option>
+                    <option value="{{ $b->id }}">{{ $b->customer_name }} ({{ $b->event_type }} — {{ optional($b->event_date)->format('d M Y') }})</option>
                 @endforeach
             </select>
         </div>

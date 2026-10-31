@@ -170,8 +170,8 @@ class BookingConcurrencyTest extends TestCase
     {
         $booking = Booking::with('payments', 'kitchenKot')->first();
 
-        // 1. Unauthenticated / IDOR access attempt is blocked with 403
-        $this->get(route('documents.agreement', $booking->id))->assertStatus(403);
+        // 1. Guests are sent to login before confidential contracts are served
+        $this->get(route('documents.agreement', $booking->id))->assertRedirect(route('login'));
 
         // 2. Authenticated tenant owner can download legal agreement
         $owner = User::where('tenant_id', $booking->tenant_id)->first();

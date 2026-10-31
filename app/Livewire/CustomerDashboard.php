@@ -24,6 +24,14 @@ class CustomerDashboard extends Component
         if (! $user) {
             return redirect()->route('customer.login');
         }
+
+        if (! $user->isCustomer()) {
+            if ($user->isSuperAdmin()) {
+                return redirect()->route('admin.dashboard');
+            }
+
+            return redirect()->route('dashboard');
+        }
     }
 
     public function viewBooking(string $bookingId)

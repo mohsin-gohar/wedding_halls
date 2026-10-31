@@ -114,21 +114,8 @@
                         Reserve Event Shift &rarr;
                     </button>
 
-                    @php
-                        $hallWhatsappUrl = $hall->getWhatsappUrl("Hello {$hall->name}, I am interested in reserving an event date at your venue. Please share availability and packages.");
-                        $hallPhone = $hall->getWhatsappNumber();
-                    @endphp
-                    @if($hallWhatsappUrl)
-                        <a href="{{ $hallWhatsappUrl }}" 
-                           target="_blank"
-                           class="btn-outline-gold !h-11 !px-5 text-xs font-semibold text-white border-white/20 flex items-center gap-2 rounded-lg">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <span>WhatsApp Concierge</span>
-                        </a>
-                    @endif
-
-                    <a href="#shift-matrix" class="px-4 py-2.5 rounded-lg border border-white/20 text-white text-xs font-sans tracking-wide hover:bg-white/10 transition">
-                        View 14-Day Calendar &darr;
+                    <a href="#shift-matrix" class="px-5 py-2.5 rounded-lg border border-white/20 text-white text-xs font-sans tracking-wide hover:bg-white/10 hover:border-[#C6A15B] transition flex items-center gap-1.5 font-bold">
+                        <span>View 3-Month Calendar &darr;</span>
                     </a>
                 </div>
 
@@ -616,7 +603,7 @@
             <!-- Header matching Image 2 -->
             <div class="text-center space-y-2 max-w-2xl mx-auto">
                 <span class="text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.28em] text-[#C6A15B] font-bold block">
-                    Upcoming 14-Day Shift Availability • Multi-Year Engine ({{ min($allowedYears) }}-{{ max($allowedYears) }})
+                    Upcoming 3-Month Shift Availability • Multi-Year Engine ({{ min($allowedYears) }}-{{ max($allowedYears) }})
                 </span>
                 <h3 class="font-serif-luxury text-3xl sm:text-5xl text-white font-normal tracking-wide">
                     Check Hall Availability
@@ -1092,14 +1079,14 @@
                               <span>Instant Shift Reservation &rarr;</span>
                           </button>
 
-                          @if($hallWhatsappUrl = $hall->getWhatsappUrl("Hello {$hall->name}, I would like to reserve an event shift at your venue."))
-                          <a href="{{ $hallWhatsappUrl }}" 
-                             target="_blank"
-                             class="btn-outline-gold !w-full !h-11 text-xs font-semibold flex items-center justify-center gap-2 rounded-xl transition-all duration-200">
-                              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                              <span>Chat with {{ $hall->name }} on WhatsApp</span>
-                          </a>
-                          @endif
+                          <button type="button"
+                                  onclick="Livewire.dispatch('toggleChat')"
+                                  class="btn-outline-gold !w-full !h-11 text-xs font-semibold flex items-center justify-center gap-2 rounded-xl transition-all duration-200 hover:border-[#C6A15B] hover:text-[#C6A15B] cursor-pointer">
+                              <svg class="w-4 h-4 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                              </svg>
+                              <span>Ask {{ $hall->name }} Concierge Bot</span>
+                          </button>
                         @if($hallPhone = $hall->getWhatsappNumber())
                         <a href="tel:{{ $hallPhone }}" 
                            class="w-full h-10 bg-transparent border border-white/10 text-stone-300 text-xs font-sans rounded-xl flex items-center justify-center gap-2 hover:bg-white/5 transition block">
@@ -1220,5 +1207,7 @@
         ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
     </script>
 
+    <!-- Venue Interactive AI Concierge Chatbot Widget (Only on Venue Page) -->
+    <livewire:venue-chat-widget :hall="$hall" :key="'venue-chat-'.$hall->id" />
 
 </div>

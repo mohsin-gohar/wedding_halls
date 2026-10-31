@@ -6,5 +6,13 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
-    //
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $compiled = storage_path('framework/views/testing');
+        if (! is_dir($compiled)) {
+            mkdir($compiled, 0755, true);
+        }
+    }
 }

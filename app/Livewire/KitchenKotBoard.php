@@ -17,7 +17,12 @@ class KitchenKotBoard extends Component
         if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized. Culinary and operations staff access required.');
         }
+
         $this->filterDate = Carbon::today()->format('Y-m-d');
+
+        if (! config('platform.kitchen_module_enabled')) {
+            $this->redirect(route($user->portalHomeRoute()), navigate: true);
+        }
     }
 
     public function updateStatus(string $kotId, string $status)

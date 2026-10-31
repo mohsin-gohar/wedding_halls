@@ -132,8 +132,7 @@ class StaffAttendance extends Component
     {
         $this->authorizeAttendanceManager();
         $tenantId = Auth::user()->tenant_id;
-        $staffQuery = User::where('tenant_id', $tenantId)
-            ->where('role', '!=', 'ROLE_CUSTOMER')
+        $staffQuery = User::hallStaff($tenantId)
             ->where('status', '!=', 'SUSPENDED');
         if ($this->selectedStaffId !== 'ALL') {
             $staffQuery->whereKey($this->selectedStaffId);
@@ -183,8 +182,7 @@ class StaffAttendance extends Component
     {
         $this->authorizeAttendanceManager();
         $tenantId = Auth::user()->tenant_id;
-        $staffIds = User::where('tenant_id', $tenantId)
-            ->where('role', '!=', 'ROLE_CUSTOMER')
+        $staffIds = User::hallStaff($tenantId)
             ->where('status', '!=', 'SUSPENDED')
             ->when($this->selectedStaffId !== 'ALL', fn ($query) => $query->whereKey($this->selectedStaffId))
             ->pluck('id')
@@ -311,7 +309,7 @@ class StaffAttendance extends Component
     public function openLeaveModal()
     {
         $this->authorizeAttendanceManager();
-        $firstStaff = User::where('tenant_id', Auth::user()->tenant_id)->first();
+        $firstStaff = User::hallStaff(Auth::user()->tenant_id)->orderBy('name')->first();
         $this->leaveUserId = $firstStaff ? $firstStaff->id : null;
         $this->leaveType = 'CASUAL';
         $this->leaveStartDate = Carbon::today()->format('Y-m-d');
@@ -386,14 +384,12 @@ class StaffAttendance extends Component
         $this->authorizeAttendanceManager();
         $tenantId = Auth::user()->tenant_id;
 
-        $staffOptions = User::where('tenant_id', $tenantId)
-            ->where('role', '!=', 'ROLE_CUSTOMER')
+        $staffOptions = User::hallStaff($tenantId)
             ->where('status', '!=', 'SUSPENDED')
             ->orderBy('name')
             ->get();
 
-        $staffQuery = User::where('tenant_id', $tenantId)
-            ->where('role', '!=', 'ROLE_CUSTOMER')
+        $staffQuery = User::hallStaff($tenantId)
             ->where('status', '!=', 'SUSPENDED');
         if ($this->selectedStaffId !== 'ALL') {
             $staffQuery->whereKey($this->selectedStaffId);

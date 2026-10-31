@@ -28,11 +28,12 @@
                     <a href="{{ route('public.venues') }}" class="btn-gold !h-10 !px-5 text-xs font-bold font-sans uppercase tracking-wider rounded-lg shadow-sm transition-all duration-200">
                         <span>+ Explore More Venues</span>
                     </a>
-                    <a href="https://wa.me/923001234567?text={{ urlencode('Assalamu Alaikum! I am an EventHub customer (' . auth()->user()->name . ') inquiring about my wedding bookings.') }}" 
-                       target="_blank" 
+                    <a href="{{ route('public.concierge') }}" 
                        class="btn-outline-gold !h-10 !px-4 text-xs font-bold font-sans uppercase tracking-wider rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-[#C6A15B]" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.698.077-1.13-.062-.272-.088-.621-.248-1.074-.446-1.92-1.054-3.16-3.042-3.256-3.17-.096-.128-.778-1.036-.778-1.975 0-.94.492-1.403.668-1.595.176-.192.384-.24.512-.24.128 0 .256.002.368.008.12.006.28-.046.438.334.16.384.544 1.328.592 1.424.048.096.08.208.016.336-.064.128-.096.208-.192.32-.096.112-.202.25-.288.336-.096.096-.197.2-.085.392.112.192.498.822 1.069 1.33.734.654 1.352.856 1.544.952.192.096.304.08.416-.048.112-.128.48-.56.608-.752.128-.192.256-.16.432-.096.176.064 1.12.528 1.312.624.192.096.32.144.368.224.048.08.048.464-.096.869z"/></svg>
-                        <span>Concierge Desk</span>
+                        <svg class="w-4 h-4 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                        </svg>
+                        <span>AI Concierge Chatbot</span>
                     </a>
                 </div>
             </div>

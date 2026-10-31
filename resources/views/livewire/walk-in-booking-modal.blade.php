@@ -108,7 +108,7 @@
 
                 <div class="flex justify-end pt-4 border-t border-[#E7E5E4] dark:border-white/10">
                     <button wire:click="goToStep(2)" {{ !$isSlotAvailable ? 'disabled' : '' }} class="btn-gold !h-11 !px-8 text-xs font-bold uppercase tracking-wider font-mono shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-                        Next: Host Details &rarr;
+                        Next: Host Details →
                     </button>
                 </div>
             </div>
@@ -273,7 +273,7 @@
                         &larr; Back
                     </button>
                     <button wire:click="goToStep(4)" class="btn-gold !h-10 !px-7 text-xs font-bold uppercase font-mono tracking-wider shadow-md">
-                        {{ $isStaff ? 'Next: Advance Deposit &rarr;' : 'Next: Review &amp; Submit &rarr;' }}
+                        {{ $isStaff ? 'Next: Advance Deposit →' : 'Next: Review & Submit →' }}
                     </button>
                 </div>
             </div>
@@ -382,7 +382,7 @@
                             Print Receipt &rarr;
                         </a>
                     @endif
-                    @if($createdBooking->kitchenKot && $isStaff)
+                    @if(config('platform.kitchen_module_enabled') && $createdBooking->kitchenKot && $isStaff)
                         <a href="{{ route('documents.kot', $createdBooking->kitchenKot->id) }}" target="_blank" class="border border-[#C6A15B]/50 bg-[#C6A15B]/15 dark:bg-[#171513]/85 text-[#8F7239] dark:text-[#D4AF67] hover:bg-[#C6A15B]/20 py-2.5 px-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition block text-center">
                             Chef KOT Slip &rarr;
                         </a>

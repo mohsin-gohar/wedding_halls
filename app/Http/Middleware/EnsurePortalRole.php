@@ -19,17 +19,6 @@ class EnsurePortalRole
             }
         }
 
-        return redirect()->route($this->homeRoute($user->role));
-    }
-
-    private function homeRoute(?string $role): string
-    {
-        return match ($role) {
-            'ROLE_SUPER_ADMIN' => 'admin.dashboard',
-            'ROLE_ACCOUNTANT' => 'expenses',
-            'ROLE_CHEF' => 'kitchen.board',
-            'ROLE_FRONT_DESK', 'ROLE_FLOOR_STAFF' => 'calendar',
-            default => 'dashboard',
-        };
+        return redirect()->route($user->portalHomeRoute());
     }
 }

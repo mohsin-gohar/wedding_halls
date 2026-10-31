@@ -62,7 +62,7 @@
                 </div>
                 <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Dedicated Public Website</h3>
                 <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
-                    Every registered hall gets its own shareable website page — with your photo gallery, 4K video tour, capacity &amp; rent details, services catalog, catering menus, live shift calendar, and WhatsApp concierge button. Share one link with clients and start receiving bookings.
+                    Every registered hall gets its own shareable website page — with your photo gallery, 4K video tour, capacity &amp; rent details, services catalog, catering menus, live shift calendar, and 24/7 AI concierge chatbot. Share one link with clients and start receiving bookings.
                 </p>
                 <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 text-[11px] font-semibold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B] font-sans">
                     Free With Every Subscription
@@ -113,11 +113,12 @@
                     Run Every Department From One Panel
                 </h2>
                 <p class="text-xs text-stone-600 dark:text-stone-300 font-sans">
-                    Kitchen, inventory, staff, money, and guest communication — the full ERP modules included with your EventHub subscription.
+                    Kitchen, inventory, staff, money, and guest communication — the full ERP modules included free during our launch period.
                 </p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                @if(config('platform.kitchen_module_enabled'))
                 <!-- 4. Kitchen KOT Board -->
                 <div class="rounded-2xl p-8 bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 space-y-4 shadow-sm hover:border-[#C6A15B]/50 hover:shadow-md transition">
                     <div class="w-12 h-12 rounded-xl bg-[#171513] text-[#C6A15B] border border-[#C6A15B]/60 flex items-center justify-center font-cinzel text-xl font-bold">
@@ -131,11 +132,12 @@
                         Auto Bawarchi Ratios
                     </div>
                 </div>
+                @endif
 
                 <!-- 5. Inventory Tracker -->
                 <div class="rounded-2xl p-8 bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 space-y-4 shadow-sm hover:border-[#C6A15B]/50 hover:shadow-md transition">
                     <div class="w-12 h-12 rounded-xl bg-[#171513] text-[#C6A15B] border border-[#C6A15B]/60 flex items-center justify-center font-cinzel text-xl font-bold">
-                        05
+                        {{ config('platform.kitchen_module_enabled') ? '05' : '04' }}
                     </div>
                     <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Raw Ingredient Inventory</h3>
                     <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
@@ -149,7 +151,7 @@
                 <!-- 6. Staff, Attendance & Payroll -->
                 <div class="rounded-2xl p-8 bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 space-y-4 shadow-sm hover:border-[#C6A15B]/50 hover:shadow-md transition">
                     <div class="w-12 h-12 rounded-xl bg-[#171513] text-[#C6A15B] border border-[#C6A15B]/60 flex items-center justify-center font-cinzel text-xl font-bold">
-                        06
+                        {{ config('platform.kitchen_module_enabled') ? '06' : '05' }}
                     </div>
                     <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Staff, Attendance &amp; Payroll</h3>
                     <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
@@ -163,7 +165,7 @@
                 <!-- 7. Expense & Fuel Register -->
                 <div class="rounded-2xl p-8 bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 space-y-4 shadow-sm hover:border-[#C6A15B]/50 hover:shadow-md transition">
                     <div class="w-12 h-12 rounded-xl bg-[#171513] text-[#C6A15B] border border-[#C6A15B]/60 flex items-center justify-center font-cinzel text-xl font-bold">
-                        07
+                        {{ config('platform.kitchen_module_enabled') ? '07' : '06' }}
                     </div>
                     <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Expense &amp; Generator Fuel Register</h3>
                     <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
@@ -177,7 +179,7 @@
                 <!-- 8. WhatsApp RSVP Manager -->
                 <div class="rounded-2xl p-8 bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 space-y-4 shadow-sm hover:border-[#C6A15B]/50 hover:shadow-md transition">
                     <div class="w-12 h-12 rounded-xl bg-[#171513] text-[#C6A15B] border border-[#C6A15B]/60 flex items-center justify-center font-cinzel text-xl font-bold">
-                        08
+                        {{ config('platform.kitchen_module_enabled') ? '08' : '07' }}
                     </div>
                     <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">WhatsApp RSVP Manager</h3>
                     <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
@@ -191,7 +193,7 @@
                 <!-- 9. Seating & Floor Plan Designer -->
                 <div class="rounded-2xl p-8 bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 space-y-4 shadow-sm hover:border-[#C6A15B]/50 hover:shadow-md transition">
                     <div class="w-12 h-12 rounded-xl bg-[#171513] text-[#C6A15B] border border-[#C6A15B]/60 flex items-center justify-center font-cinzel text-xl font-bold">
-                        09
+                        {{ config('platform.kitchen_module_enabled') ? '09' : '08' }}
                     </div>
                     <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Seating &amp; Floor Plan Designer</h3>
                     <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">

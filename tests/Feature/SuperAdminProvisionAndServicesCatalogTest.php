@@ -147,7 +147,7 @@ class SuperAdminProvisionAndServicesCatalogTest extends TestCase
             ->assertSee($hall->name)
             ->assertSee('Signature Drone Aerial Filming')
             ->assertSee('PKR 75,000')
-            ->assertSee('Upcoming 14-Day Shift Availability')
+            ->assertSee('Upcoming 3-Month Shift Availability')
             ->assertSee('Verified Couple Experiences');
     }
 }

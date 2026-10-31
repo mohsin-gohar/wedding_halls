@@ -86,7 +86,7 @@
             <div class="flex h-16 items-center justify-between gap-3 sm:gap-5 lg:h-[4.5rem]">
                 
                 <!-- Brand Identity -->
-                <a href="{{ route('home') }}" class="group flex shrink-0 items-center gap-3 max-sm:gap-2.5">
+                <a href="{{ route('home') }}" wire:navigate.hover class="group flex shrink-0 items-center gap-3 max-sm:gap-2.5">
                     <img src="{{ asset('images/eventhub-logo.png') }}" width="48" height="48" alt="EventHub" style="max-height: 48px; width: auto;" class="h-10 sm:h-12 w-auto object-contain rounded-lg border border-[#C6A15B]/35 bg-[#171513] shadow-sm group-hover:border-[#C6A15B] transition-all duration-300">
                     <span class="flex flex-col leading-none">
                         <span class="font-cinzel text-base font-bold tracking-[0.16em] text-white transition-colors duration-300 group-hover:text-[#F2DE9A] sm:text-lg">
@@ -113,7 +113,7 @@
                 @endphp
                 <nav class="hidden shrink-0 items-center gap-6 xl:flex xl:gap-8" aria-label="Primary">
                     @foreach ($primaryNavLinks as $link)
-                        <a href="{{ route($link['route']) }}" class="nav-link {{ request()->routeIs(...$link['patterns']) ? 'is-active' : '' }}">{{ $link['label'] }}</a>
+                        <a href="{{ route($link['route']) }}" wire:navigate.hover class="nav-link {{ request()->routeIs(...$link['patterns']) ? 'is-active' : '' }}">{{ $link['label'] }}</a>
                     @endforeach
                 </nav>
 
@@ -134,13 +134,13 @@
                     </button>
 
                     @guest
-                        <a href="{{ route('login') }}" class="hidden h-9 items-center px-2 text-[12px] font-semibold uppercase tracking-[0.12em] text-stone-300 transition-colors duration-300 hover:text-[#C6A15B] sm:inline-flex">
+                        <a href="{{ route('login') }}" wire:navigate.hover class="hidden h-9 items-center px-2 text-[12px] font-semibold uppercase tracking-[0.12em] text-stone-300 transition-colors duration-300 hover:text-[#C6A15B] sm:inline-flex">
                             Sign In
                         </a>
                     @else
                         @if(auth()->user()->isSuperAdmin())
                             <a href="{{ route('admin.dashboard') }}" class="btn-gold !h-9 !px-3 !py-1 !text-[11px] inline-flex items-center gap-1.5 font-bold whitespace-nowrap">
-                                <span>Owner Dashboard</span>
+                                <span>Platform Console</span>
                             </a>
                         @elseif(auth()->user()->isCustomer())
                             <a href="{{ route('customer.dashboard') }}" class="btn-gold !h-9 !px-3 !py-1 !text-[11px] inline-flex items-center gap-1.5 font-bold whitespace-nowrap">
@@ -190,6 +190,7 @@
                 @foreach ($mobileNavLinks as $mobileLink)
                     @php $mobileActive = request()->routeIs(...$mobileLink['patterns']); @endphp
                     <a href="{{ route($mobileLink['route']) }}"
+                       wire:navigate.hover
                        class="flex items-center justify-between border-b border-white/[0.07] py-3 text-[15px] font-medium transition-colors duration-200 {{ $mobileActive ? 'text-[#C6A15B]' : 'text-stone-200 hover:text-[#C6A15B]' }}">
                         <span>{{ $mobileLink['label'] }}</span>
                         <svg class="h-4 w-4 {{ $mobileActive ? 'text-[#C6A15B]' : 'text-[#C6A15B]/50' }}" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
@@ -201,11 +202,11 @@
 
             <div class="flex flex-col gap-2.5">
                 @guest
-                    <a href="{{ route('login') }}" class="btn-outline-gold !w-full !justify-center !text-[#F8F5EF] !border-[#C6A15B]/60 hover:!text-[#171513] hover:!border-[#C6A15B] hover:!bg-[#C6A15B] transition-all duration-300">Sign In</a>
-                    <a href="{{ route('register') }}" class="btn-gold !w-full !justify-center">List Your Wedding Hall</a>
+                    <a href="{{ route('login') }}" wire:navigate.hover class="btn-outline-gold !w-full !justify-center !text-[#F8F5EF] !border-[#C6A15B]/60 hover:!text-[#171513] hover:!border-[#C6A15B] hover:!bg-[#C6A15B] transition-all duration-300">Sign In</a>
+                    <a href="{{ route('register') }}" wire:navigate.hover class="btn-gold !w-full !justify-center">List Your Wedding Hall</a>
                 @else
                     @if(auth()->user()->isSuperAdmin())
-                        <a href="{{ route('admin.dashboard') }}" class="btn-gold !w-full !justify-center">Owner Dashboard</a>
+                        <a href="{{ route('admin.dashboard') }}" class="btn-gold !w-full !justify-center">Platform Console</a>
                     @elseif(auth()->user()->isCustomer())
                         <a href="{{ route('customer.dashboard') }}" class="btn-gold !w-full !justify-center">My Bookings</a>
                     @else
@@ -253,12 +254,12 @@
                 <div class="space-y-4">
                     <h4 class="font-cinzel text-xs font-bold uppercase tracking-[0.15em] text-[#C6A15B]">Marketplace</h4>
                     <ul class="space-y-2.5 text-xs text-stone-200 font-normal">
-                        <li><a href="{{ route('public.venues') }}" class="hover:text-white transition">Explore Venues</a></li>
-                        <li><a href="{{ route('public.packages') }}" class="hover:text-white transition">Wedding Packages</a></li>
-                        <li><a href="{{ route('public.packages') }}" class="hover:text-white transition">Catering & Bawarchi</a></li>
-                        <li><a href="{{ route('public.gallery') }}" class="hover:text-white transition">Photo & Video Gallery</a></li>
-                        <li><a href="{{ route('public.availability') }}" class="hover:text-white transition">Live Shift Availability</a></li>
-                        <li><a href="{{ route('public.services') }}" class="hover:text-white transition">Event Services</a></li>
+                        <li><a href="{{ route('public.venues') }}" wire:navigate.hover class="hover:text-white transition">Explore Venues</a></li>
+                        <li><a href="{{ route('public.packages') }}" wire:navigate.hover class="hover:text-white transition">Wedding Packages</a></li>
+                        <li><a href="{{ route('public.packages') }}" wire:navigate.hover class="hover:text-white transition">Catering & Bawarchi</a></li>
+                        <li><a href="{{ route('public.gallery') }}" wire:navigate.hover class="hover:text-white transition">Photo & Video Gallery</a></li>
+                        <li><a href="{{ route('public.availability') }}" wire:navigate.hover class="hover:text-white transition">Live Shift Availability</a></li>
+                        <li><a href="{{ route('public.services') }}" wire:navigate.hover class="hover:text-white transition">Event Services</a></li>
                     </ul>
                 </div>
 
@@ -266,11 +267,11 @@
                 <div class="space-y-4">
                     <h4 class="font-cinzel text-xs font-bold uppercase tracking-[0.15em] text-[#C6A15B]">Venue Owners</h4>
                     <ul class="space-y-2.5 text-xs text-stone-200 font-normal">
-                        <li><a href="{{ route('register') }}" class="hover:text-white transition">List Your Venue</a></li>
-                        <li><a href="{{ route('login') }}" class="hover:text-white transition">Vendor Portal Login</a></li>
+                        <li><a href="{{ route('register') }}" wire:navigate.hover class="hover:text-white transition">List Your Venue</a></li>
+                        <li><a href="{{ route('login') }}" wire:navigate.hover class="hover:text-white transition">Vendor Portal Login</a></li>
                         <li><a href="{{ route('dashboard') }}" class="hover:text-white transition">Shift Matrix & Calendar</a></li>
-                        <li><a href="{{ route('public.about') }}" class="hover:text-white transition">Why EventHub SaaS</a></li>
-                        <li><a href="{{ route('public.faqs') }}" class="hover:text-white transition">Vendor FAQs</a></li>
+                        <li><a href="{{ route('public.about') }}" wire:navigate.hover class="hover:text-white transition">Why EventHub SaaS</a></li>
+                        <li><a href="{{ route('public.faqs') }}" wire:navigate.hover class="hover:text-white transition">Vendor FAQs</a></li>
                     </ul>
                 </div>
 
@@ -278,11 +279,11 @@
                 <div class="space-y-4">
                     <h4 class="font-cinzel text-xs font-bold uppercase tracking-[0.15em] text-[#C6A15B]">Trust & Policies</h4>
                     <ul class="space-y-2.5 text-xs text-stone-200 font-normal">
-                        <li><a href="{{ route('public.policies.terms') }}" class="hover:text-white transition">Terms of Service</a></li>
-                        <li><a href="{{ route('public.policies.privacy') }}" class="hover:text-white transition">Privacy Policy</a></li>
-                        <li><a href="{{ route('public.policies.cancellation') }}" class="hover:text-white transition">Cancellation & Refund Policy</a></li>
-                        <li><a href="{{ route('public.faqs') }}" class="hover:text-white transition">Booking Security FAQ</a></li>
-                        <li><a href="{{ route('public.contact') }}" class="hover:text-white transition">Customer Support</a></li>
+                        <li><a href="{{ route('public.policies.terms') }}" wire:navigate.hover class="hover:text-white transition">Terms of Service</a></li>
+                        <li><a href="{{ route('public.policies.privacy') }}" wire:navigate.hover class="hover:text-white transition">Privacy Policy</a></li>
+                        <li><a href="{{ route('public.policies.cancellation') }}" wire:navigate.hover class="hover:text-white transition">Cancellation & Refund Policy</a></li>
+                        <li><a href="{{ route('public.faqs') }}" wire:navigate.hover class="hover:text-white transition">Booking Security FAQ</a></li>
+                        <li><a href="{{ route('public.contact') }}" wire:navigate.hover class="hover:text-white transition">Customer Support</a></li>
                     </ul>
                 </div>
 
@@ -300,30 +301,14 @@
         </div>
     </footer>
 
-    <!-- Floating WhatsApp Concierge Button (Dynamic Per-Hall or Platform) -->
-    @php
-        $floatingHall = isset($hall) && $hall instanceof \App\Models\Hall ? $hall : null;
-        $floatingWaUrl = $floatingHall ? $floatingHall->getWhatsappUrl() : "https://wa.me/924235789000?text=" . urlencode("Assalamu Alaikum! I would like to inquire about wedding venue availability on EventHub.");
-        $floatingWaLabel = $floatingHall ? "WhatsApp " . $floatingHall->name : "WhatsApp Concierge";
-    @endphp
-    @if($floatingWaUrl)
-    <a href="{{ $floatingWaUrl }}"
-       target="_blank"
-       rel="noopener noreferrer"
-       aria-label="{{ $floatingWaLabel }}"
-       class="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-[#171513] border border-[#C6A15B]/50 hover:border-[#C6A15B] text-[#F8F5EF] shadow-[0_12px_30px_rgba(0,0,0,0.5)] hover:-translate-y-0.5 transition-all duration-200">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span class="text-xs font-semibold tracking-wide font-sans">{{ $floatingWaLabel }}</span>
-    </a>
-    @endif
-
-    <!-- GDPR / PDPA Cookie & Privacy Consent Bar -->
+    <!-- GDPR / PDPA Cookie & Privacy Consent Bar (hidden on auth screens so login controls stay clickable) -->
+    @unless(request()->routeIs('login', 'register', 'customer.login', 'customer.register'))
     <div x-data="{ showCookieBar: !localStorage.getItem('EventHub_cookie_consent') }"
          x-show="showCookieBar"
          x-cloak
          role="region"
          aria-label="Cookie consent notice"
-         class="fixed bottom-4 left-4 right-4 sm:right-auto sm:max-w-md z-40 bg-[#171513]/95 backdrop-blur-md border border-[#C6A15B]/35 rounded-2xl p-4 text-xs text-stone-300 shadow-2xl">
+         class="fixed bottom-4 left-4 right-28 sm:right-auto sm:max-w-sm z-30 bg-[#171513]/95 backdrop-blur-md border border-[#C6A15B]/35 rounded-2xl p-4 text-xs text-stone-300 shadow-2xl">
         <div class="flex items-start justify-between gap-4">
             <p class="leading-relaxed">
                 We use essential cookies to guarantee secure shift reservations and personalize your venue search experience. Read our <a href="{{ route('public.policies.privacy') }}" class="text-[#C6A15B] underline hover:text-white">Privacy Policy</a>.
@@ -336,9 +321,16 @@
             </button>
         </div>
     </div>
+    @endunless
 
-    <!-- Interactive Walk-in Booking Modal Component (Accessible across public site) -->
+    @unless(request()->routeIs('login', 'register', 'customer.login', 'customer.register'))
     <livewire:walk-in-booking-modal />
+    @endunless
+
+    <!-- Platform AI Public Concierge Chatbot (On General Public Pages; Venue Showcase has its own Venue Manager Desk) -->
+    @unless(request()->routeIs('login', 'register', 'customer.login', 'customer.register', 'hall.showcase', 'public.venue.details'))
+    <livewire:public-chat-widget />
+    @endunless
 
     @livewireScripts
     <script>

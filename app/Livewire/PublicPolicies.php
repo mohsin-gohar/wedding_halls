@@ -21,7 +21,11 @@ class PublicPolicies extends Component
             }
         }
 
-        $this->section = in_array($section, ['terms', 'privacy', 'cancellation']) ? $section : 'terms';
+        if ($section === 'refund') {
+            $section = 'cancellation';
+        }
+
+        $this->section = in_array($section, ['terms', 'privacy', 'cancellation'], true) ? $section : 'terms';
     }
 
     public function render()

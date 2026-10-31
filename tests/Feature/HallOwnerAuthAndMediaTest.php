@@ -92,7 +92,9 @@ class HallOwnerAuthAndMediaTest extends TestCase
     {
         $tenant = Tenant::first();
         $hall = Hall::where('tenant_id', $tenant->id)->first();
-        $user = User::first();
+        $user = User::where('tenant_id', $tenant->id)
+            ->where('role', 'ROLE_TENANT_OWNER')
+            ->firstOrFail();
 
         $this->actingAs($user);
 
@@ -117,7 +119,7 @@ class HallOwnerAuthAndMediaTest extends TestCase
         $response = $this->get(route('hall.showcase', $hall->slug));
         $response->assertStatus(200);
         $response->assertSee($hall->name);
-        $response->assertSee('Upcoming 14-Day Shift Availability');
+        $response->assertSee('Upcoming 3-Month Shift Availability');
     }
 
     public function test_dashboard_is_strictly_isolated_to_owner_tenant(): void

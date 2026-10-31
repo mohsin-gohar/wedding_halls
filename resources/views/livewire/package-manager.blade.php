@@ -299,7 +299,7 @@
                         Cancel
                     </button>
                     <button wire:click="savePackage" class="btn-gold !h-9 !px-5 text-xs font-bold uppercase shadow-md">
-                        {{ $isEditing ? 'Save Changes &rarr;' : 'Create Package &rarr;' }}
+                        {{ $isEditing ? 'Save Changes →' : 'Create Package →' }}
                     </button>
                 </div>
             </div>

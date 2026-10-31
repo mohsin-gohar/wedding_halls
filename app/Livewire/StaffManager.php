@@ -427,8 +427,8 @@ class StaffManager extends Component
         $this->authorizeStaffManager();
         $tenant = Auth::user()->tenant;
         $staffQuery = $this->showFormerStaff
-            ? User::onlyTrashed()->where('tenant_id', Auth::user()->tenant_id)
-            : User::where('tenant_id', Auth::user()->tenant_id);
+            ? User::onlyTrashed()->hallStaff(Auth::user()->tenant_id)
+            : User::hallStaff(Auth::user()->tenant_id);
 
         if (! $this->showFormerStaff && $this->statusFilter !== 'ALL') {
             $staffQuery->where('status', $this->statusFilter);
@@ -445,7 +445,7 @@ class StaffManager extends Component
         $staffMembers = $staffQuery->latest()->get();
 
         $maxStaff = $tenant && $tenant->subscriptionPlan ? $tenant->subscriptionPlan->max_staff : 10;
-        $currentStaffCount = User::where('tenant_id', Auth::user()->tenant_id)->count();
+        $currentStaffCount = User::hallStaff(Auth::user()->tenant_id)->count();
 
         return view('livewire.staff-manager', [
             'staffMembers' => $staffMembers,

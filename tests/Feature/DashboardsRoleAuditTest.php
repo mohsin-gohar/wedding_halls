@@ -27,6 +27,9 @@ class DashboardsRoleAuditTest extends TestCase
     {
         $admin = User::where('role', 'ROLE_SUPER_ADMIN')->first();
         $this->assertNotNull($admin);
+        $this->assertNull($admin->tenant_id);
+        $this->assertTrue(PlatformTask::where('category', 'VENDOR_ONBOARDING')->exists());
+        $this->assertTrue(PlatformTask::where('category', 'CUSTOMER_INQUIRY')->exists());
 
         Livewire::actingAs($admin)
             ->test(AdminDashboard::class)

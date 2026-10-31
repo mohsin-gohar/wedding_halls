@@ -366,17 +366,18 @@ class WalkInBookingModal extends Component
         $this->errorMessage = null;
 
         if ($targetStep === 2) {
+            $this->checkAvailability();
+            if (! $this->isSlotAvailable) {
+                $this->errorMessage = 'Cannot proceed: Selected shift is already reserved. Pick another date or shift.';
+
+                return;
+            }
+
             $this->validate([
                 'hall_id' => 'required|exists:halls,id',
                 'event_date' => 'required|date|after_or_equal:today',
                 'slot_type' => 'required|in:AFTERNOON,EVENING,NIGHT,FULL_DAY',
             ]);
-            $this->checkAvailability();
-            if (! $this->isSlotAvailable) {
-                $this->errorMessage = 'Cannot proceed: Selected shift is already reserved.';
-
-                return;
-            }
         }
 
         if ($targetStep === 3) {
