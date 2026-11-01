@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#F8F5EF] dark:bg-[#171513] text-[#171513] dark:text-[#F8F5EF] antialiased">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="EvZOSWZ9B9GnSzitVVijHbD0k9kq0a7bfVUldkhS">
+
+    <title>Sign In — EventHub</title>
+    <meta name="description" content="Secure access to EventHub luxury banqueting and wedding management.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="http://127.0.0.1:9000/images/eventhub-logo.png">
+    <link rel="apple-touch-icon" href="http://127.0.0.1:9000/images/eventhub-logo.png">
+
+    <!-- Google Fonts: Preconnect & Asynchronous Loading (High Performance & Zero Render-Blocking) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+    </noscript>
+
+    <!-- Styles & Livewire -->
+    <!-- Defensive Baseline Styles (Prevent Unstyled Image Blowout & Layout Shift) -->
+    <style>
+        img { max-width: 100%; height: auto; }
+        .site-header img, header img, aside img { max-height: 48px; width: auto; }
+    </style>
+
+    <!-- Styles & Livewire -->
+    <link rel="preload" as="style" href="http://127.0.0.1:9000/build/assets/app-BF8iYQFb.css" /><link rel="modulepreload" as="script" href="http://127.0.0.1:9000/build/assets/app-CQLOgZLP.js" /><link rel="stylesheet" href="http://127.0.0.1:9000/build/assets/app-BF8iYQFb.css" data-navigate-track="reload" /><script type="module" src="http://127.0.0.1:9000/build/assets/app-CQLOgZLP.js" data-navigate-track="reload"></script>    <!-- Livewire Styles --><style >[wire\:loading][wire\:loading], [wire\:loading\.delay][wire\:loading\.delay], [wire\:loading\.list-item][wire\:loading\.list-item], [wire\:loading\.inline-block][wire\:loading\.inline-block], [wire\:loading\.inline][wire\:loading\.inline], [wire\:loading\.block][wire\:loading\.block], [wire\:loading\.flex][wire\:loading\.flex], [wire\:loading\.table][wire\:loading\.table], [wire\:loading\.grid][wire\:loading\.grid], [wire\:loading\.inline-flex][wire\:loading\.inline-flex] {display: none;}[wire\:loading\.delay\.none][wire\:loading\.delay\.none], [wire\:loading\.delay\.shortest][wire\:loading\.delay\.shortest], [wire\:loading\.delay\.shorter][wire\:loading\.delay\.shorter], [wire\:loading\.delay\.short][wire\:loading\.delay\.short], [wire\:loading\.delay\.default][wire\:loading\.delay\.default], [wire\:loading\.delay\.long][wire\:loading\.delay\.long], [wire\:loading\.delay\.longer][wire\:loading\.delay\.longer], [wire\:loading\.delay\.longest][wire\:loading\.delay\.longest] {display: none;}[wire\:offline][wire\:offline] {display: none;}[wire\:dirty]:not(textarea):not(input):not(select) {display: none;}:root {--livewire-progress-bar-color: #2299dd;}[x-cloak="x-cloak"],[x-cloak=""] {display: none !important;}[wire\:cloak="wire:cloak"],[wire\:cloak=""] {display: none !important;}dialog#livewire-error::backdrop {background-color: rgba(0, 0, 0, .6);}</style>
+
+    <!-- Theme State Initializer (Default: Dark) -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('EventHub_theme');
+            if (savedTheme === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+</head>
+<body class="min-h-full flex flex-col font-sans bg-[#F8F5EF] dark:bg-[#0E0D0C] text-[#171513] dark:text-[#F8F5EF] selection:bg-[#C6A15B] selection:text-[#171513] transition-colors duration-200"
+      x-data="{ 
+          darkMode: document.documentElement.classList.contains('dark'), 
+          toggleTheme() { 
+              this.darkMode = !this.darkMode; 
+              if (this.darkMode) { 
+                  document.documentElement.classList.add('dark'); 
+                  localStorage.setItem('EventHub_theme', 'dark'); 
+              } else { 
+                  document.documentElement.classList.remove('dark'); 
+                  localStorage.setItem('EventHub_theme', 'light'); 
+              } 
+          } 
+      }">
+
+    <!-- Minimal Auth Header: Back to Home + Brand Mark + Theme Toggle -->
+    <header class="w-full py-3.5 px-4 sm:px-8 flex items-center justify-between border-b border-[#E7E5E4] dark:border-white/10 bg-white/70 dark:bg-[#171513]/70 backdrop-blur-md sticky top-0 z-50">
+        <!-- Back Button -->
+        <a href="http://127.0.0.1:9000" 
+           class="inline-flex items-center gap-2 text-xs font-sans uppercase tracking-wider text-stone-600 dark:text-stone-300 hover:text-[#8F7239] dark:hover:text-[#C6A15B] transition-colors group">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-[#E7E5E4] dark:border-white/15 bg-stone-50 dark:bg-white/5 group-hover:border-[#C6A15B]/60 transition-colors">
+                &larr;
+            </span>
+            <span class="font-bold">Back to Home</span>
+        </a>
+
+        <!-- Center Brand Logo -->
+        <a href="http://127.0.0.1:9000" class="flex items-center gap-2.5 group">
+            <img src="http://127.0.0.1:9000/images/eventhub-logo.png" width="36" height="36" alt="EventHub Logo" class="h-9 w-9 object-contain rounded-lg border border-[#C6A15B]/50 bg-[#171513] shadow-sm">
+            <span class="font-cinzel text-sm sm:text-base font-bold tracking-[0.16em] text-[#171513] dark:text-white group-hover:text-[#C6A15B] transition-colors">
+                EventHub
+            </span>
+        </a>
+
+        <!-- Dark / Light Theme Toggle -->
+        <button type="button" 
+                @click="toggleTheme()" 
+                class="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E7E5E4] dark:border-white/15 bg-stone-50 dark:bg-white/5 text-stone-600 dark:text-stone-300 hover:text-[#8F7239] dark:hover:text-[#C6A15B] transition-colors cursor-pointer"
+                aria-label="Toggle color theme"
+                title="Toggle Theme">
+            <svg x-show="!darkMode" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+            <svg x-show="darkMode" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display: none;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+        </button>
+    </header>
+
+    <!-- Main Content Slot (Perfect Vertical Centering Without Clipping) -->
+    <main class="auth-page-content flex-1 flex flex-col justify-center py-6 sm:py-10 px-4 sm:px-6 min-h-[calc(100vh-4.5rem)]">
+        <div class="w-full flex justify-center my-auto">
+            <div wire:snapshot="{&quot;data&quot;:{&quot;email&quot;:&quot;&quot;,&quot;password&quot;:&quot;&quot;,&quot;remember&quot;:false},&quot;memo&quot;:{&quot;id&quot;:&quot;4aVcrpdPwVsI40yr1uOg&quot;,&quot;name&quot;:&quot;auth.login&quot;,&quot;path&quot;:&quot;login&quot;,&quot;method&quot;:&quot;GET&quot;,&quot;release&quot;:&quot;a-a-a&quot;,&quot;children&quot;:[],&quot;scripts&quot;:[],&quot;assets&quot;:[],&quot;errors&quot;:[],&quot;locale&quot;:&quot;en&quot;,&quot;islands&quot;:[]},&quot;checksum&quot;:&quot;ea2f9ec7b710097fd850615b0d0f4fc961ce93caded9c46352e9d0cdc3c97803&quot;}" wire:effects="[]" wire:id="4aVcrpdPwVsI40yr1uOg" wire:name="auth.login" class="w-full max-w-md">
+    <!-- Card Container -->
+    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 rounded-2xl p-7 sm:p-9 shadow-xl space-y-6 relative overflow-hidden">
+
+        <!-- Brand Logo -->
+        <div class="flex justify-center -mb-1">
+            <img src="http://127.0.0.1:9000/images/eventhub-logo.png" width="56" height="56" fetchpriority="high" decoding="async" alt="EventHub Logo" class="h-14 w-14 object-contain rounded-xl border border-[#C6A15B]/40 bg-[#171513] shadow-sm p-1">
+        </div>
+
+        <!-- Heading Section (Clean, Universal Luxury Login) -->
+        <div class="text-center space-y-1.5">
+            <h1 class="font-serif-luxury text-2xl sm:text-3xl text-[#171513] dark:text-white font-normal tracking-tight">
+                Welcome Back
+            </h1>
+            <p class="text-xs text-stone-500 dark:text-stone-400 font-sans max-w-xs mx-auto leading-relaxed">
+                Please enter your credentials to sign in.
+            </p>
+        </div>
+
+        <!-- Flash Messages -->
+        <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+        <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+        <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->
+        <!-- Sign In Form (Supports both Livewire and Native POST) -->
+        <form wire:submit="login" method="POST" action="http://127.0.0.1:9000/login" class="space-y-4">
+            <input type="hidden" name="_token" value="EvZOSWZ9B9GnSzitVVijHbD0k9kq0a7bfVUldkhS" autocomplete="off">            <!-- Email -->
+            <div>
+                <label for="email" class="block text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5 font-sans">
+                    Email Address
+                </label>
+                <input id="email" 
+                       name="email"
+                       type="email" 
+                       value=""
+                       wire:model="email" 
+                       required 
+                       autofocus
+                       autocomplete="email"
+                       placeholder="name@example.com"
+                       class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm w-full">
+                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->            </div>
+
+            <!-- Password -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label for="password" class="block text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300 font-sans">
+                        Password
+                    </label>
+                </div>
+                <input id="password" 
+                       name="password"
+                       type="password" 
+                       wire:model="password" 
+                       required 
+                       autocomplete="current-password"
+                       placeholder="••••••••"
+                       class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm w-full">
+                <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]-->            </div>
+
+            <!-- Remember Me & Security -->
+            <div class="flex items-center justify-between text-xs pt-0.5">
+                <label class="flex items-center gap-2 cursor-pointer text-stone-600 dark:text-stone-400 select-none">
+                    <input type="checkbox" name="remember" value="1" wire:model="remember" class="accent-[#C6A15B] rounded">
+                    <span>Remember me</span>
+                </label>
+                <span class="inline-flex items-center gap-1 text-stone-400 dark:text-stone-500 text-[11px] font-sans">
+                    <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    256-bit Encrypted
+                </span>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-1.5">
+                <button type="submit" 
+                        class="btn-gold !w-full !h-11 text-xs font-bold uppercase tracking-wider font-sans rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
+                    <span>Sign In</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Clean Footer Link -->
+        <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 text-center text-xs text-stone-500 dark:text-stone-400">
+            <span>Don't have an account?</span>
+            <a href="http://127.0.0.1:9000/customer/register" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline font-semibold ml-1">
+                Sign up &rarr;
+            </a>
+        </div>
+
+        <!-- Discreet Demo Quick-Fill for Testing -->
+        <div class="pt-1 text-center">
+            <details class="text-[11px] text-stone-400 dark:text-stone-500 cursor-pointer group">
+                <summary class="hover:text-[#8F7239] dark:hover:text-[#C6A15B] transition-colors py-0.5 select-none inline-flex items-center gap-1 font-sans text-[10px]">
+                    <span>Demo Accounts</span>
+                    <svg class="w-3 h-3 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </summary>
+                <div class="mt-2 flex flex-wrap justify-center gap-1.5 pt-1">
+                    <button type="button" @click="$wire.set('email', 'customer@example.com'); $wire.set('password', 'password'); document.getElementById('email').value = 'customer@example.com'; document.getElementById('password').value = 'password';" class="px-2.5 py-1 rounded-md bg-stone-100 dark:bg-white/5 hover:bg-[#C6A15B]/15 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] text-[10px] font-sans border border-stone-200 dark:border-white/10 transition cursor-pointer">
+                        Customer
+                    </button>
+                    <button type="button" @click="$wire.set('email', 'owner@venuecloud.pk'); $wire.set('password', 'password'); document.getElementById('email').value = 'owner@venuecloud.pk'; document.getElementById('password').value = 'password';" class="px-2.5 py-1 rounded-md bg-stone-100 dark:bg-white/5 hover:bg-[#C6A15B]/15 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] text-[10px] font-sans border border-stone-200 dark:border-white/10 transition cursor-pointer">
+                        Hall Owner
+                    </button>
+                    <button type="button" @click="$wire.set('email', 'admin@eventhub.com'); $wire.set('password', 'admin1235'); document.getElementById('email').value = 'admin@eventhub.com'; document.getElementById('password').value = 'admin1235';" class="px-2.5 py-1 rounded-md bg-stone-100 dark:bg-white/5 hover:bg-[#C6A15B]/15 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B] text-[10px] font-sans border border-stone-200 dark:border-white/10 transition cursor-pointer">
+                        Super Admin
+                    </button>
+                </div>
+            </details>
+        </div>
+
+    </div>
+</div>
+        </div>
+    </main>
+
+    <!-- Livewire Scripts -->
+<script src="http://127.0.0.1:9000/livewire-8f9155ee/livewire.js?id=8ea5922c"   data-csrf="EvZOSWZ9B9GnSzitVVijHbD0k9kq0a7bfVUldkhS" data-module-url="http://127.0.0.1:9000/livewire-8f9155ee" data-update-uri="http://127.0.0.1:9000/livewire-8f9155ee/update" data-navigate-once="true"></script>
+</body>
+</html>

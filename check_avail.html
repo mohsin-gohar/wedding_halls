@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#F8F5EF] dark:bg-[#171513] text-[#171513] dark:text-[#F8F5EF] antialiased">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="so0oa6QlGJ7Al6etmhpy8SWJzeEpxXofmYCKP8B0">
+
+    <title>Check Hall Availability — EventHub Pakistan</title>
+    <meta name="description" content="Discover and reserve Pakistan&#039;s premier luxury wedding ballrooms, royal marquees, and banquet complexes. Concurrency-safe shift reservations, authentic Mughlai catering, and transparent pricing in PKR.">
+    <meta name="theme-color" content="#171513">
+    <link rel="canonical" href="http://127.0.0.1:9000/check-availability">
+    <link rel="manifest" href="http://127.0.0.1:9000/manifest.webmanifest">
+
+    <!-- OpenGraph & Social Sharing Meta -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="EventHub Pakistan">
+    <meta property="og:title" content="Check Hall Availability — EventHub Pakistan">
+    <meta property="og:description" content="Discover and reserve Pakistan&#039;s premier luxury wedding ballrooms, royal marquees, and banquet complexes with guaranteed single-host shift exclusivity.">
+    <meta property="og:url" content="http://127.0.0.1:9000/check-availability">
+    <meta property="og:image" content="http://127.0.0.1:9000/images/eventhub-logo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Check Hall Availability — EventHub Pakistan">
+    <meta name="twitter:description" content="Discover and reserve Pakistan&#039;s premier luxury wedding ballrooms, royal marquees, and banquet complexes.">
+    <meta name="twitter:image" content="http://127.0.0.1:9000/images/eventhub-logo.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="http://127.0.0.1:9000/images/eventhub-logo.png">
+    <link rel="apple-touch-icon" href="http://127.0.0.1:9000/images/eventhub-logo.png">
+
+    <!-- Google Fonts: Preconnect & Asynchronous Loading (High Performance & Zero Render-Blocking) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+    </noscript>
+
+    <!-- Styles & Livewire -->
+    <!-- Defensive Baseline Styles (Prevent Unstyled Image Blowout & Layout Shift) -->
+    <style>
+        img { max-width: 100%; height: auto; }
+        .site-header img, header img, aside img { max-height: 48px; width: auto; }
+    </style>
+
+    <!-- Styles & Livewire -->
+    <link rel="preload" as="style" href="http://127.0.0.1:9000/build/assets/app-BF8iYQFb.css" /><link rel="modulepreload" as="script" href="http://127.0.0.1:9000/build/assets/app-CQLOgZLP.js" /><link rel="stylesheet" href="http://127.0.0.1:9000/build/assets/app-BF8iYQFb.css" data-navigate-track="reload" /><script type="module" src="http://127.0.0.1:9000/build/assets/app-CQLOgZLP.js" data-navigate-track="reload"></script>    <!-- Livewire Styles --><style >[wire\:loading][wire\:loading], [wire\:loading\.delay][wire\:loading\.delay], [wire\:loading\.list-item][wire\:loading\.list-item], [wire\:loading\.inline-block][wire\:loading\.inline-block], [wire\:loading\.inline][wire\:loading\.inline], [wire\:loading\.block][wire\:loading\.block], [wire\:loading\.flex][wire\:loading\.flex], [wire\:loading\.table][wire\:loading\.table], [wire\:loading\.grid][wire\:loading\.grid], [wire\:loading\.inline-flex][wire\:loading\.inline-flex] {display: none;}[wire\:loading\.delay\.none][wire\:loading\.delay\.none], [wire\:loading\.delay\.shortest][wire\:loading\.delay\.shortest], [wire\:loading\.delay\.shorter][wire\:loading\.delay\.shorter], [wire\:loading\.delay\.short][wire\:loading\.delay\.short], [wire\:loading\.delay\.default][wire\:loading\.delay\.default], [wire\:loading\.delay\.long][wire\:loading\.delay\.long], [wire\:loading\.delay\.longer][wire\:loading\.delay\.longer], [wire\:loading\.delay\.longest][wire\:loading\.delay\.longest] {display: none;}[wire\:offline][wire\:offline] {display: none;}[wire\:dirty]:not(textarea):not(input):not(select) {display: none;}:root {--livewire-progress-bar-color: #2299dd;}[x-cloak="x-cloak"],[x-cloak=""] {display: none !important;}[wire\:cloak="wire:cloak"],[wire\:cloak=""] {display: none !important;}dialog#livewire-error::backdrop {background-color: rgba(0, 0, 0, .6);}</style>
+
+    <!-- Theme State Initializer (Default: Dark Luxury Palace) -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('EventHub_theme');
+            if (savedTheme === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+</head>
+<body class="min-h-full flex flex-col font-sans bg-[#F8F5EF] dark:bg-[#171513] text-[#171513] dark:text-[#F8F5EF] selection:bg-[#C6A15B] selection:text-[#171513] overflow-x-hidden transition-colors duration-200" 
+      x-data="{ 
+          mobileNav: false, 
+          darkMode: document.documentElement.classList.contains('dark'), 
+          toggleTheme() { 
+              this.darkMode = !this.darkMode; 
+              if (this.darkMode) { 
+                  document.documentElement.classList.add('dark'); 
+                  localStorage.setItem('EventHub_theme', 'dark'); 
+              } else { 
+                  document.documentElement.classList.remove('dark'); 
+                  localStorage.setItem('EventHub_theme', 'light'); 
+              } 
+          } 
+      }">
+
+    <!-- Accessibility Skip Link (WCAG 2.1 AA) -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-[#C6A15B] focus:text-[#171513] focus:font-semibold focus:text-xs focus:shadow-lg">
+        Skip to main content
+    </a>
+
+    <!-- Main Navigation Bar (Luxury Obsidian & Champagne Gold) -->
+    <header id="site-header" class="site-header sticky top-0 z-40 bg-[#171513]/95 backdrop-blur-xl border-b border-[#C6A15B]/25 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex h-16 items-center justify-between gap-3 sm:gap-5 lg:h-[4.5rem]">
+                
+                <!-- Brand Identity -->
+                <a href="http://127.0.0.1:9000" wire:navigate.hover class="group flex shrink-0 items-center gap-3 max-sm:gap-2.5">
+                    <img src="http://127.0.0.1:9000/images/eventhub-logo.png" width="48" height="48" alt="EventHub" style="max-height: 48px; width: auto;" class="h-10 sm:h-12 w-auto object-contain rounded-lg border border-[#C6A15B]/35 bg-[#171513] shadow-sm group-hover:border-[#C6A15B] transition-all duration-300">
+                    <span class="flex flex-col leading-none">
+                        <span class="font-cinzel text-base font-bold tracking-[0.16em] text-white transition-colors duration-300 group-hover:text-[#F2DE9A] sm:text-lg">
+                            EventHub
+                        </span>
+                        <span class="mt-1 hidden text-[9px] font-sans font-medium uppercase tracking-[0.22em] text-[#C6A15B]/80 sm:block">
+                            Luxury Banquets &amp; Marquees
+                        </span>
+                    </span>
+                </a>
+
+                <!-- Desktop Navigation Links -->
+                                <nav class="hidden shrink-0 items-center gap-6 xl:flex xl:gap-8" aria-label="Primary">
+                                            <a href="http://127.0.0.1:9000/venues" wire:navigate.hover class="nav-link ">Venues</a>
+                                            <a href="http://127.0.0.1:9000/services" wire:navigate.hover class="nav-link ">Services</a>
+                                            <a href="http://127.0.0.1:9000/about" wire:navigate.hover class="nav-link ">About</a>
+                                            <a href="http://127.0.0.1:9000/contact" wire:navigate.hover class="nav-link ">Contact</a>
+                                    </nav>
+
+                <!-- Actions -->
+                <div class="flex shrink-0 items-center gap-2 sm:gap-3">
+                    <!-- Theme Toggle (icon-only) -->
+                    <button type="button"
+                            @click="toggleTheme()"
+                            class="flex h-9 w-9 items-center justify-center rounded-lg border border-[#C6A15B]/30 bg-[#171513] text-[#C6A15B] transition-colors duration-200 hover:border-[#C6A15B] hover:bg-[#C6A15B] hover:text-[#171513] cursor-pointer"
+                            title="Toggle Light / Dark Mode"
+                            aria-label="Toggle Light / Dark Mode">
+                        <svg x-show="darkMode" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1.5M12 19.5V21M4.22 4.22l1.06 1.06M18.72 18.72l1.06 1.06M3 12h1.5M19.5 12H21M4.22 19.78l1.06-1.06M18.72 5.28l1.06-1.06M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                        <svg x-show="!darkMode" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true" style="display: none;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                        </svg>
+                    </button>
+
+                                            <a href="http://127.0.0.1:9000/login" wire:navigate.hover class="hidden h-9 items-center px-2 text-[12px] font-semibold uppercase tracking-[0.12em] text-stone-300 transition-colors duration-300 hover:text-[#C6A15B] sm:inline-flex">
+                            Sign In
+                        </a>
+                    
+                    <!-- Mobile Menu Hamburger -->
+                    <button type="button" @click="mobileNav = !mobileNav" class="xl:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-[#C6A15B]/30 bg-[#171513] text-white transition-colors duration-300 hover:border-[#C6A15B] hover:text-[#C6A15B] cursor-pointer" aria-label="Toggle Navigation" :aria-expanded="mobileNav ? 'true' : 'false'">
+                        <svg x-show="!mobileNav" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M4 7h16M4 12h16M4 17h16"/>
+                        </svg>
+                        <svg x-show="mobileNav" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" style="display: none;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M6 6l12 12M18 6L6 18"/>
+                        </svg>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Mobile Drawer -->
+        <div x-show="mobileNav"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             class="xl:hidden bg-[#171513] border-b border-[#C6A15B]/30 px-5 py-5 space-y-5 shadow-2xl text-white"
+             style="display: none;"
+             @click.outside="mobileNav = false">
+            <div class="text-[10px] uppercase font-bold tracking-[0.2em] text-[#C6A15B] font-sans">Navigation</div>
+            <nav class="flex flex-col" aria-label="Mobile">
+                                                        <a href="http://127.0.0.1:9000"
+                       wire:navigate.hover
+                       class="flex items-center justify-between border-b border-white/[0.07] py-3 text-[15px] font-medium transition-colors duration-200 text-stone-200 hover:text-[#C6A15B]">
+                        <span>Home</span>
+                        <svg class="h-4 w-4 text-[#C6A15B]/50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                                                        <a href="http://127.0.0.1:9000/venues"
+                       wire:navigate.hover
+                       class="flex items-center justify-between border-b border-white/[0.07] py-3 text-[15px] font-medium transition-colors duration-200 text-stone-200 hover:text-[#C6A15B]">
+                        <span>Venues</span>
+                        <svg class="h-4 w-4 text-[#C6A15B]/50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                                                        <a href="http://127.0.0.1:9000/services"
+                       wire:navigate.hover
+                       class="flex items-center justify-between border-b border-white/[0.07] py-3 text-[15px] font-medium transition-colors duration-200 text-stone-200 hover:text-[#C6A15B]">
+                        <span>Services</span>
+                        <svg class="h-4 w-4 text-[#C6A15B]/50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                                                        <a href="http://127.0.0.1:9000/about"
+                       wire:navigate.hover
+                       class="flex items-center justify-between border-b border-white/[0.07] py-3 text-[15px] font-medium transition-colors duration-200 text-stone-200 hover:text-[#C6A15B]">
+                        <span>About</span>
+                        <svg class="h-4 w-4 text-[#C6A15B]/50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                                                        <a href="http://127.0.0.1:9000/contact"
+                       wire:navigate.hover
+                       class="flex items-center justify-between border-b border-white/[0.07] py-3 text-[15px] font-medium transition-colors duration-200 text-stone-200 hover:text-[#C6A15B]">
+                        <span>Contact</span>
+                        <svg class="h-4 w-4 text-[#C6A15B]/50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                            </nav>
+
+            <div class="flex flex-col gap-2.5">
+                                    <a href="http://127.0.0.1:9000/login" wire:navigate.hover class="btn-outline-gold !w-full !justify-center !text-[#F8F5EF] !border-[#C6A15B]/60 hover:!text-[#171513] hover:!border-[#C6A15B] hover:!bg-[#C6A15B] transition-all duration-300">Sign In</a>
+                    <a href="http://127.0.0.1:9000/register" wire:navigate.hover class="btn-gold !w-full !justify-center">List Your Wedding Hall</a>
+                            </div>
+        </div>
+    </header>
+
+    <!-- Page Content Slot -->
+    <main id="main-content" class="public-page-content flex-1">
+        <div wire:snapshot="{&quot;data&quot;:{&quot;selectedDate&quot;:&quot;2026-11-01&quot;,&quot;paginators&quot;:[{&quot;page&quot;:1},{&quot;s&quot;:&quot;arr&quot;}]},&quot;memo&quot;:{&quot;id&quot;:&quot;gmuY0O57XK8YwdUv2PnC&quot;,&quot;name&quot;:&quot;public-availability-checker&quot;,&quot;path&quot;:&quot;check-availability&quot;,&quot;method&quot;:&quot;GET&quot;,&quot;release&quot;:&quot;a-a-a&quot;,&quot;children&quot;:[],&quot;scripts&quot;:[],&quot;assets&quot;:[],&quot;errors&quot;:[],&quot;locale&quot;:&quot;en&quot;,&quot;islands&quot;:[]},&quot;checksum&quot;:&quot;d7801162213681603bfd0a7a0a49b104b17a0258b64953d97c103a6fb30fa6d2&quot;}" wire:effects="{&quot;url&quot;:{&quot;paginators.page&quot;:{&quot;as&quot;:&quot;page&quot;,&quot;use&quot;:&quot;push&quot;,&quot;alwaysShow&quot;:false,&quot;except&quot;:null}}}" wire:id="gmuY0O57XK8YwdUv2PnC" wire:name="public-availability-checker" class="py-12 bg-[#F8F5EF] dark:bg-[#171513] text-[#171513] dark:text-[#F8F5EF] min-h-screen transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+
+        <!-- Page Header -->
+        <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-8 space-y-3">
+            <div class="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#8F7239] dark:text-[#C6A15B]">
+                <span>Shift Concurrency Engine</span>
+                <span>•</span>
+                <span>Zero Overbooking Protocol</span>
+            </div>
+            <h1 class="font-serif-luxury text-4xl sm:text-5xl text-[#171513] dark:text-white font-normal">
+                Check Live Shift Availability
+            </h1>
+            <p class="text-stone-600 dark:text-stone-300 text-sm max-w-2xl font-normal leading-relaxed">
+                Choose your wedding date to inspect real-time availability across Afternoon Lunch, Evening Dinner, and Late Night Mehndi shifts.
+            </p>
+        </div>
+
+        <!-- Interactive Date Picker Controls (Zero-Pill Card) -->
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 sm:p-8 shadow-sm space-y-4 max-w-3xl mx-auto">
+            <div class="flex flex-col sm:flex-row items-center gap-4 justify-center">
+                <label class="text-xs uppercase font-bold tracking-wider text-stone-700 dark:text-stone-300 font-mono">Select Event Date:</label>
+                <input type="date" wire:model.live="selectedDate" min="2026-10-31" max="2031-12-31" aria-label="Select event date" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm font-semibold max-w-xs">
+            </div>
+
+            <!-- Date Shortcuts -->
+            <div class="flex flex-wrap items-center justify-center gap-2 pt-3 border-t border-[#E7E5E4] dark:border-white/10">
+                <span class="text-xs font-semibold text-stone-400 dark:text-stone-400 font-mono">Quick Shortcuts:</span>
+                <!--[if BLOCK]><![endif]-->                    <button type="button" wire:click="setDate('2026-11-01')" 
+                            class="px-3 py-1 text-xs font-semibold transition cursor-pointer border bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513] border-[#171513] dark:border-[#C6A15B]">
+                        Tomorrow
+                    </button>
+                                    <button type="button" wire:click="setDate('2026-11-06')" 
+                            class="px-3 py-1 text-xs font-semibold transition cursor-pointer border bg-[#F8F5EF] dark:bg-white/5 text-stone-700 dark:text-stone-300 border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF] dark:hover:bg-white/10">
+                        This Friday
+                    </button>
+                                    <button type="button" wire:click="setDate('2026-10-31')" 
+                            class="px-3 py-1 text-xs font-semibold transition cursor-pointer border bg-[#F8F5EF] dark:bg-white/5 text-stone-700 dark:text-stone-300 border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF] dark:hover:bg-white/10">
+                        This Saturday
+                    </button>
+                                    <button type="button" wire:click="setDate('2026-11-01')" 
+                            class="px-3 py-1 text-xs font-semibold transition cursor-pointer border bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513] border-[#171513] dark:border-[#C6A15B]">
+                        This Sunday
+                    </button>
+                                    <button type="button" wire:click="setDate('2026-11-07')" 
+                            class="px-3 py-1 text-xs font-semibold transition cursor-pointer border bg-[#F8F5EF] dark:bg-white/5 text-stone-700 dark:text-stone-300 border-[#E7E5E4] dark:border-white/10 hover:bg-[#F8F5EF] dark:hover:bg-white/10">
+                        Next Saturday
+                    </button>
+                <!--[if ENDBLOCK]><![endif]-->            </div>
+        </div>
+
+        <!-- Current Date Header -->
+        <div class="text-center pt-4">
+            <span class="text-xs text-stone-500 dark:text-stone-400 uppercase font-bold tracking-widest block font-mono">Displaying All Venues For</span>
+            <h2 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white font-normal mt-1">
+                Sunday, 01 November 2026
+            </h2>
+        </div>
+
+        <!-- Halls Shift Availability Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!--[if BLOCK]><![endif]-->                                <div class="editorial-card p-6 sm:p-8 space-y-6 flex flex-col justify-between bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15">
+                    <div class="space-y-4">
+                        <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-3 flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold tracking-wider text-[#8F7239] dark:text-[#C6A15B] font-mono">VENUE</span>
+                                <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Executive Crystal Lawn</h3>
+                                <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Capacity: 300 - 1400 Heads</p>
+                            </div>
+                            <span class="text-xs font-bold text-stone-700 dark:text-[#C6A15B] bg-[#F8F5EF] dark:bg-white/5 border border-[#E7E5E4] dark:border-white/10 px-2.5 py-1 font-mono">
+                                PKR 220,000
+                            </span>
+                        </div>
+
+                        <!-- 3 Shift Rows -->
+                        <div class="space-y-3 pt-2">
+                            <!-- Afternoon -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Afternoon Lunch</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">12:00 PM – 4:00 PM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a18043-60f7-7250-8a15-dfdbbbb03ea4', event_date: '2026-11-01', slot_type: 'AFTERNOON' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                            <!-- Evening -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Evening Dinner</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">6:30 PM – 10:30 PM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a18043-60f7-7250-8a15-dfdbbbb03ea4', event_date: '2026-11-01', slot_type: 'EVENING' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                            <!-- Night -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Late Night Mehndi</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">11:00 PM – 3:00 AM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a18043-60f7-7250-8a15-dfdbbbb03ea4', event_date: '2026-11-01', slot_type: 'NIGHT' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-[#E7E5E4] dark:border-white/10 flex items-center justify-between">
+                        <a href="http://127.0.0.1:9000/venues/executive-crystal-lawn" class="text-xs text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white font-semibold underline">
+                            View Venue Specs &rarr;
+                        </a>
+                        <span class="text-[10px] text-stone-400 dark:text-stone-500 font-mono">Real DB Concurrency</span>
+                    </div>
+                </div>
+                                            <div class="editorial-card p-6 sm:p-8 space-y-6 flex flex-col justify-between bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15">
+                    <div class="space-y-4">
+                        <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-3 flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold tracking-wider text-[#8F7239] dark:text-[#C6A15B] font-mono">VENUE</span>
+                                <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Hira Diamond</h3>
+                                <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Capacity: 160 - 400 Heads</p>
+                            </div>
+                            <span class="text-xs font-bold text-stone-700 dark:text-[#C6A15B] bg-[#F8F5EF] dark:bg-white/5 border border-[#E7E5E4] dark:border-white/10 px-2.5 py-1 font-mono">
+                                PKR 200,000
+                            </span>
+                        </div>
+
+                        <!-- 3 Shift Rows -->
+                        <div class="space-y-3 pt-2">
+                            <!-- Afternoon -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Afternoon Lunch</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">12:00 PM – 4:00 PM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a18d81-90d0-71b5-afaf-2748837d9379', event_date: '2026-11-01', slot_type: 'AFTERNOON' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                            <!-- Evening -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Evening Dinner</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">6:30 PM – 10:30 PM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a18d81-90d0-71b5-afaf-2748837d9379', event_date: '2026-11-01', slot_type: 'EVENING' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                            <!-- Night -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Late Night Mehndi</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">11:00 PM – 3:00 AM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a18d81-90d0-71b5-afaf-2748837d9379', event_date: '2026-11-01', slot_type: 'NIGHT' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-[#E7E5E4] dark:border-white/10 flex items-center justify-between">
+                        <a href="http://127.0.0.1:9000/venues/hira-diamond" class="text-xs text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white font-semibold underline">
+                            View Venue Specs &rarr;
+                        </a>
+                        <span class="text-[10px] text-stone-400 dark:text-stone-500 font-mono">Real DB Concurrency</span>
+                    </div>
+                </div>
+                                            <div class="editorial-card p-6 sm:p-8 space-y-6 flex flex-col justify-between bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15">
+                    <div class="space-y-4">
+                        <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-3 flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold tracking-wider text-[#8F7239] dark:text-[#C6A15B] font-mono">VENUE</span>
+                                <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">Imperial Banquet Suite</h3>
+                                <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Capacity: 100 - 450 Heads</p>
+                            </div>
+                            <span class="text-xs font-bold text-stone-700 dark:text-[#C6A15B] bg-[#F8F5EF] dark:bg-white/5 border border-[#E7E5E4] dark:border-white/10 px-2.5 py-1 font-mono">
+                                PKR 110,000
+                            </span>
+                        </div>
+
+                        <!-- 3 Shift Rows -->
+                        <div class="space-y-3 pt-2">
+                            <!-- Afternoon -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Afternoon Lunch</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">12:00 PM – 4:00 PM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a18043-6105-7026-af59-ff9ef30dec1d', event_date: '2026-11-01', slot_type: 'AFTERNOON' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                            <!-- Evening -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Evening Dinner</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">6:30 PM – 10:30 PM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a18043-6105-7026-af59-ff9ef30dec1d', event_date: '2026-11-01', slot_type: 'EVENING' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                            <!-- Night -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Late Night Mehndi</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">11:00 PM – 3:00 AM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a18043-6105-7026-af59-ff9ef30dec1d', event_date: '2026-11-01', slot_type: 'NIGHT' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-[#E7E5E4] dark:border-white/10 flex items-center justify-between">
+                        <a href="http://127.0.0.1:9000/venues/imperial-banquet-suite" class="text-xs text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white font-semibold underline">
+                            View Venue Specs &rarr;
+                        </a>
+                        <span class="text-[10px] text-stone-400 dark:text-stone-500 font-mono">Real DB Concurrency</span>
+                    </div>
+                </div>
+                                            <div class="editorial-card p-6 sm:p-8 space-y-6 flex flex-col justify-between bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15">
+                    <div class="space-y-4">
+                        <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-3 flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold tracking-wider text-[#8F7239] dark:text-[#C6A15B] font-mono">VENUE</span>
+                                <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">The Royal Ballroom</h3>
+                                <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Capacity: 200 - 850 Heads</p>
+                            </div>
+                            <span class="text-xs font-bold text-stone-700 dark:text-[#C6A15B] bg-[#F8F5EF] dark:bg-white/5 border border-[#E7E5E4] dark:border-white/10 px-2.5 py-1 font-mono">
+                                PKR 150,000
+                            </span>
+                        </div>
+
+                        <!-- 3 Shift Rows -->
+                        <div class="space-y-3 pt-2">
+                            <!-- Afternoon -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Afternoon Lunch</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">12:00 PM – 4:00 PM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a18043-60e8-733a-8ffc-068deefa41d8', event_date: '2026-11-01', slot_type: 'AFTERNOON' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                            <!-- Evening -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Evening Dinner</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">6:30 PM – 10:30 PM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a18043-60e8-733a-8ffc-068deefa41d8', event_date: '2026-11-01', slot_type: 'EVENING' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                            <!-- Night -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Late Night Mehndi</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">11:00 PM – 3:00 AM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a18043-60e8-733a-8ffc-068deefa41d8', event_date: '2026-11-01', slot_type: 'NIGHT' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-[#E7E5E4] dark:border-white/10 flex items-center justify-between">
+                        <a href="http://127.0.0.1:9000/venues/the-royal-ballroom" class="text-xs text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white font-semibold underline">
+                            View Venue Specs &rarr;
+                        </a>
+                        <span class="text-[10px] text-stone-400 dark:text-stone-500 font-mono">Real DB Concurrency</span>
+                    </div>
+                </div>
+                                            <div class="editorial-card p-6 sm:p-8 space-y-6 flex flex-col justify-between bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15">
+                    <div class="space-y-4">
+                        <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-3 flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold tracking-wider text-[#8F7239] dark:text-[#C6A15B] font-mono">VENUE</span>
+                                <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">grace garden</h3>
+                                <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Capacity: 198 - 497 Heads</p>
+                            </div>
+                            <span class="text-xs font-bold text-stone-700 dark:text-[#C6A15B] bg-[#F8F5EF] dark:bg-white/5 border border-[#E7E5E4] dark:border-white/10 px-2.5 py-1 font-mono">
+                                PKR 10,000
+                            </span>
+                        </div>
+
+                        <!-- 3 Shift Rows -->
+                        <div class="space-y-3 pt-2">
+                            <!-- Afternoon -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Afternoon Lunch</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">12:00 PM – 4:00 PM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a18d7d-4426-7221-93c0-e3425af487cb', event_date: '2026-11-01', slot_type: 'AFTERNOON' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                            <!-- Evening -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Evening Dinner</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">6:30 PM – 10:30 PM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a18d7d-4426-7221-93c0-e3425af487cb', event_date: '2026-11-01', slot_type: 'EVENING' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                            <!-- Night -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Late Night Mehndi</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">11:00 PM – 3:00 AM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a18d7d-4426-7221-93c0-e3425af487cb', event_date: '2026-11-01', slot_type: 'NIGHT' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-[#E7E5E4] dark:border-white/10 flex items-center justify-between">
+                        <a href="http://127.0.0.1:9000/venues/grace-garden" class="text-xs text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white font-semibold underline">
+                            View Venue Specs &rarr;
+                        </a>
+                        <span class="text-[10px] text-stone-400 dark:text-stone-500 font-mono">Real DB Concurrency</span>
+                    </div>
+                </div>
+                                            <div class="editorial-card p-6 sm:p-8 space-y-6 flex flex-col justify-between bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15">
+                    <div class="space-y-4">
+                        <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-3 flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold tracking-wider text-[#8F7239] dark:text-[#C6A15B] font-mono">VENUE</span>
+                                <h3 class="font-serif-luxury text-2xl text-[#171513] dark:text-white font-medium">jhuisahlf asdh</h3>
+                                <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Capacity: 20 - 50 Heads</p>
+                            </div>
+                            <span class="text-xs font-bold text-stone-700 dark:text-[#C6A15B] bg-[#F8F5EF] dark:bg-white/5 border border-[#E7E5E4] dark:border-white/10 px-2.5 py-1 font-mono">
+                                PKR 150,000
+                            </span>
+                        </div>
+
+                        <!-- 3 Shift Rows -->
+                        <div class="space-y-3 pt-2">
+                            <!-- Afternoon -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Afternoon Lunch</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">12:00 PM – 4:00 PM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a1808d-e208-710c-8582-a33d65020e94', event_date: '2026-11-01', slot_type: 'AFTERNOON' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                            <!-- Evening -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Evening Dinner</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">6:30 PM – 10:30 PM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a1808d-e208-710c-8582-a33d65020e94', event_date: '2026-11-01', slot_type: 'EVENING' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                            <!-- Night -->
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Late Night Mehndi</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">11:00 PM – 3:00 AM</span>
+                                </div>
+                                <!--[if BLOCK]><![endif]-->                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '01a1808d-e208-710c-8582-a33d65020e94', event_date: '2026-11-01', slot_type: 'NIGHT' })" 
+                                            class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
+                                        <span>Available</span>
+                                        <span class="opacity-50">&bull;</span>
+                                        <span>Reserve</span>
+                                    </button>
+                                <!--[if ENDBLOCK]><![endif]-->                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-[#E7E5E4] dark:border-white/10 flex items-center justify-between">
+                        <a href="http://127.0.0.1:9000/venues/jhuisahlf-asdh" class="text-xs text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white font-semibold underline">
+                            View Venue Specs &rarr;
+                        </a>
+                        <span class="text-[10px] text-stone-400 dark:text-stone-500 font-mono">Real DB Concurrency</span>
+                    </div>
+                </div>
+            <!--[if ENDBLOCK]><![endif]-->        </div>
+
+        <div class="pt-2"><div>
+    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]--></div>
+</div>
+
+    </div>
+</div>
+    </main>
+
+    <!-- Luxury Obsidian Dark Footer -->
+    <footer class="bg-[#171513] text-[#F8F5EF] pt-20 pb-12 border-t border-[#C6A15B]/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 pb-12 border-b border-white/10">
+                <!-- Brand Info -->
+                <div class="lg:col-span-2 space-y-5">
+                    <a href="http://127.0.0.1:9000" class="flex items-center gap-3 group">
+                        <img src="http://127.0.0.1:9000/images/eventhub-logo.png" width="48" height="48" alt="EventHub Logo" style="max-height: 48px; width: auto;" class="h-12 w-auto object-contain rounded-lg border border-[#C6A15B]/35 bg-[#171513] shadow-sm">
+                        <div>
+                            <span class="font-cinzel text-2xl font-bold tracking-[0.16em] text-white group-hover:text-[#F2DE9A] transition block">EventHub</span>
+                            <span class="block text-[9px] uppercase tracking-[0.22em] text-[#C6A15B]/80 font-sans font-medium mt-0.5">Pakistan's Venue Platform</span>
+                        </div>
+                    </a>
+                    <p class="text-sm text-stone-400 font-light leading-relaxed max-w-sm">
+                        Pakistan's premier commercial marketplace and management SaaS for luxury wedding banquets, royal marquees, and convention centres. Dedicated to authentic hospitality, zero double-booking reliability, and transparent pricing.
+                    </p>
+                    <div class="pt-2 text-xs text-stone-400 space-y-1">
+                        <p><strong class="text-white">Headquarters:</strong> Plot 42, Main Boulevard, Gulberg III, Lahore, Pakistan</p>
+                        <p><strong class="text-white">Direct Phone:</strong> +92 42 35789000 (UAN Helpline)</p>
+                        <p><strong class="text-white">Inquiries:</strong> inquiries@EventHub.pk</p>
+                    </div>
+                </div>
+
+                <!-- Explore Links -->
+                <div class="space-y-4">
+                    <h4 class="font-cinzel text-xs font-bold uppercase tracking-[0.15em] text-[#C6A15B]">Marketplace</h4>
+                    <ul class="space-y-2.5 text-xs text-stone-200 font-normal">
+                        <li><a href="http://127.0.0.1:9000/venues" wire:navigate.hover class="hover:text-white transition">Explore Venues</a></li>
+                        <li><a href="http://127.0.0.1:9000/packages" wire:navigate.hover class="hover:text-white transition">Wedding Packages</a></li>
+                        <li><a href="http://127.0.0.1:9000/packages" wire:navigate.hover class="hover:text-white transition">Catering & Bawarchi</a></li>
+                        <li><a href="http://127.0.0.1:9000/gallery" wire:navigate.hover class="hover:text-white transition">Photo & Video Gallery</a></li>
+                        <li><a href="http://127.0.0.1:9000/check-availability" wire:navigate.hover class="hover:text-white transition">Live Shift Availability</a></li>
+                        <li><a href="http://127.0.0.1:9000/services" wire:navigate.hover class="hover:text-white transition">Event Services</a></li>
+                    </ul>
+                </div>
+
+                <!-- Venue Owners / SaaS -->
+                <div class="space-y-4">
+                    <h4 class="font-cinzel text-xs font-bold uppercase tracking-[0.15em] text-[#C6A15B]">Venue Owners</h4>
+                    <ul class="space-y-2.5 text-xs text-stone-200 font-normal">
+                        <li><a href="http://127.0.0.1:9000/register" wire:navigate.hover class="hover:text-white transition">List Your Venue</a></li>
+                        <li><a href="http://127.0.0.1:9000/login" wire:navigate.hover class="hover:text-white transition">Vendor Portal Login</a></li>
+                        <li><a href="http://127.0.0.1:9000/dashboard" class="hover:text-white transition">Shift Matrix & Calendar</a></li>
+                        <li><a href="http://127.0.0.1:9000/about" wire:navigate.hover class="hover:text-white transition">Why EventHub SaaS</a></li>
+                        <li><a href="http://127.0.0.1:9000/faqs" wire:navigate.hover class="hover:text-white transition">Vendor FAQs</a></li>
+                    </ul>
+                </div>
+
+                <!-- Legal & Compliance -->
+                <div class="space-y-4">
+                    <h4 class="font-cinzel text-xs font-bold uppercase tracking-[0.15em] text-[#C6A15B]">Trust & Policies</h4>
+                    <ul class="space-y-2.5 text-xs text-stone-200 font-normal">
+                        <li><a href="http://127.0.0.1:9000/policies/terms" wire:navigate.hover class="hover:text-white transition">Terms of Service</a></li>
+                        <li><a href="http://127.0.0.1:9000/policies/privacy" wire:navigate.hover class="hover:text-white transition">Privacy Policy</a></li>
+                        <li><a href="http://127.0.0.1:9000/policies/cancellation" wire:navigate.hover class="hover:text-white transition">Cancellation & Refund Policy</a></li>
+                        <li><a href="http://127.0.0.1:9000/faqs" wire:navigate.hover class="hover:text-white transition">Booking Security FAQ</a></li>
+                        <li><a href="http://127.0.0.1:9000/contact" wire:navigate.hover class="hover:text-white transition">Customer Support</a></li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- Bottom Disclaimer & Copyright -->
+            <div class="flex flex-col md:flex-row items-center justify-between text-xs text-stone-500 gap-4">
+                <span>&copy; 2026 EventHub Technologies (Pvt) Ltd. All rights reserved. Registered under SECP Pakistan.</span>
+                <div class="flex items-center gap-6">
+                    <span class="text-stone-400">Currency: <strong>Pakistani Rupee (PKR)</strong></span>
+                    <span class="text-stone-400">Tax Compliance: <strong>PRA / SRB / FBR</strong></span>
+                </div>
+            </div>
+
+        </div>
+    </footer>
+
+    <!-- GDPR / PDPA Cookie & Privacy Consent Bar (hidden on auth screens so login controls stay clickable) -->
+        <div x-data="{ showCookieBar: !localStorage.getItem('EventHub_cookie_consent') }"
+         x-show="showCookieBar"
+         x-cloak
+         role="region"
+         aria-label="Cookie consent notice"
+         class="fixed bottom-4 left-4 right-28 sm:right-auto sm:max-w-sm z-30 bg-[#171513]/95 backdrop-blur-md border border-[#C6A15B]/35 rounded-2xl p-4 text-xs text-stone-300 shadow-2xl">
+        <div class="flex items-start justify-between gap-4">
+            <p class="leading-relaxed">
+                We use essential cookies to guarantee secure shift reservations and personalize your venue search experience. Read our <a href="http://127.0.0.1:9000/policies/privacy" class="text-[#C6A15B] underline hover:text-white">Privacy Policy</a>.
+            </p>
+            <button type="button"
+                    @click="localStorage.setItem('EventHub_cookie_consent', 'accepted'); showCookieBar = false"
+                    aria-label="Accept cookies"
+                    class="btn-gold !h-8 !px-3.5 text-[11px] font-semibold rounded-lg shrink-0">
+                Accept
+            </button>
+        </div>
+    </div>
+    
+        <div wire:key="lw-1293423332-0-1" wire:snapshot="{&quot;data&quot;:{&quot;isOpen&quot;:false,&quot;step&quot;:1,&quot;isStaff&quot;:false,&quot;hall_id&quot;:&quot;01a18043-60e8-733a-8ffc-068deefa41d8&quot;,&quot;event_date&quot;:&quot;2026-11-01&quot;,&quot;slot_type&quot;:&quot;EVENING&quot;,&quot;event_type&quot;:&quot;Barat&quot;,&quot;isSlotAvailable&quot;:true,&quot;slotMessage&quot;:null,&quot;customer_phone&quot;:&quot;&quot;,&quot;customer_name&quot;:&quot;&quot;,&quot;customer_cnic&quot;:&quot;&quot;,&quot;customer_email&quot;:&quot;&quot;,&quot;clientFound&quot;:false,&quot;guest_count&quot;:250,&quot;package_id&quot;:null,&quot;per_head_rate&quot;:1850,&quot;hall_rent&quot;:150000,&quot;addonPrices&quot;:[{&quot;sparklers&quot;:15000,&quot;dj_lighting&quot;:30000,&quot;ac_extra&quot;:20000,&quot;valet&quot;:12000,&quot;stage_flowers&quot;:35000},{&quot;s&quot;:&quot;arr&quot;}],&quot;selected_addons&quot;:[[],{&quot;s&quot;:&quot;arr&quot;}],&quot;addons_total&quot;:0,&quot;discount_amount&quot;:0,&quot;tax_rate_percent&quot;:5,&quot;tax_amount&quot;:30625,&quot;grand_total&quot;:643125,&quot;advance_paid&quot;:0,&quot;balance_due&quot;:643125,&quot;payment_method&quot;:&quot;CASH&quot;,&quot;transaction_reference&quot;:null,&quot;notes&quot;:null,&quot;createdBooking&quot;:null,&quot;errorMessage&quot;:null},&quot;memo&quot;:{&quot;id&quot;:&quot;g7TtXvVfyO930SJmAjKt&quot;,&quot;name&quot;:&quot;walk-in-booking-modal&quot;,&quot;path&quot;:&quot;check-availability&quot;,&quot;method&quot;:&quot;GET&quot;,&quot;release&quot;:&quot;a-a-a&quot;,&quot;children&quot;:[],&quot;scripts&quot;:[],&quot;assets&quot;:[],&quot;errors&quot;:[],&quot;locale&quot;:&quot;en&quot;,&quot;islands&quot;:[]},&quot;checksum&quot;:&quot;824ea5eb2dec73788177081e56e26ba6793389b841d5a5cb01f4ef877fbcb971&quot;}" wire:effects="{&quot;listeners&quot;:[&quot;openWalkInModal&quot;,&quot;open-walk-in-modal&quot;]}" wire:id="g7TtXvVfyO930SJmAjKt" wire:name="walk-in-booking-modal">
+    <!--[if BLOCK]><![endif]--><!--[if ENDBLOCK]><![endif]--></div>
+    
+    <!-- Platform AI Public Concierge Chatbot (On General Public Pages; Venue Showcase has its own Venue Manager Desk) -->
+        <div wire:key="lw-1293423332-1-1" wire:snapshot="{&quot;data&quot;:{&quot;isOpen&quot;:false,&quot;newMessage&quot;:&quot;&quot;,&quot;messages&quot;:[[[{&quot;sender&quot;:&quot;bot&quot;,&quot;message&quot;:&quot;Assalamu Alaikum! EventHub Pakistan mein aap ka khush-aamdeed!\n\nMain **EventHub AI Chatbot** hoon. Main aap ko Pakistan ke top luxury banquets, wedding marquees, shift booking timings, catering packages aur platform registration ke baray mein mukammal information de sakta hoon.\n\nAap mujh se kuch bhi pooch saktay hain!&quot;,&quot;time&quot;:&quot;09:01 PM&quot;},{&quot;s&quot;:&quot;arr&quot;}]],{&quot;s&quot;:&quot;arr&quot;}]},&quot;memo&quot;:{&quot;id&quot;:&quot;6bMww3InVHnPa2a5Vcmy&quot;,&quot;name&quot;:&quot;public-chat-widget&quot;,&quot;path&quot;:&quot;check-availability&quot;,&quot;method&quot;:&quot;GET&quot;,&quot;release&quot;:&quot;a-a-a&quot;,&quot;children&quot;:[],&quot;scripts&quot;:[],&quot;assets&quot;:[],&quot;errors&quot;:[],&quot;locale&quot;:&quot;en&quot;,&quot;islands&quot;:[]},&quot;checksum&quot;:&quot;85e2ebddf5ae5360d14906132afc80a769b0d2071c1157cbb88946fd3fd71626&quot;}" wire:effects="[]" wire:id="6bMww3InVHnPa2a5Vcmy" wire:name="public-chat-widget" id="eventhub-public-ai-chatbot"
+     x-data="{
+         open: false,
+         init() {
+             window.addEventListener('publicChatOpened', () => {
+                 this.open = true;
+                 setTimeout(scrollPublicChat, 100);
+             });
+             window.addEventListener('publicChatUpdated', () => {
+                 setTimeout(scrollPublicChat, 80);
+             });
+         },
+         openChat() {
+             this.open = true;
+             setTimeout(scrollPublicChat, 100);
+         },
+         closeChat() {
+             this.open = false;
+         }
+     }"
+     class="font-sans">
+
+    <!-- =====================================================================
+         STATE 1: FLOATING CHAT BUTTON (When Closed - Pure Elegant Chat Bubble)
+         z-30 ensures it never collides or creeps above the sticky navbar (z-40)
+         ===================================================================== -->
+    <button type="button"
+            x-show="!open"
+            @click="openChat()"
+            aria-label="Open EventHub AI Chatbot"
+            title="EventHub AI Chatbot"
+            class="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-30 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-[#C6A15B] via-[#D8B46B] to-[#F2DE9A] text-[#171513] shadow-[0_12px_32px_rgba(198,161,91,0.6)] hover:shadow-[0_16px_40px_rgba(198,161,91,0.8)] hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center cursor-pointer border-2 border-white/70 dark:border-[#F2DE9A]/50 group">
+        
+        <!-- Friendly Chatbot Robot Icon -->
+        <svg class="w-7 h-7 sm:w-8 sm:h-8 text-[#171513] group-hover:rotate-6 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2M7.5 13A1.5 1.5 0 006 14.5 1.5 1.5 0 007.5 16 1.5 1.5 0 009 14.5 1.5 1.5 0 007.5 13m9 0a1.5 1.5 0 00-1.5 1.5 1.5 1.5 0 001.5 1.5 1.5 1.5 0 001.5-1.5 1.5 1.5 0 00-1.5-1.5z"/>
+        </svg>
+
+        <!-- Pulsing Active Status Indicator -->
+        <span class="absolute top-1 right-1 flex h-3.5 w-3.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white dark:border-[#171513]"></span>
+        </span>
+    </button>
+
+    <!-- =====================================================================
+         STATE 2: CHATBOT POPUP WINDOW (Matching Reference Screenshot)
+         z-30 + max-h-[calc(100vh-5.5rem)] strictly prevents it from ever climbing over or covering the navbar!
+         ===================================================================== -->
+    <div x-show="open"
+         x-cloak
+         style="display: none;"
+         class="fixed inset-x-3 bottom-3 sm:inset-x-auto sm:bottom-6 sm:right-6 z-30 w-auto sm:w-[410px] h-[78vh] sm:h-[550px] max-h-[calc(100vh-5.5rem)] bg-white dark:bg-[#1A1714] rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] border-2 border-[#C6A15B] flex flex-col overflow-hidden">
+        
+        <!-- Header (Directly Inspired by Reference Screenshot) -->
+        <div class="bg-gradient-to-r from-[#C6A15B] via-[#B89241] to-[#9A7836] p-3.5 sm:p-4 text-white flex items-center justify-between shadow-md shrink-0">
+            <div class="flex items-center gap-3">
+                <!-- White Circular Robot Icon Avatar -->
+                <div class="w-10 h-10 rounded-full bg-white text-[#C6A15B] flex items-center justify-center shadow-md shrink-0">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2M7.5 13A1.5 1.5 0 006 14.5 1.5 1.5 0 007.5 16 1.5 1.5 0 009 14.5 1.5 1.5 0 007.5 13m9 0a1.5 1.5 0 00-1.5 1.5 1.5 1.5 0 001.5 1.5 1.5 1.5 0 001.5-1.5 1.5 1.5 0 00-1.5-1.5z"/>
+                    </svg>
+                </div>
+                <div>
+                    <!-- "Hello!" replaced by "EventHub Chatbot" as explicitly requested -->
+                    <h4 class="font-bold text-base sm:text-lg leading-tight text-white tracking-wide">EventHub Chatbot</h4>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+                        <p class="text-[11px] text-white/95 font-medium">Ask EventHub AI • Always Online</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Icons: Refresh & Close (Screenshot Top Right) -->
+            <div class="flex items-center gap-1">
+                <button type="button"
+                        wire:click="resetConversation"
+                        title="Reset conversation"
+                        class="w-8 h-8 rounded-full hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </button>
+                <button type="button"
+                        @click="closeChat()"
+                        title="Close chatbot"
+                        class="w-8 h-8 rounded-full hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Messages Stream Area -->
+        <div class="flex-1 min-h-0 overflow-y-auto p-4 space-y-3.5 bg-stone-50/90 dark:bg-[#141210]/95 text-xs" 
+             id="eventhub-public-chat-stream">
+            
+            <!-- Quick Suggestion Action Chips -->
+            <div class="pb-1">
+                <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 dark:text-stone-400 block mb-2 font-mono">Suggested Inquiries:</span>
+                <div class="flex flex-wrap gap-1.5">
+                    <button type="button" 
+                            wire:click="askQuickQuestion('Top verified venues in Lahore')"
+                            class="px-2.5 py-1 rounded-full bg-white dark:bg-[#1f1b17] border border-[#C6A15B]/40 hover:border-[#C6A15B] text-[11px] text-[#171513] dark:text-stone-200 transition shadow-xs cursor-pointer">
+                        🏛️ Top Venues
+                    </button>
+                    <button type="button" 
+                            wire:click="askQuickQuestion('Shift timings aur single-host exclusivity kya hai?')"
+                            class="px-2.5 py-1 rounded-full bg-white dark:bg-[#1f1b17] border border-[#C6A15B]/40 hover:border-[#C6A15B] text-[11px] text-[#171513] dark:text-stone-200 transition shadow-xs cursor-pointer">
+                        📅 Shift Timings
+                    </button>
+                    <button type="button" 
+                            wire:click="askQuickQuestion('Catering packages aur per head rate kya hai?')"
+                            class="px-2.5 py-1 rounded-full bg-white dark:bg-[#1f1b17] border border-[#C6A15B]/40 hover:border-[#C6A15B] text-[11px] text-[#171513] dark:text-stone-200 transition shadow-xs cursor-pointer">
+                        🍽️ Catering Menu
+                    </button>
+                    <button type="button" 
+                            wire:click="askQuickQuestion('Apna wedding hall kaise register karein?')"
+                            class="px-2.5 py-1 rounded-full bg-white dark:bg-[#1f1b17] border border-[#C6A15B]/40 hover:border-[#C6A15B] text-[11px] text-[#171513] dark:text-stone-200 transition shadow-xs cursor-pointer">
+                        📝 Register Hall
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages Conversation -->
+            <!--[if BLOCK]><![endif]-->                <div class="flex justify-start">
+                    <div class="max-w-[85%] rounded-2xl p-3.5 shadow-sm space-y-1.5
+                                                    bg-white dark:bg-[#1c1917] text-[#171513] dark:text-stone-100 border border-[#C6A15B]/30 rounded-tl-none shadow-md
+                                            ">
+                        <div class="flex items-center justify-between gap-3 text-[9px] font-mono opacity-75">
+                            <span class="font-bold uppercase tracking-wider">
+                                <!--[if BLOCK]><![endif]-->                                    🤖 EventHub AI Concierge
+                                <!--[if ENDBLOCK]><![endif]-->                            </span>
+                            <span>09:01 PM</span>
+                        </div>
+
+                        <div class="leading-relaxed whitespace-pre-line text-[11px] sm:text-xs">
+                            Assalamu Alaikum! EventHub Pakistan mein aap ka khush-aamdeed!<br />
+<br />
+Main **EventHub AI Chatbot** hoon. Main aap ko Pakistan ke top luxury banquets, wedding marquees, shift booking timings, catering packages aur platform registration ke baray mein mukammal information de sakta hoon.<br />
+<br />
+Aap mujh se kuch bhi pooch saktay hain!
+                        </div>
+                    </div>
+                </div>
+            <!--[if ENDBLOCK]><![endif]-->
+        </div>
+
+        <!-- Footer: Text Input Form (Matching Reference Screenshot) -->
+        <div class="p-3 bg-white dark:bg-[#1A1714] border-t border-[#E7E5E4] dark:border-white/10 shrink-0">
+            <form wire:submit.prevent="sendMessage" class="flex items-center gap-2">
+                <input type="text"
+                       wire:model="newMessage"
+                       placeholder="Type your message here..."
+                       class="flex-1 px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-white/20 bg-stone-50 dark:bg-[#171513] text-[#171513] dark:text-white placeholder-stone-400 focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B] outline-none text-xs transition">
+
+                <!-- Orange/Gold Paper Airplane Send Button (Matching Screenshot) -->
+                <button type="submit"
+                        wire:loading.attr="disabled"
+                        class="w-10 h-10 rounded-xl bg-gradient-to-r from-[#C6A15B] to-[#A88236] text-[#171513] hover:brightness-110 flex items-center justify-center shadow-md shadow-[#C6A15B]/30 shrink-0 transition cursor-pointer"
+                        title="Send message">
+                    <svg class="w-4 h-4 transform rotate-45 -translate-y-0.5 translate-x-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
+                    </svg>
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    function scrollPublicChat() {
+        const stream = document.getElementById('eventhub-public-chat-stream');
+        if (stream) {
+            stream.scrollTo({ top: stream.scrollHeight, behavior: 'smooth' });
+        }
+    }
+</script>
+    
+    <!-- Livewire Scripts -->
+<script src="http://127.0.0.1:9000/livewire-8f9155ee/livewire.js?id=8ea5922c"   data-csrf="so0oa6QlGJ7Al6etmhpy8SWJzeEpxXofmYCKP8B0" data-module-url="http://127.0.0.1:9000/livewire-8f9155ee" data-update-uri="http://127.0.0.1:9000/livewire-8f9155ee/update" data-navigate-once="true"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>
+
