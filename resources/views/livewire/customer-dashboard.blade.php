@@ -39,6 +39,155 @@
             </div>
         </div>
 
+        <!-- Navigation Tabs: Bookings vs Profile -->
+        <div class="flex items-center gap-3 border-b border-[#E7E5E4] dark:border-white/10 pb-3">
+            <button type="button" wire:click="switchTab('bookings')" 
+                    class="px-4 py-2 text-xs font-sans font-bold uppercase tracking-wider rounded-xl transition flex items-center gap-2 cursor-pointer {{ $activeTab === 'bookings' ? 'bg-[#C6A15B] text-[#171513] shadow-md font-extrabold' : 'bg-stone-100 dark:bg-white/5 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B]' }}">
+                <span>📋 My Reservations &amp; Contracts ({{ $bookings->count() }})</span>
+            </button>
+            <button type="button" wire:click="switchTab('profile')" 
+                    class="px-4 py-2 text-xs font-sans font-bold uppercase tracking-wider rounded-xl transition flex items-center gap-2 cursor-pointer {{ $activeTab === 'profile' ? 'bg-[#C6A15B] text-[#171513] shadow-md font-extrabold' : 'bg-stone-100 dark:bg-white/5 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B]' }}">
+                <span>👤 My Profile &amp; Account Settings</span>
+            </button>
+        </div>
+
+        @if($profileFeedback)
+            <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold shadow-md flex items-center justify-between">
+                <span>✓ {{ $profileFeedback }}</span>
+                <button type="button" wire:click="$set('profileFeedback', null)" class="text-emerald-500 text-lg leading-none cursor-pointer">&times;</button>
+            </div>
+        @endif
+
+        @if($activeTab === 'profile')
+            <!-- ===================================================================
+                 CUSTOMER PROFILE & CREDENTIAL SUITE
+                 =================================================================== -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- Left: Luxury Customer Identity Card (5 cols) -->
+                <div class="lg:col-span-5 bg-white dark:bg-[#171513] border border-[#C6A15B]/40 rounded-2xl p-6 sm:p-7 shadow-md space-y-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#D4AF67] via-[#C6A15B] to-[#8F7239] text-[#171513] font-cinzel text-2xl font-bold flex items-center justify-center shadow-lg shadow-[#C6A15B]/20 shrink-0">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-mono uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B] font-bold block">
+                                Registered Member
+                            </span>
+                            <h3 class="font-serif-luxury text-xl sm:text-2xl text-[#171513] dark:text-white font-bold leading-tight">
+                                {{ auth()->user()->name }}
+                            </h3>
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-sans font-bold uppercase bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 mt-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                VIP Client Account
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 pt-4 border-t border-[#E7E5E4] dark:border-white/10 text-xs font-sans">
+                        <div class="flex justify-between py-1.5 border-b border-stone-100 dark:border-white/5">
+                            <span class="text-stone-500 dark:text-stone-400">Email Address:</span>
+                            <strong class="text-[#171513] dark:text-white font-mono">{{ auth()->user()->email }}</strong>
+                        </div>
+                        <div class="flex justify-between py-1.5 border-b border-stone-100 dark:border-white/5">
+                            <span class="text-stone-500 dark:text-stone-400">Phone Number:</span>
+                            <strong class="text-[#171513] dark:text-white font-mono">{{ auth()->user()->phone ?? 'Not specified' }}</strong>
+                        </div>
+                        <div class="flex justify-between py-1.5 border-b border-stone-100 dark:border-white/5">
+                            <span class="text-stone-500 dark:text-stone-400">Account Created:</span>
+                            <strong class="text-[#171513] dark:text-white">{{ auth()->user()->created_at->format('d M Y') }}</strong>
+                        </div>
+                        <div class="flex justify-between py-1.5 border-b border-stone-100 dark:border-white/5">
+                            <span class="text-stone-500 dark:text-stone-400">Total Bookings:</span>
+                            <strong class="text-[#8F7239] dark:text-[#C6A15B] font-bold">{{ $bookings->count() }} Functions</strong>
+                        </div>
+                        <div class="flex justify-between py-1.5">
+                            <span class="text-stone-500 dark:text-stone-400">Total Spent:</span>
+                            <strong class="text-emerald-600 dark:text-emerald-400 font-bold font-mono">PKR {{ number_format($totalSpent) }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-[#F8F5EF] dark:bg-white/5 border border-[#C6A15B]/20 text-[11px] text-stone-600 dark:text-stone-400 space-y-1">
+                        <strong class="text-[#171513] dark:text-white block font-bold">🔒 Privacy & Data Guarantee</strong>
+                        <p>Your contact details are strictly confidential and only shared with verified hall managers for your booked dates.</p>
+                    </div>
+                </div>
+
+                <!-- Right: Profile Edit & Password Change (7 cols) -->
+                <div class="lg:col-span-7 space-y-6">
+                    
+                    <!-- Edit Details Form -->
+                    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 rounded-2xl p-6 sm:p-7 shadow-md space-y-5">
+                        <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-3">
+                            <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-bold">Personal Contact Profile</h4>
+                            <p class="text-xs text-stone-500 dark:text-stone-400">Update your primary name and phone number for booking confirmations.</p>
+                        </div>
+
+                        <form wire:submit.prevent="updateProfile" class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-1">Full Name</label>
+                                    <input type="text" wire:model="profileName" class="w-full bg-[#F8F5EF] dark:bg-[#1f1b17] border border-[#E7E5E4] dark:border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-[#171513] dark:text-white outline-none focus:border-[#C6A15B] transition">
+                                    @error('profileName') <span class="text-rose-500 text-[11px] font-bold block mt-1">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-1">Mobile Phone (WhatsApp)</label>
+                                    <input type="text" wire:model="profilePhone" class="w-full bg-[#F8F5EF] dark:bg-[#1f1b17] border border-[#E7E5E4] dark:border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-[#171513] dark:text-white font-mono outline-none focus:border-[#C6A15B] transition">
+                                    @error('profilePhone') <span class="text-rose-500 text-[11px] font-bold block mt-1">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-1">Account Email (Immutable ID)</label>
+                                <input type="email" value="{{ auth()->user()->email }}" disabled class="w-full bg-stone-100 dark:bg-white/5 border border-stone-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-stone-500 dark:text-stone-400 font-mono cursor-not-allowed">
+                                <span class="text-[10px] text-stone-400 block mt-1">To change your registered email, contact platform concierge.</span>
+                            </div>
+
+                            <div class="flex justify-end pt-2">
+                                <button type="submit" class="tbtn tbtn-gold !h-10 !px-5 text-xs font-bold uppercase tracking-wider">
+                                    <span>💾 Save Profile Changes</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Change Password Form -->
+                    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 rounded-2xl p-6 sm:p-7 shadow-md space-y-5">
+                        <div class="border-b border-[#E7E5E4] dark:border-white/10 pb-3">
+                            <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-bold">Security &amp; Password Update</h4>
+                            <p class="text-xs text-stone-500 dark:text-stone-400">Ensure your account has a strong passphrase of at least 6 characters.</p>
+                        </div>
+
+                        <form wire:submit.prevent="updatePassword" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-1">Current Password</label>
+                                <input type="password" wire:model="currentPassword" class="w-full bg-[#F8F5EF] dark:bg-[#1f1b17] border border-[#E7E5E4] dark:border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-[#171513] dark:text-white outline-none focus:border-[#C6A15B] transition">
+                                @error('currentPassword') <span class="text-rose-500 text-[11px] font-bold block mt-1">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-1">New Password</label>
+                                    <input type="password" wire:model="newPassword" class="w-full bg-[#F8F5EF] dark:bg-[#1f1b17] border border-[#E7E5E4] dark:border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-[#171513] dark:text-white outline-none focus:border-[#C6A15B] transition">
+                                    @error('newPassword') <span class="text-rose-500 text-[11px] font-bold block mt-1">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-1">Confirm New Password</label>
+                                    <input type="password" wire:model="newPassword_confirmation" class="w-full bg-[#F8F5EF] dark:bg-[#1f1b17] border border-[#E7E5E4] dark:border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-[#171513] dark:text-white outline-none focus:border-[#C6A15B] transition">
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end pt-2">
+                                <button type="submit" class="tbtn tbtn-outline !h-10 !px-5 text-xs font-bold uppercase tracking-wider">
+                                    <span>🔑 Update Password</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        @else
         <!-- Feedback & Status Flash Messages -->
         @if(session('message'))
             <div class="p-4 rounded-xl bg-[#171513]/90 border border-[#C6A15B]/60 text-[#C6A15B] text-xs font-semibold shadow-md flex items-center justify-between">
@@ -365,19 +514,19 @@
                                         @endif
                                     </td>
 
-                                    <td class="text-right">
-                                        <div class="flex items-center justify-end gap-1.5 font-sans">
-                                            <button wire:click="viewBooking('{{ $b->id }}')" 
-                                                    class="btn-outline-gold !h-7 !px-2.5 text-[11px] font-bold rounded-lg uppercase">
-                                                Details
+                                    <td class="text-right whitespace-nowrap">
+                                        <div class="inline-flex items-center justify-end gap-1.5 font-sans">
+                                            <button type="button" wire:click="viewBooking('{{ $b->id }}')" class="tbtn tbtn-gold" title="View Reservation Details">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                <span>Details</span>
                                             </button>
-                                            <a href="{{ route('documents.agreement', $b->id) }}" target="_blank" 
-                                               class="px-2.5 py-1 rounded-lg border border-stone-200 dark:border-white/10 hover:border-[#C6A15B] text-stone-700 dark:text-stone-300 hover:text-[#C6A15B] transition font-bold text-[10px] uppercase">
-                                                A4 Contract ↗
+                                            <a href="{{ route('documents.agreement', $b->id) }}" target="_blank" class="tbtn tbtn-outline" title="Download Official A4 Contract">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                <span>Contract ↗</span>
                                             </a>
-                                            <a href="{{ route('documents.invoice', $b->id) }}" target="_blank" 
-                                               class="px-2.5 py-1 rounded-lg border border-stone-200 dark:border-white/10 hover:border-[#C6A15B] text-stone-700 dark:text-stone-300 hover:text-[#C6A15B] transition font-bold text-[10px] uppercase">
-                                                Tax Invoice ↗
+                                            <a href="{{ route('documents.invoice', $b->id) }}" target="_blank" class="tbtn tbtn-dark" title="Download Formal Tax Invoice">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+                                                <span>Invoice ↗</span>
                                             </a>
                                         </div>
                                     </td>
@@ -388,6 +537,7 @@
                 </div>
             @endif
         </div>
+        @endif
 
         <!-- ===================================================================
              5. ITEMIZED FINANCIAL & LEGAL BREAKDOWN MODAL

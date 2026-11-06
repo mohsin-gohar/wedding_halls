@@ -15,12 +15,10 @@
             <p class="text-xs text-stone-500 dark:text-stone-400 font-sans max-w-md mx-auto leading-relaxed">
                 List your ballrooms and manage banquet operations on Pakistan's premier venue network.
             </p>
-            @if(! config('platform.billing_enabled'))
-                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#C6A15B]/10 border border-[#C6A15B]/40 text-[#8F7239] dark:text-[#C6A15B] text-[10px] font-sans font-bold uppercase tracking-wider">
-                    <span class="w-1.5 h-1.5 rounded-full bg-[#C6A15B]"></span>
-                    Free Launch Access — {{ (int) config('platform.free_access_days', 30) }} Days Complimentary
-                </div>
-            @endif
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#C6A15B]/10 border border-[#C6A15B]/40 text-[#8F7239] dark:text-[#C6A15B] text-[10px] font-sans font-bold uppercase tracking-wider">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#C6A15B]"></span>
+                100% Free Launch Registration &mdash; Zero Rent &amp; Zero Listing Charges
+            </div>
         </div>
 
         <!-- Flash Messages -->
@@ -193,6 +191,17 @@
                                class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm w-full">
                     </div>
                 </div>
+            </div>
+
+            <!-- Free Launch & Admin Approval Notice -->
+            <div class="p-3.5 rounded-xl bg-[#F8F5EF] dark:bg-white/5 border border-[#C6A15B]/40 text-stone-700 dark:text-stone-300 text-xs space-y-1">
+                <div class="flex items-center gap-1.5 font-bold text-[#8F7239] dark:text-[#C6A15B] uppercase text-[10px] font-mono">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Free Onboarding &amp; Instant Live Launch</span>
+                </div>
+                <p class="leading-relaxed">
+                    Registration is completely free with zero rent or listing fees. Once submitted, our admin team reviews your hall details and your venue goes <strong>LIVE on the public website immediately upon approval</strong>!
+                </p>
             </div>
 
             <!-- Submit Button -->

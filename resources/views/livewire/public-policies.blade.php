@@ -51,6 +51,10 @@
                     <p>
                         All vendor financial data, customer identities, and contract agreements are isolated via strict database tenant boundaries. Venue operators can only inspect their own booked events and cannot access competitor data.
                     </p>
+                    <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">4. Free Registration Data &amp; Public Showcase Notice</h3>
+                    <p>
+                        Hall profiles, hall capacity, addresses, photos, and shift pricing submitted during free vendor registration are used strictly to showcase your venue on EventHub's public discovery marketplace once approved by administration. No hidden listing fees or rent are charged for public listing.
+                    </p>
                 </div>
             @elseif($section === 'cancellation')
                 <div class="space-y-4">
@@ -71,15 +75,23 @@
                 </div>
             @else
                 <div class="space-y-4">
-                    <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">1. Agreement to Platform Terms</h3>
+                    <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">1. 100% Free Launch Onboarding &amp; Zero Platform Rent</h3>
+                    <p>
+                        During this launch phase across Pakistan, <strong>EventHub is completely 100% free of charge for banquet, marquee, and wedding hall owners</strong>. We charge <strong>zero platform rent, zero monthly subscription fees, and zero listing charges</strong>. Any venue owner can sign up and utilize the complete management suite without any payment obligation.
+                    </p>
+                    <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">2. Admin Verification &amp; Instant Live Publication</h3>
+                    <p>
+                        When a wedding hall completes free registration, its credentials undergo rapid verification by our administrative moderation team. <strong>The moment the Super Admin approves the venue, the hall profile, high-resolution photo galleries, availability calendar, and instant booking inquiry channels go LIVE immediately on the public website and nationwide marketplace</strong>, making it directly accessible to thousands of wedding couples and families across Pakistan.
+                    </p>
+                    <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">3. Agreement to Platform Terms</h3>
                     <p>
                         By using the EventHub marketplace or SaaS platform, clients and venue operators agree to adhere to these Terms of Service. All monetary amounts are quoted authoritatively in Pakistani Rupees (PKR) and are subject to applicable provincial sales tax on services (PRA in Punjab, SRB in Sindh, ICT in Islamabad).
                     </p>
-                    <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">2. Concurrency &amp; Booking Validity</h3>
+                    <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">4. Concurrency &amp; Booking Validity</h3>
                     <p>
                         A booking reservation is only officially confirmed once the token advance has been recorded and an official EventHub receipt number is issued. Online holds expire automatically after the designated window if unconfirmed.
                     </p>
-                    <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">3. Operating Shift Compliance</h3>
+                    <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">5. Operating Shift Compliance</h3>
                     <p>
                         Events must conform to municipal operating regulations, including Punjabi Banquets One-Dish legislation and standard municipal closing times. Hall managers hold authority to enforce these requirements.
                     </p>

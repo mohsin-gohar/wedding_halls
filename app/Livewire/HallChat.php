@@ -63,6 +63,12 @@ class HallChat extends Component
             if (! $this->hall->is_active) {
                 abort(404, 'This venue space is currently inactive.');
             }
+
+            $user = Auth::user();
+            $isStaffForHall = $user && ($user->isSuperAdmin() || $user->tenant_id === $this->hall->tenant_id);
+            if (! $isStaffForHall && (! $this->hall->tenant || ! $this->hall->tenant->is_active || $this->hall->tenant->verification_status !== 'APPROVED')) {
+                abort(404, 'Venue is pending verification or currently unavailable.');
+            }
         }
 
         $this->visitorIp = request()->ip() ?? '127.0.0.1';
@@ -292,6 +298,10 @@ class HallChat extends Component
 
     public function setSelectedCustomer(string $ip, string $session)
     {
+        $user = Auth::user();
+        $isHallOwner = $user && ($user->isSuperAdmin() || $user->tenant_id === $this->hall->tenant_id);
+        abort_unless($isHallOwner, 403, 'Only authorized venue staff can open guest chat threads.');
+
         $this->selectedCustomerIp = $ip;
         $this->selectedCustomerSession = $session;
         $this->messages = HallChatMessage::getConversation(

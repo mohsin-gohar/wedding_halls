@@ -64,10 +64,20 @@
             <!-- FAQ 5 -->
             <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 rounded-2xl p-6 sm:p-7 shadow-sm space-y-2">
                 <h3 class="font-serif-luxury text-xl sm:text-2xl text-[#171513] dark:text-white font-medium" style="text-wrap: balance;">
-                    5. How can venue and marquee owners list their properties?
+                    5. How can wedding hall and marquee owners register their property?
                 </h3>
                 <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed font-normal" style="text-wrap: pretty;">
-                    Banquet owners can register via our "List Your Hall" link. Once onboarding details and business documents are submitted, our Super Admin moderation desk verifies your commercial credentials and activates your dedicated SaaS dashboard suite.
+                    Banquet and marquee owners can sign up directly via our <a href="{{ route('register') }}" class="text-[#8F7239] dark:text-[#C6A15B] font-bold hover:underline">Free Venue Registration</a> form in under 2 minutes. Fill in your basic venue details, capacity, and city to begin.
+                </p>
+            </div>
+
+            <!-- FAQ 6 -->
+            <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 rounded-2xl p-6 sm:p-7 shadow-sm space-y-2">
+                <h3 class="font-serif-luxury text-xl sm:text-2xl text-[#171513] dark:text-white font-medium" style="text-wrap: balance;">
+                    6. Is listing my hall on EventHub free? When does it go live?
+                </h3>
+                <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed font-normal" style="text-wrap: pretty;">
+                    Yes! During our current nationwide launch phase across Pakistan, registering and listing your hall on EventHub is <strong>100% free of cost</strong> — with zero monthly rent, zero subscription fees, and zero listing commission. Once you submit your registration, our administration team reviews your details. <strong>The moment your account is approved by admin, your hall profile and availability calendar go LIVE on our public marketplace immediately</strong> for couples to explore, check available dates, and submit booking inquiries.
                 </p>
             </div>
         </div>

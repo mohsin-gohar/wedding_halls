@@ -613,9 +613,11 @@ class AdminDashboard extends Component
             'verification_status' => 'APPROVED',
             'is_active' => true,
         ]);
+        $tenant->venues()->update(['is_active' => true]);
+        $tenant->halls()->update(['is_active' => true]);
 
         AuditLog::log('VENDOR_APPROVED', "Super Admin approved and activated vendor [{$tenant->name}].", $tenant->id, 'Tenant', $tenant->id);
-        $this->feedbackMessage = "Vendor [{$tenant->name}] has been approved.";
+        $this->feedbackMessage = "Vendor [{$tenant->name}] has been approved and is now live on the public website.";
     }
 
     public function approveTenant(string $tenantId)

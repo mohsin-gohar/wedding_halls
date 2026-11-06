@@ -1,0 +1,65 @@
+<div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="flex justify-center">
+            <div class="w-16 h-16 bg-[#C6A15B] rounded-2xl flex items-center justify-center text-[#171513] font-bold text-2xl shadow-lg">
+                EH
+            </div>
+        </div>
+
+        @if ($verified)
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-[#171513] tracking-tight sm:text-4xl">
+                Email Verified ✓
+            </h2>
+            <p class="mt-2 text-center text-stone-600 dark:text-stone-400 text-sm">
+                {{ $feedbackMessage }}
+            </p>
+            <div class="mt-8 text-center">
+                <a href="{{ route('login') }}" class="tbtn tbtn-gold py-3 px-6 rounded-xl text-sm font-semibold uppercase tracking-wide shadow-lg">
+                    Go to Sign In
+                </a>
+            </div>
+        @else
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-[#171513] tracking-tight sm:text-4xl">
+                Verify Your Email
+            </h2>
+            <p class="mt-2 text-center text-stone-600 dark:text-stone-400 text-sm">
+                Enter your email to resend the verification link.
+            </p>
+
+            <div class="mt-8">
+                @if ($errorMessage)
+                    <div class="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-sm font-medium">
+                        {{ $errorMessage }}
+                    </div>
+                @endif
+
+                @if ($feedbackMessage)
+                    <div class="mb-4 p-4 bg-[#C6A15B]/10 border border-[#C6A15B]/20 rounded-xl text-[#C6A15B] text-sm font-medium">
+                        {{ $feedbackMessage }}
+                    </div>
+                @endif
+
+                <form wire:submit.prevent="resendVerification" class="space-y-4">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-[#171513] dark:text-white mb-2">
+                            Email Address
+                        </label>
+                        <input type="email" id="email" wire:model="email" placeholder="you@example.com"
+                            class="w-full px-4 py-3 rounded-xl border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#1f1c18] text-[#171513] dark:text-white focus:ring-2 focus:ring-[#C6A15B] focus:border-transparent outline-none transition-all"
+                            autocomplete="email" required>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full tbtn tbtn-gold py-3.5 rounded-xl text-sm font-semibold uppercase tracking-wide shadow-lg hover:shadow-[#C6A15B]/30 transition-all">
+                        Resend Verification Email
+                    </button>
+                </form>
+
+                <p class="mt-6 text-center text-xs text-stone-500 dark:text-stone-400">
+                    Already verified?
+                    <a href="{{ route('login') }}" class="font-semibold text-[#C6A15B] hover:underline">Sign in</a>
+                </p>
+            </div>
+        @endif
+    </div>
+</div>

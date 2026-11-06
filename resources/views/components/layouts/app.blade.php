@@ -409,16 +409,29 @@
                     @endunless
             </div>
 
-            </div><!-- Sidebar Footer User Account --><div class="p-4 shrink-0 border-t border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#171513]">
-                <div class="flex items-center justify-between text-xs">
-                    <div>
-                        <strong class="text-[#171513] dark:text-white block font-semibold">{{ auth()->user()->name }}</strong>
-                        <span class="text-[10px] text-[#C6A15B] uppercase font-sans">{{ auth()->user()->role }}</span>
-                    </div>
-                    <form method="POST" action="{{ route('logout') }}" class="inline">
+            </div><!-- Sidebar Footer User Account -->
+            <div class="p-3.5 shrink-0 border-t border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#1a1714]">
+                <div class="flex items-center justify-between gap-2.5">
+                    <a href="{{ auth()->user()->isSuperAdmin() ? route('admin.dashboard') : route('staff') }}" class="flex items-center gap-2.5 min-w-0 group cursor-pointer" title="Manage Profile & Team">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D4AF67] to-[#8F7239] text-[#171513] font-bold text-xs flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                        </div>
+                        <div class="min-w-0 text-left">
+                            <strong class="text-[#171513] dark:text-white block font-semibold text-xs truncate group-hover:text-[#C6A15B] transition">{{ auth()->user()->name }}</strong>
+                            <span class="text-[9px] text-[#8F7239] dark:text-[#C6A15B] uppercase font-mono block tracking-wider truncate">
+                                @if(auth()->user()->isSuperAdmin()) 👑 Super Admin
+                                @elseif(auth()->user()->isTenantOwner()) 👑 Hall Owner
+                                @elseif(auth()->user()->isManager()) 👔 Manager
+                                @elseif(auth()->user()->isChef()) 👨‍🍳 Head Chef
+                                @else 🛎️ {{ auth()->user()->role }}
+                                @endif
+                            </span>
+                        </div>
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}" class="inline shrink-0">
                         @csrf
-                        <button type="submit" class="text-[#171513] dark:text-[#C6A15B] hover:text-[#171513] dark:hover:text-[#F8F5EF] text-xs font-semibold underline">
-                            Sign Out
+                        <button type="submit" class="tbtn tbtn-icon tbtn-outline !w-7 !h-7 text-xs" title="Sign Out">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                         </button>
                     </form>
                 </div>

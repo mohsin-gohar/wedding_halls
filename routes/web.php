@@ -3,8 +3,12 @@
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\WhatsAppWebhookController;
 use App\Livewire\AdminDashboard;
+use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
+use App\Livewire\Auth\ResetPassword;
+use App\Livewire\Auth\TwoFactorAuthComponent;
+use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\CalendarShiftGrid;
 use App\Livewire\CustomerDashboard;
 use App\Livewire\CustomerLogin;
@@ -17,6 +21,9 @@ use App\Livewire\HallMediaManager;
 use App\Livewire\InventoryTracker;
 use App\Livewire\KitchenKotBoard;
 use App\Livewire\PackageManager;
+use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\PaymentController;
+use App\Livewire\NotificationCenter;
 use App\Livewire\PublicAbout;
 use App\Livewire\PublicAvailabilityChecker;
 use App\Livewire\PublicContact;
@@ -153,11 +160,11 @@ Route::get('/services', PublicServices::class)->middleware('throttle:public-page
 
 // Company & Customer Assistance
 Route::get('/about', PublicAbout::class)->middleware('throttle:public-pages')->name('public.about');
-Route::get('/contact', PublicContact::class)->name('public.contact')->middleware('throttle:30,1');
+Route::get('/contact', PublicContact::class)->name('public.contact')->middleware('throttle:reload-protection');
 Route::get('/faqs', PublicFaqs::class)->middleware('throttle:public-pages')->name('public.faqs');
 Route::get('/check-availability', PublicAvailabilityChecker::class)->name('public.availability')->middleware('throttle:public-availability');
 Route::redirect('/availability', '/check-availability', 301);
-Route::get('/rsvp', PublicGuestRsvp::class)->name('public.rsvp')->middleware('throttle:30,1');
+Route::get('/rsvp', PublicGuestRsvp::class)->name('public.rsvp')->middleware('throttle:reload-protection');
 
 // Legal Policies
 Route::get('/policies/terms', PublicPolicies::class)->middleware('throttle:public-pages')->name('public.policies.terms');
@@ -183,8 +190,8 @@ Route::get('/refund', function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('customer')->group(function () {
-    Route::get('/login', CustomerLogin::class)->name('customer.login')->middleware('throttle:60,1');
-    Route::get('/register', CustomerRegister::class)->name('customer.register')->middleware('throttle:60,1');
+    Route::get('/login', CustomerLogin::class)->name('customer.login')->middleware('throttle:reload-protection');
+    Route::get('/register', CustomerRegister::class)->name('customer.register')->middleware('throttle:reload-protection');
 });
 
 Route::middleware(['auth', 'portal.role:ROLE_CUSTOMER'])->prefix('customer')->group(function () {
@@ -197,8 +204,8 @@ Route::middleware(['auth', 'portal.role:ROLE_CUSTOMER'])->prefix('customer')->gr
 | 3. Unified & Vendor Authentication Routes (Livewire + Native HTTP POST)
 |--------------------------------------------------------------------------
 */
-Route::get('/login', Login::class)->name('login')->middleware('throttle:60,1');
-Route::get('/register', Register::class)->name('register')->middleware('throttle:60,1');
+Route::get('/login', Login::class)->name('login')->middleware('throttle:reload-protection');
+Route::get('/register', Register::class)->name('register')->middleware('throttle:reload-protection');
 
 $authenticatePortalRequest = function (Request $request) {
     $credentials = $request->validate([
@@ -208,11 +215,11 @@ $authenticatePortalRequest = function (Request $request) {
 
     $throttleKey = Str::lower($credentials['email']).'|'.$request->ip();
 
-    if (RateLimiter::tooManyAttempts($throttleKey, 10)) {
+    if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
         $seconds = RateLimiter::availableIn($throttleKey);
 
         return back()->withErrors([
-            'email' => "Too many login attempts. Please try again in {$seconds} seconds.",
+            'email' => "Aap dobara se login koshish nahi kar saktay. Baraye meherbani {$seconds} seconds intezar karein. (Too many login attempts. Please try again in {$seconds} seconds.)",
         ])->withInput($request->only('email'));
     }
 
@@ -245,8 +252,8 @@ $authenticatePortalRequest = function (Request $request) {
     ])->withInput($request->only('email'));
 };
 
-Route::post('/login', $authenticatePortalRequest)->name('login.perform')->middleware('throttle:60,1');
-Route::post('/customer/login', $authenticatePortalRequest)->name('customer.login.perform')->middleware('throttle:60,1');
+Route::post('/login', $authenticatePortalRequest)->name('login.perform')->middleware('throttle:reload-protection');
+Route::post('/customer/login', $authenticatePortalRequest)->name('customer.login.perform')->middleware('throttle:reload-protection');
 
 Route::match(['get', 'post'], '/logout', function () {
     Auth::logout();
@@ -255,6 +262,17 @@ Route::match(['get', 'post'], '/logout', function () {
 
     return redirect()->route('login')->with('message', 'You have been signed out successfully.');
 })->name('logout');
+
+/*
+|--------------------------------------------------------------------------
+| 3.5 Password Reset & Email Verification Routes
+|--------------------------------------------------------------------------
+*/
+Route::get('/password/forgot', ForgotPassword::class)->name('password.forgot')->middleware('throttle:reload-protection');
+Route::get('/password/reset', ResetPassword::class)->name('password.reset')->middleware('throttle:reload-protection');
+Route::get('/verify/email', VerifyEmail::class)->name('verify.email')->middleware('throttle:reload-protection');
+Route::get('/2fa/setup', TwoFactorAuthComponent::class)->name('2fa.setup')->middleware('auth');
+Route::get('/2fa/verify', TwoFactorAuthComponent::class)->name('2fa.verify')->middleware('auth');
 
 /*
 |--------------------------------------------------------------------------
@@ -278,6 +296,7 @@ Route::middleware(['auth', 'tenant.staff'])->group(function () {
     Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_CHEF')->get('/inventory', InventoryTracker::class)->name('inventory');
     Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_CHEF')->get('/catering-packages', PackageManager::class)->name('packages.manager');
     Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_ACCOUNTANT')->get('/expenses', ExpenseTracker::class)->name('expenses');
+    Route::middleware(['auth', 'tenant.staff'])->get('/notifications', NotificationCenter::class)->name('notifications');
 });
 
 /*
@@ -311,3 +330,24 @@ Route::middleware('auth')->prefix('documents')->name('documents.')->group(functi
 */
 Route::get('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'verify'])->middleware('throttle:120,1');
 Route::post('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'handle'])->middleware('throttle:120,1');
+
+/*
+|--------------------------------------------------------------------------
+| 8. REST API for Mobile Apps & Third-Party Integrations
+|--------------------------------------------------------------------------
+*/
+Route::prefix('api/v1')->middleware(['auth', 'api'])->name('api.')->group(function () {
+    // Booking API
+    Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');
+    Route::get('/bookings/{id}', [BookingController::class, 'show'])->name('bookings.show');
+    Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
+    Route::put('/bookings/{id}', [BookingController::class, 'update'])->name('bookings.update');
+    Route::delete('/bookings/{id}', [BookingController::class, 'destroy'])->name('bookings.destroy');
+    Route::get('/bookings/availability', [BookingController::class, 'availability'])->name('bookings.availability');
+
+    // Payment API
+    Route::get('/payments', [PaymentController::class, 'list'])->name('payments.index');
+    Route::post('/payments/initiate', [PaymentController::class, 'initiate'])->name('payments.initiate');
+    Route::get('/payments/summary', [PaymentController::class, 'summary'])->name('payments.summary');
+    Route::post('/payments/webhook/{gateway}', [PaymentController::class, 'webhook'])->name('payments.webhook');
+});

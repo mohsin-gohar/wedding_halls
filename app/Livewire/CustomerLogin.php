@@ -18,6 +18,8 @@ class CustomerLogin extends Component
 
     public bool $remember = false;
 
+    public int $loginRetryAfter = 0;
+
     protected $rules = [
         'email' => 'required|email',
         'password' => 'required|string',
@@ -33,8 +35,10 @@ class CustomerLogin extends Component
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
 
+            $this->loginRetryAfter = (int) $seconds;
+
             throw ValidationException::withMessages([
-                'email' => "Too many login attempts. Please try again in {$seconds} seconds.",
+                'email' => "Aap dobara se login koshish nahi kar saktay. Baraye meherbani {$seconds} seconds intezar karein. (Too many login attempts. Please try again in {$seconds} seconds.)",
             ]);
         }
 
@@ -60,6 +64,16 @@ class CustomerLogin extends Component
         RateLimiter::hit($throttleKey, 60);
 
         $this->addError('email', 'These credentials do not match our registered records.');
+    }
+
+    public function setLoginRetryAfter(int $seconds)
+    {
+        $this->loginRetryAfter = max(0, $seconds);
+    }
+
+    public function clearLoginRetryAfter()
+    {
+        $this->loginRetryAfter = 0;
     }
 
     public function render()

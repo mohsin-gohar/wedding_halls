@@ -7,7 +7,6 @@ use App\Livewire\HallChat;
 use App\Livewire\VenueChatWidget;
 use App\Models\Hall;
 use App\Models\HallChatMessage;
-use App\Models\Package;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -46,7 +45,7 @@ class ConciergeChatbotTest extends TestCase
 
         $response = $this->get(route('hall.showcase', $hall->slug));
         $response->assertOk();
-        $response->assertSee('Ask ' . $hall->name . ' Concierge', false);
+        $response->assertSee('Ask '.$hall->name.' Concierge', false);
         $response->assertDontSee('https://wa.me/', false);
         $response->assertDontSee('WhatsApp Concierge', false);
     }

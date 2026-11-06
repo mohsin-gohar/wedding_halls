@@ -134,21 +134,21 @@
                 </div>
 
                 <!-- Actions Footer -->
-                <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 flex items-center justify-between gap-2 font-mono text-xs">
-                    <button wire:click="openEditModal('{{ $pkg->id }}')" 
-                            class="px-3 py-1.5 bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513] hover:bg-[#C6A15B] hover:text-[#171513] transition font-bold">
-                        Edit Menu
+                <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 flex items-center justify-between gap-2 font-sans">
+                    <button type="button" wire:click="openEditModal('{{ $pkg->id }}')" class="tbtn tbtn-gold" title="Edit Menu & Pricing">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        <span>Edit Menu</span>
                     </button>
 
                     <div class="flex items-center gap-2">
-                        <button wire:click="togglePackageStatus('{{ $pkg->id }}')" 
-                                class="px-2.5 py-1.5 border border-stone-300 dark:border-white/20 text-stone-700 dark:text-stone-300 hover:border-[#C6A15B] transition">
-                            {{ $pkg->is_active ? 'Archive' : 'Publish' }}
+                        <button type="button" wire:click="togglePackageStatus('{{ $pkg->id }}')" class="tbtn tbtn-outline">
+                            <span>{{ $pkg->is_active ? 'Archive' : 'Publish' }}</span>
                         </button>
-                        <button wire:click="deletePackage('{{ $pkg->id }}')" 
+                        <button type="button" wire:click="deletePackage('{{ $pkg->id }}')" 
                                 onclick="return confirm('Delete this catering package?') || event.stopImmediatePropagation()"
-                                class="px-2.5 py-1.5 bg-[#171513] text-white hover:bg-[#171513] transition">
-                            Delete
+                                class="tbtn tbtn-red">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            <span>Delete</span>
                         </button>
                     </div>
                 </div>

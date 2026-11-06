@@ -17,6 +17,16 @@ use Livewire\Component;
 #[Layout('components.layouts.public')]
 class PublicHallDetails extends Component
 {
+    /**
+     * Curated showcase photos used when a hall has not uploaded its own gallery yet.
+     */
+    private const FALLBACK_IMAGES = [
+        'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?q=80&w=1200&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1200&auto=format&fit=crop',
+    ];
+
     public Hall $hall;
 
     public string $activePhoto = '';
@@ -54,10 +64,9 @@ class PublicHallDetails extends Component
             abort(404, 'Venue is pending verification or currently unavailable.');
         }
 
-        $images = is_array($this->hall->images) ? $this->hall->images : [];
         $this->activePhoto = ! empty($this->hall->cover_image)
             ? $this->hall->cover_image
-            : ($images[0] ?? 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop');
+            : $this->displayImages()[0];
 
         // Track page visit
         PageVisit::record(
@@ -244,11 +253,35 @@ class PublicHallDetails extends Component
         ]);
     }
 
+    /**
+     * Photos actually shown in the public gallery: the hall's uploaded
+     * gallery when present, otherwise the curated showcase fallbacks.
+     * Used by both the view and setPhoto() so every visible thumbnail is
+     * selectable (and no arbitrary URL can be injected).
+     */
+    public function displayImages(): array
+    {
+        $images = is_array($this->hall->images)
+            ? array_values(array_filter($this->hall->images, fn ($img) => is_string($img) && $img !== ''))
+            : [];
+
+        if (! empty($images)) {
+            return $images;
+        }
+
+        return self::FALLBACK_IMAGES;
+    }
+
     public function setPhoto(string $url)
     {
-        // Validate that the requested photo is actually part of this hall's gallery or cover image
-        $images = is_array($this->hall->images) ? $this->hall->images : [];
-        if ($url === $this->hall->cover_image || in_array($url, $images)) {
+        // Validate that the requested photo is actually part of this hall's gallery,
+        // its cover image, or the curated fallback set the visitor can see.
+        $allowed = $this->displayImages();
+        if (! empty($this->hall->cover_image)) {
+            $allowed[] = $this->hall->cover_image;
+        }
+
+        if (in_array($url, $allowed, true)) {
             $this->activePhoto = $url;
         }
     }
@@ -478,7 +511,7 @@ class PublicHallDetails extends Component
             'days' => $calendarDays, // alias for backwards compatibility
             'bookings' => $bookings,
             'packages' => $packages,
-            'images' => is_array($this->hall->images) ? $this->hall->images : [],
+            'images' => $this->displayImages(),
             'videos' => is_array($this->hall->videos) ? $this->hall->videos : [],
             'isWishlisted' => $this->isWishlisted,
             'wishlistCount' => $this->wishlistCount,

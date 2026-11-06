@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -30,6 +31,15 @@ class CustomerRegister extends Component
 
     public function register()
     {
+        $throttleKey = 'customer_register|'.request()->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            $this->addError('name', "Aap dobara se register koshish nahi kar saktay. Baraye meherbani {$seconds} seconds intezar karein. (Too many registration attempts. Please wait {$seconds} seconds.)");
+
+            return;
+        }
+        RateLimiter::hit($throttleKey, 60);
+
         $this->validate();
 
         $user = User::create([

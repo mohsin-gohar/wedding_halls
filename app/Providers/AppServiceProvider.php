@@ -28,6 +28,20 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('public-pages', fn (Request $request) => Limit::perMinute(120)->by($request->ip()));
         RateLimiter::for('public-availability', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
 
+        // Reload Protection: Limits rapid reloads to 5 per minute per IP + path
+        RateLimiter::for('reload-protection', function (Request $request) {
+            return Limit::perMinute(5)
+                ->by($request->ip().'|'.$request->path())
+                ->response(function (Request $request, array $headers) {
+                    $retryAfter = (int) ($headers['Retry-After'] ?? 60);
+
+                    return response()->view('errors.429', [
+                        'retryAfter' => $retryAfter,
+                        'message' => 'Aap website ko bar bar reload nahi kar saktay. Baraye meherbani thori der intezar karein.',
+                    ], 429, $headers);
+                });
+        });
+
         if (! $this->app->runningInConsole() && is_file($hotFile = public_path('hot')) && is_file(public_path('build/manifest.json'))) {
             $hotUrl = trim((string) @file_get_contents($hotFile));
             $parsed = parse_url($hotUrl);

@@ -357,12 +357,14 @@ class Dashboard extends Component
 
     public function openChatModal(string $hallId, string $ip, string $session): void
     {
-        $this->selectedChatHallId = $hallId;
+        $hall = $this->assertOwnedHall($hallId);
+
+        $this->selectedChatHallId = $hall->id;
         $this->selectedChatIp = $ip;
         $this->selectedChatSession = $session;
         $this->chatReplyText = '';
-        $this->chatMessages = HallChatMessage::getConversation($hallId, $ip, $session);
-        HallChatMessage::markAsRead($hallId, $ip, $session);
+        $this->chatMessages = HallChatMessage::getConversation($hall->id, $ip, $session);
+        HallChatMessage::markAsRead($hall->id, $ip, $session);
         $this->showChatModal = true;
     }
 
@@ -383,8 +385,10 @@ class Dashboard extends Component
             return;
         }
 
+        $hall = $this->assertOwnedHall($this->selectedChatHallId);
+
         HallChatMessage::create([
-            'hall_id' => $this->selectedChatHallId,
+            'hall_id' => $hall->id,
             'user_id' => Auth::id(),
             'ip_address' => $this->selectedChatIp,
             'session_id' => $this->selectedChatSession,
@@ -397,10 +401,23 @@ class Dashboard extends Component
 
         $this->chatReplyText = '';
         $this->chatMessages = HallChatMessage::getConversation(
-            $this->selectedChatHallId,
+            $hall->id,
             $this->selectedChatIp,
             $this->selectedChatSession
         );
+    }
+
+    /**
+     * Ensure chat actions only touch halls belonging to the authenticated tenant.
+     */
+    protected function assertOwnedHall(string $hallId): Hall
+    {
+        $user = Auth::user();
+        abort_unless($user && $user->tenant_id && ! $user->isCustomer(), 403);
+
+        return Hall::where('id', $hallId)
+            ->where('tenant_id', $user->tenant_id)
+            ->firstOrFail();
     }
 
     public function render()

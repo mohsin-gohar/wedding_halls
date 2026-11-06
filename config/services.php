@@ -71,4 +71,30 @@ return [
         'scheme' => 'https',
     ],
 
+    /*--------------------------------------------------------------------------
+    | Payment Gateways
+    |--------------------------------------------------------------------------
+    |
+    | Supported: Stripe, JazzCash (Pakistan), EasyPaisa (Pakistan)
+    |--------------------------------------------------------------------------
+    */
+
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+
+    'jazzcash' => [
+        'merchant_id' => env('JAZZCASH_MERCHANT_ID'),
+        'password' => env('JAZZCASH_PASSWORD'),
+        'return_url' => env('JAZZCASH_RETURN_URL', config('app.url').'/api/v1/payments/webhook/jazzcash'),
+    ],
+
+    'easypaisa' => [
+        'merchant_id' => env('EASYPAISA_MERCHANT_ID'),
+        'secret_key' => env('EASYPAISA_SECRET_KEY'),
+        'return_url' => env('EASYPAISA_RETURN_URL', config('app.url').'/api/v1/payments/webhook/easypaisa'),
+    ],
+
 ];

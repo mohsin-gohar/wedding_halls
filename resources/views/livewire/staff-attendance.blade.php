@@ -210,8 +210,9 @@
                                 </td>
                                 <td class="p-3 text-right whitespace-nowrap">
                                     <button wire:click="openEditRecordModal({{ $m->id }})" type="button" 
-                                            class="border border-[#C6A15B]/50 hover:border-[#C6A15B] text-[#8F7239] hover:bg-[#C6A15B]/10 px-2.5 py-1 text-[11px] font-mono font-bold uppercase transition cursor-pointer">
-                                        ✏️ Edit
+                                            class="tbtn tbtn-outline" title="Edit Daily Log">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        <span>Edit</span>
                                     </button>
                                 </td>
                             </tr>
@@ -295,12 +296,14 @@
                                     @if($lv->status === 'PENDING')
                                         <div class="flex items-center justify-end gap-1.5">
                                             <button wire:click="approveLeave('{{ $lv->id }}')" 
-                                                    class="px-2.5 py-1 bg-[#C6A15B] hover:bg-[#C6A15B] text-white font-bold text-[10px]">
-                                                Approve
+                                                    class="tbtn tbtn-green" title="Approve Leave">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                <span>Approve</span>
                                             </button>
                                             <button wire:click="rejectLeave('{{ $lv->id }}')" 
-                                                    class="px-2 py-1 bg-[#171513] hover:bg-[#171513] text-white font-bold text-[10px]">
-                                                Reject
+                                                    class="tbtn tbtn-red" title="Reject Leave">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                <span>Reject</span>
                                             </button>
                                         </div>
                                     @else

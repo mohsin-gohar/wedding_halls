@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Booking;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -17,6 +18,20 @@ class CustomerDashboard extends Component
     public string $cancellationReason = '';
 
     public ?string $feedbackMessage = null;
+
+    public string $activeTab = 'bookings';
+
+    public string $profileName = '';
+
+    public string $profilePhone = '';
+
+    public string $currentPassword = '';
+
+    public string $newPassword = '';
+
+    public string $newPassword_confirmation = '';
+
+    public ?string $profileFeedback = null;
 
     public function mount()
     {
@@ -32,15 +47,69 @@ class CustomerDashboard extends Component
 
             return redirect()->route('dashboard');
         }
+
+        $this->profileName = $user->name ?? '';
+        $this->profilePhone = $user->phone ?? '';
+
+        // Claim orphan walk-in bookings that already store this customer's email
+        // so future access is by customer_id only (prevents email-registration IDOR).
+        Booking::query()
+            ->whereNull('customer_id')
+            ->whereRaw('LOWER(customer_email) = ?', [strtolower($user->email)])
+            ->update(['customer_id' => $user->id]);
+    }
+
+    public function switchTab(string $tab): void
+    {
+        $this->activeTab = in_array($tab, ['bookings', 'profile']) ? $tab : 'bookings';
+        $this->profileFeedback = null;
+    }
+
+    public function updateProfile(): void
+    {
+        $this->validate([
+            'profileName' => 'required|string|min:3|max:100',
+            'profilePhone' => 'required|string|min:10|max:25',
+        ]);
+
+        $user = Auth::user();
+        $user->update([
+            'name' => $this->profileName,
+            'phone' => $this->profilePhone,
+        ]);
+
+        $this->profileFeedback = 'Profile details updated successfully!';
+    }
+
+    public function updatePassword(): void
+    {
+        $this->validate([
+            'currentPassword' => 'required|string',
+            'newPassword' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        if (! Hash::check($this->currentPassword, $user->password)) {
+            $this->addError('currentPassword', 'The provided current password does not match.');
+
+            return;
+        }
+
+        $user->update([
+            'password' => Hash::make($this->newPassword),
+        ]);
+
+        $this->currentPassword = '';
+        $this->newPassword = '';
+        $this->newPassword_confirmation = '';
+        $this->profileFeedback = 'Password changed successfully!';
     }
 
     public function viewBooking(string $bookingId)
     {
         $user = Auth::user();
-        $this->viewingBooking = Booking::where(function ($q) use ($user) {
-            $q->where('customer_id', $user->id)
-                ->orWhere('customer_email', $user->email);
-        })
+        $this->viewingBooking = Booking::where('customer_id', $user->id)
             ->with(['hall.venue', 'package', 'payments', 'rsvps'])
             ->findOrFail($bookingId);
 
@@ -57,10 +126,7 @@ class CustomerDashboard extends Component
     public function requestCancellation(string $bookingId)
     {
         $user = Auth::user();
-        $booking = Booking::where(function ($q) use ($user) {
-            $q->where('customer_id', $user->id)
-                ->orWhere('customer_email', $user->email);
-        })
+        $booking = Booking::where('customer_id', $user->id)
             ->findOrFail($bookingId);
 
         $booking->update([
@@ -78,10 +144,7 @@ class CustomerDashboard extends Component
             return view('livewire.customer-dashboard', ['bookings' => collect(), 'totalSpent' => 0, 'totalDue' => 0]);
         }
 
-        $bookings = Booking::where(function ($q) use ($user) {
-            $q->where('customer_id', $user->id)
-                ->orWhere('customer_email', $user->email);
-        })
+        $bookings = Booking::where('customer_id', $user->id)
             ->with(['hall.venue', 'package', 'payments'])
             ->latest()
             ->get();

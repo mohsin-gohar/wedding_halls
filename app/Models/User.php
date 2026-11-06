@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Notification;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -25,12 +26,19 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+        // role + tenant_id remain assignable only via trusted server-side User::create
+        // paths (register, staff manager, admin provision, seeders). Never bind
+        // raw request arrays into User::create without an allow-list.
         'role',
         'status',
         'tenant_id',
         'password',
         'last_login_at',
         'base_salary',
+        'email_notifications_enabled',
+        'sms_notifications_enabled',
+        'two_factor_enabled',
+        'two_factor_secret',
     ];
 
     /**
@@ -55,6 +63,9 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'password' => 'hashed',
             'base_salary' => 'decimal:2',
+            'email_notifications_enabled' => 'boolean',
+            'sms_notifications_enabled' => 'boolean',
+            'two_factor_enabled' => 'boolean',
         ];
     }
 
@@ -163,5 +174,15 @@ class User extends Authenticatable
     public function payrolls(): HasMany
     {
         return $this->hasMany(StaffPayroll::class);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function unreadNotifications(): int
+    {
+        return $this->notifications()->whereNull('read_at')->count();
     }
 }

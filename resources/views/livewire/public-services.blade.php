@@ -13,20 +13,20 @@
         <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 text-center">
             <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-[#C6A15B]/40 bg-[#171513]/90 text-[#C6A15B] text-[11px] font-semibold tracking-[0.16em] uppercase font-sans">
                 <span class="w-1.5 h-1.5 rounded-full bg-[#C6A15B]"></span>
-                <span>Services We Provide to Wedding Hall Owners</span>
+                <span>100% Free Launch Access — Zero Rent & Zero Listing Charges</span>
             </div>
 
             <h1 class="font-serif-luxury text-4xl sm:text-6xl text-white font-normal max-w-4xl mx-auto leading-tight">
-                Everything Your Hall Needs to Run Digitally
+                Register Your Hall For Free — Goes Live Upon Admin Approval
             </h1>
 
             <p class="text-sm sm:text-base text-stone-300 max-w-2xl mx-auto font-light leading-relaxed">
-                EventHub gives every wedding hall, marquee, and banquet owner a dedicated public website, a private Rent&nbsp;Admin dashboard, an atomic zero double-booking calendar, kitchen KOT slips, staff &amp; payroll tools, expense tracking, and printable legal documents — all in one SaaS platform.
+                EventHub is currently 100% complimentary for wedding hall and marquee owners across Pakistan. Register in under 2 minutes with zero platform rent. The moment our administration team approves your venue, your hall goes LIVE on our public marketplace for thousands of prospective clients to explore and book.
             </p>
 
             <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
                 <a href="{{ route('register') }}" class="btn-gold !h-11 !px-6 text-xs font-bold font-sans tracking-wide rounded-xl">
-                    List Your Hall on EventHub &rarr;
+                    Register Hall For Free (0 PKR) &rarr;
                 </a>
                 <a href="{{ route('public.contact') }}" class="btn-outline-gold !h-11 !px-6 text-xs font-bold font-sans tracking-wide rounded-xl">
                     Talk to Our Onboarding Team
@@ -255,25 +255,65 @@
 
 
     <!-- ===================================================================
-         SECTION 5: ONBOARDING, SUPPORT & SUBSCRIPTION INCLUDED
+         SECTION 5: 3-STEP FREE ONBOARDING & INSTANT LIVE ACTIVATION
          =================================================================== -->
     <section class="py-16 bg-[#F8F5EF] dark:bg-[#171513] border-t border-[#E7E5E4] dark:border-white/10">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 text-center">
-            <span class="text-[11px] font-sans uppercase tracking-[0.16em] text-[#8F7239] dark:text-[#C6A15B] font-semibold block">
-                Onboarding &amp; Support
-            </span>
-            <h3 class="font-serif-luxury text-3xl text-[#171513] dark:text-white font-normal">
-                From Registration to First Online Booking
-            </h3>
-            <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed max-w-2xl mx-auto">
-                Our team verifies your business credentials, builds your hall profile, uploads your gallery, and hands you the Rent Admin login — usually within 48 hours. Every plan starts with a free trial.
-            </p>
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 text-center">
+            <div class="space-y-2">
+                <span class="text-[11px] font-sans uppercase tracking-[0.16em] text-[#8F7239] dark:text-[#C6A15B] font-semibold block">
+                    Zero Rent • Zero Commission • Instant Marketplace Launch
+                </span>
+                <h3 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white font-normal">
+                    How Free Hall Registration &amp; Live Approval Works
+                </h3>
+                <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed max-w-2xl mx-auto">
+                    During this launch period, listing your banquet is 100% complimentary. Here is the seamless 3-step pathway to bringing your hall live in front of wedding couples:
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                <!-- Step 1 -->
+                <div class="p-6 rounded-2xl bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 shadow-sm space-y-3 relative hover:border-[#C6A15B]/50 transition">
+                    <div class="flex items-center justify-between">
+                        <span class="w-10 h-10 rounded-xl bg-[#C6A15B]/15 text-[#8F7239] dark:text-[#C6A15B] border border-[#C6A15B]/30 flex items-center justify-center font-cinzel font-bold text-base">01</span>
+                        <span class="text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">100% Free</span>
+                    </div>
+                    <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-semibold">Free Registration (0 PKR)</h4>
+                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
+                        Sign up in 2 minutes with your venue name, city, guest capacity, and contact number. Zero upfront rent and zero credit card needed.
+                    </p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="p-6 rounded-2xl bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 shadow-sm space-y-3 relative hover:border-[#C6A15B]/50 transition">
+                    <div class="flex items-center justify-between">
+                        <span class="w-10 h-10 rounded-xl bg-[#C6A15B]/15 text-[#8F7239] dark:text-[#C6A15B] border border-[#C6A15B]/30 flex items-center justify-center font-cinzel font-bold text-base">02</span>
+                        <span class="text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">Fast Review</span>
+                    </div>
+                    <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-semibold">Rapid Admin Review</h4>
+                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
+                        Our administrative verification desk quickly reviews your hall details to maintain premium quality and authenticity across the platform.
+                    </p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="p-6 rounded-2xl bg-white dark:bg-[#1a1714] border border-[#C6A15B]/40 shadow-md space-y-3 relative hover:border-[#C6A15B] transition bg-gradient-to-br from-white dark:from-[#1a1714] to-[#C6A15B]/5">
+                    <div class="flex items-center justify-between">
+                        <span class="w-10 h-10 rounded-xl bg-[#C6A15B] text-[#171513] flex items-center justify-center font-cinzel font-bold text-base shadow-sm">03</span>
+                        <span class="text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">Instantly Live</span>
+                    </div>
+                    <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-semibold">Live on Public Website!</h4>
+                    <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
+                        The moment admin clicks approve, your wedding hall goes LIVE immediately on EventHub! Couples can browse your photos, check dates, and send booking requests.
+                    </p>
+                </div>
+            </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-xs font-sans font-medium text-stone-700 dark:text-stone-300">
-                <div class="p-3.5 rounded-xl bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 shadow-xs">✓ Free 14-Day Trial</div>
-                <div class="p-3.5 rounded-xl bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 shadow-xs">✓ Free Gallery Upload</div>
-                <div class="p-3.5 rounded-xl bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 shadow-xs">✓ WhatsApp Support Desk</div>
-                <div class="p-3.5 rounded-xl bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 shadow-xs">✓ Cancel Anytime</div>
+                <div class="p-3.5 rounded-xl bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 shadow-xs">✓ 100% Free Launch Access</div>
+                <div class="p-3.5 rounded-xl bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 shadow-xs">✓ Free Public Showcase</div>
+                <div class="p-3.5 rounded-xl bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 shadow-xs">✓ Zero Double-Booking Tech</div>
+                <div class="p-3.5 rounded-xl bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 shadow-xs">✓ Dedicated Rent Admin ERP</div>
             </div>
         </div>
     </section>

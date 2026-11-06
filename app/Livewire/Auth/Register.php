@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Livewire\Component;
 
@@ -67,6 +68,15 @@ class Register extends Component
 
             return;
         }
+
+        $throttleKey = 'register|'.request()->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            $this->addError('hallName', "Aap dobara se register koshish nahi kar saktay. Baraye meherbani {$seconds} seconds intezar karein. (Too many registration attempts. Please wait {$seconds} seconds.)");
+
+            return;
+        }
+        RateLimiter::hit($throttleKey, 60);
 
         $this->validate();
 

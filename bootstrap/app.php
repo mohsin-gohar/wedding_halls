@@ -9,6 +9,7 @@ use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -39,5 +40,20 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (ThrottleRequestsException $e, $request) {
+            $headers = $e->getHeaders();
+            $retryAfter = (int) ($headers['Retry-After'] ?? 60);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Aap website ko bar bar reload nahi kar saktay. Baraye meherbani thori der intezar karein.',
+                    'retry_after' => $retryAfter,
+                ], 429, $headers);
+            }
+
+            return response()->view('errors.429', [
+                'retryAfter' => $retryAfter,
+                'exception' => $e,
+            ], 429, $headers);
+        });
     })->create();

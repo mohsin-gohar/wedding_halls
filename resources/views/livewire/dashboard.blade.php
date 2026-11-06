@@ -1612,16 +1612,25 @@
                                     {{ $b->status }}
                                 </span>
                             </td>
-                            <td class="p-4 text-right space-x-2 whitespace-nowrap font-sans text-[11px]">
-                                <a href="{{ route('documents.agreement', $b->id) }}" target="_blank" class="text-stone-700 dark:text-stone-300 hover:text-[#171513] dark:hover:text-[#C6A15B] underline font-bold">Contract</a>
-                                @if($b->payments->isNotEmpty())
-                                    <span class="text-stone-300 dark:text-stone-600">•</span>
-                                    <a href="{{ route('documents.receipt', $b->payments->first()->id) }}" target="_blank" class="text-[#8F7239] dark:text-[#C6A15B] hover:underline font-bold">Receipt</a>
-                                 @endif
-                                @if($kitchenEnabled && $b->kitchenKot)
-                                    <span class="text-stone-300 dark:text-stone-600">•</span>
-                                    <a href="{{ route('documents.kot', $b->kitchenKot->id) }}" target="_blank" class="text-[#171513] dark:text-[#C6A15B] hover:underline font-bold">KOT</a>
-                                @endif
+                            <td class="p-4 text-right whitespace-nowrap font-sans text-xs">
+                                <div class="inline-flex items-center justify-end gap-1.5">
+                                    <a href="{{ route('documents.agreement', $b->id) }}" target="_blank" class="tbtn tbtn-outline" title="Official Event Contract">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        <span>Contract</span>
+                                    </a>
+                                    @if($b->payments->isNotEmpty())
+                                        <a href="{{ route('documents.receipt', $b->payments->first()->id) }}" target="_blank" class="tbtn tbtn-gold" title="Payment Receipt">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+                                            <span>Receipt</span>
+                                        </a>
+                                    @endif
+                                    @if($kitchenEnabled && $b->kitchenKot)
+                                        <a href="{{ route('documents.kot', $b->kitchenKot->id) }}" target="_blank" class="tbtn tbtn-dark" title="Kitchen Order Ticket">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                                            <span>KOT</span>
+                                        </a>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty

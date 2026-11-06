@@ -230,12 +230,8 @@
 
                 <!-- Thumbnails Strip -->
                 @php
-                    $displayImages = !empty($images) ? $images : [
-                        'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
-                        'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200&auto=format&fit=crop',
-                        'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?q=80&w=1200&auto=format&fit=crop',
-                        'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1200&auto=format&fit=crop'
-                    ];
+                    // $images already resolves to the hall's uploaded gallery or the curated fallback set.
+                    $displayImages = $images;
                 @endphp
                 <div class="grid grid-cols-4 sm:grid-cols-6 gap-3">
                     @foreach($displayImages as $photo)
@@ -705,33 +701,51 @@
                                     @foreach($monthGrid as $cell)
                                         @php
                                             $isSelected = ($selectedDate === $cell['date']);
+                                            $openCount = ($cell['afternoon_available'] ? 1 : 0) + ($cell['evening_available'] ? 1 : 0) + ($cell['night_available'] ? 1 : 0);
+                                            $shiftSegments = [
+                                                ['label' => 'Afternoon', 'open' => $cell['afternoon_available']],
+                                                ['label' => 'Evening', 'open' => $cell['evening_available']],
+                                                ['label' => 'Night', 'open' => $cell['night_available']],
+                                            ];
                                         @endphp
                                         <button type="button"
                                                 wire:click="selectCalendarDate('{{ $cell['date'] }}')"
-                                                class="group min-h-[60px] sm:min-h-[72px] rounded-xl p-2 flex flex-col items-center justify-between text-center transition-all duration-200 cursor-pointer select-none
+                                                class="group relative min-h-[60px] sm:min-h-[72px] rounded-xl p-2 flex flex-col items-center justify-between text-center transition-all duration-200 cursor-pointer select-none overflow-hidden
+                                                    {{ $cell['isPast'] ? 'opacity-40' : '' }}
                                                     {{ $isSelected
                                                         ? 'border-2 border-[#C6A15B] bg-gradient-to-b from-[#2a2217] to-[#1a1610] shadow-[0_0_20px_rgba(198,161,91,0.35)] scale-[1.02]'
-                                                        : 'border border-white/5 bg-[#17130e] hover:border-[#C6A15B]/50 hover:bg-[#221c14] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.4)]'
-                                                    }}">
-                                            <!-- Date Number -->
-                                            <span class="text-sm sm:text-base font-semibold leading-none {{ $isSelected ? 'text-[#fcedaa]' : 'text-stone-200 group-hover:text-white' }}">
+                                                        : 'border border-white/5 bg-[#17130e] hover:border-[#C6A15B]/50 hover:bg-[#221c14] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.4)]' }}">
+                                            <!-- Fully Booked: subtle diagonal hatch overlay -->
+                                            @if($cell['all_booked'])
+                                                <span class="absolute inset-0 pointer-events-none bg-[repeating-linear-gradient(45deg,transparent_0px,transparent_7px,rgba(255,255,255,0.035)_7px,rgba(255,255,255,0.035)_14px)]"></span>
+                                            @endif
+
+                                            <!-- Date Number + Today Marker -->
+                                            <span class="text-sm sm:text-base font-semibold leading-none relative {{ $cell['isToday'] ? 'text-[#fcedaa]' : ($isSelected ? 'text-[#fcedaa]' : 'text-stone-200 group-hover:text-white') }}">
                                                 {{ $cell['day'] }}
                                             </span>
 
-                                            <!-- Shift Indicators -->
-                                            @if($cell['all_booked'])
-                                                <div class="flex items-center justify-center gap-0.5 mt-1">
-                                                    <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500"></span>
-                                                    <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500"></span>
-                                                    <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500"></span>
+                                            <!-- Shift Availability Ribbon (3 slim segments: one per shift) -->
+                                            <div class="w-full space-y-1 relative">
+                                                <div class="flex items-center gap-[3px]">
+                                                    @foreach($shiftSegments as $seg)
+                                                        <span class="h-[5px] flex-1 rounded-full transition-all duration-200 {{ $seg['open'] ? 'bg-gradient-to-r from-[#a8823f] via-[#e2c178] to-[#a8823f] shadow-[0_0_6px_rgba(198,161,91,0.55)]' : 'bg-white/[0.07] ring-1 ring-inset ring-white/10' }}"
+                                                              title="{{ $seg['label'] }} shift — {{ $seg['open'] ? 'Available' : 'Booked' }}"></span>
+                                                    @endforeach
                                                 </div>
-                                            @else
-                                                <div class="flex items-center justify-center gap-1 mt-1">
-                                                    <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full {{ $cell['afternoon_available'] ? 'bg-emerald-400' : 'bg-red-500' }}" title="Afternoon"></span>
-                                                    <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full {{ $cell['evening_available'] ? 'bg-emerald-400' : 'bg-red-500' }}" title="Evening"></span>
-                                                    <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full {{ $cell['night_available'] ? 'bg-emerald-400' : 'bg-red-500' }}" title="Night"></span>
-                                                </div>
-                                            @endif
+                                                <span class="block text-[8.5px] sm:text-[9px] font-mono uppercase tracking-[0.14em] leading-none
+                                                    {{ $openCount === 0
+                                                        ? 'text-rose-400/80'
+                                                        : ($openCount === 3 ? 'text-[#dfbe74]' : 'text-stone-400') }}">
+                                                    @if($openCount === 0)
+                                                        Sold Out
+                                                    @elseif($openCount === 3)
+                                                        All Open
+                                                    @else
+                                                        {{ $openCount }}/3 Open
+                                                    @endif
+                                                </span>
+                                            </div>
                                         </button>
                                     @endforeach
                                 </div>
@@ -757,13 +771,16 @@
                                     <span>Night (9 PM - 1 AM)</span>
                                 </div>
                                 <div class="flex items-center gap-4 pt-2 border-t border-[#C6A15B]/20 font-mono text-[10px]">
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="w-2.5 h-2.5 bg-emerald-500 rounded-xs inline-block"></span>
-                                        <span class="text-emerald-400 font-bold">Available</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="inline-flex items-center gap-[3px] w-9">
+                                            <span class="h-[5px] flex-1 rounded-full bg-gradient-to-r from-[#a8823f] to-[#e2c178]"></span>
+                                            <span class="h-[5px] flex-1 rounded-full bg-gradient-to-r from-[#a8823f] to-[#e2c178]"></span>
+                                        </span>
+                                        <span class="text-[#dfbe74] font-bold">Open Shift</span>
                                     </div>
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="w-2.5 h-2.5 bg-red-600 rounded-xs inline-block"></span>
-                                        <span class="text-red-400 font-bold">Booked</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="h-[5px] w-9 rounded-full bg-white/[0.07] ring-1 ring-inset ring-white/10 inline-block"></span>
+                                        <span class="text-stone-400 font-bold">Booked Shift</span>
                                     </div>
                                 </div>
                             </div>

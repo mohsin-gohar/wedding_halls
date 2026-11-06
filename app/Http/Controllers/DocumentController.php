@@ -31,11 +31,8 @@ class DocumentController extends Controller
             return;
         }
 
-        // 3. Customer who owns the booking
-        if ($booking->customer_id && $booking->customer_id === $user->id) {
-            return;
-        }
-        if ($booking->customer_email && strtolower($booking->customer_email) === strtolower($user->email)) {
+        // 3. Verified customer account linked to the booking (never match email alone — IDOR risk)
+        if ($user->isCustomer() && $booking->customer_id && (string) $booking->customer_id === (string) $user->id) {
             return;
         }
 
@@ -62,14 +59,11 @@ class DocumentController extends Controller
             return;
         }
 
-        // 3. Customer who owns the associated booking
-        if ($payment->booking) {
-            if ($payment->booking->customer_id && $payment->booking->customer_id === $user->id) {
-                return;
-            }
-            if ($payment->booking->customer_email && strtolower($payment->booking->customer_email) === strtolower($user->email)) {
-                return;
-            }
+        // 3. Verified customer linked to the associated booking
+        if ($payment->booking && $user->isCustomer()
+            && $payment->booking->customer_id
+            && (string) $payment->booking->customer_id === (string) $user->id) {
+            return;
         }
 
         abort(403, 'Forbidden. You do not have permission to access financial receipts belonging to another business.');

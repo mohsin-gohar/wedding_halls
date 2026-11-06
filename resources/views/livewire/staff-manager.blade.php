@@ -159,40 +159,50 @@
                                     <span>Shift Calendar, Booking Creation, Inquiries</span>
                                 @endif
                             </td>
-                            <td class="py-4 px-6 text-right whitespace-nowrap space-x-1.5 font-mono">
-                                <button wire:click="openProfileModal({{ $member->id }})"
-                                        class="text-[#C6A15B] hover:text-[#8F7239] dark:hover:text-[#F2DE9A] font-semibold text-xs transition border border-[#C6A15B]/40 hover:border-[#C6A15B] px-2.5 py-1 bg-[#C6A15B]/10 cursor-pointer">
-                                    Profile
-                                </button>
-                                @if(!$member->trashed())
-                                <button wire:click="openEditModal({{ $member->id }})"
-                                        class="text-[#171513] dark:text-stone-200 hover:text-[#C6A15B] font-semibold text-xs transition border border-[#E7E5E4] dark:border-white/15 hover:border-[#C6A15B] px-2.5 py-1 bg-white dark:bg-[#171513] cursor-pointer">
-                                    Edit
-                                </button>
-                                @if($member->id !== auth()->id() && !$member->isTenantOwner() && (auth()->user()->isTenantOwner() || !$member->isManager()))
-                                    <button wire:click="removeStaffMember({{ $member->id }})" 
-                                            wire:confirm="Archive this staff account? Access will be revoked while history is retained."
-                                            class="text-amber-700 dark:text-amber-400 hover:text-amber-800 font-semibold text-xs transition border border-amber-500/30 px-2 py-1 bg-amber-500/10 cursor-pointer">
-                                        Archive
+                            <td class="py-4 px-6 text-right whitespace-nowrap">
+                                <div class="inline-flex items-center justify-end gap-1.5 font-sans">
+                                    <button type="button" wire:click="openProfileModal({{ $member->id }})" class="tbtn tbtn-gold" title="View Staff Profile">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                        <span>Profile</span>
                                     </button>
-                                    @if(auth()->user()->isTenantOwner())
-                                        <button wire:click="purgeStaffMember({{ $member->id }})"
-                                                wire:confirm="Permanently purge {{ $member->name }} from the database? This deletes this user to save server space and cannot be undone."
-                                                class="text-red-700 dark:text-red-400 hover:text-red-800 font-semibold text-xs transition border border-red-500/30 px-2 py-1 bg-red-500/10 cursor-pointer">
-                                            Purge
+                                    @if(!$member->trashed())
+                                        <button type="button" wire:click="openEditModal({{ $member->id }})" class="tbtn tbtn-outline" title="Edit Staff Details">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                            <span>Edit</span>
                                         </button>
-                                    @endif
-                                @else
-                                    <span class="text-stone-400 dark:text-stone-500 font-mono text-[11px]">Protected</span>
-                                @endif
-                                @else
-                                    @if(auth()->user()->isTenantOwner())
-                                        <button wire:click="restoreStaffMember({{ $member->id }})" wire:confirm="Restore {{ $member->name }}'s access to this venue?" class="text-emerald-400 border border-emerald-500/30 px-2.5 py-1 font-semibold text-xs cursor-pointer">Restore</button>
-                                        <button wire:click="purgeStaffMember({{ $member->id }})" wire:confirm="Permanently purge {{ $member->name }} from the database completely?" class="text-red-400 border border-red-500/30 px-2.5 py-1 font-semibold text-xs cursor-pointer">Purge</button>
+                                        @if($member->id !== auth()->id() && !$member->isTenantOwner() && (auth()->user()->isTenantOwner() || !$member->isManager()))
+                                            <button type="button" wire:click="removeStaffMember({{ $member->id }})" 
+                                                    wire:confirm="Archive this staff account? Access will be revoked while history is retained."
+                                                    class="tbtn tbtn-amber" title="Archive Staff Account">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                                                <span>Archive</span>
+                                            </button>
+                                            @if(auth()->user()->isTenantOwner())
+                                                <button type="button" wire:click="purgeStaffMember({{ $member->id }})"
+                                                        wire:confirm="Permanently purge {{ $member->name }} from the database? This deletes this user to save server space and cannot be undone."
+                                                        class="tbtn tbtn-red" title="Permanently Delete">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                    <span>Purge</span>
+                                                </button>
+                                            @endif
+                                        @else
+                                            <span class="text-stone-400 dark:text-stone-500 font-mono text-[10px] uppercase px-2 py-1 rounded bg-stone-100 dark:bg-white/5 border border-stone-200 dark:border-white/10">Protected</span>
+                                        @endif
                                     @else
-                                        <span class="text-stone-500 text-[11px]">Archived</span>
+                                        @if(auth()->user()->isTenantOwner())
+                                            <button type="button" wire:click="restoreStaffMember({{ $member->id }})" wire:confirm="Restore {{ $member->name }}'s access to this venue?" class="tbtn tbtn-green">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                                <span>Restore</span>
+                                            </button>
+                                            <button type="button" wire:click="purgeStaffMember({{ $member->id }})" wire:confirm="Permanently purge {{ $member->name }} from the database completely?" class="tbtn tbtn-red">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                <span>Purge</span>
+                                            </button>
+                                        @else
+                                            <span class="text-stone-400 text-[10px] uppercase font-mono px-2 py-1 rounded bg-stone-100 dark:bg-white/5 border border-stone-200 dark:border-white/10">Archived</span>
+                                        @endif
                                     @endif
-                                @endif
+                                </div>
                             </td>
                         </tr>
                     @endforeach
@@ -436,32 +446,36 @@
                             <span>💰 View Salary Slips</span>
                         </a>
 
-                        @if(!$profileUser->trashed())
+                                                @if(!$profileUser->trashed())
                             <button type="button" wire:click="openEditModal({{ $profileUser->id }})" 
-                                    class="border border-[#E7E5E4] dark:border-white/20 bg-white dark:bg-white/10 text-stone-800 dark:text-white px-3 py-2 text-xs font-mono font-bold uppercase hover:border-[#C6A15B] transition cursor-pointer">
-                                ✏️ Edit Profile
+                                    class="tbtn tbtn-outline" title="Edit Profile Details">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                <span>Edit Profile</span>
                             </button>
 
                             @if($profileUser->id !== auth()->id() && !$profileUser->isTenantOwner())
                                 <button type="button" wire:click="toggleStaffStatus({{ $profileUser->id }})" 
-                                        class="border border-stone-300 dark:border-white/20 bg-stone-100 dark:bg-white/5 text-stone-700 dark:text-stone-300 px-3 py-2 text-xs font-mono font-bold uppercase hover:bg-stone-200 transition cursor-pointer">
-                                    {{ $profileUser->status === 'SUSPENDED' ? '🔓 Activate Account' : '🔒 Suspend Account' }}
+                                        class="tbtn tbtn-dark" title="Toggle Status">
+                                    <span>{{ $profileUser->status === 'SUSPENDED' ? '🔓 Activate Account' : '🔒 Suspend Account' }}</span>
                                 </button>
                                 
                                 <button type="button" wire:click="removeStaffMember({{ $profileUser->id }})" 
                                         wire:confirm="Archive this staff account? Access will be revoked while salary history is retained."
-                                        class="border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400 px-3 py-2 text-xs font-mono font-bold uppercase hover:bg-amber-500/20 transition cursor-pointer">
-                                    📦 Archive
+                                        class="tbtn tbtn-amber" title="Archive Account">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                                    <span>Archive</span>
                                 </button>
 
                                 @if(auth()->user()->isTenantOwner())
                                     <button type="button" wire:click="purgeStaffMember({{ $profileUser->id }})" 
                                             wire:confirm="PERMANENTLY PURGE {{ $profileUser->name }} from the server? All records for this user will be deleted to free up server database storage. This action cannot be undone."
-                                            class="border border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-400 px-3 py-2 text-xs font-mono font-bold uppercase hover:bg-red-500/20 transition cursor-pointer">
-                                        🗑️ Purge From Server
+                                            class="tbtn tbtn-red" title="Purge Record">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        <span>Purge From Server</span>
                                     </button>
                                 @endif
                             @endif
+                        
                         @else
                             @if(auth()->user()->isTenantOwner())
                                 <button type="button" wire:click="restoreStaffMember({{ $profileUser->id }})" 

@@ -141,7 +141,7 @@ class PublicChatWidget extends Component
 
         // Thank you / Shukriya
         if (preg_match('/\b(shukriya|thanks|thank you|jazakallah|meherbani|great|good)\b/i', $lower)) {
-            return "Bohat shukriya! EventHub par aap ka aitmaad hamara fakhr hai. Agar aap ko kisi venue ya date availability ke baray mein mazeed poochna ho, toh main yahin dastyab hoon. Have a wonderful day!";
+            return 'Bohat shukriya! EventHub par aap ka aitmaad hamara fakhr hai. Agar aap ko kisi venue ya date availability ke baray mein mazeed poochna ho, toh main yahin dastyab hoon. Have a wonderful day!';
         }
 
         // Default Intelligent Fallback

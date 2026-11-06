@@ -30,6 +30,35 @@
             </div>
         @endif
 
+        @if($loginRetryAfter > 0)
+            <div class="p-3 rounded-lg bg-amber-500/10 border border-amber-500/50 text-amber-600 dark:text-amber-400 text-xs text-center font-medium"
+                 x-data="{ remaining: {{ $loginRetryAfter }}, timer: null }"
+                 x-init="() => {
+                    let n = {{ $loginRetryAfter }};
+                    const startTimer = () => {
+                        timer = setInterval(() => {
+                            n -= 1;
+                            if (n <= 0) {
+                                clearInterval(timer);
+                                timer = null;
+                                $wire.call('clearLoginRetryAfter');
+                                return;
+                            }
+                            remaining = n;
+                        }, 1000);
+                    };
+                    startTimer();
+                    return () => { if (timer) clearInterval(timer); };
+                 }">
+                <div class="flex items-center justify-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-amber-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Too many login attempts. Retry in</span>
+                    <span class="font-bold text-amber-700 dark:text-amber-300 tabular-nums" x-text="remaining">0</span>
+                    <span>seconds.</span>
+                </div>
+            </div>
+        @endif
+
         @auth
             <div class="p-3 rounded-xl bg-[#C6A15B]/10 border border-[#C6A15B]/35 text-xs flex items-center justify-between gap-3">
                 <div class="text-stone-700 dark:text-stone-200">

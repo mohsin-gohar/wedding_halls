@@ -209,23 +209,26 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="p-3 text-right">
-                                <div class="flex items-center justify-end gap-1.5 text-[11px]">
+                            <td class="p-3 text-right whitespace-nowrap">
+                                <div class="inline-flex items-center justify-end gap-1.5 font-sans">
                                     <button wire:click="openEditModal('{{ $p->id }}')" 
-                                            class="px-2.5 py-1 bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300">
-                                        Edit
+                                            class="tbtn tbtn-outline" title="Edit Payroll Entry">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        <span>Edit</span>
                                     </button>
 
                                     @if($p->status !== 'PAID')
                                         <button wire:click="openPayModal('{{ $p->id }}')" 
-                                                class="px-2.5 py-1 bg-[#C6A15B] hover:bg-[#C6A15B] text-white font-bold">
-                                            Pay Now
+                                                class="tbtn tbtn-gold" title="Disburse Salary">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                            <span>Pay Now</span>
                                         </button>
                                     @endif
 
                                     <a href="{{ route('documents.salary-slip', $p->id) }}" target="_blank"
-                                       class="px-2.5 py-1 bg-[#171513] text-[#C6A15B] border border-[#C6A15B] hover:bg-[#C6A15B] hover:text-[#171513] transition">
-                                        Slip ↗
+                                       class="tbtn tbtn-dark" title="Download Salary Slip">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        <span>Slip ↗</span>
                                     </a>
                                 </div>
                             </td>

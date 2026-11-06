@@ -6,6 +6,7 @@ use App\Models\Hall;
 use App\Models\HallChatMessage;
 use App\Models\Package;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -43,7 +44,7 @@ class VenueChatWidget extends Component
         $this->loadConversation();
     }
 
-    #[\Livewire\Attributes\On('toggleChat')]
+    #[On('toggleChat')]
     public function toggleChat(): void
     {
         $this->isOpen = ! $this->isOpen;
@@ -55,7 +56,7 @@ class VenueChatWidget extends Component
         }
     }
 
-    #[\Livewire\Attributes\On('openVenueChat')]
+    #[On('openVenueChat')]
     public function openChat(): void
     {
         $this->isOpen = true;
@@ -188,7 +189,7 @@ class VenueChatWidget extends Component
         // 1. Warm Greetings: hi, hello, salam, aoa, hey, etc.
         if (preg_match('/^(hi|hello|hey|salam|aoa|assalam|assalam-o-alaikum|assalamu alaikum|helo|hy|salamalikum|kese ho|kaise ho)(\b|\s|\!|\?|$)/i', $lower) || in_array($lower, ['hi', 'hello', 'hey', 'salam', 'aoa', 'assalam', 'helo', 'hy'])) {
             return "Walaikum Assalam wa Rahmatullah! Welcome to **{$hall->name}** VIP Desk.\n\n"
-                ."Main aap ki kya madad kar sakta hoon? Aap mujh se hall rent, guest capacity, catering packages ya available dates ke baray mein be-jhijhak pooch sakte hain!";
+                .'Main aap ki kya madad kar sakta hoon? Aap mujh se hall rent, guest capacity, catering packages ya available dates ke baray mein be-jhijhak pooch sakte hain!';
         }
 
         // 2. Goodbyes / Gratitude: bye, shukriya, thanks, jazakallah, ok, theek hai, allah hafiz
@@ -202,7 +203,7 @@ class VenueChatWidget extends Component
                 ."• **Base Hall Rental:** PKR {$formattedRent} per event shift (Afternoon ya Evening).\n"
                 ."• **Seating Capacity:** {$minCap} se {$maxCap} guests araam se accommodate hotay hain.\n"
                 ."• **Included Facilities:** Central Chiller AC, 100% heavy generator power backup, private bridal suite aur secure parking.\n\n"
-                ."Aap kis date ya month ke liye booking plan kar rahe hain? Manager ko bhi alert bhej diya gaya hai taake aap ko best discounted package offer kiya ja sakay!";
+                .'Aap kis date ya month ke liye booking plan kar rahe hain? Manager ko bhi alert bhej diya gaya hai taake aap ko best discounted package offer kiya ja sakay!';
         }
 
         // 4. Catering & Food Menus: food, cater, menu, package, biryani, khana, dish, per head
@@ -218,11 +219,11 @@ class VenueChatWidget extends Component
 
                 return "🍽️ **Royal Catering Packages at {$hall->name}:**\n\n"
                     ."{$pkgList}\n\n"
-                    ."Tamam packages me shahi degi recipes, live tandoori naan, salad bar, desserts aur professional waiter service shamil hai. Free menu tasting bhi arrange ki ja sakti hai!";
+                    .'Tamam packages me shahi degi recipes, live tandoori naan, salad bar, desserts aur professional waiter service shamil hai. Free menu tasting bhi arrange ki ja sakti hai!';
             }
 
             return "🍽️ **Royal Catering Service at {$hall->name}:**\n\n"
-                ."Hamaray executive bawarchi traditional degi biryani, live tandoor, chicken handi, fresh salads aur shahi sweets provide kartay hain (PKR 1,800 se PKR 3,200/head tak packages available hain). Aap ke kitne guests mutawaqqo hain?";
+                .'Hamaray executive bawarchi traditional degi biryani, live tandoor, chicken handi, fresh salads aur shahi sweets provide kartay hain (PKR 1,800 se PKR 3,200/head tak packages available hain). Aap ke kitne guests mutawaqqo hain?';
         }
 
         // 5. Shift Timings, Dates & Booking
@@ -230,7 +231,7 @@ class VenueChatWidget extends Component
             return "📅 **Shift Timings & Booking Details:**\n\n"
                 ."• **Afternoon Shift:** 12:00 PM se 04:00 PM (Mehndi / Nikkah / Luncheons)\n"
                 ."• **Evening Shift:** 07:00 PM se 11:30 PM (Barat / Walima Receptions)\n\n"
-                ."Aap kis specific tarikh ya month ke liye shift dekh rahe hain? Yahan bataiye, manager live dashboard par availability check kar ke slot lock karwa dega!";
+                .'Aap kis specific tarikh ya month ke liye shift dekh rahe hain? Yahan bataiye, manager live dashboard par availability check kar ke slot lock karwa dega!';
         }
 
         // 6. Amenities: Generator, AC, Bridal Suite, Stage Decor
@@ -244,7 +245,7 @@ class VenueChatWidget extends Component
                 ."• ❄️ **Climate Control:** {$acText}\n"
                 ."• 👰 **Bridal Suite:** {$bridalText}\n"
                 ."• 🚗 **Guest Parking:** On-site secure parking & valet assistance\n"
-                ."• 🌸 **Stage & Decor:** Bespoke thematic stage decor mojood hai.";
+                .'• 🌸 **Stage & Decor:** Bespoke thematic stage decor mojood hai.';
         }
 
         // 7. Contact Human / Venue Manager / Phone Number
@@ -255,7 +256,7 @@ class VenueChatWidget extends Component
 
         // 8. Default Friendly Assistance
         return "Shukriya! Aap ka paigham **{$hall->name}** ke front desk par receive ho chuka hai.\n\n"
-            ."Main aap ki mazeed kya madad kar sakta hoon? Aap mujh se **hall rent, catering menu, available dates ya facilities** ke baray me pooch sakte hain. Hamara venue manager bhi live dashboard se aap ke sath connected hai!";
+            .'Main aap ki mazeed kya madad kar sakta hoon? Aap mujh se **hall rent, catering menu, available dates ya facilities** ke baray me pooch sakte hain. Hamara venue manager bhi live dashboard se aap ke sath connected hai!';
     }
 
     public function render()

@@ -127,9 +127,9 @@
          STATE 1: FLOATING CHAT BUTTON (Pure Chat Icon, Clean & Responsive)
          Always stays mounted in DOM; visible when closed.
          ===================================================================== -->
+    @if(! $isOpen)
     <button type="button"
-            x-show="!open"
-            @click="open = true; setTimeout(scrollVenueChat, 100)"
+            wire:click="openChat"
             aria-label="Ask {{ $hall->name }} Concierge"
             title="Ask {{ $hall->name }} Concierge"
             class="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-30 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-[#C6A15B] via-[#D8B46B] to-[#F2DE9A] text-[#171513] shadow-[0_12px_32px_rgba(198,161,91,0.6)] hover:shadow-[0_16px_40px_rgba(198,161,91,0.8)] hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center cursor-pointer border-2 border-white/70 dark:border-[#F2DE9A]/50 group">
@@ -149,19 +149,15 @@
         </span>
     </button>
 
+    @endif
+
     <!-- =====================================================================
          STATE 2: CHATBOT POPUP WINDOW (When Opened - Screenshot 1)
          Mobile-Responsive: fixed inset-x-2 bottom-2 on phones, fixed bottom-6 right-6 on desktop.
          min-h-0 + overflow-y-auto ensures inner message scrolling without stretching outer height!
          ===================================================================== -->
-    <div x-show="open"
-         x-cloak
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 translate-y-4 scale-95"
-         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-         x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+    @if($isOpen)
+    <div
          class="fixed inset-x-2 bottom-2 sm:inset-x-auto sm:bottom-6 sm:right-6 z-30 w-auto sm:w-[410px] h-[78vh] sm:h-[550px] max-h-[calc(100vh-5.5rem)] bg-white dark:bg-[#1A1714] rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] border-2 border-[#C6A15B] flex flex-col overflow-hidden">
         
         <!-- Header (Directly Inspired by Screenshot 1) -->
@@ -193,7 +189,7 @@
                     </svg>
                 </button>
                 <button type="button"
-                        @click="open = false"
+                        wire:click="closeChat"
                         title="Close chat"
                         class="w-8 h-8 rounded-full hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -321,6 +317,7 @@
         </div>
 
     </div>
+    @endif
 
 </div>
 

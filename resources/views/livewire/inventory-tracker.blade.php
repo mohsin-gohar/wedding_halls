@@ -165,23 +165,23 @@
                                 <td class="p-3 text-stone-600 font-sans">
                                     {{ $i->supplier_name ?: 'Market Vendor' }}
                                 </td>
-                                <td class="p-3 text-right">
-                                    <div class="flex items-center justify-end gap-1.5 text-[11px]">
+                                <td class="p-3 text-right whitespace-nowrap">
+                                    <div class="inline-flex items-center justify-end gap-1.5 font-sans">
                                         <button wire:click="openMovementModal('{{ $i->id }}', 'STOCK_IN')" 
-                                                class="px-2 py-1 bg-[#C6A15B] hover:bg-[#C6A15B] text-white font-bold" title="Add Stock In">
+                                                class="tbtn tbtn-green" title="Add Stock In">
                                             + In
                                         </button>
                                         <button wire:click="openMovementModal('{{ $i->id }}', 'STOCK_OUT')" 
-                                                class="px-2 py-1 bg-[#C6A15B] hover:bg-[#C6A15B] text-white font-bold" title="Record Usage / Event Deduction">
+                                                class="tbtn tbtn-amber" title="Record Usage Deduction">
                                             - Out
                                         </button>
                                         <button wire:click="openEditItemModal('{{ $i->id }}')" 
-                                                class="px-2 py-1 bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300">
+                                                class="tbtn tbtn-outline" title="Edit Item Details">
                                             Edit
                                         </button>
                                         <button wire:click="deleteItem('{{ $i->id }}')" 
                                                 onclick="return confirm('Delete this inventory item?') || event.stopImmediatePropagation()"
-                                                class="px-2 py-1 bg-[#171513] text-white hover:bg-[#171513]">
+                                                class="tbtn tbtn-red" title="Delete Item">
                                             Del
                                         </button>
                                     </div>

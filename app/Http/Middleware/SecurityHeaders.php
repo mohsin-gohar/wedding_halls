@@ -70,7 +70,7 @@ class SecurityHeaders
             "img-src 'self' data: blob: https:",
             "media-src 'self' data: blob: https:",
             "connect-src {$connectSrc}",
-            "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com",
+            "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://www.google.com https://maps.google.com",
             "frame-ancestors 'self'",
             "base-uri 'self'",
             "form-action 'self'",
