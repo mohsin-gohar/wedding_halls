@@ -308,13 +308,13 @@ class StaffManager extends Component
         // Attendance summary for current month
         $attendancesCount = StaffAttendance::where('tenant_id', Auth::user()->tenant_id)
             ->where('user_id', $staff->id)
-            ->whereBetween('date', [$monthStart, $monthEnd])
+            ->whereDate('date', '>=', $monthStart)->whereDate('date', '<=', $monthEnd)
             ->where('status', 'PRESENT')
             ->count();
 
         $overtimeTotal = (float) StaffAttendance::where('tenant_id', Auth::user()->tenant_id)
             ->where('user_id', $staff->id)
-            ->whereBetween('date', [$monthStart, $monthEnd])
+            ->whereDate('date', '>=', $monthStart)->whereDate('date', '<=', $monthEnd)
             ->sum('overtime_hours');
 
         // Latest payroll record

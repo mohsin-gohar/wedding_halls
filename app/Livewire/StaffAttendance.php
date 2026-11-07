@@ -140,7 +140,7 @@ class StaffAttendance extends Component
         $staff = $staffQuery->get();
 
         $existing = AttendanceRecord::where('tenant_id', $tenantId)
-            ->where('date', $this->selectedDate)
+            ->whereDate('date', $this->selectedDate)
             ->get()
             ->keyBy('user_id');
 
@@ -206,21 +206,39 @@ class StaffAttendance extends Component
                 'notes' => 'nullable|string|max:1000',
             ])->validate();
 
-            AttendanceRecord::updateOrCreate(
-                [
-                    'tenant_id' => $tenantId,
-                    'user_id' => $userId,
-                    'date' => $this->selectedDate,
-                ],
-                [
-                    'status' => $data['status'] ?? 'PRESENT',
-                    'check_in' => ! empty($data['check_in']) ? $data['check_in'] : null,
-                    'check_out' => ! empty($data['check_out']) ? $data['check_out'] : null,
-                    'overtime_hours' => (float) ($data['overtime_hours'] ?? 0),
-                    'notes' => $data['notes'] ?? null,
-                    'created_by' => Auth::id(),
-                ]
-            );
+            $record = AttendanceRecord::where('tenant_id', $tenantId)
+                ->where('user_id', $userId)
+                ->whereDate('date', $this->selectedDate)
+                ->first();
+
+            $recordData = [
+                'status' => $data['status'] ?? 'PRESENT',
+                'check_in' => ! empty($data['check_in']) ? $data['check_in'] : null,
+                'check_out' => ! empty($data['check_out']) ? $data['check_out'] : null,
+                'overtime_hours' => (float) ($data['overtime_hours'] ?? 0),
+                'notes' => $data['notes'] ?? null,
+                'created_by' => Auth::id(),
+            ];
+
+            if ($record) {
+                $record->update($recordData);
+            } else {
+                try {
+                    AttendanceRecord::create(array_merge([
+                        'tenant_id' => $tenantId,
+                        'user_id' => $userId,
+                        'date' => $this->selectedDate,
+                    ], $recordData));
+                } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                    $record = AttendanceRecord::where('tenant_id', $tenantId)
+                        ->where('user_id', $userId)
+                        ->whereDate('date', $this->selectedDate)
+                        ->first();
+                    if ($record) {
+                        $record->update($recordData);
+                    }
+                }
+            }
         }
 
         AuditLog::log(
@@ -248,7 +266,7 @@ class StaffAttendance extends Component
 
         $rec = AttendanceRecord::where('tenant_id', Auth::user()->tenant_id)
             ->where('user_id', $userId)
-            ->where('date', $date)
+            ->whereDate('date', $date)
             ->first();
 
         $this->editingUserId = $userId;
@@ -282,21 +300,39 @@ class StaffAttendance extends Component
             'editingNotes' => 'nullable|string|max:1000',
         ]);
 
-        AttendanceRecord::updateOrCreate(
-            [
-                'tenant_id' => Auth::user()->tenant_id,
-                'user_id' => $this->editingUserId,
-                'date' => $this->editingRecordDate,
-            ],
-            [
-                'status' => $this->editingStatus,
-                'check_in' => ! empty($this->editingCheckIn) ? $this->editingCheckIn : null,
-                'check_out' => ! empty($this->editingCheckOut) ? $this->editingCheckOut : null,
-                'overtime_hours' => $this->editingOvertime,
-                'notes' => $this->editingNotes ?: null,
-                'created_by' => Auth::id(),
-            ]
-        );
+        $record = AttendanceRecord::where('tenant_id', $tenantId)
+            ->where('user_id', $this->editingUserId)
+            ->whereDate('date', $this->editingRecordDate)
+            ->first();
+
+        $recordData = [
+            'status' => $this->editingStatus,
+            'check_in' => ! empty($this->editingCheckIn) ? $this->editingCheckIn : null,
+            'check_out' => ! empty($this->editingCheckOut) ? $this->editingCheckOut : null,
+            'overtime_hours' => $this->editingOvertime,
+            'notes' => $this->editingNotes ?: null,
+            'created_by' => Auth::id(),
+        ];
+
+        if ($record) {
+            $record->update($recordData);
+        } else {
+            try {
+                AttendanceRecord::create(array_merge([
+                    'tenant_id' => $tenantId,
+                    'user_id' => $this->editingUserId,
+                    'date' => $this->editingRecordDate,
+                ], $recordData));
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                $record = AttendanceRecord::where('tenant_id', $tenantId)
+                    ->where('user_id', $this->editingUserId)
+                    ->whereDate('date', $this->editingRecordDate)
+                    ->first();
+                if ($record) {
+                    $record->update($recordData);
+                }
+            }
+        }
 
         $this->loadAttendanceForDate();
         $this->showEditRecordModal = false;
@@ -406,7 +442,8 @@ class StaffAttendance extends Component
         $monthEnd = $monthStart->copy()->endOfMonth();
 
         $monthlyRecords = AttendanceRecord::where('tenant_id', $tenantId)
-            ->whereBetween('date', [$monthStart->format('Y-m-d'), $monthEnd->format('Y-m-d')])
+            ->whereDate('date', '>=', $monthStart->format('Y-m-d'))
+            ->whereDate('date', '<=', $monthEnd->format('Y-m-d'))
             ->get();
 
         $summary = [];

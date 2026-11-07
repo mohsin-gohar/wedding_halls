@@ -49,7 +49,7 @@ class KitchenKotBoard extends Component
 
         $kotsQuery = KitchenKot::with(['booking.hall'])
             ->whereHas('booking', function ($q) use ($tenantId, $isSuperAdmin) {
-                $q->where('event_date', $this->filterDate);
+                $q->whereDate('event_date', $this->filterDate);
                 if (! $isSuperAdmin) {
                     if ($tenantId) {
                         $q->where('tenant_id', $tenantId);

@@ -71,7 +71,7 @@
     </div>
 
     <!-- Team Members Table -->
-    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 shadow-sm dark:shadow-xl overflow-hidden transition-colors duration-200">
+    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 shadow-sm dark:shadow-xl overflow-x-auto overflow-hidden transition-colors duration-200">
         <div class="px-6 py-4 border-b border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#171513] flex justify-between items-center">
             <h3 class="font-serif-luxury text-sm font-bold uppercase tracking-wider text-[#171513] dark:text-white">
                 Authorized Team Members ({{ $currentStaffCount }})

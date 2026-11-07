@@ -101,7 +101,7 @@ class StaffPayroll extends Component
             // Check overtime hours from attendance
             $otHours = (float) StaffAttendance::where('tenant_id', $tenantId)
                 ->where('user_id', $m->id)
-                ->whereBetween('date', [$monthStart->format('Y-m-d'), $monthEnd->format('Y-m-d')])
+                ->whereDate('date', '>=', $monthStart->format('Y-m-d'))->whereDate('date', '<=', $monthEnd->format('Y-m-d'))
                 ->sum('overtime_hours');
 
             // Default basic salary based on role
