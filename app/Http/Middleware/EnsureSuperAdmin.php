@@ -4,27 +4,34 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Auth;
 
-/**
- * Strict gate for the platform Super Admin console.
- *
- * Unlike the portal role middleware (which redirects users to their own
- * dashboard), this middleware returns a hard 403 so the existence of the
- * administrative area is never confirmed to unauthorised accounts.
- */
 class EnsureSuperAdmin
 {
-    public function handle(Request $request, Closure $next): Response
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @return \Illuminate\Http\Response
+     */
+    public function handle(Request $request, Closure $next)
     {
-        $user = $request->user();
+        // If user is not authenticated, redirect to login
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Please login to access the admin console.');
+        }
 
-        abort_unless(
-            $user && ($user->role === 'ROLE_SUPER_ADMIN' || $user->isSuperAdmin()),
-            403,
-            'Access denied. Super Admin privileges are required.'
-        );
+        $user = Auth::user();
 
-        return $next($request);
+        // Check if user is super admin
+        if ($user->isSuperAdmin()) {
+            return $next($request);
+        }
+
+        // Redirect non-super admins away from admin routes
+        return redirect()->route('home')
+            ->with('error', 'You do not have access to the Super Admin console.');
     }
 }

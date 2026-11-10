@@ -58,13 +58,15 @@ use Illuminate\Support\Str;
 */
 // Cinematic Homepage (Cached with automatic fallback)
 Route::get('/', function () {
-    [$halls, $packages] = Cache::remember('home.featured.v2', 120, function () {
+        [$halls, $packages] = Cache::remember('home.featured.v3', 120, function () {
         $featuredHalls = Hall::with(['venue', 'tenant'])
             ->where('is_active', true)
+            ->whereHas('venue', fn ($venue) => $venue->where('is_active', true))
             ->whereHas('tenant', function ($q) {
                 $q->where('is_active', true)
                     ->where('verification_status', 'APPROVED');
             })
+            ->orderBy('name')
             ->take(6)
             ->get();
 

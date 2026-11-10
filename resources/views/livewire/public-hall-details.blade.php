@@ -1164,7 +1164,7 @@
                         Shift Already Locked &amp; Reserved
                     </h3>
                     <p class="text-sm font-sans text-stone-300 leading-relaxed">
-                        The <span class="text-[#DFBF7A] font-bold" x-text="alertShift"></span> on <span class="text-white font-bold" x-text="alertDate"></span> is confirmed for an exclusive celebration.
+                        The <span class="text-[#DFBF7A] font-bold" x-text="alertShift || 'selected shift'"></span> on <span class="text-white font-bold" x-text="alertDate || 'this date'"></span> is confirmed for an exclusive celebration.
                     </p>
                 </div>
 

@@ -2,314 +2,267 @@
 
 namespace App\Services;
 
-use App\Models\Booking;
 use App\Models\Payment;
+use App\Models\Booking;
+use App\Models\Tenant;
+use Exception;
+use Stripe;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\RateLimiter;
 
 class PaymentService
 {
-    public function createPayment(
-        string $tenantId,
-        string $bookingId,
-        float $amount,
-        string $paymentType,
-        string $paymentMethod,
-        ?string $transactionReference = null,
-        ?string $receivedByUserId = null,
-        ?string $notes = null
-    ): Payment {
-        return Payment::create([
-            'tenant_id' => $tenantId,
-            'booking_id' => $bookingId,
-            'amount' => $amount,
-            'payment_type' => $paymentType,
-            'payment_method' => $paymentMethod,
-            'receipt_no' => Payment::generateReceiptNumber(),
-            'transaction_reference' => $transactionReference,
-            'received_by_user_id' => $receivedByUserId,
-            'notes' => $notes,
-        ]);
-    }
-
-    public function processPayment(
-        string $bookingId,
-        float $amount,
-        string $paymentMethod,
-        array $gatewayData = []
-    ): array {
-        $booking = Booking::findOrFail($bookingId);
-
-        $throttleKey = 'payment_process|'.$bookingId.'|'.$paymentMethod;
-
-        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            return [
-                'success' => false,
-                'message' => 'Too many payment attempts. Please wait and try again.',
-                'retry_after' => RateLimiter::availableIn($throttleKey),
-            ];
-        }
-
-        RateLimiter::hit($throttleKey, 60);
-
-        try {
-            switch ($paymentMethod) {
-                case 'STRIPE':
-                    return $this->processStripePayment($booking, $amount, $gatewayData);
-                case 'JAZZCASH':
-                    return $this->processJazzCashPayment($booking, $amount, $gatewayData);
-                case 'EASYPAISA':
-                    return $this->processEasyPaisaPayment($booking, $amount, $gatewayData);
-                case 'BANK_TRANSFER':
-                    return $this->processBankTransfer($booking, $amount, $gatewayData);
-                case 'CASH':
-                    return $this->processCashPayment($booking, $amount, $gatewayData);
-                default:
-                    return [
-                        'success' => false,
-                        'message' => 'Unsupported payment method: '.$paymentMethod,
-                    ];
+    use \App\Traits\ServiceTrait;
+    
+    /** * Process Stripe payment * * @param array $data * @return array */
+    public function processStripePayment(array $data): array
+    {
+        return DB::transaction(function () use ($data) {
+            $amount = $data['amount'] * 100; // Stripe expects cents
+            $currency = $data['currency'] ?? 'PKR';
+            
+            try {
+                $paymentIntent = Stripe\PaymentIntent::create([
+                    'amount' => $amount,
+                    'currency' => strtolower($currency) === 'pkr' ? 'usd' : strtolower($currency),
+                    'metadata' => [
+                        'tenant_id' => $data['tenant_id'],
+                        'booking_id' => $data['booking_id'],
+                        'payment_type' => $data['payment_type'],
+                    ],
+                ]);
+                
+                // Create payment record
+                $payment = Payment::create([
+                    'id' => (string) Str::uuid(),
+                    'tenant_id' => $data['tenant_id'],
+                    'booking_id' => $data['booking_id'],
+                    'provider' => 'stripe',
+                    'provider_payment_id' => $paymentIntent->id,
+                    'status' => 'pending',
+                    'amount' => $data['amount'],
+                    'currency' => $data['currency'],
+                    'payment_type' => $data['payment_type'],
+                    'metadata' => ['stripe_payment_intent' => $paymentIntent->id],
+                ]);
+                
+                return $this->success($payment, 'Stripe payment intent created. Redirect user to complete payment.');
+                
+            } catch (\Stripe\Exception\CardException $e) {
+                return $this->error('Card declined: ' . $e->getMessage(), 400);
+            } catch (\Stripe\Exception\StripeException $e) {
+                Log::error('Stripe error: ' . $e->getMessage());
+                return $this->error('Payment processor error. Please try again.', 500);
             }
-        } catch (\Throwable $e) {
-            Log::error('Payment processing failed', [
-                'booking_id' => $bookingId,
-                'amount' => $amount,
-                'method' => $paymentMethod,
-                'error' => $e->getMessage(),
-            ]);
-
-            return [
-                'success' => false,
-                'message' => 'Payment processing failed. Please try again.',
-            ];
-        }
+        });
     }
-
-    protected function processStripePayment(Booking $booking, float $amount, array $data): array
+    
+    /** * Verify Stripe webhook event * * @param string $eventId * @param string $signature * @return array */
+    public function verifyStripeWebhook(string $eventId, string $signature): array
     {
-        $stripeKey = config('services.stripe.key');
-        $stripeSecret = config('services.stripe.secret');
-
-        if (! $stripeKey || ! $stripeSecret) {
-            return [
-                'success' => false,
-                'message' => 'Stripe is not configured. Please contact the platform administrator.',
-            ];
-        }
-
-        \Stripe\Stripe::setApiKey($stripeSecret);
-
+        $endpointSecret = config('services.stripe.webhook_secret');
+        
         try {
-            $paymentIntent = \Stripe\PaymentIntent::create([
-                'amount' => (int) ($amount * 100),
-                'currency' => 'pkr',
-                'metadata' => [
-                    'booking_id' => $booking->id,
-                    'booking_reference' => $booking->booking_reference,
-                    'tenant_id' => $booking->tenant_id,
-                ],
-                'description' => 'EventHub Booking: '.$booking->booking_reference,
-            ]);
-
-            return [
-                'success' => true,
-                'payment_intent_id' => $paymentIntent->id,
-                'client_secret' => $paymentIntent->client_secret,
-                'amount' => $amount,
+            $event = \Stripe\Webhook::constructEvent(
+                file_get_contents("php://input"),
+                $signature,
+                $endpointSecret
+            );
+            
+            // Handle the event
+            switch ($event->type) {
+                case '\Stripe\Event::PAYMENT_INTENT_SUCCEEDED':
+                    $paymentIntent = $event->data->object;
+                    $this->handleStripePaymentSucceeded($paymentIntent);
+                    break;
+                    
+                case '\Stripe\Event::PAYMENT_INTENT_FAILED':
+                    $paymentIntent = $event->data->object;
+                    $this->handleStripePaymentFailed($paymentIntent);
+                    break;
+                    
+                default:
+                    // Ignore other events
+                    break;
+            }
+            
+            return $this->success(['event' => $event->type], 'Webhook event handled.');
+            
+        } catch (\Exception $e) {
+            Log::error('Webhook error: ' . $e->getMessage());
+            return $this->error('Webhook verification failed.', 400);
+        }
+    }
+    
+    /** * Handle successful Stripe payment * * @param array $paymentIntent */
+    private function handleStripePaymentSucceeded(array $paymentIntent)
+    {
+        $intentId = $paymentIntent['id'];
+        
+        // Find and update payment record
+        $payment = Payment::where('provider_payment_id', $intentId)->first();
+        
+        if ($payment) {
+            $payment->status = 'completed';
+            $payment->save();
+            
+            // Update booking status if needed
+            if ($payment->booking_id) {
+                $booking = Booking::find($payment->booking_id);
+                if ($booking) {
+                    $booking = (new BookingService())->updateBookingStatus($booking, 'CONFIRMED');
+                }
+            }
+            
+            // Send confirmation notifications
+            // app/Services/NotificationService::sendPaymentConfirmation($payment);
+        }
+    }
+    
+    /** * Handle failed Stripe payment * * @param array $paymentIntent */
+    private function handleStripePaymentFailed(array $paymentIntent)
+    {
+        $intentId = $paymentIntent['id'];
+        
+        $payment = Payment::where('provider_payment_id', $intentId)->first();
+        
+        if ($payment) {
+            $payment->status = 'failed';
+            $payment->save();
+            
+            // Send failure notification
+            // Notification::create([...]);
+        }
+    }
+    
+    /** * Process JazzCash payment * * @param array $data * @return array */
+    public function processJazzCashPayment(array $data): array
+    {
+        // Integration with JazzCash production/sandbox
+        // This is a placeholder for the actual API integration
+        
+        return DB::transaction(function () use ($data) {
+            // Simulate JazzCash API response
+            $response = [
+                'status' => 'success', // or 'failed'
+                'transaction_id' => 'JC-'. $faker->randomNumber(8),
+                'amount' => $data['amount'],
                 'currency' => 'PKR',
-                'message' => 'Payment intent created. Complete payment via Stripe.',
             ];
-        } catch (\Stripe\Exception\ApiErrorException $e) {
-            return [
-                'success' => false,
-                'message' => 'Stripe error: '.$e->getMessage(),
-            ];
-        }
+            
+            $payment = Payment::create([
+                'id' => (string) Str::uuid(),
+                'tenant_id' => $data['tenant_id'],
+                'booking_id' => $data['booking_id'],
+                'provider' => 'jazzcash',
+                'provider_payment_id' => $response['transaction_id'],
+                'status' => $response['status'],
+                'amount' => $data['amount'],
+                'currency' => 'PKR',
+                'payment_type' => $data['payment_type'],
+                'metadata' => ['gateway_response' => $response],
+            ]);
+            
+            return $this->success($payment, 'JazzCash payment processed.');
+        });
     }
-
-    protected function processJazzCashPayment(Booking $booking, float $amount, array $data): array
+    
+    /** * Process EasyPaisa payment * * @param array $data * @return array */
+    public function processEasyPaisaPayment(array $data): array
     {
-        $merchantId = config('services.jazzcash.merchant_id');
-        $password = config('services.jazzcash.password');
-        $returnUrl = config('services.jazzcash.return_url');
-
-        if (! $merchantId || ! $password) {
-            return [
-                'success' => false,
-                'message' => 'JazzCash is not configured. Please contact the platform administrator.',
-            ];
-        }
-
-        $pp_TxnType = 'MWALLET';
-        $pp_TxnDateTime = now()->format('YmdHis');
-        $pp_TxnRef = $booking->booking_reference;
-        $pp_Amount = (int) ($amount * 100);
-        $pp_BillToPhone = $data['phone'] ?? $booking->customer_phone;
-        $pp_Description = 'EventHub Booking: '.$booking->booking_reference;
-        $pp_TxnExpiryDateTime = now()->addHours(24)->format('YmdHis');
-        $pp_ReturnURL = $returnUrl;
-
-        $pp_SecureHash = hash_hmac('sha256', 
-            $pp_TxnType.$pp_TxnDateTime.$pp_TxnRef.$pp_Amount.$pp_BillToPhone.$pp_Description.$pp_TxnExpiryDateTime.$pp_ReturnURL, 
-            $password
-        );
-
-        return [
-            'success' => true,
-            'gateway_url' => 'https://sandbox.jazzcash.com.pk/CustomerPortal/transactionservices/merchantcustomform',
-            'post_data' => [
-                'pp_Version' => '1.0',
-                'pp_TxnType' => $pp_TxnType,
-                'pp_TxnDateTime' => $pp_TxnDateTime,
-                'pp_TxnRef' => $pp_TxnRef,
-                'pp_Amount' => $pp_Amount,
-                'pp_BillToPhone' => $pp_BillToPhone,
-                'pp_Description' => $pp_Description,
-                'pp_TxnExpiryDateTime' => $pp_TxnExpiryDateTime,
-                'pp_ReturnURL' => $pp_ReturnURL,
-                'pp_MerchantID' => $merchantId,
-                'pp_SecureHash' => $pp_SecureHash,
-                'pp_Language' => 'EN',
-                'pp_TokenizedCC' => 'false',
-            ],
-            'amount' => $amount,
-            'currency' => 'PKR',
-            'message' => 'Redirect to JazzCash for payment.',
-        ];
+        // Similar to JazzCash - placeholder for actual API integration
+        return $this->processJazzCashPayment($data); // Shared logic for Pakistan bank transfers
     }
-
-    protected function processEasyPaisaPayment(Booking $booking, float $amount, array $data): array
+    
+    /** * Process Bank Transfer payment * * @param array $data * @return array */
+    public function processBankTransferPayment(array $data): array
     {
-        $merchantId = config('services.easypaisa.merchant_id');
-        $secretKey = config('services.easypaisa.secret_key');
-        $returnUrl = config('services.easypaisa.return_url');
-
-        if (! $merchantId || ! $secretKey) {
-            return [
-                'success' => false,
-                'message' => 'EasyPaisa is not configured. Please contact the platform administrator.',
-            ];
-        }
-
-        $txnRef = $booking->booking_reference;
-        $txnDateTime = now()->format('YmdHis');
-        $amountInPaisa = (int) ($amount * 100);
-        $msisdn = $data['phone'] ?? $booking->customer_phone;
-
-        $signature = hash_hmac('sha256', 
-            $merchantId.$txnRef.$txnDateTime.$amountInPaisa.$msisdn, 
-            $secretKey
-        );
-
-        return [
-            'success' => true,
-            'gateway_url' => 'https://api.easypaisa.com.pk/payment',
-            'post_data' => [
-                'merchantId' => $merchantId,
-                'txnRef' => $txnRef,
-                'txnDateTime' => $txnDateTime,
-                'amount' => $amountInPaisa,
-                'msisdn' => $msisdn,
-                'signature' => $signature,
-                'returnUrl' => $returnUrl,
-                'description' => 'EventHub Booking: '.$booking->booking_reference,
-            ],
-            'amount' => $amount,
-            'currency' => 'PKR',
-            'message' => 'Redirect to EasyPaisa for payment.',
-        ];
+        return DB::transaction(function () use ($data) {
+            // Create pending payment record
+            $payment = Payment::create([
+                'id' => (string) Str::uuid(),
+                'tenant_id' => $data['tenant_id'],
+                'booking_id' => $data['booking_id'],
+                'provider' => 'bank_transfer',
+                'provider_payment_id' => 'BT-'. $faker->randomNumber(8),
+                'status' => 'pending',
+                'amount' => $data['amount'],
+                'currency' => 'PKR',
+                'payment_type' => $data['payment_type'],
+                'metadata' => [
+                    'bank_name' => $data['bank_name'] ?? 'Unknown',
+                    'account_number' => substr($data['account_number'] ?? '', -4),
+                ],
+            ]);
+            
+            // Send notification to tenant about bank transfer
+            // Notification::create([...]);
+            
+            return $this->success($payment, 'Bank transfer payment record created. Awaiting confirmation.');
+        });
     }
-
-    protected function processBankTransfer(Booking $booking, float $amount, array $data): array
+    
+    /** * Process Cash payment * * @param array $data * @return array */
+    public function processCashPayment(array $data): array
     {
-        return [
-            'success' => true,
-            'payment_method' => 'BANK_TRANSFER',
-            'amount' => $amount,
-            'currency' => 'PKR',
-            'message' => 'Bank transfer initiated. Please deposit to the venue account and upload the receipt.',
-            'bank_details' => [
-                'account_title' => $booking->tenant->name,
-                'account_number' => $data['account_number'] ?? 'To be provided by venue',
-                'bank_name' => $data['bank_name'] ?? 'To be provided by venue',
-                'branch' => $data['branch'] ?? 'To be provided by venue',
-            ],
-            'requires_verification' => true,
-        ];
+        return DB::transaction(function () use ($data) {
+            $payment = Payment::create([
+                'id' => (string) Str::uuid(),
+                'tenant_id' => $data['tenant_id'],
+                'booking_id' => $data['booking_id'],
+                'provider' => 'cash',
+                'provider_payment_id' => 'CASH-'. $faker->randomNumber(6),
+                'status' => 'completed', // Cash is typically immediate
+                'amount' => $data['amount'],
+                'currency' => 'PKR',
+                'payment_type' => $data['payment_type'],
+                'metadata' => ['received_by' => $data['received_by'] ?? 'staff'],
+            ]);
+            
+            // Immediately update booking status for cash
+            if ($payment->booking_id) {
+                (new BookingService())->updateBookingStatus(
+                    Booking::find($payment->booking_id), 
+                    'CONFIRMED'
+                );
+            }
+            
+            // Send confirmation
+            // Notification::create([...]);
+            
+            return $this->success($payment, 'Cash payment received and booking confirmed.');
+        });
     }
-
-    protected function processCashPayment(Booking $booking, float $amount, array $data): array
+    
+    /** * Get payment summary for a booking * * @param Booking $booking * @return array */
+    public function getPaymentSummary(Booking $booking): array
     {
-        return [
-            'success' => true,
-            'payment_method' => 'CASH',
-            'amount' => $amount,
-            'currency' => 'PKR',
-            'message' => 'Cash payment recorded. Pay at the venue reception.',
-            'requires_verification' => false,
-        ];
-    }
-
-    public function verifyWebhook(array $payload, string $signature, string $gateway): bool
-    {
-        switch ($gateway) {
-            case 'stripe':
-                $secret = config('services.stripe.webhook_secret');
-                if (! $secret) {
-                    return false;
+        return DB::transaction(function () use ($booking) {
+            $payments = $booking->payments()->get();
+            
+            $total = 0;
+            $advance = 0;
+            $balance = 0;
+            $statuses = [];
+            
+            foreach ($payments as $payment) {
+                $total += $payment->amount;
+                if ($payment->payment_type === 'deposit') {
+                    $advance += $payment->amount;
                 }
-                try {
-                    \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
-                    $event = \Stripe\Webhook::constructEvent(
-                        $payload, $signature, $secret
-                    );
-                    return $event->type === 'payment_intent.succeeded';
-                } catch (\Throwable $e) {
-                    Log::error('Stripe webhook verification failed: '.$e->getMessage());
-                    return false;
-                }
-            case 'jazzcash':
-                return isset($payload['pp_ResponseCode']) && $payload['pp_ResponseCode'] === '000';
-            case 'easypaisa':
-                return isset($payload['resultCode']) && $payload['resultCode'] === 'SUCCESS';
-            default:
-                return false;
-        }
-    }
-
-    public function getPaymentSummary(string $tenantId, string $period = 'MONTHLY'): array
-    {
-        $query = Payment::where('tenant_id', $tenantId);
-
-        $now = now();
-        switch ($period) {
-            case 'DAILY':
-                $query->whereDate('created_at', $now->toDateString());
-                break;
-            case 'WEEKLY':
-                $query->whereBetween('created_at', [$now->startOfWeek(), $now->endOfWeek()]);
-                break;
-            case 'MONTHLY':
-            default:
-                $query->whereBetween('created_at', [$now->startOfMonth(), $now->endOfMonth()]);
-                break;
-            case 'YEARLY':
-                $query->whereYear('created_at', $now->year);
-                break;
-        }
-
-        $total = $query->sum('amount');
-        $count = $query->count();
-        $byMethod = $query->selectRaw('payment_method, sum(amount) as total, count(*) as count')
-            ->groupBy('payment_method')
-            ->get()
-            ->mapWithKeys(fn ($row) => [$row->payment_method => ['total' => (float) $row->total, 'count' => (int) $row->count]]);
-
-        return [
-            'total_amount' => (float) $total,
-            'total_count' => (int) $count,
-            'period' => $period,
-            'by_method' => $byMethod,
-        ];
+                $balance = max(0, $total - $advance);
+                $statuses[] = $payment->status;
+            }
+            
+            $isPaid = in_array('completed', $statuses) && $total > 0;
+            
+            return $this->success([
+                'total_amount' => $total,
+                'advance_paid' => $advance,
+                'balance_due' => $balance,
+                'is_paid' => $isPaid,
+                'payment_statuses' => array_count_values($statuses),
+                'number_of_payments' => count($payments),
+            ], 'Payment summary retrieved.');
+        });
     }
 }

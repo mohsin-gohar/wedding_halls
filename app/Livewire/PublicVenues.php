@@ -270,10 +270,22 @@ class PublicVenues extends Component
                     });
             })
             ->whereNotNull('city')
-            ->where('city', '!=', '')
-            ->orderBy('city')
-            ->distinct()
-            ->pluck('city');
+            ->pluck('city')
+            ->map(fn ($city) => trim((string) $city))
+            ->filter()
+            ->map(fn ($city) => mb_convert_case(mb_strtolower($city), MB_CASE_TITLE, 'UTF-8'))
+            ->unique(fn ($city) => mb_strtolower($city))
+            ->sort()
+            ->values();
+
+        $requestedCity = trim($this->city);
+        if ($requestedCity !== '' && strcasecmp($requestedCity, 'All') !== 0) {
+            $requestedLabel = mb_convert_case(mb_strtolower($requestedCity), MB_CASE_TITLE, 'UTF-8');
+            if (! $cities->contains(fn ($city) => strcasecmp($city, $requestedLabel) === 0)) {
+                $cities->push($requestedLabel);
+                $cities = $cities->sort()->values();
+            }
+        }
 
         $query = clone $publicHalls;
         $this->applyDiscoveryFilters($query);
@@ -424,9 +436,10 @@ class PublicVenues extends Component
 
     private function applyDiscoveryFilters($query): void
     {
-        if ($this->city !== 'All' && $this->city !== '') {
-            $query->whereHas('venue', function ($q) {
-                $q->where('city', $this->city);
+        $city = trim($this->city);
+        if ($city !== '' && strcasecmp($city, 'All') !== 0) {
+            $query->whereHas('venue', function ($q) use ($city) {
+                $q->whereRaw('LOWER(TRIM(city)) = ?', [mb_strtolower($city)]);
             });
         }
 

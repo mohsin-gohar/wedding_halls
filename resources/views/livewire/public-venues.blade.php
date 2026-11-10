@@ -99,7 +99,7 @@
                         <!-- Location Badge (top-left) -->
                         <span class="absolute top-3.5 left-3.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] font-medium font-sans border border-white/15">
                             <svg class="w-3 h-3 text-[#C6A15B]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                            {{ $hall->venue->city ?? 'Lahore' }}
+                            {{ $hall->venue?->city ? \Illuminate\Support\Str::title(trim($hall->venue->city)) : 'Pakistan' }}
                         </span>
 
                         @if($hasVideo)
