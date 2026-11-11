@@ -18,4 +18,15 @@ export default defineConfig({
             ignored: ['**/storage/framework/views/**'],
         },
     },
+    resolve: {
+        alias: {
+            '.js': '.jsx',
+        },
+        extensionAlias: {
+            '.js': ['js', 'jsx'],
+        },
+    },
+    esbuild: {
+        jsx: 'automatic',
+    },
 });

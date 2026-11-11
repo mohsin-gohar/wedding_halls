@@ -71,14 +71,16 @@
         <div class="flex items-center gap-3">
             <span class="inline-block w-1.5 h-1.5 rounded-full bg-[#C6A15B]"></span>
             <span class="text-stone-300">
-                @if(auth()->user()->isSuperAdmin())
-                    PLATFORM: <strong class="text-white">EventHub Pakistan</strong>
+                @if(auth()->check() && auth()->user()->isSuperAdmin())
+                    PLATFORM: <strong class="text-white">Riwaj Grand Pakistan</strong>
+                @elseif(auth()->check())
+                    VENUE: <strong class="text-white">{{ auth()->user()->tenant->name ?? 'Riwaj Grand Host' }}</strong>
                 @else
-                    VENUE: <strong class="text-white">{{ auth()->user()->tenant->name ?? 'EventHub Host' }}</strong>
+                    RIWAJ GRAND: <strong class="text-white">Riwayat bhi, Jiddat bhi</strong>
                 @endif
             </span>
             <span class="text-stone-600 hidden sm:inline">|</span>
-            <span class="text-stone-400 hidden sm:inline">{{ auth()->user()->isSuperAdmin() ? 'Platform Super Admin' : 'Enterprise Banquet Suite' }}</span>
+            <span class="text-stone-400 hidden sm:inline">{{ auth()->check() ? (auth()->user()->isSuperAdmin() ? 'Platform Super Admin' : 'Enterprise Banquet Suite') : 'Luxury Banquet Network' }}</span>
         </div>
         <div class="flex items-center gap-4 text-stone-400 text-[11px]">
             <button type="button" @click="toggleTheme()" aria-label="Toggle dark mode" class="hover:text-[#C6A15B] transition flex items-center gap-1.5 font-sans cursor-pointer" title="Toggle Light / Dark Mode">
@@ -122,13 +124,13 @@
                 <!-- Brand Badge -->
                     <div class="p-6 border-b border-[#E7E5E4] dark:border-[#C6A15B]/20 flex items-center justify-between bg-gradient-to-r from-transparent to-[#171513]/5 dark:to-[#C6A15B]/5">
                         <a href="{{ route('home') }}" class="flex items-center gap-3 group">
-                            <img src="{{ asset('images/eventhub-logo.png') }}" width="48" height="48" alt="EventHub Logo" style="max-height: 48px; width: auto;" class="h-10 w-auto object-contain rounded-lg border border-[#C6A15B]/40 bg-[#171513] shadow-sm">
+                            <img src="{{ asset('images/riwaj-grand-logo.png') }}" width="48" height="48" alt="Riwaj Grand Logo" style="max-height: 48px; width: auto;" class="h-10 w-auto object-contain rounded-lg border border-[#C6A15B]/40 bg-[#171513] shadow-sm">
                             <div>
-                                <span class="font-cinzel text-lg font-bold tracking-[0.15em] text-[#171513] dark:text-white block group-hover:text-[#C6A15B] transition">EventHub</span>
+                                <span class="font-cinzel text-lg font-bold tracking-[0.15em] text-[#171513] dark:text-white block group-hover:text-[#C6A15B] transition">Riwaj Grand</span>
                                 @if(auth()->user()->isSuperAdmin())
                                     <span class="text-[9px] uppercase tracking-[0.16em] text-[#C6A15B] font-semibold block -mt-0.5 font-sans">Platform Super Admin</span>
                                 @else
-                                    <span class="text-[9px] uppercase tracking-[0.16em] text-[#C6A15B] font-medium block -mt-0.5 font-sans">Rent Admin Suite</span>
+                                    <span class="text-[9px] uppercase tracking-[0.16em] text-[#C6A15B] font-medium block -mt-0.5 font-sans">Banquet Suite</span>
                                 @endif
                             </div>
                         </a>

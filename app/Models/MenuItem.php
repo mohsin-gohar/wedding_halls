@@ -31,8 +31,61 @@ class MenuItem extends Model
         'is_active' => 'boolean',
     ];
 
+    public function categoryOptions(): array
+    {
+        return [
+            'STARTER',
+            'MAIN',
+            'DESSERT',
+            'BEVERAGE',
+        ];
+    }
+
+    public function cuisineOptions(): array
+    {
+        return [
+            'MUGHAL',
+            'CONTINENTAL',
+            'DESI',
+            'ITALIAN',
+            'CHINESE',
+            'ARABIC',
+            'FRENCH',
+        ];
+    }
+
+    public function isStarter(): bool
+    {
+        return $this->category === 'STARTER';
+    }
+
+    public function isMain(): bool
+    {
+        return $this->category === 'MAIN';
+    }
+
+    public function isDessert(): bool
+    {
+        return $this->category === 'DESSERT';
+    }
+
+    public function isBeverage(): bool
+    {
+        return $this->category === 'BEVERAGE';
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function pricePerHead(int $guestCount): float
+    {
+        return $this->unit_cost * $guestCount;
+    }
+
+    public function meetsMinGuestCount(int $guestCount): bool
+    {
+        return $guestCount >= $this->min_guest_count;
     }
 }

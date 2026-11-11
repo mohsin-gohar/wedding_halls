@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'EventHub — Luxury Wedding Venues & Banquet Marketplace' }}</title>
+    <title>{{ $title ?? 'Riwaj Grand — Riwayat bhi, Jiddat bhi | Luxury Wedding Banquets & Marquees' }}</title>
     <meta name="description" content="{{ $metaDescription ?? 'Discover and reserve Pakistan\'s premier luxury wedding ballrooms, royal marquees, and banquet complexes. Concurrency-safe shift reservations, authentic Mughlai catering, and transparent pricing in PKR.' }}">
     <meta name="theme-color" content="#171513">
     <link rel="canonical" href="{{ url()->current() }}">
@@ -13,19 +13,19 @@
 
     <!-- OpenGraph & Social Sharing Meta -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="EventHub Pakistan">
-    <meta property="og:title" content="{{ $title ?? 'EventHub — Luxury Wedding Venues & Banquet Marketplace' }}">
+    <meta property="og:site_name" content="Riwaj Grand">
+    <meta property="og:title" content="{{ $title ?? 'Riwaj Grand — Riwayat bhi, Jiddat bhi' }}">
     <meta property="og:description" content="{{ $metaDescription ?? 'Discover and reserve Pakistan\'s premier luxury wedding ballrooms, royal marquees, and banquet complexes with guaranteed single-host shift exclusivity.' }}">
     <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:image" content="{{ $ogImage ?? asset('images/eventhub-logo.png') }}">
+    <meta property="og:image" content="{{ $ogImage ?? asset('images/riwaj-grand-logo.png') }}">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ $title ?? 'EventHub — Luxury Wedding Venues & Banquet Marketplace' }}">
+    <meta name="twitter:title" content="{{ $title ?? 'Riwaj Grand — Riwayat bhi, Jiddat bhi' }}">
     <meta name="twitter:description" content="{{ $metaDescription ?? 'Discover and reserve Pakistan\'s premier luxury wedding ballrooms, royal marquees, and banquet complexes.' }}">
-    <meta name="twitter:image" content="{{ $ogImage ?? asset('images/eventhub-logo.png') }}">
+    <meta name="twitter:image" content="{{ $ogImage ?? asset('images/riwaj-grand-logo.png') }}">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('images/eventhub-logo.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/eventhub-logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/riwaj-grand-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/riwaj-grand-logo.png') }}">
 
     <!-- Google Fonts: Preconnect & Asynchronous Loading (High Performance & Zero Render-Blocking) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -87,13 +87,13 @@
                 
                 <!-- Brand Identity -->
                 <a href="{{ route('home') }}" wire:navigate.hover class="group flex shrink-0 items-center gap-3 max-sm:gap-2.5">
-                    <img src="{{ asset('images/eventhub-logo.png') }}" width="48" height="48" alt="EventHub" style="max-height: 48px; width: auto;" class="h-10 sm:h-12 w-auto object-contain rounded-lg border border-[#C6A15B]/35 bg-[#171513] shadow-sm group-hover:border-[#C6A15B] transition-all duration-300">
+                    <img src="{{ asset('images/riwaj-grand-logo.png') }}" width="48" height="48" alt="Riwaj Grand" style="max-height: 48px; width: auto;" class="h-10 sm:h-12 w-auto object-contain rounded-lg border border-[#C6A15B]/35 bg-[#171513] shadow-sm group-hover:border-[#C6A15B] transition-all duration-300">
                     <span class="flex flex-col leading-none">
                         <span class="font-cinzel text-base font-bold tracking-[0.16em] text-white transition-colors duration-300 group-hover:text-[#F2DE9A] sm:text-lg">
-                            EventHub
+                            Riwaj Grand
                         </span>
-                        <span class="mt-1 hidden text-[9px] font-sans font-medium uppercase tracking-[0.22em] text-[#C6A15B]/80 sm:block">
-                            Luxury Banquets &amp; Marquees
+                        <span class="mt-1 hidden text-[9px] font-sans font-medium uppercase tracking-[0.22em] text-[#C6A15B]/90 sm:block">
+                            Riwayat bhi, Jiddat bhi
                         </span>
                     </span>
                 </a>
@@ -234,10 +234,10 @@
                 <!-- Brand Info -->
                 <div class="lg:col-span-2 space-y-5">
                     <a href="{{ route('home') }}" class="flex items-center gap-3 group">
-                        <img src="{{ asset('images/eventhub-logo.png') }}" width="48" height="48" alt="EventHub Logo" style="max-height: 48px; width: auto;" class="h-12 w-auto object-contain rounded-lg border border-[#C6A15B]/35 bg-[#171513] shadow-sm">
+                        <img src="{{ asset('images/riwaj-grand-logo.png') }}" width="48" height="48" alt="Riwaj Grand Logo" style="max-height: 48px; width: auto;" class="h-12 w-auto object-contain rounded-lg border border-[#C6A15B]/35 bg-[#171513] shadow-sm">
                         <div>
-                            <span class="font-cinzel text-2xl font-bold tracking-[0.16em] text-white group-hover:text-[#F2DE9A] transition block">EventHub</span>
-                            <span class="block text-[9px] uppercase tracking-[0.22em] text-[#C6A15B]/80 font-sans font-medium mt-0.5">Pakistan's Venue Platform</span>
+                            <span class="font-cinzel text-2xl font-bold tracking-[0.16em] text-white group-hover:text-[#F2DE9A] transition block">Riwaj Grand</span>
+                            <span class="block text-[9px] uppercase tracking-[0.22em] text-[#C6A15B] font-sans font-semibold mt-0.5">Riwayat bhi, Jiddat bhi</span>
                         </div>
                     </a>
                     <p class="text-sm text-stone-400 font-light leading-relaxed max-w-sm">
@@ -246,7 +246,7 @@
                     <div class="pt-2 text-xs text-stone-400 space-y-1">
                         <p><strong class="text-white">Headquarters:</strong> Plot 42, Main Boulevard, Gulberg III, Lahore, Pakistan</p>
                         <p><strong class="text-white">Direct Phone:</strong> +92 42 35789000 (UAN Helpline)</p>
-                        <p><strong class="text-white">Inquiries:</strong> inquiries@EventHub.pk</p>
+                        <p><strong class="text-white">Inquiries:</strong> inquiries@riwajgrand.pk</p>
                     </div>
                 </div>
 
@@ -270,7 +270,7 @@
                         <li><a href="{{ route('register') }}" wire:navigate.hover class="hover:text-white transition">List Your Venue</a></li>
                         <li><a href="{{ route('login') }}" wire:navigate.hover class="hover:text-white transition">Vendor Portal Login</a></li>
                         <li><a href="{{ route('dashboard') }}" class="hover:text-white transition">Shift Matrix & Calendar</a></li>
-                        <li><a href="{{ route('public.about') }}" wire:navigate.hover class="hover:text-white transition">Why EventHub SaaS</a></li>
+                        <li><a href="{{ route('public.about') }}" wire:navigate.hover class="hover:text-white transition">Why Riwaj Grand SaaS</a></li>
                         <li><a href="{{ route('public.faqs') }}" wire:navigate.hover class="hover:text-white transition">Vendor FAQs</a></li>
                     </ul>
                 </div>
@@ -291,7 +291,7 @@
 
             <!-- Bottom Disclaimer & Copyright -->
             <div class="flex flex-col md:flex-row items-center justify-between text-xs text-stone-500 gap-4">
-                <span>&copy; {{ date('Y') }} EventHub Technologies (Pvt) Ltd. All rights reserved. Registered under SECP Pakistan.</span>
+                <span>&copy; {{ date('Y') }} Riwaj Grand Technologies (Pvt) Ltd. All rights reserved. Registered under SECP Pakistan.</span>
                 <div class="flex items-center gap-6">
                     <span class="text-stone-400">Currency: <strong>Pakistani Rupee (PKR)</strong></span>
                     <span class="text-stone-400">Tax Compliance: <strong>PRA / SRB / FBR</strong></span>

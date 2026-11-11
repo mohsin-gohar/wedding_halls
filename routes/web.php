@@ -184,6 +184,7 @@ Route::get('/refund', function () {
     return redirect()->route('public.policies', ['policy' => 'refund']);
 })->name('refund');
 
+
 /*
 |--------------------------------------------------------------------------
 | 2. Customer Portal Authentication & Experience

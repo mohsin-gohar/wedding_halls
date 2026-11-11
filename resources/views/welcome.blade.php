@@ -1,4 +1,4 @@
-<x-layouts.public title="EventHub — Transform Your Wedding Dreams Into Timeless Luxury">
+<x-layouts.public title="Riwaj Grand — Riwayat bhi, Jiddat bhi | Luxury Wedding Banquets & Marquees">
 
     <!-- ===================================================================
          1. CINEMATIC LUXURY HERO SECTION (With Smooth Visual Depth)
@@ -45,7 +45,7 @@
             <!-- Prestige Eyebrow Badge -->
             <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-[#C6A15B]/30 bg-[#171513]/85 text-[#F2DE9A] text-[11px] font-medium tracking-[0.18em] uppercase backdrop-blur-md">
                 <span class="w-1.5 h-1.5 rounded-full bg-[#C6A15B]"></span>
-                <span>Pakistan's Premier Wedding Venue Network</span>
+                <span>Riwaj Grand &bull; Riwayat bhi, Jiddat bhi</span>
             </div>
 
             <!-- Headline: Playfair Editorial Luxury -->
@@ -754,14 +754,14 @@
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
                 <div class="lg:col-span-8 space-y-6">
                     <span class="text-[11px] uppercase tracking-[0.2em] text-[#C6A15B] block font-semibold font-sans">
-                        EventHub Partner Network
+                        Riwaj Grand Partner Network
                     </span>
                     <h2 class="font-serif-luxury text-3xl sm:text-5xl font-normal leading-tight text-[#F8F5EF]">
                         Are You a Wedding Hall or Marquee Owner? <br>
-                        <span class="italic text-[#C6A15B]">Power Your Banquet with EventHub.</span>
+                        <span class="italic text-[#C6A15B]">Power Your Banquet with Riwaj Grand.</span>
                     </h2>
                     <p class="text-sm sm:text-base text-stone-300 font-light leading-relaxed max-w-2xl">
-                        Manage your entire banquet operation seamlessly on EventHub. Every hall receives a dedicated public showcase link to share with families, a private Rent Admin workspace, guaranteed single-shift exclusivity, kitchen order slips, and complete expense tracking.
+                        Manage your entire banquet operation seamlessly on Riwaj Grand. Every hall receives a dedicated public showcase link to share with families, a private Rent Admin workspace, guaranteed single-shift exclusivity, kitchen order slips, and complete expense tracking.
                     </p>
 
                     <!-- Features Grid -->
@@ -786,7 +786,7 @@
 
                     <div class="flex flex-wrap items-center gap-4 pt-3">
                         <a href="{{ route('register') }}" class="btn-gold !h-12 !px-8 text-xs font-semibold uppercase tracking-wider">
-                            <span>Register Your Hall on EventHub &rarr;</span>
+                            <span>Register Your Hall on Riwaj Grand &rarr;</span>
                         </a>
                         <a href="{{ route('public.about') }}" class="btn-outline-gold !h-12 !px-7 text-xs font-semibold text-white border-white/20">
                             Learn About Partner Benefits

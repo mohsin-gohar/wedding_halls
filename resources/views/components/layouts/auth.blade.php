@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'EventHub — Secure Sign In' }}</title>
-    <meta name="description" content="Secure access to EventHub luxury banqueting and wedding management.">
+    <title>{{ $title ?? 'Riwaj Grand — Secure Sign In' }}</title>
+    <meta name="description" content="Secure access to Riwaj Grand luxury banqueting and wedding management.">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('images/eventhub-logo.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/eventhub-logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/riwaj-grand-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/riwaj-grand-logo.png') }}">
 
     <!-- Google Fonts: Preconnect & Asynchronous Loading (High Performance & Zero Render-Blocking) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -72,9 +72,9 @@
 
         <!-- Center Brand Logo -->
         <a href="{{ route('home') }}" class="flex items-center gap-2.5 group">
-            <img src="{{ asset('images/eventhub-logo.png') }}" width="36" height="36" alt="EventHub Logo" class="h-9 w-9 object-contain rounded-lg border border-[#C6A15B]/50 bg-[#171513] shadow-sm">
+            <img src="{{ asset('images/riwaj-grand-logo.png') }}" width="36" height="36" alt="Riwaj Grand Logo" class="h-9 w-9 object-contain rounded-lg border border-[#C6A15B]/50 bg-[#171513] shadow-sm">
             <span class="font-cinzel text-sm sm:text-base font-bold tracking-[0.16em] text-[#171513] dark:text-white group-hover:text-[#C6A15B] transition-colors">
-                EventHub
+                Riwaj Grand
             </span>
         </a>
 

@@ -2,7 +2,7 @@ import '../css/app.css';
 import './bootstrap';
 
 /**
- * EventHub Luxury Interactive Engine
+ * Riwaj Grand Luxury Interactive Engine
  * Note: Livewire 4 bundles and initializes Alpine.js automatically via @livewireScripts.
  * Do NOT import or start a second Alpine instance here, as it breaks wire:submit / wire:click.
  */

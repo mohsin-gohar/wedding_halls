@@ -52,4 +52,29 @@ class SubscriptionPlan extends Model
     {
         return $this->hasMany(SubscriptionPayment::class);
     }
+
+    public function isFreeTier(): bool
+    {
+        return $this->name === 'FREE' || $this->slug === 'free';
+    }
+
+    public function isProTier(): bool
+    {
+        return $this->name === 'PRO' || $this->slug === 'pro';
+    }
+
+    public function isEnterpriseTier(): bool
+    {
+        return $this->name === 'ENTERPRISE' || $this->slug === 'enterprise';
+    }
+
+    public function commissionRate(): float
+    {
+        return match($this->name) {
+            'FREE' => 20.00,
+            'PRO' => 15.00,
+            'ENTERPRISE' => 10.00,
+            default => 20.00,
+        };
+    }
 }
