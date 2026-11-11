@@ -101,7 +101,7 @@
                 <!-- Desktop Navigation Links -->
                 @php
                     $primaryNavLinks = [
-                        ['label' => 'Venues', 'route' => 'public.venues', 'patterns' => ['public.venues*', 'public.venue.details*', 'hall.showcase', 'marketplace']],
+                        ['label' => 'Venues', 'route' => 'public.venues', 'patterns' => ['public.venues*', 'hall.showcase', 'marketplace']],
                         ['label' => 'Services', 'route' => 'public.services', 'patterns' => ['public.services*']],
                         ['label' => 'About', 'route' => 'public.about', 'patterns' => ['public.about*']],
                         ['label' => 'Contact', 'route' => 'public.contact', 'patterns' => ['public.contact*']],
@@ -328,7 +328,7 @@
     @endunless
 
     <!-- Platform AI Public Concierge Chatbot (On General Public Pages; Venue Showcase has its own Venue Manager Desk) -->
-    @unless(request()->routeIs('login', 'register', 'customer.login', 'customer.register', 'hall.showcase', 'public.venue.details'))
+    @unless(request()->routeIs('login', 'register', 'customer.login', 'customer.register', 'hall.showcase'))
     <livewire:public-chat-widget />
     @endunless
 

@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use App\Models\Notification;
-use App\Services\NotificationService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -12,7 +11,9 @@ use Livewire\Component;
 class NotificationCenter extends Component
 {
     public string $search = '';
+
     public string $typeFilter = 'ALL';
+
     public bool $unreadOnly = false;
 
     public function markAsRead(string $notificationId): void

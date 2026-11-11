@@ -37,7 +37,7 @@ class PaymentController extends Controller
         $booking = Booking::find($request->booking_id);
 
         // Verify tenant access
-        if ($user && !$user->isSuperAdmin() && $booking->tenant_id !== $user->tenant_id) {
+        if ($user && ! $user->isSuperAdmin() && $booking->tenant_id !== $user->tenant_id) {
             return response()->json(['message' => 'Unauthorized access to this booking.'], 403);
         }
 

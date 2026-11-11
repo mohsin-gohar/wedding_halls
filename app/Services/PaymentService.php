@@ -6,6 +6,10 @@ use App\Models\Booking;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Stripe\Exception\ApiErrorException;
+use Stripe\PaymentIntent;
+use Stripe\Stripe;
+use Stripe\Webhook;
 
 class PaymentService
 {
@@ -97,10 +101,10 @@ class PaymentService
             ];
         }
 
-        \Stripe\Stripe::setApiKey($stripeSecret);
+        Stripe::setApiKey($stripeSecret);
 
         try {
-            $paymentIntent = \Stripe\PaymentIntent::create([
+            $paymentIntent = PaymentIntent::create([
                 'amount' => (int) ($amount * 100),
                 'currency' => 'pkr',
                 'metadata' => [
@@ -119,7 +123,7 @@ class PaymentService
                 'currency' => 'PKR',
                 'message' => 'Payment intent created. Complete payment via Stripe.',
             ];
-        } catch (\Stripe\Exception\ApiErrorException $e) {
+        } catch (ApiErrorException $e) {
             return [
                 'success' => false,
                 'message' => 'Stripe error: '.$e->getMessage(),
@@ -149,8 +153,8 @@ class PaymentService
         $pp_TxnExpiryDateTime = now()->addHours(24)->format('YmdHis');
         $pp_ReturnURL = $returnUrl;
 
-        $pp_SecureHash = hash_hmac('sha256', 
-            $pp_TxnType.$pp_TxnDateTime.$pp_TxnRef.$pp_Amount.$pp_BillToPhone.$pp_Description.$pp_TxnExpiryDateTime.$pp_ReturnURL, 
+        $pp_SecureHash = hash_hmac('sha256',
+            $pp_TxnType.$pp_TxnDateTime.$pp_TxnRef.$pp_Amount.$pp_BillToPhone.$pp_Description.$pp_TxnExpiryDateTime.$pp_ReturnURL,
             $password
         );
 
@@ -196,8 +200,8 @@ class PaymentService
         $amountInPaisa = (int) ($amount * 100);
         $msisdn = $data['phone'] ?? $booking->customer_phone;
 
-        $signature = hash_hmac('sha256', 
-            $merchantId.$txnRef.$txnDateTime.$amountInPaisa.$msisdn, 
+        $signature = hash_hmac('sha256',
+            $merchantId.$txnRef.$txnDateTime.$amountInPaisa.$msisdn,
             $secretKey
         );
 
@@ -259,13 +263,15 @@ class PaymentService
                     return false;
                 }
                 try {
-                    \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
-                    $event = \Stripe\Webhook::constructEvent(
+                    Stripe::setApiKey(config('services.stripe.secret'));
+                    $event = Webhook::constructEvent(
                         $payload, $signature, $secret
                     );
+
                     return $event->type === 'payment_intent.succeeded';
                 } catch (\Throwable $e) {
                     Log::error('Stripe webhook verification failed: '.$e->getMessage());
+
                     return false;
                 }
             case 'jazzcash':

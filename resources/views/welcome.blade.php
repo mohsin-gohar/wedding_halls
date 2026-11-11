@@ -301,7 +301,7 @@
                                 
                                 <!-- View Details Overlay -->
                                 <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <a href="{{ route('public.venue.details', $hall->slug) }}" wire:navigate.hover class="btn-gold !h-10 !px-6 text-xs font-semibold uppercase tracking-wider shadow-lg">
+                                    <a href="{{ route('hall.showcase', $hall->slug) }}" wire:navigate.hover class="btn-gold !h-10 !px-6 text-xs font-semibold uppercase tracking-wider shadow-lg">
                                         View Details &rarr;
                                     </a>
                                 </div>
@@ -310,7 +310,7 @@
                             <!-- Content Block -->
                             <div class="p-6 space-y-3">
                                 <h3 class="font-serif-luxury text-2xl text-[#F8F5EF] font-medium leading-snug group-hover:text-[#E8DCBE] transition-colors duration-200">
-                                    <a href="{{ route('public.venue.details', $hall->slug) }}" wire:navigate.hover>
+                                    <a href="{{ route('hall.showcase', $hall->slug) }}" wire:navigate.hover>
                                         {{ $hall->name }}
                                     </a>
                                 </h3>
@@ -340,7 +340,7 @@
                                 <strong class="font-cinzel text-lg text-[#C6A15B]">PKR {{ number_format($hall->base_rent) }}</strong>
                             </div>
                             <div class="flex items-center gap-2">
-                                <a href="{{ route('public.venue.details', $hall->slug) }}" wire:navigate.hover class="btn-gold !h-9 !px-4 text-[11px] font-semibold uppercase tracking-wider rounded-lg">
+                                <a href="{{ route('hall.showcase', $hall->slug) }}" wire:navigate.hover class="btn-gold !h-9 !px-4 text-[11px] font-semibold uppercase tracking-wider rounded-lg">
                                     View Venue &rarr;
                                 </a>
                             </div>

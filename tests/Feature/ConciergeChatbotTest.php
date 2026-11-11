@@ -33,7 +33,7 @@ class ConciergeChatbotTest extends TestCase
             ->assertOk()
             ->assertSee('Virtual Concierge', false);
 
-        $this->get(route('public.venue.chat', $hall->slug))
+        $this->get(route('hall.chat', $hall->slug))
             ->assertOk()
             ->assertSee($hall->name, false)
             ->assertSee('AI Concierge', false);

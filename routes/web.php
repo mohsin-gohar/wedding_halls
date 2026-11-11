@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\WhatsAppWebhookController;
 use App\Livewire\AdminDashboard;
@@ -20,10 +22,8 @@ use App\Livewire\HallChat;
 use App\Livewire\HallMediaManager;
 use App\Livewire\InventoryTracker;
 use App\Livewire\KitchenKotBoard;
-use App\Livewire\PackageManager;
-use App\Http\Controllers\Api\BookingController;
-use App\Http\Controllers\Api\PaymentController;
 use App\Livewire\NotificationCenter;
+use App\Livewire\PackageManager;
 use App\Livewire\PublicAbout;
 use App\Livewire\PublicAvailabilityChecker;
 use App\Livewire\PublicContact;
@@ -146,9 +146,7 @@ Route::middleware(['auth', 'tenant.staff', 'portal.role:ROLE_TENANT_OWNER,ROLE_M
 // Venue Exploration & Showcase
 Route::get('/venues', PublicVenues::class)->middleware('throttle:public-pages')->name('public.venues');
 Route::get('/marketplace', PublicMarketplace::class)->middleware('throttle:public-pages')->name('marketplace');
-Route::get('/venues/{slug}', PublicHallDetails::class)->middleware('throttle:public-pages')->name('public.venue.details');
 Route::get('/hall/{slug}', PublicHallDetails::class)->middleware('throttle:public-pages')->name('hall.showcase');
-Route::get('/venues/{slug}/chat', HallChat::class)->middleware('throttle:public-pages')->name('public.venue.chat');
 Route::get('/hall/{slug}/chat', HallChat::class)->middleware('throttle:public-pages')->name('hall.chat');
 Route::get('/concierge', HallChat::class)->middleware('throttle:public-pages')->name('public.concierge');
 

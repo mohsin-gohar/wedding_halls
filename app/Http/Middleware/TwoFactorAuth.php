@@ -18,8 +18,9 @@ class TwoFactorAuth
         }
 
         // Check if 2FA is enabled for this user
-        if ($user->two_factor_enabled && !$request->session()->get('2fa_verified')) {
+        if ($user->two_factor_enabled && ! $request->session()->get('2fa_verified')) {
             $intended = $request->fullUrl();
+
             return redirect()->route('2fa.verify', ['intended' => $intended])
                 ->with('warning', 'Two-factor authentication required.');
         }

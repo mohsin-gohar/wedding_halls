@@ -7,6 +7,7 @@ use App\Models\StaffAttendance as AttendanceRecord;
 use App\Models\StaffLeave;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -229,7 +230,7 @@ class StaffAttendance extends Component
                         'user_id' => $userId,
                         'date' => $this->selectedDate,
                     ], $recordData));
-                } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                } catch (UniqueConstraintViolationException $e) {
                     $record = AttendanceRecord::where('tenant_id', $tenantId)
                         ->where('user_id', $userId)
                         ->whereDate('date', $this->selectedDate)
@@ -323,7 +324,7 @@ class StaffAttendance extends Component
                     'user_id' => $this->editingUserId,
                     'date' => $this->editingRecordDate,
                 ], $recordData));
-            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            } catch (UniqueConstraintViolationException $e) {
                 $record = AttendanceRecord::where('tenant_id', $tenantId)
                     ->where('user_id', $this->editingUserId)
                     ->whereDate('date', $this->editingRecordDate)

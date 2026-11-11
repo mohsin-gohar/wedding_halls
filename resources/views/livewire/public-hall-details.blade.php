@@ -576,7 +576,7 @@
                     </div>
 
                     <div class="flex flex-wrap gap-3">
-                        <a href="{{ route('public.venue.details', $hall->slug) }}" class="px-4 py-2 bg-[#171513] border border-white/10 text-white text-xs font-mono uppercase hover:bg-[#C6A15B] hover:text-[#171513] transition group relative overflow-hidden">
+                        <a href="{{ route('hall.showcase', $hall->slug) }}" class="px-4 py-2 bg-[#171513] border border-white/10 text-white text-xs font-mono uppercase hover:bg-[#C6A15B] hover:text-[#171513] transition group relative overflow-hidden">
                             View Full Details
                         </a>
                         @if(!empty($googleMapsUrl))

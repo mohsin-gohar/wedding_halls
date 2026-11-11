@@ -94,7 +94,7 @@
                     if ($hall->has_generator_backup) { $amenities[] = '100% Generator'; }
                     if ($hall->has_bridal_room) { $amenities[] = 'Bridal Lounge'; }
                 @endphp
-                <a href="{{ route('public.venue.details', $hall->slug) }}"
+                <a href="{{ route('hall.showcase', $hall->slug) }}"
                    class="editorial-card group flex flex-col overflow-hidden bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] dark:hover:border-[#C6A15B]/70 transition-all duration-300">
                     <!-- Image Banner (16:10) -->
                     <div class="relative aspect-[16/10] overflow-hidden bg-stone-900">

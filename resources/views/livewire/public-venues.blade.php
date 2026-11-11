@@ -85,7 +85,7 @@
                     if ($hall->has_generator_backup) { $amenities[] = '100% Generator'; }
                     if ($hall->has_bridal_room) { $amenities[] = 'Bridal Lounge'; }
                 @endphp
-                <a href="{{ route('public.venue.details', array_filter(['slug' => $hall->slug, 'date' => $searchDate?->format('Y-m-d')])) }}"
+                <a href="{{ route('hall.showcase', array_filter(['slug' => $hall->slug, 'date' => $searchDate?->format('Y-m-d')])) }}"
                    wire:navigate.hover
                    class="group flex flex-col rounded-2xl overflow-hidden bg-white dark:bg-[#1C1917] border border-stone-200/80 dark:border-white/10 hover:border-[#C6A15B]/60 shadow-xs hover:shadow-[0_12px_30px_-8px_rgba(23,21,19,0.12)] hover:-translate-y-0.5 transition-all duration-300">
                     <!-- Image Banner (16:10) -->

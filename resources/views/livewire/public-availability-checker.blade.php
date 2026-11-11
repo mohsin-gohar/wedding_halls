@@ -133,7 +133,7 @@
                     </div>
 
                     <div class="pt-3 border-t border-[#E7E5E4] dark:border-white/10 flex items-center justify-between">
-                        <a href="{{ route('public.venue.details', $hall->slug) }}" class="text-xs text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white font-semibold underline">
+                        <a href="{{ route('hall.showcase', $hall->slug) }}" class="text-xs text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white font-semibold underline">
                             View Venue Specs &rarr;
                         </a>
                         <span class="text-[10px] text-stone-400 dark:text-stone-500 font-mono">Real DB Concurrency</span>

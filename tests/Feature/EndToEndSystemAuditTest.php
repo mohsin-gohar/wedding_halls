@@ -103,7 +103,7 @@ class EndToEndSystemAuditTest extends TestCase
         // ---------------------------------------------------------------------
         // STEP 4: Approved Hall Showcase is Now Publicly Accessible
         // ---------------------------------------------------------------------
-        $publicVenueResponse = $this->get('/venues/'.$hall->slug);
+        $publicVenueResponse = $this->get('/hall/'.$hall->slug);
         $publicVenueResponse->assertStatus(200);
         $publicVenueResponse->assertSee('Margalla Grand Marquee');
 

@@ -33,7 +33,7 @@ class PortalRoutesTest extends TestCase
 
         // 3. Public Venue Details
         if ($hall) {
-            $this->get('/venues/'.$hall->slug)->assertStatus(200);
+            $this->get('/hall/'.$hall->slug)->assertStatus(200);
         }
 
         // 4. Public Menus & Packages

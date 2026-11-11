@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MenuItem extends Model
 {
@@ -31,8 +30,56 @@ class MenuItem extends Model
         'is_active' => 'boolean',
     ];
 
-    public function tenant(): BelongsTo
+    public function categoryOptions(): array
     {
-        return $this->belongsTo(Tenant::class);
+        return [
+            'STARTER',
+            'MAIN',
+            'DESSERT',
+            'BEVERAGE',
+        ];
+    }
+
+    public function cuisineOptions(): array
+    {
+        return [
+            'MUGHAL',
+            'CONTINENTAL',
+            'DESI',
+            'ITALIAN',
+            'CHINESE',
+            'ARABIC',
+            'FRENCH',
+        ];
+    }
+
+    public function isStarter(): bool
+    {
+        return $this->category === 'STARTER';
+    }
+
+    public function isMain(): bool
+    {
+        return $this->category === 'MAIN';
+    }
+
+    public function isDessert(): bool
+    {
+        return $this->category === 'DESSERT';
+    }
+
+    public function isBeverage(): bool
+    {
+        return $this->category === 'BEVERAGE';
+    }
+
+    public function pricePerHead(int $guestCount): decimal
+    {
+        return $this->unit_cost * $guestCount;
+    }
+
+    public function meetsMinGuestCount(int $guestCount): bool
+    {
+        return $guestCount >= $this->min_guest_count;
     }
 }

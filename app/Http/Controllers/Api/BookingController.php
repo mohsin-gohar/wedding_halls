@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\SlotAlreadyBookedException;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Hall;
 use App\Services\BookingService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -25,7 +27,7 @@ class BookingController extends Controller
 
         $query = Booking::with(['hall.venue', 'package', 'payments']);
 
-        if ($user && !$user->isSuperAdmin() && $user->tenant_id) {
+        if ($user && ! $user->isSuperAdmin() && $user->tenant_id) {
             $query->where('tenant_id', $user->tenant_id);
         }
 
@@ -60,7 +62,7 @@ class BookingController extends Controller
 
         $query = Booking::with(['hall.venue', 'package', 'payments', 'rsvps', 'kitchenKot', 'floorPlan']);
 
-        if ($user && !$user->isSuperAdmin() && $user->tenant_id) {
+        if ($user && ! $user->isSuperAdmin() && $user->tenant_id) {
             $query->where('tenant_id', $user->tenant_id);
         }
 
@@ -101,7 +103,7 @@ class BookingController extends Controller
         $user = Auth::user();
         $hall = Hall::findOrFail($request->hall_id);
 
-        if ($user && !$user->isSuperAdmin() && $hall->tenant_id !== $user->tenant_id) {
+        if ($user && ! $user->isSuperAdmin() && $hall->tenant_id !== $user->tenant_id) {
             return response()->json(['message' => 'Unauthorized access to this hall.'], 403);
         }
 
@@ -124,7 +126,7 @@ class BookingController extends Controller
                 'booking' => $booking,
                 'message' => 'Booking created successfully.',
             ], 201);
-        } catch (\App\Exceptions\SlotAlreadyBookedException $e) {
+        } catch (SlotAlreadyBookedException $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -143,7 +145,7 @@ class BookingController extends Controller
 
         $query = Booking::where('id', $id);
 
-        if ($user && !$user->isSuperAdmin() && $user->tenant_id) {
+        if ($user && ! $user->isSuperAdmin() && $user->tenant_id) {
             $query->where('tenant_id', $user->tenant_id);
         }
 
@@ -203,11 +205,11 @@ class BookingController extends Controller
 
         $hall = Hall::with(['venue', 'tenant'])->findOrFail($request->hall_id);
 
-        if (!$hall->tenant || !$hall->tenant->is_active || $hall->tenant->verification_status !== 'APPROVED') {
+        if (! $hall->tenant || ! $hall->tenant->is_active || $hall->tenant->verification_status !== 'APPROVED') {
             return response()->json(['message' => 'Hall is not available for booking.'], 403);
         }
 
-        $date = \Carbon\Carbon::parse($request->date);
+        $date = Carbon::parse($request->date);
         $slotType = $request->slot_type;
 
         $bookings = Booking::where('hall_id', $hall->id)
@@ -228,7 +230,7 @@ class BookingController extends Controller
         $allSlots = ['AFTERNOON', 'EVENING', 'NIGHT', 'FULL_DAY'];
         $availableSlots = array_diff($allSlots, $bookedSlots);
 
-        if ($slotType && !in_array($slotType, $availableSlots)) {
+        if ($slotType && ! in_array($slotType, $availableSlots)) {
             return response()->json([
                 'available' => false,
                 'message' => 'Selected slot is already booked.',

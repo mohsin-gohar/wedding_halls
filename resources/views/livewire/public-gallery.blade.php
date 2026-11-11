@@ -81,7 +81,7 @@
                                     <h4 class="font-serif-luxury text-xl font-medium text-[#171513] dark:text-white">{{ $h->name }}</h4>
                                     <span class="text-xs text-stone-500 dark:text-stone-400 font-sans">{{ $h->venue->city ?? 'Lahore' }} • Capacity: {{ $h->min_capacity }}-{{ $h->max_capacity }}</span>
                                 </div>
-                                <a href="{{ route('public.venue.details', $h->slug) }}" class="btn-obsidian dark:bg-white/10 dark:text-white dark:border-white/20 dark:hover:bg-[#C6A15B] dark:hover:text-[#171513] !h-8 !px-4 text-xs font-sans rounded-lg">
+                                <a href="{{ route('hall.showcase', $h->slug) }}" class="btn-obsidian dark:bg-white/10 dark:text-white dark:border-white/20 dark:hover:bg-[#C6A15B] dark:hover:text-[#171513] !h-8 !px-4 text-xs font-sans rounded-lg">
                                     Explore Hall &rarr;
                                 </a>
                             </div>

@@ -15,6 +15,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Venue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -31,7 +32,11 @@ class TenantPrivacyAndSecurityAuditTest extends TestCase
 
     public function test_newly_registered_tenant_is_pending_verification_and_on_trial(): void
     {
-        Livewire::test(Register::class)
+        // Debug: check database connection
+        $connection = DB::connection()->getDatabaseName();
+        $this->assertStringContainsString('testing.sqlite', $connection);
+
+        $component = Livewire::test(Register::class)
             ->set('hallName', 'Skyline Grand Marquee')
             ->set('ownerName', 'Malik Tanveer')
             ->set('email', 'tanveer@skyline.pk')
@@ -42,6 +47,12 @@ class TenantPrivacyAndSecurityAuditTest extends TestCase
             ->set('password', 'secret123')
             ->set('password_confirmation', 'secret123')
             ->call('register');
+
+        // Debug: check for errors
+        $errors = $component->errors()->toArray();
+        if (! empty($errors)) {
+            $this->fail('Validation errors: '.json_encode($errors));
+        }
 
         $tenant = Tenant::where('email', 'tanveer@skyline.pk')->first();
         $this->assertNotNull($tenant);
