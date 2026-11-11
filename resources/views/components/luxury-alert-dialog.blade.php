@@ -1,6 +1,6 @@
 <div x-data="{
         dialogOpen: false,
-        title: 'EventHub Royal Notification',
+        title: 'Riwaj Grand Royal Notification',
         message: '',
         type: 'gold',
         confirmText: 'Understood',
@@ -10,7 +10,7 @@
         toasts: [],
 
         openDialog(detail) {
-            this.title = detail.title || 'EventHub Notice';
+            this.title = detail.title || 'Riwaj Grand Notice';
             this.message = detail.message || '';
             this.type = detail.type || 'gold';
             this.confirmText = detail.confirmText || 'Understood';
@@ -101,7 +101,7 @@
                         </svg>
                     </template>
                     <span class="absolute -bottom-2 px-2 py-0.5 bg-[#C6A15B] text-[#171513] text-[8px] font-sans font-bold tracking-widest uppercase rounded shadow-sm">
-                        EVENTHUB
+                        RIWAJ GRAND
                     </span>
                 </div>
 

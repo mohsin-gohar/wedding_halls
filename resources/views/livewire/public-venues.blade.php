@@ -384,7 +384,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-8">
             <div class="space-y-2">
                 <span class="text-[11px] font-sans uppercase tracking-[0.2em] text-[#C6A15B] block font-semibold">
-                    EventHub Concierge
+                    Riwaj Grand Concierge
                 </span>
                 <h3 class="font-serif-luxury text-2xl sm:text-3xl font-normal text-white">
                     Need Personalized Venue Recommendation?

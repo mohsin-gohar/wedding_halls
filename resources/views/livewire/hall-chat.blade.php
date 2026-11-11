@@ -337,7 +337,7 @@
                 </form>
 
                 <div class="flex items-center justify-between text-[10px] text-stone-400 dark:text-stone-500 mt-2 px-1">
-                    <span>💡 Powered by EventHub Automated Concierge • 24/7 Availability</span>
+                    <span>💡 Powered by Riwaj Grand Automated Concierge • 24/7 Availability</span>
                     <span>Messages are delivered directly to {{ $hall->name }} front desk</span>
                 </div>
             </div>

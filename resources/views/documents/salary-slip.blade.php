@@ -32,7 +32,7 @@
 
         <div class="header">
             <div>
-                <h1 class="brand-title">{{ $payroll->tenant->name ?? 'EventHub Hospitality' }}</h1>
+                <h1 class="brand-title">{{ $payroll->tenant->name ?? 'Riwaj Grand Hospitality' }}</h1>
                 <div class="brand-subtitle">{{ $payroll->tenant->address ?? 'Main Boulevard, Lahore' }} • Phone: {{ $payroll->tenant->phone }}</div>
                 <div class="brand-subtitle">Workforce ERP &amp; Payroll Management Suite</div>
             </div>
@@ -139,7 +139,7 @@
         </div>
 
         <div style="margin-top: 25px; border-top: 1px dashed #D6D3D1; padding-top: 10px; font-size: 9px; color: #78716C; text-align: center;">
-            This computer-generated document is issued by the EventHub Enterprise ERP Suite. Strictly strictly confidential.
+            This computer-generated document is issued by the Riwaj Grand Enterprise ERP Suite. Strictly confidential.
         </div>
     </div>
 </body>

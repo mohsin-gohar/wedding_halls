@@ -108,7 +108,7 @@ class PaymentService
                     'booking_reference' => $booking->booking_reference,
                     'tenant_id' => $booking->tenant_id,
                 ],
-                'description' => 'EventHub Booking: '.$booking->booking_reference,
+                'description' => 'Riwaj Grand Booking: '.$booking->booking_reference,
             ]);
 
             return [
@@ -145,7 +145,7 @@ class PaymentService
         $pp_TxnRef = $booking->booking_reference;
         $pp_Amount = (int) ($amount * 100);
         $pp_BillToPhone = $data['phone'] ?? $booking->customer_phone;
-        $pp_Description = 'EventHub Booking: '.$booking->booking_reference;
+        $pp_Description = 'Riwaj Grand Booking: '.$booking->booking_reference;
         $pp_TxnExpiryDateTime = now()->addHours(24)->format('YmdHis');
         $pp_ReturnURL = $returnUrl;
 
@@ -212,7 +212,7 @@ class PaymentService
                 'msisdn' => $msisdn,
                 'signature' => $signature,
                 'returnUrl' => $returnUrl,
-                'description' => 'EventHub Booking: '.$booking->booking_reference,
+                'description' => 'Riwaj Grand Booking: '.$booking->booking_reference,
             ],
             'amount' => $amount,
             'currency' => 'PKR',

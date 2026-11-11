@@ -50,7 +50,7 @@
     <!-- Theme State Initializer (Default: Dark Luxury Palace) -->
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('EventHub_theme');
+            const savedTheme = localStorage.getItem('RiwajGrand_theme') || localStorage.getItem('EventHub_theme');
             if (savedTheme === 'light') {
                 document.documentElement.classList.remove('dark');
             } else {
@@ -67,10 +67,10 @@
               this.darkMode = !this.darkMode; 
               if (this.darkMode) { 
                   document.documentElement.classList.add('dark'); 
-                  localStorage.setItem('EventHub_theme', 'dark'); 
+                  localStorage.setItem('RiwajGrand_theme', 'dark'); 
               } else { 
                   document.documentElement.classList.remove('dark'); 
-                  localStorage.setItem('EventHub_theme', 'light'); 
+                  localStorage.setItem('RiwajGrand_theme', 'light'); 
               } 
           } 
       }">
@@ -303,7 +303,7 @@
 
     <!-- GDPR / PDPA Cookie & Privacy Consent Bar (hidden on auth screens so login controls stay clickable) -->
     @unless(request()->routeIs('login', 'register', 'customer.login', 'customer.register'))
-    <div x-data="{ showCookieBar: !localStorage.getItem('EventHub_cookie_consent') }"
+    <div x-data="{ showCookieBar: !localStorage.getItem('RiwajGrand_cookie_consent') && !localStorage.getItem('EventHub_cookie_consent') }"
          x-show="showCookieBar"
          x-cloak
          role="region"
@@ -314,7 +314,7 @@
                 We use essential cookies to guarantee secure shift reservations and personalize your venue search experience. Read our <a href="{{ route('public.policies.privacy') }}" class="text-[#C6A15B] underline hover:text-white">Privacy Policy</a>.
             </p>
             <button type="button"
-                    @click="localStorage.setItem('EventHub_cookie_consent', 'accepted'); showCookieBar = false"
+                    @click="localStorage.setItem('RiwajGrand_cookie_consent', 'accepted'); showCookieBar = false"
                     aria-label="Accept cookies"
                     class="btn-gold !h-8 !px-3.5 text-[11px] font-semibold rounded-lg shrink-0">
                 Accept

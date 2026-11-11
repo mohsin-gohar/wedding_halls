@@ -18,7 +18,7 @@
             '@context' => 'https://schema.org',
             '@type' => 'EventVenue',
             'name' => $hall->name,
-            'description' => $hall->description ?? 'Luxury wedding banquet ballroom and marquee on EventHub Pakistan.',
+            'description' => $hall->description ?? 'Luxury wedding banquet ballroom and marquee on Riwaj Grand Pakistan.',
             'url' => route('hall.showcase', $hall->slug),
             'image' => $activePhoto,
             'maximumAttendeeCapacity' => (int) $hall->max_capacity,
@@ -1177,7 +1177,7 @@
                         <span>Zero Double-Booking Guarantee</span>
                     </div>
                     <p>
-                        To uphold our royal luxury hospitality standard, EventHub guarantees absolute private venue occupancy for every confirmed client. No secondary reservations are permitted for this shift.
+                        To uphold our royal luxury hospitality standard, Riwaj Grand guarantees absolute private venue occupancy for every confirmed client. No secondary reservations are permitted for this shift.
                     </p>
                     <div class="pt-1 flex items-center justify-between text-[11px] font-sans text-[#C6A15B] border-t border-white/5">
                         <span>Status: Token Confirmed</span>

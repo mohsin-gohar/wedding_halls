@@ -82,7 +82,7 @@
 
             <div class="flex flex-wrap items-center gap-3 pt-2">
                     <button type="button" 
-                            onclick="const text = `Assalamu Alaikum {{ $provisionedCredentials['owner_name'] }}!\nYour EventHub Rent Admin portal for *{{ $provisionedCredentials['business_name'] }}* is ready.\n\nLogin URL: {{ $provisionedCredentials['login_url'] }}\nEmail: {{ $provisionedCredentials['email'] }}\n\nLive Hall Website: {{ $provisionedCredentials['hall_url'] }}\n\nPlease sign in to customize your hall photos, services catalog, and shifts.`; navigator.clipboard.writeText(text); window.luxuryToast('WhatsApp credentials message copied to clipboard!', 'gold');"
+                            onclick="const text = `Assalamu Alaikum {{ $provisionedCredentials['owner_name'] }}!\nYour Riwaj Grand Luxury ERP portal for *{{ $provisionedCredentials['business_name'] }}* is ready.\n\nLogin URL: {{ $provisionedCredentials['login_url'] }}\nEmail: {{ $provisionedCredentials['email'] }}\n\nLive Hall Website: {{ $provisionedCredentials['hall_url'] }}\n\nPlease sign in to customize your hall photos, services catalog, and shifts.`; navigator.clipboard.writeText(text); window.luxuryToast('WhatsApp credentials message copied to clipboard!', 'gold');"
                             class="btn-gold !h-9 !px-4 text-xs font-bold font-sans tracking-wide rounded-lg shadow-sm transition-all duration-200">
                         <span>Copy WhatsApp Handover Message</span>
                     </button>
@@ -711,7 +711,7 @@
                         {{ $newContactInquiriesCount }} Couples
                     </div>
                     <p class="text-xs text-stone-500 dark:text-stone-400 font-sans">
-                        Public contact-form leads waiting for EventHub concierge follow-up.
+                        Public contact-form leads waiting for Riwaj Grand concierge follow-up.
                     </p>
                 </div>
                 @endif
@@ -1517,7 +1517,7 @@
                                                 {{ $b->customer_name }}
                                             </div>
                                             @if($b->customer_phone)
-                                                <a href="https://wa.me/{{ $cleanPhone }}?text=Hello%20{{ urlencode($b->customer_name) }},%20regarding%20your%20EventHub%20reservation%20{{ $b->booking_reference }}" target="_blank"
+                                                <a href="https://wa.me/{{ $cleanPhone }}?text=Hello%20{{ urlencode($b->customer_name) }},%20regarding%20your%20Riwaj%20Grand%20reservation%20{{ $b->booking_reference }}" target="_blank"
                                                    class="inline-flex items-center gap-1 text-[11px] text-stone-500 dark:text-stone-400 hover:text-emerald-500 font-mono transition mt-0.5">
                                                     <span class="text-emerald-500">💬</span>
                                                     <span>{{ $b->customer_phone }}</span>

@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.auth', ['title' => 'Verify Email — EventHub'])]
+#[Layout('components.layouts.auth', ['title' => 'Verify Email â€” Riwaj Grand'])]
 class VerifyEmail extends Component
 {
     public string $email = '';
@@ -95,7 +95,7 @@ class VerifyEmail extends Component
             'verificationUrl' => route('verify.email', ['token' => $token, 'email' => $user->email]),
         ], function ($message) use ($user) {
             $message->to($user->email)
-                ->subject('Verify Your Email Address — EventHub');
+                ->subject('Verify Your Email Address â€” Riwaj Grand');
         });
 
         $this->feedbackMessage = 'A new verification email has been sent to your inbox.';

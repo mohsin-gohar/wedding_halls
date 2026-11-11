@@ -12,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.auth', ['title' => 'Reset Password — EventHub'])]
+#[Layout('components.layouts.auth', ['title' => 'Reset Password â€” Riwaj Grand'])]
 class ResetPassword extends Component
 {
     public string $token = '';

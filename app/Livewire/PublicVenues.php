@@ -13,7 +13,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('components.layouts.public', ['title' => 'Wedding Venues Marketplace — EventHub Pakistan'])]
+#[Layout('components.layouts.public', ['title' => 'Wedding Venues Marketplace â€” Riwaj Grand Pakistan'])]
 class PublicVenues extends Component
 {
     use WithPagination;
@@ -389,19 +389,19 @@ class PublicVenues extends Component
             'afternoon' => [
                 'name' => 'AFTERNOON',
                 'time' => '11 AM - 3 PM',
-                'icon' => '☀️',
+                'icon' => 'â˜€ï¸',
                 'isBooked' => $selAfternoonBooked,
             ],
             'evening' => [
                 'name' => 'EVENING',
                 'time' => '4 PM - 8 PM',
-                'icon' => '🌄',
+                'icon' => 'ðŸŒ„',
                 'isBooked' => $selEveningBooked,
             ],
             'night' => [
                 'name' => 'NIGHT',
                 'time' => '9 PM - 1 AM',
-                'icon' => '🌙',
+                'icon' => 'ðŸŒ™',
                 'isBooked' => $selNightBooked,
             ],
         ];

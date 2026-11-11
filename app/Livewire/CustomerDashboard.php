@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.public', ['title' => 'Customer Dashboard — EventHub Pakistan'])]
+#[Layout('components.layouts.public', ['title' => 'Customer Dashboard â€” Riwaj Grand Pakistan'])]
 class CustomerDashboard extends Component
 {
     public ?string $selectedBookingId = null;

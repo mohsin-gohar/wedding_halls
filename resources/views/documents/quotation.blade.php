@@ -144,7 +144,7 @@
         </div>
 
         <div style="margin-top: 35px; border-top: 1px dashed #D6D3D1; padding-top: 15px; font-size: 10px; color: #78716C; text-align: center;">
-            Issued by {{ $booking->tenant->name }} Concierge Terminal • Powered by EventHub SaaS
+            Issued by {{ $booking->tenant->name }} Concierge Terminal • Powered by Riwaj Grand ERP
         </div>
     </div>
 </body>

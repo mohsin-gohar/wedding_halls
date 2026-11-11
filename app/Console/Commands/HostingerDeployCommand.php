@@ -28,13 +28,13 @@ class HostingerDeployCommand extends Command
     public function handle(): int
     {
         $this->info('====================================================');
-        $this->info('   EventHub — Hostinger Production Setup & Optimizer ');
+        $this->info('   Riwaj Grand â€” Hostinger Production Setup & Optimizer ');
         $this->info('====================================================');
 
         // 1. Remove Vite dev hot file
         if (File::exists(public_path('hot'))) {
             File::delete(public_path('hot'));
-            $this->line('<info>✓</info> Removed dev hot file (public/hot)');
+            $this->line('<info>âœ“</info> Removed dev hot file (public/hot)');
         }
 
         // 2. Storage symlink
@@ -48,12 +48,12 @@ class HostingerDeployCommand extends Command
         if (! file_exists($publicLink)) {
             try {
                 Artisan::call('storage:link');
-                $this->line('<info>✓</info> Public storage symlink created: '.$publicLink);
+                $this->line('<info>âœ“</info> Public storage symlink created: '.$publicLink);
             } catch (\Throwable $e) {
                 $this->warn('! Symlink creation failed, trying relative link or copy: '.$e->getMessage());
             }
         } else {
-            $this->line('<info>✓</info> Public storage symlink already exists');
+            $this->line('<info>âœ“</info> Public storage symlink already exists');
         }
 
         // 3. Database Migration
@@ -61,7 +61,7 @@ class HostingerDeployCommand extends Command
         try {
             Artisan::call('migrate', ['--force' => true]);
             $this->line(trim(Artisan::output()));
-            $this->line('<info>✓</info> Database migrations executed successfully');
+            $this->line('<info>âœ“</info> Database migrations executed successfully');
         } catch (\Throwable $e) {
             $this->error('Database migration failed: '.$e->getMessage());
 
@@ -74,7 +74,7 @@ class HostingerDeployCommand extends Command
             try {
                 Artisan::call('db:seed', ['--force' => true]);
                 $this->line(trim(Artisan::output()));
-                $this->line('<info>✓</info> Database seeding completed');
+                $this->line('<info>âœ“</info> Database seeding completed');
             } catch (\Throwable $e) {
                 $this->warn('! Database seeding skipped or failed: '.$e->getMessage());
             }
@@ -87,7 +87,7 @@ class HostingerDeployCommand extends Command
         Artisan::call('route:cache');
         Artisan::call('view:cache');
         Artisan::call('event:cache');
-        $this->line('<info>✓</info> Config, routes, views, and events cached');
+        $this->line('<info>âœ“</info> Config, routes, views, and events cached');
 
         // 6. Check Storage and Cache Permissions
         $writableDirs = [
@@ -107,7 +107,7 @@ class HostingerDeployCommand extends Command
                 @chmod($dir, 0775);
             }
         }
-        $this->line('<info>✓</info> Verified storage & cache directory permissions');
+        $this->line('<info>âœ“</info> Verified storage & cache directory permissions');
 
         $this->newLine();
         $this->info('====================================================');

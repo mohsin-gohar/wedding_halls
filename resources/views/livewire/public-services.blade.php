@@ -1,7 +1,7 @@
 <div class="bg-[#F8F5EF] dark:bg-[#171513] text-[#171513] dark:text-[#F8F5EF] min-h-screen">
 
     <!-- ===================================================================
-         SECTION 1: HERO — SERVICES EVENTHUB PROVIDES TO HALL OWNERS
+         SECTION 1: HERO — SERVICES RIWAJ GRAND PROVIDES TO HALL OWNERS
          =================================================================== -->
     <section class="parallax-window relative bg-[#171513] text-white py-20 border-b border-[#C6A15B]/30 overflow-hidden">
         <div class="parallax-bg opacity-75" data-parallax="0.25"
@@ -21,7 +21,7 @@
             </h1>
 
             <p class="text-sm sm:text-base text-stone-300 max-w-2xl mx-auto font-light leading-relaxed">
-                EventHub is currently 100% complimentary for wedding hall and marquee owners across Pakistan. Register in under 2 minutes with zero platform rent. The moment our administration team approves your venue, your hall goes LIVE on our public marketplace for thousands of prospective clients to explore and book.
+                Riwaj Grand is currently 100% complimentary for wedding hall and marquee owners across Pakistan — Riwayat bhi, Jiddat bhi. Register in under 2 minutes with zero platform rent. The moment our administration team approves your venue, your hall goes LIVE on our public marketplace for thousands of prospective clients to explore and book.
             </p>
 
             <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
@@ -239,7 +239,7 @@
                 <span class="text-xs font-sans font-semibold text-[#8F7239] dark:text-[#C6A15B] uppercase tracking-wider">Free Marketplace Exposure</span>
                 <h4 class="font-serif-luxury text-xl text-[#171513] dark:text-white">Listed on the Public Marketplace</h4>
                 <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
-                    Your hall appears in EventHub's public venue discovery, live availability checker, gallery, and search — in front of every couple actively comparing verified banquets in your city.
+                    Your hall appears in Riwaj Grand's public venue discovery, live availability checker, gallery, and search — in front of every couple actively comparing verified banquets in your city.
                 </p>
             </div>
 
@@ -304,7 +304,7 @@
                     </div>
                     <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-semibold">Live on Public Website!</h4>
                     <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
-                        The moment admin clicks approve, your wedding hall goes LIVE immediately on EventHub! Couples can browse your photos, check dates, and send booking requests.
+                        The moment admin clicks approve, your wedding hall goes LIVE immediately on Riwaj Grand! Couples can browse your photos, check dates, and send booking requests.
                     </p>
                 </div>
             </div>
@@ -329,7 +329,7 @@
                     Ready to Go Digital?
                 </span>
                 <h3 class="font-serif-luxury text-2xl sm:text-3xl font-normal text-white">
-                    Put Your Hall on EventHub Today
+                    Put Your Hall on Riwaj Grand Today
                 </h3>
                 <p class="text-xs text-stone-300 font-light max-w-xl">
                     Join the platform where couples check availability, book shifts, and pay advances online — while you manage everything from one dashboard.

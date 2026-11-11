@@ -35,7 +35,7 @@
     <!-- Theme State Initializer (Default: Dark) -->
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('EventHub_theme');
+            const savedTheme = localStorage.getItem('RiwajGrand_theme') || localStorage.getItem('EventHub_theme');
             if (savedTheme === 'light') {
                 document.documentElement.classList.remove('dark');
             } else {
@@ -51,10 +51,10 @@
               this.darkMode = !this.darkMode; 
               if (this.darkMode) { 
                   document.documentElement.classList.add('dark'); 
-                  localStorage.setItem('EventHub_theme', 'dark'); 
+                  localStorage.setItem('RiwajGrand_theme', 'dark'); 
               } else { 
                   document.documentElement.classList.remove('dark'); 
-                  localStorage.setItem('EventHub_theme', 'light'); 
+                  localStorage.setItem('RiwajGrand_theme', 'light'); 
               } 
           } 
       }">

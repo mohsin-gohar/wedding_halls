@@ -216,7 +216,7 @@ class DashboardClickAuditTest extends TestCase
             ->get(route('admin.dashboard', ['tab' => 'tasks']))
             ->assertOk()
             ->assertSee('Review pending hall KYC', false)
-            ->assertSee('Follow up EventHub contact-form', false)
+            ->assertSee('Follow up Riwaj Grand contact-form', false)
             ->assertSee('Concierge Inquiries', false);
 
         $tabs = ['vendors', 'tasks', 'traffic', 'halls', 'bookings', 'users', 'audit'];

@@ -218,7 +218,7 @@
                             {{ $bookings->count() }}
                         </strong>
                         <p class="text-xs text-stone-500 dark:text-stone-400 font-sans mt-1">
-                            Reserved banquet shifts on EventHub.
+                            Reserved banquet shifts on Riwaj Grand.
                         </p>
                     </div>
                 </div>

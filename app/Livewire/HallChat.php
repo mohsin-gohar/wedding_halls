@@ -10,7 +10,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-#[Layout('components.layouts.public', ['title' => 'Concierge Chatbot — EventHub'])]
+#[Layout('components.layouts.public', ['title' => 'Concierge Chatbot â€” Riwaj Grand'])]
 class HallChat extends Component
 {
     use WithFileUploads;
@@ -177,7 +177,7 @@ class HallChat extends Component
         $this->voiceRecording = null;
 
         if (! $isHallOwner) {
-            $botReply = "🎙️ Thank you for your voice note! Our wedding concierge desk at {$this->hall->name} has received it. A venue manager will listen to your recording and get back to you shortly.";
+            $botReply = "ðŸŽ™ï¸ Thank you for your voice note! Our wedding concierge desk at {$this->hall->name} has received it. A venue manager will listen to your recording and get back to you shortly.";
             HallChatMessage::create([
                 'hall_id' => $this->hall->id,
                 'user_id' => null,
@@ -222,10 +222,10 @@ class HallChat extends Component
             $minCap = $hall->min_capacity ?: 100;
             $maxCap = $hall->max_capacity ?: 800;
 
-            return "🏛️ **{$hall->name} — Rates & Capacity:**\n\n"
-                ."• **Base Hall Rental:** PKR {$formattedRent} per event shift (Afternoon or Evening).\n"
-                ."• **Guest Capacity:** Accommodates from {$minCap} up to {$maxCap} guests.\n"
-                ."• **Included:** Central AC, 100% generator backup, private bridal suite, and parking.\n\n"
+            return "ðŸ›ï¸ **{$hall->name} â€” Rates & Capacity:**\n\n"
+                ."â€¢ **Base Hall Rental:** PKR {$formattedRent} per event shift (Afternoon or Evening).\n"
+                ."â€¢ **Guest Capacity:** Accommodates from {$minCap} up to {$maxCap} guests.\n"
+                ."â€¢ **Included:** Central AC, 100% generator backup, private bridal suite, and parking.\n\n"
                 .'Would you like to review our royal catering packages or check live date availability?';
         }
 
@@ -236,25 +236,25 @@ class HallChat extends Component
                 $lines = [];
                 foreach ($packages as $pkg) {
                     $rate = number_format($pkg->per_head_price);
-                    $lines[] = "• **{$pkg->name}:** PKR {$rate}/head (Min {$pkg->min_guests} guests)";
+                    $lines[] = "â€¢ **{$pkg->name}:** PKR {$rate}/head (Min {$pkg->min_guests} guests)";
                 }
                 $pkgList = implode("\n", $lines);
 
-                return "🍽️ **Royal Catering Packages at {$hall->name}:**\n\n"
+                return "ðŸ½ï¸ **Royal Catering Packages at {$hall->name}:**\n\n"
                     ."{$pkgList}\n\n"
                     .'All packages feature authentic Moghlai recipes, live tandoori naan, salad bar, desserts, and dedicated waiter service. You can also customize your preferred menu items during reservation!';
             }
 
-            return "🍽️ **Catering Service at {$hall->name}:**\n\n"
+            return "ðŸ½ï¸ **Catering Service at {$hall->name}:**\n\n"
                 .'We provide premium catering packages with traditional degi biryani, chicken handi, live tandoor, and royal sweets. Custom menu tastings can also be arranged with our executive chef!';
         }
 
         // 3. Shift Timings, Dates & Booking
         if (preg_match('/(date|available|avail|book|reserve|slot|shift|calendar|december|january|february|march|april|november|october|tarikh|din)/i', $lower)) {
-            return "📅 **Shift Hours & Reservation Process:**\n\n"
-                ."• **Afternoon Shift:** 12:00 PM – 04:00 PM (Ideal for Mehndi / Nikkah / Luncheons)\n"
-                ."• **Evening Shift:** 07:00 PM – 11:30 PM (Barat / Walima Reception)\n"
-                ."• **Full Day:** 11:00 AM – 11:30 PM (Exclusive Takeover)\n\n"
+            return "ðŸ“… **Shift Hours & Reservation Process:**\n\n"
+                ."â€¢ **Afternoon Shift:** 12:00 PM â€“ 04:00 PM (Ideal for Mehndi / Nikkah / Luncheons)\n"
+                ."â€¢ **Evening Shift:** 07:00 PM â€“ 11:30 PM (Barat / Walima Reception)\n"
+                ."â€¢ **Full Day:** 11:00 AM â€“ 11:30 PM (Exclusive Takeover)\n\n"
                 ."To reserve an available slot instantly, you can click **'Reserve Event Shift'** on the showcase page and pay token advance deposit at front desk rates!";
         }
 
@@ -264,17 +264,17 @@ class HallChat extends Component
             $genText = $hall->has_generator_backup ? '100% Heavy-Duty Backup Generator (Seamless Transfer)' : 'Standard Power';
             $bridalText = $hall->has_bridal_room ? 'Private VIP Bridal Suite with dressing vanity and restroom' : 'Available on request';
 
-            return "✨ **Facilities & Luxury Amenities at {$hall->name}:**\n\n"
-                ."• ⚡ **Power Backup:** {$genText}\n"
-                ."• ❄️ **Climate Control:** {$acText}\n"
-                ."• 👰 **Bridal Suite:** {$bridalText}\n"
-                ."• 🚗 **Guest Parking:** On-site secure parking & valet assistance\n"
-                .'• 🌸 **Stage & Decor:** Bespoke thematic stage decor and fresh floral styling are available through our services catalog.';
+            return "âœ¨ **Facilities & Luxury Amenities at {$hall->name}:**\n\n"
+                ."â€¢ âš¡ **Power Backup:** {$genText}\n"
+                ."â€¢ â„ï¸ **Climate Control:** {$acText}\n"
+                ."â€¢ ðŸ‘° **Bridal Suite:** {$bridalText}\n"
+                ."â€¢ ðŸš— **Guest Parking:** On-site secure parking & valet assistance\n"
+                .'â€¢ ðŸŒ¸ **Stage & Decor:** Bespoke thematic stage decor and fresh floral styling are available through our services catalog.';
         }
 
         // 5. Contact Human / Venue Manager
         if (preg_match('/(human|owner|manager|call|phone|number|baat|contact|agent|talk|person)/i', $lower)) {
-            return "📞 **Venue Manager Alerted:**\n\n"
+            return "ðŸ“ž **Venue Manager Alerted:**\n\n"
                 ."Your conversation has been sent to the front-desk management console of {$hall->name}. Please reply with your **phone number and event date**, and our wedding coordinator will contact you directly!";
         }
 
@@ -288,11 +288,11 @@ class HallChat extends Component
         // 7. Default Friendly Assistance
         return "Thank you for reaching out to **{$hall->name} Concierge**!\n\n"
             ."I can instantly help you with:\n"
-            ."1️⃣ **Hall Rent & Capacity** (Base rent & seating limits)\n"
-            ."2️⃣ **Catering Packages** (Per-head menus & tastings)\n"
-            ."3️⃣ **Shift Timings & Dates** (Afternoon vs Evening slots)\n"
-            ."4️⃣ **Generator & Bridal Suite Facilities**\n"
-            ."5️⃣ **Connect with Venue Manager**\n\n"
+            ."1ï¸âƒ£ **Hall Rent & Capacity** (Base rent & seating limits)\n"
+            ."2ï¸âƒ£ **Catering Packages** (Per-head menus & tastings)\n"
+            ."3ï¸âƒ£ **Shift Timings & Dates** (Afternoon vs Evening slots)\n"
+            ."4ï¸âƒ£ **Generator & Bridal Suite Facilities**\n"
+            ."5ï¸âƒ£ **Connect with Venue Manager**\n\n"
             .'What would you like to know more about?';
     }
 

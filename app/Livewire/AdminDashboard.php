@@ -26,7 +26,7 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-#[Layout('components.layouts.app', ['title' => 'Super Admin Console — EventHub'])]
+#[Layout('components.layouts.app', ['title' => 'Super Admin Console — Riwaj Grand'])]
 class AdminDashboard extends Component
 {
     #[Url(as: 'tab')]

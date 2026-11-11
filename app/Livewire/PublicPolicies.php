@@ -31,13 +31,13 @@ class PublicPolicies extends Component
     public function render()
     {
         $titles = [
-            'terms' => 'Terms & Conditions — EventHub Pakistan',
-            'privacy' => 'Privacy Policy — EventHub Pakistan',
-            'cancellation' => 'Cancellation & Refund Policy — EventHub Pakistan',
+            'terms' => 'Terms & Conditions â€” Riwaj Grand Pakistan',
+            'privacy' => 'Privacy Policy â€” Riwaj Grand Pakistan',
+            'cancellation' => 'Cancellation & Refund Policy â€” Riwaj Grand Pakistan',
         ];
 
         return view('livewire.public-policies')->layout('components.layouts.public', [
-            'title' => $titles[$this->section] ?? 'Policies — EventHub Pakistan',
+            'title' => $titles[$this->section] ?? 'Policies â€” Riwaj Grand Pakistan',
         ]);
     }
 }

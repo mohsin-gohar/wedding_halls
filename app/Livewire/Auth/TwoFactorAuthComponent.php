@@ -8,7 +8,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use PragmaRX\Google2FA\Google2FA;
 
-#[Layout('components.layouts.auth', ['title' => 'Two-Factor Authentication — EventHub'])]
+#[Layout('components.layouts.auth', ['title' => 'Two-Factor Authentication â€” Riwaj Grand'])]
 class TwoFactorAuthComponent extends Component
 {
     public string $code = '';

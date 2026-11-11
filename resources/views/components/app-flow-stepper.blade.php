@@ -32,7 +32,7 @@
     ];
 @endphp
 
-<!-- AppFlow Step-by-Step Progress Track (EventHub Obsidian Luxury Standard) -->
+<!-- AppFlow Step-by-Step Progress Track (Riwaj Grand Obsidian Luxury Standard) -->
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
     <div class="glass-panel p-4 sm:p-5 border border-[#C6A15B]/25 bg-[#171513]/90 backdrop-blur-xl shadow-2xl rounded-2xl">
         

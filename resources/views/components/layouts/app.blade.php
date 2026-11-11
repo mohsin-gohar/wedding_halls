@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'EventHub — Vendor SaaS Management Suite' }}</title>
+    <title>{{ $title ?? 'Riwaj Grand — Vendor Luxury ERP Suite' }}</title>
     <meta name="theme-color" content="#171513">
     <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('images/eventhub-logo.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/eventhub-logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/riwaj-grand-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/riwaj-grand-logo.png') }}">
 
     <!-- Google Fonts: Preconnect & Asynchronous Loading (High Performance & Zero Render-Blocking) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,7 +36,7 @@
     <!-- Theme State Initializer (Default: Dark Luxury Palace) -->
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('EventHub_theme');
+            const savedTheme = localStorage.getItem('RiwajGrand_theme') || localStorage.getItem('EventHub_theme');
             if (savedTheme === 'light') {
                 document.documentElement.classList.remove('dark');
             } else {
@@ -53,10 +53,10 @@
               this.darkMode = !this.darkMode; 
               if (this.darkMode) { 
                   document.documentElement.classList.add('dark'); 
-                  localStorage.setItem('EventHub_theme', 'dark'); 
+                  localStorage.setItem('RiwajGrand_theme', 'dark'); 
               } else { 
                   document.documentElement.classList.remove('dark'); 
-                  localStorage.setItem('EventHub_theme', 'light'); 
+                  localStorage.setItem('RiwajGrand_theme', 'light'); 
               } 
           } 
       }">
@@ -105,7 +105,7 @@
     <!-- Subscription Status Banners -->
     @if(config('platform.billing_enabled') && auth()->user()->tenant && auth()->user()->tenant->subscription_status === 'EXPIRED')
         <div class="bg-[#171513] border-b border-[#C6A15B]/60 text-[#F8F5EF] px-4 py-3 text-xs text-center font-medium shadow-md">
-            <strong>Subscription Notice:</strong> Your EventHub SaaS subscription expired on {{ auth()->user()->tenant->subscription_expires_at?->format('d M Y') ?? 'recently' }}. All your halls, bookings, client records, and finances are 100% safe and preserved. Please submit your renewal payment to unlock operations.
+            <strong>Subscription Notice:</strong> Your Riwaj Grand subscription expired on {{ auth()->user()->tenant->subscription_expires_at?->format('d M Y') ?? 'recently' }}. All your halls, bookings, client records, and finances are 100% safe and preserved. Please submit your renewal payment to unlock operations.
         </div>
     @elseif(auth()->user()->tenant && auth()->user()->tenant->subscription_status === 'GRACE_PERIOD')
         <div class="bg-[#24211E] border-b border-[#A98746]/50 text-[#F8F5EF] px-4 py-2.5 text-xs text-center font-medium">
@@ -113,7 +113,7 @@
         </div>
     @elseif(auth()->user()->tenant && auth()->user()->tenant->verification_status === 'PENDING')
         <div class="bg-[#C6A15B]/20 border-b border-[#C6A15B]/60 text-[#8F7239] px-4 py-2.5 text-xs text-center font-medium">
-            <strong>Verification Notice:</strong> Your venue business credentials are under review by EventHub administrators. You can configure halls, photos, and menus now; public listings will become visible upon verification.
+            <strong>Verification Notice:</strong> Your venue business credentials are under review by Riwaj Grand administrators. You can configure halls, photos, and menus now; public listings will become visible upon verification.
         </div>
     @endif
 
@@ -627,8 +627,8 @@
 
             <!-- Footer -->
             <footer class="bg-white dark:bg-[#171513] border-t border-[#E7E5E4] dark:border-white/10 py-4 px-8 text-xs text-stone-500 dark:text-stone-400 flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
-                <span>&copy; {{ date('Y') }} EventHub Enterprise Hospitality Architecture. All rights reserved.</span>
-                <span class="font-sans text-[11px] text-stone-400 dark:text-stone-500">Verified Hospitality Workspace</span>
+                <span>&copy; {{ date('Y') }} Riwaj Grand Enterprise Hospitality Architecture. All rights reserved.</span>
+                <span class="font-sans text-[11px] text-stone-400 dark:text-stone-500">Riwayat bhi, Jiddat bhi • Verified Workspace</span>
             </footer>
 
         </div>

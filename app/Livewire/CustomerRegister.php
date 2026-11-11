@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.auth', ['title' => 'Create Account — EventHub'])]
+#[Layout('components.layouts.auth', ['title' => 'Create Account â€” Riwaj Grand'])]
 class CustomerRegister extends Component
 {
     public string $name = '';

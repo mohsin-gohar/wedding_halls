@@ -474,19 +474,19 @@ class PublicHallDetails extends Component
             'afternoon' => [
                 'name' => 'AFTERNOON',
                 'time' => '11 AM - 3 PM',
-                'icon' => '☀️',
+                'icon' => 'â˜€ï¸',
                 'isBooked' => $selAfternoonBooked,
             ],
             'evening' => [
                 'name' => 'EVENING',
                 'time' => '4 PM - 8 PM',
-                'icon' => '🌄',
+                'icon' => 'ðŸŒ„',
                 'isBooked' => $selEveningBooked,
             ],
             'night' => [
                 'name' => 'NIGHT',
                 'time' => '9 PM - 1 AM',
-                'icon' => '🌙',
+                'icon' => 'ðŸŒ™',
                 'isBooked' => $selNightBooked,
             ],
         ];
@@ -522,7 +522,7 @@ class PublicHallDetails extends Component
             'selectedYear' => $this->selectedYear,
             'selectedMonthNumber' => $this->selectedMonthNumber,
         ])->layout('components.layouts.public', [
-            'title' => $this->hall->name.' — EventHub Pakistan',
+            'title' => $this->hall->name.' â€” Riwaj Grand Pakistan',
             'metaDescription' => Str::limit(strip_tags($this->hall->description ?? ''), 155, '...'),
             'ogImage' => $this->activePhoto,
         ]);

@@ -39,7 +39,7 @@ class FreeLaunchAndInstantLiveApprovalTest extends TestCase
         // 4. FAQs page
         $this->get(route('public.faqs'))
             ->assertStatus(200)
-            ->assertSee('Is listing my hall on EventHub free? When does it go live?');
+            ->assertSee('Is listing my hall on Riwaj Grand free? When does it go live?');
 
         // 5. Register page
         $this->get(route('register'))

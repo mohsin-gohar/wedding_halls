@@ -4,7 +4,7 @@
 
         <!-- Brand Logo -->
         <div class="flex justify-center -mb-1">
-            <img src="{{ asset('images/eventhub-logo.png') }}" width="56" height="56" fetchpriority="high" decoding="async" alt="EventHub Logo" class="h-14 w-14 object-contain rounded-xl border border-[#C6A15B]/40 bg-[#171513] shadow-sm p-1">
+            <img src="{{ asset('images/riwaj-grand-logo.png') }}" width="56" height="56" fetchpriority="high" decoding="async" alt="Riwaj Grand Logo" class="h-14 w-14 object-contain rounded-xl border border-[#C6A15B]/40 bg-[#171513] shadow-sm p-1">
         </div>
 
         <!-- Heading Section (Clean, Universal Luxury) -->

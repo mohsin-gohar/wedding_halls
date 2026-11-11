@@ -5,7 +5,7 @@ namespace App\Livewire;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.public', ['title' => 'Services — EventHub Pakistan'])]
+#[Layout('components.layouts.public', ['title' => 'Services â€” Riwaj Grand Pakistan'])]
 class PublicServices extends Component
 {
     public function render()

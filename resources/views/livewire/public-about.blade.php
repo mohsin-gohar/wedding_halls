@@ -9,10 +9,10 @@
                 <span>What This Website Does</span>
             </div>
             <h1 class="font-serif-luxury text-4xl sm:text-5xl text-[#171513] dark:text-white font-normal">
-                About EventHub &amp; This Website
+                About Riwaj Grand &amp; This Website
             </h1>
             <p class="text-stone-600 dark:text-stone-300 text-sm max-w-2xl font-normal leading-relaxed">
-                EventHub is Pakistan's wedding banqueting marketplace and hall-management website — one platform where couples discover and reserve verified venues, and hall owners run their entire business online.
+                Riwaj Grand is Pakistan's premier luxury wedding banqueting marketplace and hall-management website — Riwayat bhi, Jiddat bhi. One unified platform where couples discover and reserve verified venues, and hall owners run their entire business online.
             </p>
         </div>
 
@@ -60,7 +60,7 @@
                         Pakistani weddings are legendary milestones involving hundreds of distinguished guests, multi-course Mughlai feasts, and multi-day celebrations spanning Barat, Valima, and Mehndi. Yet, wedding hall management has historically suffered from manual paperwork registers, accidental overlapping double-bookings, volatile ingredient costs, and uncoordinated kitchen orders.
                     </p>
                     <p>
-                        <strong>EventHub</strong> — this website — was engineered as an authoritative two-sided platform: an ultra-refined luxury marketplace for wedding hosts to explore authentic venues with transparent PKR pricing, combined with a dedicated multi-tenant ERP software suite for banquet hall directors to manage shifts, kitchen raw materials, fuel consumption, and legally compliant contracts. One website, both sides of the wedding business.
+                        <strong>Riwaj Grand</strong> ("Riwayat bhi, Jiddat bhi") — this website — was engineered as an authoritative two-sided platform: an ultra-refined luxury marketplace for wedding hosts to explore authentic venues with transparent PKR pricing, combined with a dedicated multi-tenant ERP software suite for banquet hall directors to manage shifts, kitchen raw materials, fuel consumption, and legally compliant contracts. One website, both sides of the wedding business.
                     </p>
                 </div>
 
@@ -84,7 +84,7 @@
             <div class="lg:col-span-5 bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-white/10 p-3 rounded-2xl shadow-sm">
                 <div class="aspect-[4/5] bg-stone-900 overflow-hidden relative rounded-xl">
                     <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1000&auto=format&fit=crop" 
-                         alt="EventHub Executive Headquarters" 
+                         alt="Riwaj Grand Executive Headquarters" 
                          class="w-full h-full object-cover">
                     <div class="absolute inset-0 bg-gradient-to-t from-[#171513]/80 via-transparent to-transparent"></div>
                     <div class="absolute bottom-6 left-6 right-6 text-white">
@@ -167,7 +167,7 @@
                     Reserve Your Dream Wedding Date Today.
                 </h3>
                 <p class="text-xs text-[#F8F5EF]/70 font-light max-w-xl">
-                    Lock in your preferred hall, shift, and catering package with EventHub's verified venue network. Our concierge will guide you through every detail.
+                    Lock in your preferred hall, shift, and catering package with Riwaj Grand's verified venue network. Our concierge will guide you through every detail.
                 </p>
             </div>
 

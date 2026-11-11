@@ -672,7 +672,7 @@ class DatabaseSeeder extends Seeder
             'is_completed' => false,
         ]);
         PlatformTask::create([
-            'title' => 'Follow up EventHub contact-form and concierge inquiries',
+            'title' => 'Follow up Riwaj Grand contact-form and concierge inquiries',
             'category' => 'CUSTOMER_INQUIRY',
             'priority' => 'HIGH',
             'due_date' => Carbon::now()->addDay()->toDateString(),

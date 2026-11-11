@@ -13,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.auth', ['title' => 'Forgot Password — EventHub'])]
+#[Layout('components.layouts.auth', ['title' => 'Forgot Password â€” Riwaj Grand'])]
 class ForgotPassword extends Component
 {
     public string $email = '';

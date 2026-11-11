@@ -23,12 +23,12 @@ class PublicChatbotTest extends TestCase
         $this->get(route('home'))
             ->assertOk()
             ->assertSee('eventhub-public-ai-chatbot')
-            ->assertSee('EventHub Chatbot');
+            ->assertSee('Riwaj Grand Chatbot');
 
         $this->get(route('public.venues'))
             ->assertOk()
             ->assertSee('eventhub-public-ai-chatbot')
-            ->assertSee('EventHub Chatbot');
+            ->assertSee('Riwaj Grand Chatbot');
     }
 
     public function test_public_chat_widget_is_hidden_on_venue_showcase(): void

@@ -21,10 +21,10 @@
             <!-- FAQ 1 -->
             <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 rounded-2xl p-6 sm:p-7 shadow-sm space-y-2">
                 <h3 class="font-serif-luxury text-xl sm:text-2xl text-[#171513] dark:text-white font-medium" style="text-wrap: balance;">
-                    1. How does EventHub guarantee zero double-bookings?
+                    1. How does Riwaj Grand guarantee zero double-bookings?
                 </h3>
                 <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed font-normal" style="text-wrap: pretty;">
-                    When you initiate a booking, EventHub creates a distributed cache mutex lock in memory and locks the database row. If another user attempts to book the same hall on the same date and shift, our system immediately rejects the conflict. Confirmed reservations are atomically committed to our ACID database.
+                    When you initiate a booking, Riwaj Grand creates a distributed cache mutex lock in memory and locks the database row. If another user attempts to book the same hall on the same date and shift, our system immediately rejects the conflict. Confirmed reservations are atomically committed to our ACID database.
                 </p>
             </div>
 
@@ -74,10 +74,10 @@
             <!-- FAQ 6 -->
             <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 rounded-2xl p-6 sm:p-7 shadow-sm space-y-2">
                 <h3 class="font-serif-luxury text-xl sm:text-2xl text-[#171513] dark:text-white font-medium" style="text-wrap: balance;">
-                    6. Is listing my hall on EventHub free? When does it go live?
+                    6. Is listing my hall on Riwaj Grand free? When does it go live?
                 </h3>
                 <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed font-normal" style="text-wrap: pretty;">
-                    Yes! During our current nationwide launch phase across Pakistan, registering and listing your hall on EventHub is <strong>100% free of cost</strong> — with zero monthly rent, zero subscription fees, and zero listing commission. Once you submit your registration, our administration team reviews your details. <strong>The moment your account is approved by admin, your hall profile and availability calendar go LIVE on our public marketplace immediately</strong> for couples to explore, check available dates, and submit booking inquiries.
+                    Yes! During our current nationwide launch phase across Pakistan, registering and listing your hall on Riwaj Grand is <strong>100% free of cost</strong> — with zero monthly rent, zero subscription fees, and zero listing commission ("Riwayat bhi, Jiddat bhi"). Once you submit your registration, our administration team reviews your details. <strong>The moment your account is approved by admin, your hall profile and availability calendar go LIVE on our public marketplace immediately</strong> for couples to explore, check available dates, and submit booking inquiries.
                 </p>
             </div>
         </div>

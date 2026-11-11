@@ -243,7 +243,7 @@ class Hall extends Model
             return null;
         }
 
-        $message = $customMessage ?? "Hello {$this->name}, I am interested in checking date availability and packages on EventHub.";
+        $message = $customMessage ?? "Hello {$this->name}, I am interested in checking date availability and packages on Riwaj Grand.";
 
         return 'https://wa.me/'.$clean.'?text='.urlencode($message);
     }

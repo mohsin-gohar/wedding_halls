@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.app', ['title' => 'Notifications — EventHub'])]
+#[Layout('components.layouts.app', ['title' => 'Notifications â€” Riwaj Grand'])]
 class NotificationCenter extends Component
 {
     public string $search = '';

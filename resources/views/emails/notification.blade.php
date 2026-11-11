@@ -15,11 +15,11 @@
     @endcomponent
 @endif
 
-<p>Best regards,<br>The EventHub Team</p>
+<p>Best regards,<br>The Riwaj Grand Team</p>
 @endcomponent
 
 @component('components::footer')
-© {{ date('Y') }} EventHub Technologies (Pvt) Ltd. All rights reserved.
+© {{ date('Y') }} Riwaj Grand Technologies (Pvt) Ltd. All rights reserved. • Riwayat bhi, Jiddat bhi
 @endcomponent
 
 @endcomponent

@@ -18,7 +18,7 @@
                 @endif
             </h1>
             <p class="text-stone-600 dark:text-stone-400 text-xs font-mono uppercase tracking-wider">
-                Last updated: October 2026 • Effective for all EventHub customers and hall operators
+                Last updated: October 2026 • Effective for all Riwaj Grand customers and hall operators
             </p>
         </div>
 
@@ -41,7 +41,7 @@
                 <div class="space-y-4">
                     <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">1. Information Collection and Privacy</h3>
                     <p>
-                        EventHub Technologies (Pvt) Ltd ("EventHub") respects the privacy of our customers and partner wedding venues. We collect personal contact details (name, CNIC number, phone number, email address) solely for the purpose of booking confirmation, legal contract generation, guest RSVP checklists, and payment ledger maintenance.
+                        Riwaj Grand Technologies (Pvt) Ltd ("Riwaj Grand" — "Riwayat bhi, Jiddat bhi") respects the privacy of our customers and partner wedding venues. We collect personal contact details (name, CNIC number, phone number, email address) solely for the purpose of booking confirmation, legal contract generation, guest RSVP checklists, and payment ledger maintenance.
                     </p>
                     <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">2. CNIC &amp; Guest Privacy</h3>
                     <p>
@@ -53,7 +53,7 @@
                     </p>
                     <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">4. Free Registration Data &amp; Public Showcase Notice</h3>
                     <p>
-                        Hall profiles, hall capacity, addresses, photos, and shift pricing submitted during free vendor registration are used strictly to showcase your venue on EventHub's public discovery marketplace once approved by administration. No hidden listing fees or rent are charged for public listing.
+                        Hall profiles, hall capacity, addresses, photos, and shift pricing submitted during free vendor registration are used strictly to showcase your venue on Riwaj Grand's public discovery marketplace once approved by administration. No hidden listing fees or rent are charged for public listing.
                     </p>
                 </div>
             @elseif($section === 'cancellation')
@@ -70,14 +70,14 @@
                     </p>
                     <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">3. Force Majeure &amp; Weather Contingencies</h3>
                     <p>
-                        In the event of unpredicted natural disasters, governmental curbs, or extreme weather conditions affecting open-sky lawns, EventHub venues provide complimentary shift rescheduling to indoor banquet halls or subsequent open dates without cancellation penalties.
+                        In the event of unpredicted natural disasters, governmental curbs, or extreme weather conditions affecting open-sky lawns, Riwaj Grand venues provide complimentary shift rescheduling to indoor banquet halls or subsequent open dates without cancellation penalties.
                     </p>
                 </div>
             @else
                 <div class="space-y-4">
                     <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">1. 100% Free Launch Onboarding &amp; Zero Platform Rent</h3>
                     <p>
-                        During this launch phase across Pakistan, <strong>EventHub is completely 100% free of charge for banquet, marquee, and wedding hall owners</strong>. We charge <strong>zero platform rent, zero monthly subscription fees, and zero listing charges</strong>. Any venue owner can sign up and utilize the complete management suite without any payment obligation.
+                        During this launch phase across Pakistan, <strong>Riwaj Grand is completely 100% free of charge for banquet, marquee, and wedding hall owners</strong>. We charge <strong>zero platform rent, zero monthly subscription fees, and zero listing charges</strong>. Any venue owner can sign up and utilize the complete management suite without any payment obligation.
                     </p>
                     <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">2. Admin Verification &amp; Instant Live Publication</h3>
                     <p>
@@ -85,11 +85,11 @@
                     </p>
                     <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">3. Agreement to Platform Terms</h3>
                     <p>
-                        By using the EventHub marketplace or SaaS platform, clients and venue operators agree to adhere to these Terms of Service. All monetary amounts are quoted authoritatively in Pakistani Rupees (PKR) and are subject to applicable provincial sales tax on services (PRA in Punjab, SRB in Sindh, ICT in Islamabad).
+                        By using the Riwaj Grand marketplace or SaaS platform, clients and venue operators agree to adhere to these Terms of Service. All monetary amounts are quoted authoritatively in Pakistani Rupees (PKR) and are subject to applicable provincial sales tax on services (PRA in Punjab, SRB in Sindh, ICT in Islamabad).
                     </p>
                     <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">4. Concurrency &amp; Booking Validity</h3>
                     <p>
-                        A booking reservation is only officially confirmed once the token advance has been recorded and an official EventHub receipt number is issued. Online holds expire automatically after the designated window if unconfirmed.
+                        A booking reservation is only officially confirmed once the token advance has been recorded and an official Riwaj Grand receipt number is issued. Online holds expire automatically after the designated window if unconfirmed.
                     </p>
                     <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white font-bold">5. Operating Shift Compliance</h3>
                     <p>

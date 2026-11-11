@@ -17,7 +17,7 @@
                 Set New Password
             </h2>
             <p class="mt-2 text-center text-stone-600 dark:text-stone-400 text-sm">
-                Choose a strong password for your EventHub account.
+                Choose a strong password for your Riwaj Grand account.
             </p>
         @endif
     </div>

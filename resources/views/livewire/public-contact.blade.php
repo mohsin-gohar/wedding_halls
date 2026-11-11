@@ -9,7 +9,7 @@
                 <span>Immediate Assistance</span>
             </div>
             <h1 class="font-serif-luxury text-4xl sm:text-5xl text-[#171513] dark:text-white font-normal">
-                Contact EventHub
+                Contact Riwaj Grand
             </h1>
             <p class="text-stone-600 dark:text-stone-300 text-sm max-w-2xl font-normal leading-relaxed">
                 Whether you are planning a high-profile wedding celebration or require enterprise hall management SaaS solutions, our dedicated team is at your service.

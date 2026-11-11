@@ -158,7 +158,7 @@ class Register extends Component
         session()->flash(
             'message',
             'Congratulations! Your hall has been registered and is now under platform review. '
-            .'The moment EventHub approves it, your hall goes live publicly. Meanwhile you can complete your images & videos.'
+            .'The moment Riwaj Grand approves it, your hall goes live publicly. Meanwhile you can complete your images & videos.'
         );
 
         return redirect()->route('hall.media');
@@ -167,6 +167,6 @@ class Register extends Component
     public function render()
     {
         return view('livewire.auth.register')
-            ->layout('components.layouts.auth', ['title' => 'Register Your Venue — EventHub']);
+            ->layout('components.layouts.auth', ['title' => 'Register Your Venue â€” Riwaj Grand']);
     }
 }

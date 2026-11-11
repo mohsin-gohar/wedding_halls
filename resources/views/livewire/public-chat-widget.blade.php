@@ -27,8 +27,8 @@
     <button type="button"
             x-show="!open"
             @click="openChat()"
-            aria-label="Open EventHub AI Chatbot"
-            title="EventHub AI Chatbot"
+            aria-label="Open Riwaj Grand AI Chatbot"
+            title="Riwaj Grand AI Chatbot"
             class="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-30 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-[#C6A15B] via-[#D8B46B] to-[#F2DE9A] text-[#171513] shadow-[0_12px_32px_rgba(198,161,91,0.6)] hover:shadow-[0_16px_40px_rgba(198,161,91,0.8)] hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center cursor-pointer border-2 border-white/70 dark:border-[#F2DE9A]/50 group">
         
         <!-- Friendly Chatbot Robot Icon -->
@@ -62,11 +62,11 @@
                     </svg>
                 </div>
                 <div>
-                    <!-- "Hello!" replaced by "EventHub Chatbot" as explicitly requested -->
-                    <h4 class="font-bold text-base sm:text-lg leading-tight text-white tracking-wide">EventHub Chatbot</h4>
+                    <!-- "Hello!" replaced by "Riwaj Grand Chatbot" -->
+                    <h4 class="font-bold text-base sm:text-lg leading-tight text-white tracking-wide">Riwaj Grand Chatbot</h4>
                     <div class="flex items-center gap-1.5">
                         <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
-                        <p class="text-[11px] text-white/95 font-medium">Ask EventHub AI • Always Online</p>
+                        <p class="text-[11px] text-white/95 font-medium">Ask Riwaj Grand AI • Always Online</p>
                     </div>
                 </div>
             </div>
@@ -138,7 +138,7 @@
                                 @if($msg['sender'] === 'user')
                                     You (Guest)
                                 @else
-                                    🤖 EventHub AI Concierge
+                                    🤖 Riwaj Grand AI Concierge
                                 @endif
                             </span>
                             <span>{{ $msg['time'] }}</span>

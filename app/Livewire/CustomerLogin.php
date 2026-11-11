@@ -9,7 +9,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.auth', ['title' => 'Sign In — EventHub'])]
+#[Layout('components.layouts.auth', ['title' => 'Sign In â€” Riwaj Grand'])]
 class CustomerLogin extends Component
 {
     public string $email = '';

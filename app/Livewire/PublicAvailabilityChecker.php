@@ -11,7 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('components.layouts.public', ['title' => 'Check Hall Availability — EventHub Pakistan'])]
+#[Layout('components.layouts.public', ['title' => 'Check Hall Availability â€” Riwaj Grand Pakistan'])]
 class PublicAvailabilityChecker extends Component
 {
     use WithPagination;

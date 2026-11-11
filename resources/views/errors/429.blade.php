@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Server Protection — {{ config('app.name', 'EventHub') }}</title>
+    <title>Server Protection — {{ config('app.name', 'Riwaj Grand') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -65,7 +65,7 @@
         </div>
 
         <div class="footer-note">
-            EventHub Security Guard • IP: {{ request()->ip() }} • Protected by Enterprise Rate Limiter
+            Riwaj Grand Security Guard • IP: {{ request()->ip() }} • Protected by Enterprise Rate Limiter
         </div>
     </main>
 
