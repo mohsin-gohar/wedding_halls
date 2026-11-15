@@ -42,6 +42,14 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Stateless bearer-token guard for the mobile / partner API.
+        // Tokens are issued by ApiToken::issue() and resolved in
+        // AppServiceProvider via Auth::viaRequest().
+        'api' => [
+            'driver' => 'api-token',
+            'provider' => 'users',
+        ],
     ],
 
     /*

@@ -2,25 +2,29 @@
 
 namespace App\Http\Livewire;
 
-use Livewire\Component;
-use App\Models\Venue;
 use App\Models\ShiftDefinition;
-use App\Models\VenueShift;
+use App\Models\Venue;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Route;
+use Livewire\Component;
 
 class EventDashboard extends Component
 {
     public string $currentMonth = '';
+
     public ?string $selectedVenueId = null;
+
     public ?string $selectedShift = null;
+
     public array $shiftStatus = [];
+
     public bool $showCalendar = false;
 
     public function mount(): void
     {
         $user = Auth::user();
         $this->currentMonth = Carbon::now()->format('Y-m');
-        
+
         if ($user->isSuperAdmin()) {
             $venues = Venue::where('is_active', true)->get();
         } elseif ($user->tenant_id) {
@@ -28,7 +32,7 @@ class EventDashboard extends Component
         } else {
             $venues = Venue::where('is_active', true)->limit(5)->get();
         }
-        
+
         $this->selectedVenueId = $venues->first()?->id;
         $this->refreshShiftStatus();
     }
@@ -38,29 +42,33 @@ class EventDashboard extends Component
         if (! $this->selectedVenueId) {
             return;
         }
-        
+
         $venue = Venue::find($this->selectedVenueId);
         if (! $venue) {
             return;
         }
-        
+
         $this->shiftStatus = [];
-        
+
         foreach (ShiftDefinition::active()->get() as $shiftDef) {
             $existingShift = $venue->venueShifts()
                 ->where('event_date', Carbon::now()->format('Y-m-d'))
                 ->where('shift_definition_id', $shiftDef->id)
                 ->first();
-            
+
             $isBooked = $existingShift && $existingShift->is_active;
-            
+
             $this->shiftStatus[$shiftDef->slug] = [
                 'name' => $shiftDef->name,
                 'start_time' => $shiftDef->start_time->format('h:i A'),
                 'end_time' => $shiftDef->end_time->format('h:i A'),
                 'status' => $isBooked ? 'FULLY_BOOKED' : 'AVAILABLE',
-                'label' => $shiftDef->name . ' (' . $shiftDef->start_time->format('h:i A') . ' - ' . $shiftDef->end_time->format('h:i A') . ')',
-                'booking_link' => route('venue.shifts.book', ['venue' => $venue->id, 'shift' => $shiftDef->slug]),
+                'label' => $shiftDef->name.' ('.$shiftDef->start_time->format('h:i A').' - '.$shiftDef->end_time->format('h:i A').')',
+                // The shift booking route is only present when the venue shift
+                // module is enabled; never resolve a missing route name.
+                'booking_link' => Route::has('venue.shifts.book')
+                    ? route('venue.shifts.book', ['venue' => $venue->id, 'shift' => $shiftDef->slug])
+                    : route('calendar'),
             ];
         }
     }
@@ -70,26 +78,26 @@ class EventDashboard extends Component
         if (! $this->selectedVenueId) {
             return [];
         }
-        
+
         $venue = Venue::find($this->selectedVenueId);
         if (! $venue) {
             return [];
         }
-        
+
         $shifts = [];
-        
+
         foreach (ShiftDefinition::active()->get() as $shiftDef) {
             $existingShift = $venue->venueShifts()
                 ->where('event_date', $date->format('Y-m-d'))
                 ->where('shift_definition_id', $shiftDef->id)
                 ->first();
-            
+
             $isBooked = $existingShift && $existingShift->is_active;
             $capacityUsed = $existingShift ? $existingShift->booked_capacity ?? 0 : 0;
             $capacityTotal = $existingShift ? $existingShift->max_capacity : $venue->max_capacity;
-            
+
             $utilization = $capacityTotal > 0 ? round(($capacityUsed / $capacityTotal) * 100) : 0;
-            
+
             $status = 'AVAILABLE';
             if ($utilization >= 100) {
                 $status = 'FULLY_BOOKED';
@@ -98,7 +106,7 @@ class EventDashboard extends Component
             } elseif ($utilization >= 50) {
                 $status = 'LIMITED';
             }
-            
+
             $shifts[$shiftDef->slug] = [
                 'name' => $shiftDef->name,
                 'start_time' => $shiftDef->start_time->format('h:i A'),
@@ -107,10 +115,10 @@ class EventDashboard extends Component
                 'utilization' => $utilization,
                 'capacity_used' => $capacityUsed,
                 'capacity_total' => $capacityTotal,
-                'label' => $shiftDef->name . ' (' . $shiftDef->start_time->format('h:i A') . ' - ' . $shiftDef->end_time->format('h:i A') . ') - ' . $status,
+                'label' => $shiftDef->name.' ('.$shiftDef->start_time->format('h:i A').' - '.$shiftDef->end_time->format('h:i A').') - '.$status,
             ];
         }
-        
+
         return $shifts;
     }
 

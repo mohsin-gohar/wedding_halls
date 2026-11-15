@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\KitchenKot;
 use App\Models\Payment;
+use App\Models\ServicePayment;
 use App\Models\StaffPayroll;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
 {
@@ -214,5 +216,58 @@ class DocumentController extends Controller
         }
 
         return view('documents.salary-slip', compact('payroll'));
+    }
+
+    /**
+     * Serve a customer-uploaded service payment proof (bank transfer receipt,
+     * JazzCash/Easypaisa screenshot) from private storage.
+     *
+     * The file is NEVER served directly by the web server — it lives outside
+     * the public directory and every download is authorised. The stored path
+     * is validated against traversal before it is read.
+     */
+    public function vendorPaymentProof(string $id)
+    {
+        $payment = ServicePayment::with(['booking.tenant', 'booking.customer'])->findOrFail($id);
+
+        $user = auth::user();
+
+        if (! $user) {
+            abort(403, 'Unauthorized. Please sign in to view payment proofs.');
+        }
+
+        if (! $user->isSuperAdmin()) {
+            // Staff of the vendor that owns the booking.
+            $isVendorStaff = $user->tenant_id && $user->tenant_id === $payment->tenant_id;
+
+            // The customer who made the payment may always see their own proof.
+            $isPayingCustomer = $user->isCustomer()
+                && ((string) $payment->customer_id === (string) $user->id
+                    || ($payment->booking && (string) $payment->booking->customer_id === (string) $user->id));
+
+            if (! $isVendorStaff && ! $isPayingCustomer) {
+                abort(403, 'Forbidden. You do not have permission to view this payment proof.');
+            }
+        }
+
+        if (! $payment->proof_path) {
+            abort(404, 'No proof document has been attached to this payment.');
+        }
+
+        // Reject traversal attempts outright — the stored path must resolve
+        // inside the private proofs directory.
+        $relative = ltrim(str_replace('\\', '/', $payment->proof_path), '/');
+
+        if (str_contains($relative, '..') || str_starts_with($relative, 'php://') || preg_match('/^[a-z]+:\/\//i', $relative)) {
+            abort(400, 'Invalid proof path.');
+        }
+
+        $disk = Storage::disk(config('filesystems.default'));
+
+        if (! $disk->exists($relative)) {
+            abort(404, 'The proof file could not be found.');
+        }
+
+        return $disk->download($relative, basename($relative));
     }
 }

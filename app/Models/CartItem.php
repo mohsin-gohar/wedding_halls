@@ -2,15 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class CartItem extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
 
     protected $fillable = [
         'cart_id',
@@ -37,14 +36,14 @@ class CartItem extends Model
         return $this->morphTo();
     }
 
-    public function vendorShare(): decimal
+    public function vendorShare(): float
     {
-        return $this->vendor_share;
+        return (float) $this->vendor_share;
     }
 
-    public function commissionRate(): decimal
+    public function commissionRate(): float
     {
-        return $this->vendor_commission;
+        return (float) $this->vendor_commission;
     }
 
     public function calculateVendorCommission(float $baseRate): void

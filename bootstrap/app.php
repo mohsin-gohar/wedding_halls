@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Middleware\AuthenticateApiToken;
 use App\Http\Middleware\EnsureActiveAccount;
 use App\Http\Middleware\EnsurePortalRole;
 use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\EnsureTenantStaff;
 use App\Http\Middleware\ForceHttps;
+use App\Http\Middleware\ResolveTenantBrand;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\TwoFactorAuth;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,12 +17,19 @@ use Illuminate\Http\Exceptions\ThrottleRequestsException;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Stateless API surface is rate limited (60 req/min per token/IP).
+        $middleware->throttleApi();
+
         $middleware->validateCsrfTokens(except: [
             'webhooks/*',
+            'login',
+            'customer/login',
+            'api/*',
         ]);
 
         // Enforce HTTPS redirects early (production only via FORCE_HTTPS).
@@ -31,12 +41,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             SecurityHeaders::class,
             EnsureActiveAccount::class,
+            TwoFactorAuth::class,
+            ResolveTenantBrand::class,
         ]);
 
         $middleware->alias([
             'tenant.staff' => EnsureTenantStaff::class,
             'portal.role' => EnsurePortalRole::class,
             'super.admin' => EnsureSuperAdmin::class,
+            'auth.api' => AuthenticateApiToken::class,
+            '2fa' => TwoFactorAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

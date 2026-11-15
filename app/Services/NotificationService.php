@@ -68,7 +68,7 @@ class NotificationService
         string $message,
         array $data = []
     ): array {
-        $users = \App\Models\User::where('tenant_id', $tenantId)
+        $users = User::where('tenant_id', $tenantId)
             ->whereNotIn('role', ['ROLE_CUSTOMER'])
             ->get();
 

@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Hall;
+use App\Models\Venue;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 class SearchService
@@ -47,7 +49,7 @@ class SearchService
             }
 
             if ($date !== '' && $shift !== '') {
-                $eventDate = \Carbon\Carbon::parse($date);
+                $eventDate = Carbon::parse($date);
                 $query->whereDoesntHave('bookings', function ($booking) use ($eventDate, $shift) {
                     $booking->whereIn('status', ['HOLD', 'CONFIRMED'])
                         ->whereDate('event_date', $eventDate->toDateString())
@@ -60,7 +62,7 @@ class SearchService
 
             $halls = $query->orderBy('name')->paginate($perPage);
 
-            $cities = \App\Models\Venue::where('is_active', true)
+            $cities = Venue::where('is_active', true)
                 ->distinct('city')
                 ->pluck('city');
 

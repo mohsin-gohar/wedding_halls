@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ApiTokenController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\WhatsAppWebhookController;
 use App\Livewire\AdminDashboard;
@@ -9,21 +10,24 @@ use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\TwoFactorAuthComponent;
 use App\Livewire\Auth\VerifyEmail;
+use App\Livewire\BeautyBridalDashboard;
 use App\Livewire\CalendarShiftGrid;
+use App\Livewire\CatererDashboard;
 use App\Livewire\CustomerDashboard;
+use App\Livewire\CustomerEventWorkspace;
 use App\Livewire\CustomerLogin;
 use App\Livewire\CustomerRegister;
 use App\Livewire\Dashboard;
+use App\Livewire\DecoratorDashboard;
 use App\Livewire\ExpenseTracker;
 use App\Livewire\FloorPlanDesigner;
 use App\Livewire\HallChat;
 use App\Livewire\HallMediaManager;
 use App\Livewire\InventoryTracker;
 use App\Livewire\KitchenKotBoard;
-use App\Livewire\PackageManager;
-use App\Http\Controllers\Api\BookingController;
-use App\Http\Controllers\Api\PaymentController;
 use App\Livewire\NotificationCenter;
+use App\Livewire\PackageManager;
+use App\Livewire\PhotographerDashboard;
 use App\Livewire\PublicAbout;
 use App\Livewire\PublicAvailabilityChecker;
 use App\Livewire\PublicContact;
@@ -35,12 +39,24 @@ use App\Livewire\PublicMarketplace;
 use App\Livewire\PublicMenus;
 use App\Livewire\PublicPolicies;
 use App\Livewire\PublicServices;
+use App\Livewire\PublicVendorProfile;
+use App\Livewire\PublicVendors;
 use App\Livewire\PublicVenues;
 use App\Livewire\StaffAttendance;
 use App\Livewire\StaffManager;
 use App\Livewire\StaffPayroll;
+use App\Livewire\SupportCenter;
 use App\Livewire\UtilityFuelTracker;
+use App\Livewire\VendorBookingsBoard;
+use App\Livewire\VendorFinanceBoard;
+use App\Livewire\VendorLocationsManager;
+use App\Livewire\VendorPortfolioManager;
+use App\Livewire\VendorQuoteRequest;
+use App\Livewire\VendorQuotesBoard;
+use App\Livewire\VendorServicesManager;
+use App\Livewire\WeddingPlannerDashboard;
 use App\Livewire\WhatsAppRsvpManager;
+use App\Livewire\WhiteLabelSite;
 use App\Models\Hall;
 use App\Models\Package;
 use App\Models\Tenant;
@@ -91,6 +107,7 @@ Route::get('/sitemap.xml', function () {
         route('home'),
         route('public.venues'),
         route('marketplace'),
+        route('public.vendors'),
         route('public.gallery'),
         route('public.packages'),
         route('public.menus'),
@@ -152,6 +169,30 @@ Route::get('/venues/{slug}/chat', HallChat::class)->middleware('throttle:public-
 Route::get('/hall/{slug}/chat', HallChat::class)->middleware('throttle:public-pages')->name('hall.chat');
 Route::get('/concierge', HallChat::class)->middleware('throttle:public-pages')->name('public.concierge');
 
+/*
+|--------------------------------------------------------------------------
+| Multi-Vendor Marketplace ERP — Authenticated Vendor Staff Routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'tenant.staff'])->group(function () {
+    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_SERVICE_STAFF')->group(function () {
+        Route::get('/vendor/quotes', VendorQuotesBoard::class)->name('vendor.quotes');
+    });
+
+    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER')->group(function () {
+        Route::get('/vendor/bookings', VendorBookingsBoard::class)->name('vendor.bookings');
+        Route::get('/vendor/services', VendorServicesManager::class)->name('vendor.services');
+        Route::get('/vendor/portfolio', VendorPortfolioManager::class)->name('vendor.portfolio');
+        Route::get('/vendor/locations', VendorLocationsManager::class)->name('vendor.locations');
+        Route::get('/vendor/finance', VendorFinanceBoard::class)->name('vendor.finance');
+    });
+});
+
+// Multi-vendor Services Marketplace (categories are DB-driven via vendor_categories)
+// NOTE: the public /vendor/{slug} catch-all is registered AFTER the vendor ERP
+// block further down this file so it can never shadow /vendor/dashboard.
+Route::get('/vendors', PublicVendors::class)->middleware('throttle:public-pages')->name('public.vendors');
+
 // Visual Gallery, Packages & Menus
 Route::get('/gallery', PublicGallery::class)->middleware('throttle:public-pages')->name('public.gallery');
 Route::get('/packages', PublicMenus::class)->middleware('throttle:public-pages')->name('public.packages');
@@ -184,7 +225,6 @@ Route::get('/refund', function () {
     return redirect()->route('public.policies', ['policy' => 'refund']);
 })->name('refund');
 
-
 /*
 |--------------------------------------------------------------------------
 | 2. Customer Portal Authentication & Experience
@@ -198,6 +238,7 @@ Route::prefix('customer')->group(function () {
 Route::middleware(['auth', 'portal.role:ROLE_CUSTOMER'])->prefix('customer')->group(function () {
     Route::get('/dashboard', CustomerDashboard::class)->name('customer.dashboard');
     Route::get('/bookings', CustomerDashboard::class)->name('customer.bookings');
+    Route::get('/events', CustomerEventWorkspace::class)->name('customer.events');
 });
 
 /*
@@ -227,7 +268,6 @@ $authenticatePortalRequest = function (Request $request) {
     if (Auth::attempt($credentials, $request->boolean('remember'))) {
         RateLimiter::clear($throttleKey);
         $request->session()->regenerate();
-        $request->session()->forget('url.intended');
 
         $user = Auth::user();
 
@@ -243,7 +283,9 @@ $authenticatePortalRequest = function (Request $request) {
 
         $user->recordLogin();
 
-        return redirect()->route($user->portalHomeRoute())->with('message', "Welcome back, {$user->name}!");
+        // Honor the stored intended URL (e.g. a marketplace page the guest
+        // came from), falling back to the portal home.
+        return redirect()->intended(route($user->portalHomeRoute()))->with('message', "Welcome back, {$user->name}!");
     }
 
     RateLimiter::hit($throttleKey, 60);
@@ -262,7 +304,22 @@ Route::match(['get', 'post'], '/logout', function () {
     request()->session()->regenerateToken();
 
     return redirect()->route('login')->with('message', 'You have been signed out successfully.');
-})->name('logout');
+})->middleware('auth')->name('logout');
+
+Route::middleware(['auth'])->prefix('account')->group(function () {
+    Route::get('/support', SupportCenter::class)->name('support.center');
+});
+
+/*
+|--------------------------------------------------------------------------
+| 3.6 API Token Management (Mobile / Partner Integrations)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth'])->prefix('account/api-tokens')->group(function () {
+    Route::get('/', [ApiTokenController::class, 'index'])->name('account.api-tokens.index');
+    Route::post('/', [ApiTokenController::class, 'store'])->name('account.api-tokens.store');
+    Route::delete('/{id}', [ApiTokenController::class, 'destroy'])->name('account.api-tokens.destroy');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -282,8 +339,34 @@ Route::get('/2fa/verify', TwoFactorAuthComponent::class)->name('2fa.verify')->mi
 */
 Route::middleware(['auth', 'tenant.staff'])->group(function () {
     Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_ACCOUNTANT')->group(function () {
+        // Primary vendor dashboard. The route keeps the legacy "dashboard"
+        // name because the ERP layout, the login redirect and the customer
+        // dashboard all link to route('dashboard').
         Route::get('/dashboard', Dashboard::class)->name('dashboard');
-        Route::get('/vendor/dashboard', Dashboard::class)->name('vendor.dashboard');
+
+        // Category-specific dashboards
+        Route::get('/vendor/dashboard/photography', PhotographerDashboard::class)
+            ->name('vendor.dashboard.photography')
+            ->middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER');
+
+        Route::get('/vendor/dashboard/catering', CatererDashboard::class)
+            ->name('vendor.dashboard.catering')
+            ->middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER');
+
+        Route::get('/vendor/dashboard/decoration', DecoratorDashboard::class)
+            ->name('vendor.dashboard.decoration')
+            ->middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER');
+
+        Route::get('/vendor/dashboard/beauty-bridal', BeautyBridalDashboard::class)
+            ->name('vendor.dashboard.beauty-bridal')
+            ->middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER');
+
+        Route::get('/vendor/dashboard/wedding-planners', WeddingPlannerDashboard::class)
+            ->name('vendor.dashboard.wedding-planners')
+            ->middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER');
+
+        // Generic dashboard (fallback)
+        Route::get('/vendor/dashboard', Dashboard::class)->name('vendor.dashboard.generic');
     });
 
     Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_FRONT_DESK,ROLE_FLOOR_STAFF')->get('/calendar', CalendarShiftGrid::class)->name('calendar');
@@ -299,6 +382,18 @@ Route::middleware(['auth', 'tenant.staff'])->group(function () {
     Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_ACCOUNTANT')->get('/expenses', ExpenseTracker::class)->name('expenses');
     Route::middleware(['auth', 'tenant.staff'])->get('/notifications', NotificationCenter::class)->name('notifications');
 });
+
+/*
+|--------------------------------------------------------------------------
+| 4.1 Public Vendor Profile (registered after the vendor ERP routes so the
+|     /vendor/{slug} catch-all can never shadow /vendor/dashboard)
+|--------------------------------------------------------------------------
+*/
+Route::get('/vendor/{slug}', PublicVendorProfile::class)->middleware('throttle:public-pages')->name('public.vendor-profile');
+Route::get('/vendor/{slug}/request-quote', VendorQuoteRequest::class)->middleware(['auth', 'throttle:public-pages'])->name('public.vendor-quote');
+
+// White-label vendor microsite — the vendor's own branded website.
+Route::get('/site/{slug}', WhiteLabelSite::class)->middleware('throttle:public-pages')->name('public.vendor-site');
 
 /*
 |--------------------------------------------------------------------------
@@ -322,6 +417,7 @@ Route::middleware('auth')->prefix('documents')->name('documents.')->group(functi
     Route::get('/quotation/{id}', [DocumentController::class, 'bookingQuotation'])->name('quotation');
     Route::get('/invoice/{id}', [DocumentController::class, 'taxInvoice'])->name('invoice');
     Route::get('/salary-slip/{id}', [DocumentController::class, 'salarySlip'])->name('salary-slip');
+    Route::get('/vendor-payment-proof/{id}', [DocumentController::class, 'vendorPaymentProof'])->name('vendor-payment-proof');
 });
 
 /*
@@ -336,19 +432,10 @@ Route::post('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'handle'])-
 |--------------------------------------------------------------------------
 | 8. REST API for Mobile Apps & Third-Party Integrations
 |--------------------------------------------------------------------------
+|
+| The API now lives in routes/api.php (registered as /api/*) with a real
+| bearer-token guard, fail-closed authorization and idempotent webhooks.
+| The previous session-only /api/v1 group in this file was removed because
+| it applied no tenant scoping when the caller was unauthenticated.
+|
 */
-Route::prefix('api/v1')->middleware(['auth', 'api'])->name('api.')->group(function () {
-    // Booking API
-    Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');
-    Route::get('/bookings/{id}', [BookingController::class, 'show'])->name('bookings.show');
-    Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
-    Route::put('/bookings/{id}', [BookingController::class, 'update'])->name('bookings.update');
-    Route::delete('/bookings/{id}', [BookingController::class, 'destroy'])->name('bookings.destroy');
-    Route::get('/bookings/availability', [BookingController::class, 'availability'])->name('bookings.availability');
-
-    // Payment API
-    Route::get('/payments', [PaymentController::class, 'list'])->name('payments.index');
-    Route::post('/payments/initiate', [PaymentController::class, 'initiate'])->name('payments.initiate');
-    Route::get('/payments/summary', [PaymentController::class, 'summary'])->name('payments.summary');
-    Route::post('/payments/webhook/{gateway}', [PaymentController::class, 'webhook'])->name('payments.webhook');
-});

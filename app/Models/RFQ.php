@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,11 +9,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RFQ extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
+
+    protected $table = 'rfqs';
 
     protected $fillable = [
         'client_id',
         'tenant_id',
+        'vendor_category_id',
+        'title',
+        'event_date',
+        'city',
+        'guest_count',
         'budget_range',
         'requirements',
         'status',
@@ -26,11 +32,23 @@ class RFQ extends Model
         'requirements' => 'string',
         'preferences' => 'array',
         'status' => 'string',
+        'event_date' => 'date',
+        'guest_count' => 'integer',
     ];
 
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function vendorCategory(): BelongsTo
+    {
+        return $this->belongsTo(VendorCategory::class);
+    }
+
+    public function targets(): HasMany
+    {
+        return $this->hasMany(RfqTarget::class, 'rfq_id');
     }
 
     public function client(): BelongsTo
@@ -40,7 +58,7 @@ class RFQ extends Model
 
     public function bids(): HasMany
     {
-        return $this->hasMany(RFQBid::class);
+        return $this->hasMany(RFQBid::class, 'rfq_id');
     }
 
     public function isOpen(): bool
@@ -55,7 +73,7 @@ class RFQ extends Model
 
     public function statusLabel(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'OPEN' => 'Open',
             'CLOSED' => 'Closed',
             'AWARDED' => 'Awarded',

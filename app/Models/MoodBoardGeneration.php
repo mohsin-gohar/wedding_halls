@@ -2,15 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MoodBoardGeneration extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
 
     protected $fillable = [
         'tenant_id',
@@ -23,8 +21,8 @@ class MoodBoardGeneration extends Model
     ];
 
     protected $casts = [
-        'tenant_id' => 'uuid',
-        'user_id' => 'uuid',
+        'tenant_id' => 'string',
+        'user_id' => 'integer',
         'prompt' => 'string',
         'status' => 'string',
         'image_url' => 'string',
@@ -44,7 +42,7 @@ class MoodBoardGeneration extends Model
 
     public function statusLabel(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'PENDING' => 'Pending',
             'GENERATING' => 'Generating',
             'COMPLETED' => 'Completed',

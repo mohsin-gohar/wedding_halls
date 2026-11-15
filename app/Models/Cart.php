@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Cart extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
 
     protected $fillable = [
         'customer_id',
@@ -43,17 +42,17 @@ class Cart extends Model
 
     public function totalBeforeCommission(): decimal
     {
-        return $this->items()->sum(fn($item) => $item->vendor_share + $item->vendor_commission);
+        return $this->items()->sum(fn ($item) => $item->vendor_share + $item->vendor_commission);
     }
 
     public function totalVendorCommission(): decimal
     {
-        return $this->items()->sum(fn($item) => $item->vendor_commission);
+        return $this->items()->sum(fn ($item) => $item->vendor_commission);
     }
 
     public function statusLabel(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'PENDING' => 'Pending',
             'CONFIRMED' => 'Confirmed',
             'PAID' => 'Paid',

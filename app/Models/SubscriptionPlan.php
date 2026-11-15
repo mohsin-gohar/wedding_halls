@@ -70,7 +70,7 @@ class SubscriptionPlan extends Model
 
     public function commissionRate(): float
     {
-        return match($this->name) {
+        return match ($this->name) {
             'FREE' => 20.00,
             'PRO' => 15.00,
             'ENTERPRISE' => 10.00,

@@ -10,16 +10,16 @@
     <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('images/riwaj-grand-logo.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/riwaj-grand-logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/riwaj-grand-mark.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/riwaj-grand-mark-192.png') }}">
 
     <!-- Google Fonts: Preconnect & Asynchronous Loading (High Performance & Zero Render-Blocking) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400&display=swap" media="print" onload="this.media='all'">
     <noscript>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400&display=swap">
     </noscript>
 
     <!-- Styles & Livewire -->
@@ -123,16 +123,8 @@
         <aside class="hidden lg:flex lg:flex-col lg:w-64 sticky top-0 h-screen z-30 bg-gradient-to-b from-[#F8F5EF] to-[#E7E5E4] dark:from-[#15130F] dark:to-[#0F0D0A] text-[#171513] dark:text-white border-r border-[#E7E5E4] dark:border-[#C6A15B]/20 shrink-0 shadow-sm overflow-hidden"><div class="flex-1 overflow-y-auto scrollbar-none flex flex-col justify-between"><div>
                 <!-- Brand Badge -->
                     <div class="p-6 border-b border-[#E7E5E4] dark:border-[#C6A15B]/20 flex items-center justify-between bg-gradient-to-r from-transparent to-[#171513]/5 dark:to-[#C6A15B]/5">
-                        <a href="{{ route('home') }}" class="flex items-center gap-3 group">
-                            <img src="{{ asset('images/riwaj-grand-logo.png') }}" width="48" height="48" alt="Riwaj Grand Logo" style="max-height: 48px; width: auto;" class="h-10 w-auto object-contain rounded-lg border border-[#C6A15B]/40 bg-[#171513] shadow-sm">
-                            <div>
-                                <span class="font-cinzel text-lg font-bold tracking-[0.15em] text-[#171513] dark:text-white block group-hover:text-[#C6A15B] transition">Riwaj Grand</span>
-                                @if(auth()->user()->isSuperAdmin())
-                                    <span class="text-[9px] uppercase tracking-[0.16em] text-[#C6A15B] font-semibold block -mt-0.5 font-sans">Platform Super Admin</span>
-                                @else
-                                    <span class="text-[9px] uppercase tracking-[0.16em] text-[#C6A15B] font-medium block -mt-0.5 font-sans">Banquet Suite</span>
-                                @endif
-                            </div>
+                        <a href="{{ route('home') }}" aria-label="Riwaj Grand — Home">
+                            <x-riwaj-header-logo size="md" :badge="auth()->user()->isSuperAdmin() ? 'Platform Super Admin' : 'Banquet Suite'" />
                         </a>
                     </div>
 
@@ -286,11 +278,64 @@
                     @endif
 
                     @unless(auth()->user()->isSuperAdmin())
+                    <div class="text-[10px] text-[#C6A15B]/80 font-bold px-3 py-2 uppercase tracking-[0.2em] font-sans mt-2">Multi-Vendor Marketplace</div>
+
+                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->hasPermissionTo('rfq.view'))
+                    <a href="{{ route('vendor.quotes') }}" 
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200 {{ request()->routeIs('vendor.quotes') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/50 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/50' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-[#C6A15B]' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 4h-1L7 2v18l3 2 9-4 9 4V4h-1M7 2v18l-3 2V4z"/></svg>
+                        <span>Quotations &amp; Bids</span>
+                    </a>
+                    @endif
+
+                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->hasPermissionTo('service-bookings.view'))
+                    <a href="{{ route('vendor.bookings') }}" 
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200 {{ request()->routeIs('vendor.bookings') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/50 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/50' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-[#C6A15B]' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6M7 21h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span>Service Bookings</span>
+                    </a>
+                    @endif
+
+                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager())
+                    <a href="{{ route('vendor.services') }}" 
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200 {{ request()->routeIs('vendor.services') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/50 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/50' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-[#C6A15B]' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 7l-3.5-3.5a2 2 0 00-2.8 0L3 12l8.5 8.5a2 2 0 002.8 0L19 9v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2z"/></svg>
+                        <span>Service Catalog</span>
+                    </a>
+
+                    <a href="{{ route('vendor.portfolio') }}" 
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200 {{ request()->routeIs('vendor.portfolio') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/50 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/50' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-[#C6A15B]' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span>Portfolio Gallery</span>
+                    </a>
+
+                    <a href="{{ route('vendor.locations') }}" 
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200 {{ request()->routeIs('vendor.locations') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/50 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/50' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-[#C6A15B]' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <span>Business Locations</span>
+                    </a>
+                    @endif
+
+                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isAccountant())
+                    <a href="{{ route('vendor.finance') }}" 
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200 {{ request()->routeIs('vendor.finance') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/50 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/50' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-[#C6A15B]' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Finance &amp; Earnings</span>
+                    </a>
+                    @endif
+
+                    @if(! auth()->user()->isCustomer())
+                    <a href="{{ route('support.center') }}" 
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200 {{ request()->routeIs('support.center') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/50 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/50' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-[#C6A15B]' }}">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"/></svg>
+                        <span>Support Center</span>
+                    </a>
+                    @endif
                     <div class="text-[10px] text-[#C6A15B]/80 font-bold px-3 py-2 uppercase tracking-[0.2em] font-sans mt-2">Banquet Operations</div>
                     
                     @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isAccountant())
-                    <a href="{{ route('dashboard') }}" 
-                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200 {{ request()->routeIs('dashboard') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/50 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/50' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-[#C6A15B]' }}">
+                    <a href="{{ route(auth()->user()->dashboardRoute()) }}" 
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200 {{ request()->routeIs('dashboard', 'vendor.dashboard.*') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/50 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/50' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-[#C6A15B]' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                         <span>Analytics &amp; Revenue</span>
                     </a>

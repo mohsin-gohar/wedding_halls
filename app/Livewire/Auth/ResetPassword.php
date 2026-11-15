@@ -7,8 +7,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -16,13 +14,17 @@ use Livewire\Component;
 class ResetPassword extends Component
 {
     public string $token = '';
+
     public string $email = '';
 
     public string $password = '';
+
     public string $password_confirmation = '';
 
     public ?string $feedbackMessage = null;
+
     public ?string $errorMessage = null;
+
     public bool $resetComplete = false;
 
     protected $rules = [
@@ -31,7 +33,7 @@ class ResetPassword extends Component
         'token' => 'required|string',
     ];
 
-    public function mount(string $token = null, string $email = null): void
+    public function mount(?string $token = null, ?string $email = null): void
     {
         if ($token) {
             $this->token = $token;

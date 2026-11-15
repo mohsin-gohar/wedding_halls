@@ -2,14 +2,8 @@
 
 namespace App\Livewire\Auth;
 
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -19,7 +13,9 @@ class ForgotPassword extends Component
     public string $email = '';
 
     public ?string $feedbackMessage = null;
+
     public ?string $errorMessage = null;
+
     public bool $resetLinkSent = false;
 
     protected $rules = [
@@ -35,6 +31,7 @@ class ForgotPassword extends Component
         if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             $this->errorMessage = "Too many reset requests. Please wait {$seconds} seconds and try again.";
+
             return;
         }
 

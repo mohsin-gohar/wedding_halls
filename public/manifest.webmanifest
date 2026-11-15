@@ -1,7 +1,7 @@
 {
-    "name": "EventHub — Luxury Wedding Venues & Banquet Marketplace",
-    "short_name": "EventHub",
-    "description": "Discover and reserve Pakistan's premier luxury wedding ballrooms, royal marquees, and banquet complexes with guaranteed single-host shift exclusivity.",
+    "name": "Riwaj Grand — Luxury Wedding Venues & Banquet Marketplace",
+    "short_name": "Riwaj Grand",
+    "description": "Discover and reserve Pakistan's premier luxury wedding ballrooms, royal marquees, and banquet complexes. Riwayat bhi, Jiddat bhi.",
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
@@ -11,13 +11,13 @@
     "categories": ["lifestyle", "business", "hospitality"],
     "icons": [
         {
-            "src": "/images/eventhub-logo.png",
+            "src": "/images/riwaj-grand-mark-192.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any maskable"
         },
         {
-            "src": "/images/eventhub-logo.png",
+            "src": "/images/riwaj-grand-mark-512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any maskable"

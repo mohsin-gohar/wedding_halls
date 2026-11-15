@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class PhotographerPackage extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
 
     protected $fillable = [
         'name',
@@ -36,9 +36,9 @@ class PhotographerPackage extends Model
         return $this->belongsTo(Tenant::class);
     }
 
-    public function bookings(): HasMany
+    public function bookings(): MorphMany
     {
-        return $this->hasMany(PhotographerBooking::class);
+        return $this->morphMany(ServiceBooking::class, 'bookable');
     }
 
     public function isBasic(): bool
@@ -61,12 +61,14 @@ class PhotographerPackage extends Model
         // Full day rate typically covers 6-8 hours
         $dayRate = $this->full_day_rate;
         $hourlyEquivalent = $this->hourly_rate * 6; // Assume 6 hour minimum
+
         return max($dayRate, $hourlyEquivalent);
     }
 
     public function addonPrice(string $addon): decimal
     {
         $addons = $this->addons ?? [];
+
         return $addons[$addon] ?? 0;
     }
 }

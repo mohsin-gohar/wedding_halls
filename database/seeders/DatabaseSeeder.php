@@ -29,6 +29,21 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Idempotency guard: on an already-seeded database (or a re-run of
+        // `db:seed`), only refresh the enterprise-expansion seeders and skip
+        // the core demo dataset so unique constraints are never violated.
+        $alreadySeeded = Tenant::query()->where('slug', 'venue-cloud')->exists();
+
+        if ($alreadySeeded) {
+            $this->call([
+                VendorCategorySeeder::class,
+                PermissionMatrixSeeder::class,
+                VendorEcosystemSeeder::class,
+            ]);
+
+            return;
+        }
+
         // 1. Roles
         $roles = [
             'ROLE_SUPER_ADMIN',
@@ -39,62 +54,69 @@ class DatabaseSeeder extends Seeder
             'ROLE_CHEF',
             'ROLE_FLOOR_STAFF',
             'ROLE_CUSTOMER',
+            'ROLE_SERVICE_STAFF',
         ];
         foreach ($roles as $roleName) {
             Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
         }
 
-        // 1.1 Subscription Plans (Commercial Pakistani SaaS Tiers in PKR)
-        $starterPlan = SubscriptionPlan::create([
-            'name' => 'Starter Marquee',
-            'slug' => 'starter-marquee',
-            'description' => 'Ideal for single wedding marquees and banquet halls starting digital operations.',
-            'price_monthly' => 15000.00,
-            'price_yearly' => 150000.00,
-            'max_halls' => 1,
-            'max_staff' => 3,
-            'max_monthly_bookings' => 20,
-            'has_custom_domain' => false,
-            'has_kitchen_kot' => true,
-            'has_whatsapp_automation' => false,
-            'has_accounting_reports' => true,
-            'trial_days' => 14,
-            'is_active' => true,
-        ]);
+        // 1.1 Subscription Plans (Commercial Pakistani SaaS Tiers in PKR) — idempotent
+        $starterPlan = SubscriptionPlan::updateOrCreate(
+            ['slug' => 'starter-marquee'],
+            [
+                'name' => 'Starter Marquee',
+                'description' => 'Ideal for single wedding marquees and banquet halls starting digital operations.',
+                'price_monthly' => 15000.00,
+                'price_yearly' => 150000.00,
+                'max_halls' => 1,
+                'max_staff' => 3,
+                'max_monthly_bookings' => 20,
+                'has_custom_domain' => false,
+                'has_kitchen_kot' => true,
+                'has_whatsapp_automation' => false,
+                'has_accounting_reports' => true,
+                'trial_days' => 14,
+                'is_active' => true,
+            ]
+        );
 
-        $executivePlan = SubscriptionPlan::create([
-            'name' => 'Executive Banquet Suite',
-            'slug' => 'executive-banquet-suite',
-            'description' => 'Designed for busy multi-hall banquet complexes, catering operations, and full ERP management.',
-            'price_monthly' => 35000.00,
-            'price_yearly' => 350000.00,
-            'max_halls' => 3,
-            'max_staff' => 10,
-            'max_monthly_bookings' => 60,
-            'has_custom_domain' => true,
-            'has_kitchen_kot' => true,
-            'has_whatsapp_automation' => true,
-            'has_accounting_reports' => true,
-            'trial_days' => 14,
-            'is_active' => true,
-        ]);
+        $executivePlan = SubscriptionPlan::updateOrCreate(
+            ['slug' => 'executive-banquet-suite'],
+            [
+                'name' => 'Executive Banquet Suite',
+                'description' => 'Designed for busy multi-hall banquet complexes, catering operations, and full ERP management.',
+                'price_monthly' => 35000.00,
+                'price_yearly' => 350000.00,
+                'max_halls' => 3,
+                'max_staff' => 10,
+                'max_monthly_bookings' => 60,
+                'has_custom_domain' => true,
+                'has_kitchen_kot' => true,
+                'has_whatsapp_automation' => true,
+                'has_accounting_reports' => true,
+                'trial_days' => 14,
+                'is_active' => true,
+            ]
+        );
 
-        $enterprisePlan = SubscriptionPlan::create([
-            'name' => 'Royal Imperial Enterprise',
-            'slug' => 'royal-imperial-enterprise',
-            'description' => 'Unlimited multi-branch hotel banquets, convention centres, and wedding empires across Pakistan.',
-            'price_monthly' => 65000.00,
-            'price_yearly' => 650000.00,
-            'max_halls' => -1,
-            'max_staff' => -1,
-            'max_monthly_bookings' => -1,
-            'has_custom_domain' => true,
-            'has_kitchen_kot' => true,
-            'has_whatsapp_automation' => true,
-            'has_accounting_reports' => true,
-            'trial_days' => 30,
-            'is_active' => true,
-        ]);
+        $enterprisePlan = SubscriptionPlan::updateOrCreate(
+            ['slug' => 'royal-imperial-enterprise'],
+            [
+                'name' => 'Royal Imperial Enterprise',
+                'description' => 'Unlimited multi-branch hotel banquets, convention centres, and wedding empires across Pakistan.',
+                'price_monthly' => 65000.00,
+                'price_yearly' => 650000.00,
+                'max_halls' => -1,
+                'max_staff' => -1,
+                'max_monthly_bookings' => -1,
+                'has_custom_domain' => true,
+                'has_kitchen_kot' => true,
+                'has_whatsapp_automation' => true,
+                'has_accounting_reports' => true,
+                'trial_days' => 30,
+                'is_active' => true,
+            ]
+        );
 
         // 2. Tenant
         $tenant = Tenant::create([
@@ -708,6 +730,13 @@ class DatabaseSeeder extends Seeder
             'entity_id' => $tenant->id,
             'description' => 'Tenant subscription [Executive Banquet Suite] activated for 12 months with verified business credentials.',
             'ip_address' => '127.0.0.1',
+        ]);
+
+        // 10. Enterprise expansion: RBAC matrix + vendor categories + demo vendors
+        $this->call([
+            VendorCategorySeeder::class,
+            PermissionMatrixSeeder::class,
+            VendorEcosystemSeeder::class,
         ]);
     }
 }

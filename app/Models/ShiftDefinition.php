@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class ShiftDefinition extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
 
     protected $fillable = [
         'name',
@@ -25,7 +25,7 @@ class ShiftDefinition extends Model
         'multiplier' => 'decimal:2',
     ];
 
-    public function tenantVenueShifts(): HasMany
+    public function tenantVenueShifts(): HasManyThrough
     {
         return $this->hasManyThrough(
             VenueShift::class,

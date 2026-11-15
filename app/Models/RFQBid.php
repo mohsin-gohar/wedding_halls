@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RFQBid extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
+
+    protected $table = 'rfq_bids';
 
     protected $fillable = [
         'rfq_id',
@@ -37,7 +37,7 @@ class RFQBid extends Model
 
     public function statusLabel(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'PENDING' => 'Pending',
             'ACCEPTED' => 'Accepted',
             'REJECTED' => 'Rejected',

@@ -10,7 +10,7 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @foreach ($notifications as $notification)
+        @forelse ($notifications as $notification)
             <div class="bg-white dark:bg-[#171513] rounded-xl border border-[#E7E5E4] dark:border-white/10 p-5 transition-all hover:shadow-lg {{ $notification->isRead() ? '' : 'border-[#C6A15B]/40 bg-[#C6A15B]/5' }}">
                 <div class="flex items-start justify-between mb-2">
                     <span class="text-xs font-semibold text-[#C6A15B] uppercase tracking-wider">{{ $notification->type }}</span>
@@ -46,7 +46,7 @@
                 <h3 class="text-lg font-semibold text-[#171513] dark:text-white">No notifications</h3>
                 <p class="text-stone-500 dark:text-stone-400">You're all caught up. Come back later for updates.</p>
             </div>
-        @endforeach
+        @endforelse
     </div>
 
     {{ $notifications->links() }}

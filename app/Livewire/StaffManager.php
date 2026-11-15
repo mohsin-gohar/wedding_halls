@@ -70,7 +70,7 @@ class StaffManager extends Component
         'name' => 'required|string|max:100',
         'email' => 'required|email|unique:users,email',
         'phone' => 'nullable|string|max:30',
-        'role' => 'required|in:ROLE_MANAGER,ROLE_ACCOUNTANT,ROLE_FRONT_DESK,ROLE_CHEF,ROLE_FLOOR_STAFF',
+        'role' => 'required|in:ROLE_MANAGER,ROLE_VENDOR_MANAGER,ROLE_ACCOUNTANT,ROLE_VENDOR_ACCOUNTANT,ROLE_FRONT_DESK,ROLE_BOOKING_MANAGER,ROLE_CHEF,ROLE_CATERING_STAFF,ROLE_FLOOR_STAFF,ROLE_SERVICE_STAFF,ROLE_STAFF_MEMBER,ROLE_PHOTOGRAPHER,ROLE_INVENTORY_MANAGER,ROLE_HR_MANAGER',
         'password' => 'required|string|min:6',
     ];
 
@@ -89,12 +89,30 @@ class StaffManager extends Component
 
     private function allowedRoles(): array
     {
-        $roles = ['ROLE_ACCOUNTANT', 'ROLE_FRONT_DESK', 'ROLE_CHEF', 'ROLE_FLOOR_STAFF'];
+        // Vendor-operational roles only. Platform staff roles (support,
+        // finance, moderation) are provisioned by the Super Admin and must
+        // never be assignable from a tenant's staff screen.
+        $roles = [
+            'ROLE_ACCOUNTANT',
+            'ROLE_FRONT_DESK',
+            'ROLE_CHEF',
+            'ROLE_FLOOR_STAFF',
+            'ROLE_SERVICE_STAFF',
+            'ROLE_VENDOR_ACCOUNTANT',
+            'ROLE_BOOKING_MANAGER',
+            'ROLE_STAFF_MEMBER',
+            'ROLE_PHOTOGRAPHER',
+            'ROLE_CATERING_STAFF',
+            'ROLE_INVENTORY_MANAGER',
+            'ROLE_HR_MANAGER',
+        ];
+
         if (Auth::user()->isTenantOwner()) {
             array_unshift($roles, 'ROLE_MANAGER');
+            array_unshift($roles, 'ROLE_VENDOR_MANAGER');
         }
 
-        return $roles;
+        return array_values(array_unique($roles));
     }
 
     public function openCreateModal()

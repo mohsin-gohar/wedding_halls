@@ -22,10 +22,14 @@ class Review extends Model
         'user_id',
         'hall_id',
         'booking_id',
+        'reviewable_type',
+        'reviewable_id',
         'rating',
         'title',
         'body',
         'status',
+        'is_verified_booking',
+        'vendor_reply',
         'moderated_at',
         'moderated_by',
     ];
@@ -33,6 +37,7 @@ class Review extends Model
     protected $casts = [
         'rating' => 'integer',
         'moderated_at' => 'datetime',
+        'is_verified_booking' => 'boolean',
     ];
 
     public function user(): BelongsTo
@@ -43,6 +48,12 @@ class Review extends Model
     public function hall(): BelongsTo
     {
         return $this->belongsTo(Hall::class);
+    }
+
+    /** Polymorphic target: a Hall today, a Tenant (vendor) in the marketplace. */
+    public function reviewable()
+    {
+        return $this->morphTo();
     }
 
     public function booking(): BelongsTo

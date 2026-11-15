@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('hall_chat_messages', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('hall_id')->constrained()->onDelete('cascade');
-            $table->foreignUuid('user_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->string('ip_address', 45)->index(); // IPv4/IPv6
             $table->string('session_id', 100)->index(); // for guest tracking
             $table->string('sender_type', 20); // 'customer' | 'hall_owner'

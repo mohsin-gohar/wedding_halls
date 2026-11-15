@@ -2,15 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DispatchLog extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
 
     protected $fillable = [
         'tenant_id',
@@ -26,8 +24,8 @@ class DispatchLog extends Model
     ];
 
     protected $casts = [
-        'tenant_id' => 'uuid',
-        'user_id' => 'uuid',
+        'tenant_id' => 'string',
+        'user_id' => 'integer',
         'recipient_type' => 'string',
         'recipient_id' => 'string',
         'channel' => 'string',
@@ -48,7 +46,7 @@ class DispatchLog extends Model
 
     public function channelLabel(): string
     {
-        return match($this->channel) {
+        return match ($this->channel) {
             'WHATSAPP' => 'WhatsApp',
             'SMS' => 'SMS',
             'EMAIL' => 'Email',
@@ -58,7 +56,7 @@ class DispatchLog extends Model
 
     public function statusLabel(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'PENDING' => 'Pending',
             'SENT' => 'Sent',
             'DELIVERED' => 'Delivered',

@@ -2,15 +2,20 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use App\Exceptions\SlotAlreadyBookedException;
 use App\Models\Booking;
 use App\Models\Hall;
 use App\Services\BookingService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
-class BookingController extends Controller
+/**
+ * Booking API (mobile / partner integrations).
+ *
+ * Authorization is fail-closed: an unauthenticated caller receives 401 and a
+ * tenant staff member can only ever reach their own tenant's bookings.
+ */
+class BookingController extends ApiController
 {
     protected BookingService $bookingService;
 
@@ -21,52 +26,38 @@ class BookingController extends Controller
 
     public function index(Request $request)
     {
-        $user = Auth::user();
+        $user = $this->apiUser($request);
 
         $query = Booking::with(['hall.venue', 'package', 'payments']);
 
-        if ($user && !$user->isSuperAdmin() && $user->tenant_id) {
-            $query->where('tenant_id', $user->tenant_id);
+        $query = $this->scopeToPrincipal($query, $user);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->string('status')->toString());
         }
 
-        if ($user && $user->isCustomer()) {
-            $query->where('customer_id', $user->id);
+        if ($request->filled('hall_id')) {
+            $query->where('hall_id', $request->string('hall_id')->toString());
         }
 
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
+        if ($request->filled('date_from')) {
+            $query->whereDate('event_date', '>=', $request->string('date_from')->toString());
         }
 
-        if ($request->has('hall_id')) {
-            $query->where('hall_id', $request->hall_id);
+        if ($request->filled('date_to')) {
+            $query->whereDate('event_date', '<=', $request->string('date_to')->toString());
         }
 
-        if ($request->has('date_from')) {
-            $query->whereDate('event_date', '>=', $request->date_from);
-        }
-
-        if ($request->has('date_to')) {
-            $query->whereDate('event_date', '<=', $request->date_to);
-        }
-
-        $bookings = $query->latest()->paginate(20);
-
-        return response()->json($bookings);
+        return response()->json($query->latest()->paginate(20));
     }
 
     public function show(Request $request, string $id)
     {
-        $user = Auth::user();
+        $user = $this->apiUser($request);
 
         $query = Booking::with(['hall.venue', 'package', 'payments', 'rsvps', 'kitchenKot', 'floorPlan']);
 
-        if ($user && !$user->isSuperAdmin() && $user->tenant_id) {
-            $query->where('tenant_id', $user->tenant_id);
-        }
-
-        if ($user && $user->isCustomer()) {
-            $query->where('customer_id', $user->id);
-        }
+        $query = $this->scopeToPrincipal($query, $user);
 
         $booking = $query->findOrFail($id);
 
@@ -75,6 +66,10 @@ class BookingController extends Controller
 
     public function store(Request $request)
     {
+        $user = $this->apiUser($request);
+
+        $this->assertPermission($user, 'bookings.create');
+
         $validator = Validator::make($request->all(), [
             'hall_id' => 'required|uuid|exists:halls,id',
             'event_type' => 'required|string|max:50',
@@ -98,19 +93,22 @@ class BookingController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $user = Auth::user();
         $hall = Hall::findOrFail($request->hall_id);
 
-        if ($user && !$user->isSuperAdmin() && $hall->tenant_id !== $user->tenant_id) {
-            return response()->json(['message' => 'Unauthorized access to this hall.'], 403);
+        // A customer books on their own behalf; tenant staff book for their
+        // own venue. Neither may create a booking on another tenant's hall.
+        if ($user->isCustomer()) {
+            abort_unless($hall->tenant->is_active && $hall->tenant->verification_status === 'APPROVED', 403, 'Venue is not accepting bookings.');
+        } else {
+            $this->assertTenantAccess($hall->tenant_id, $user);
         }
 
         $data = $request->all();
         $data['tenant_id'] = $hall->tenant_id;
-        $data['created_by_user_id'] = $user?->id;
-        $data['customer_id'] = $user?->id;
+        $data['created_by_user_id'] = $user->id;
+        $data['customer_id'] = $user->isCustomer() ? $user->id : $request->input('customer_id');
 
-        if ($user && $user->isCustomer()) {
+        if ($user->isCustomer()) {
             $data['customer_name'] = $user->name;
             $data['customer_phone'] = $user->phone;
             $data['customer_email'] = $user->email;
@@ -124,30 +122,40 @@ class BookingController extends Controller
                 'booking' => $booking,
                 'message' => 'Booking created successfully.',
             ], 201);
-        } catch (\App\Exceptions\SlotAlreadyBookedException $e) {
+        } catch (SlotAlreadyBookedException $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 409);
         } catch (\Throwable $e) {
+            report($e);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create booking: '.$e->getMessage(),
+                'message' => 'Failed to create booking.',
             ], 500);
         }
     }
 
     public function update(Request $request, string $id)
     {
-        $user = Auth::user();
+        $user = $this->apiUser($request);
 
-        $query = Booking::where('id', $id);
+        $this->assertPermission($user, 'bookings.update');
 
-        if ($user && !$user->isSuperAdmin() && $user->tenant_id) {
-            $query->where('tenant_id', $user->tenant_id);
-        }
+        $booking = Booking::where('id', $id)
+            ->where(function ($query) use ($user) {
+                if ($user->isSuperAdmin()) {
+                    return $query;
+                }
 
-        $booking = $query->firstOrFail();
+                if ($user->isCustomer()) {
+                    return $query->where('customer_id', $user->id);
+                }
+
+                return $query->where('tenant_id', $user->tenant_id);
+            })
+            ->firstOrFail();
 
         $validator = Validator::make($request->all(), [
             'status' => 'sometimes|in:INQUIRY,HOLD,CONFIRMED,COMPLETED,CANCELLED,REFUNDED',
@@ -157,6 +165,12 @@ class BookingController extends Controller
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Customers may only annotate their own booking; they can never move
+        // financial or lifecycle state through the API.
+        if ($user->isCustomer()) {
+            abort_unless($request->hasOnly(['notes']), 403, 'Customers may only update booking notes.');
         }
 
         $booking->update($request->only(['status', 'notes', 'advance_paid']));
@@ -174,11 +188,9 @@ class BookingController extends Controller
 
     public function destroy(Request $request, string $id)
     {
-        $user = Auth::user();
+        $user = $this->apiUser($request);
 
-        if (! $user || ! $user->isSuperAdmin()) {
-            return response()->json(['message' => 'Only super admin can delete bookings.'], 403);
-        }
+        abort_unless($user->isSuperAdmin(), 403, 'Only super admin can delete bookings.');
 
         $booking = Booking::findOrFail($id);
         $booking->delete();
@@ -191,6 +203,8 @@ class BookingController extends Controller
 
     public function availability(Request $request)
     {
+        $this->apiUser($request);
+
         $validator = Validator::make($request->all(), [
             'hall_id' => 'required|uuid|exists:halls,id',
             'date' => 'required|date',
@@ -203,45 +217,17 @@ class BookingController extends Controller
 
         $hall = Hall::with(['venue', 'tenant'])->findOrFail($request->hall_id);
 
-        if (!$hall->tenant || !$hall->tenant->is_active || $hall->tenant->verification_status !== 'APPROVED') {
-            return response()->json(['message' => 'Hall is not available for booking.'], 403);
+        if (! $hall->tenant->is_active || $hall->tenant->verification_status !== 'APPROVED') {
+            return response()->json(['message' => 'Venue is not accepting bookings.'], 403);
         }
 
-        $date = \Carbon\Carbon::parse($request->date);
-        $slotType = $request->slot_type;
-
-        $bookings = Booking::where('hall_id', $hall->id)
-            ->whereDate('event_date', $date)
-            ->whereIn('status', ['HOLD', 'CONFIRMED'])
-            ->get();
-
-        $bookedSlots = [];
-        foreach ($bookings as $booking) {
-            $slots = $booking->slot_type === 'FULL_DAY'
-                ? ['AFTERNOON', 'EVENING', 'NIGHT']
-                : [$booking->slot_type];
-            foreach ($slots as $slot) {
-                $bookedSlots[] = $slot;
-            }
-        }
-
-        $allSlots = ['AFTERNOON', 'EVENING', 'NIGHT', 'FULL_DAY'];
-        $availableSlots = array_diff($allSlots, $bookedSlots);
-
-        if ($slotType && !in_array($slotType, $availableSlots)) {
-            return response()->json([
-                'available' => false,
-                'message' => 'Selected slot is already booked.',
-                'available_slots' => $availableSlots,
-            ]);
-        }
+        $slotType = $request->input('slot_type', 'FULL_DAY');
 
         return response()->json([
-            'available' => true,
-            'hall' => $hall,
-            'date' => $date->format('Y-m-d'),
-            'available_slots' => $availableSlots,
-            'booked_slots' => $bookedSlots,
+            'hall_id' => $hall->id,
+            'date' => $request->string('date')->toString(),
+            'slot_type' => $slotType,
+            'available' => $this->bookingService->checkSlotAvailability($hall->id, $request->string('date')->toString(), $slotType),
         ]);
     }
 }

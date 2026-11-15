@@ -118,6 +118,14 @@ input:not(input[type="range"]):user-valid {
     letter-spacing: -0.015em;
 }
 
+/* Urdu (Nastaliq) — brand tagline "روایت کے رنگ، جذبات کے سنگ".
+   letter-spacing must stay 0 or Arabic-script joining breaks. */
+.font-urdu {
+    font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Urdu Typesetting', serif;
+    letter-spacing: 0;
+    word-spacing: 0.08em;
+}
+
 h1, h2, h3, h4, .font-serif-luxury {
     text-wrap: balance;
     overflow-wrap: break-word;
@@ -694,6 +702,25 @@ p, .prose {
     color: var(--charcoal);
     box-shadow: 0 1px 2px rgba(23, 21, 19, 0.03);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+/* Slim horizontal scroll strip (category tabs, filter chips). */
+.scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(198, 161, 91, 0.45) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+    height: 5px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(198, 161, 91, 0.45);
+    border-radius: 999px;
 }
 
 .input-luxury:focus {

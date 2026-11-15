@@ -14,7 +14,7 @@ return new class extends Migration
 
         Schema::create('reviews', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignUuid('hall_id')->constrained('halls')->cascadeOnDelete();
             $table->foreignUuid('booking_id')->nullable()->constrained('bookings')->nullOnDelete();
             $table->unsignedTinyInteger('rating'); // 1-5
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->text('body')->nullable();
             $table->string('status', 20)->default('pending'); // pending | approved | rejected
             $table->timestamp('moderated_at')->nullable();
-            $table->foreignUuid('moderated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('moderated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
 

@@ -2,15 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class CarFleet extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
 
     protected $fillable = [
         'tenant_id',
@@ -33,9 +32,9 @@ class CarFleet extends Model
         return $this->belongsTo(Tenant::class);
     }
 
-    public function bookings(): HasMany
+    public function bookings(): MorphMany
     {
-        return $this->hasMany(CarFleetBooking::class);
+        return $this->morphMany(ServiceBooking::class, 'bookable');
     }
 
     public function isAvailable(): bool
@@ -48,8 +47,8 @@ class CarFleet extends Model
         return $this->is_available ? 'Available' : 'Unavailable';
     }
 
-    public function hourlyCostForHours(int $hours): decimal
+    public function hourlyCostForHours(int $hours): float
     {
-        return $this->hourly_rate * $hours;
+        return (float) $this->hourly_rate * max(1, $hours);
     }
 }

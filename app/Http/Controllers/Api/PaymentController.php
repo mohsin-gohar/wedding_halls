@@ -2,15 +2,22 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
-class PaymentController extends Controller
+/**
+ * Payment API (mobile / partner integrations).
+ *
+ * - Authorization is fail-closed (401 without a valid principal).
+ * - A customer may only pay for their own booking; tenant staff may only
+ *   collect for bookings inside their own tenant.
+ * - Gateway webhooks are signature-verified and idempotent: replaying the
+ *   same gateway reference can never double-credit a booking.
+ */
+class PaymentController extends ApiController
 {
     protected PaymentService $paymentService;
 
@@ -21,9 +28,11 @@ class PaymentController extends Controller
 
     public function initiate(Request $request)
     {
+        $user = $this->apiUser($request);
+
         $validator = Validator::make($request->all(), [
             'booking_id' => 'required|uuid|exists:bookings,id',
-            'amount' => 'required|numeric|min:0',
+            'amount' => 'required|numeric|min:1',
             'payment_method' => 'required|in:CASH,BANK_TRANSFER,STRIPE,JAZZCASH,EASYPAISA',
             'phone' => 'nullable|string|max:25',
             'transaction_reference' => 'nullable|string|max:100',
@@ -33,21 +42,31 @@ class PaymentController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $user = Auth::user();
-        $booking = Booking::find($request->booking_id);
+        $booking = Booking::findOrFail($request->booking_id);
 
-        // Verify tenant access
-        if ($user && !$user->isSuperAdmin() && $booking->tenant_id !== $user->tenant_id) {
-            return response()->json(['message' => 'Unauthorized access to this booking.'], 403);
+        if ($user->isCustomer()) {
+            abort_unless($booking->customer_id === $user->id, 403, 'You can only pay for your own booking.');
+        } else {
+            $this->assertTenantAccess($booking->tenant_id, $user);
+            $this->assertPermission($user, 'payments.record');
+        }
+
+        $amount = round((float) $request->amount, 2);
+
+        // Never collect more than the outstanding balance.
+        if ($amount > (float) $booking->balance_due + 0.009) {
+            return response()->json([
+                'message' => 'Amount exceeds the outstanding balance of PKR '.number_format((float) $booking->balance_due, 2).'.',
+            ], 422);
         }
 
         $result = $this->paymentService->processPayment(
-            $request->booking_id,
-            (float) $request->amount,
-            $request->payment_method,
+            $booking->id,
+            $amount,
+            $request->string('payment_method')->toString(),
             [
-                'phone' => $request->phone,
-                'transaction_reference' => $request->transaction_reference,
+                'phone' => $request->input('phone'),
+                'transaction_reference' => $request->input('transaction_reference'),
             ]
         );
 
@@ -55,21 +74,19 @@ class PaymentController extends Controller
             return response()->json(['message' => $result['message']], 400);
         }
 
-        // Create payment record
         $payment = $this->paymentService->createPayment(
             $booking->tenant_id,
             $booking->id,
-            (float) $request->amount,
+            $amount,
             'ADVANCE',
-            $request->payment_method,
-            $request->transaction_reference,
-            $user?->id,
-            'Payment initiated via API: '.$request->payment_method
+            $request->string('payment_method')->toString(),
+            $request->input('transaction_reference'),
+            $user->id,
+            'Payment initiated via API: '.$request->string('payment_method')->toString()
         );
 
-        // Update booking advance paid if cash or verified
-        if ($request->payment_method === 'CASH' || $request->payment_method === 'BANK_TRANSFER') {
-            $booking->advance_paid = (float) $booking->advance_paid + (float) $request->amount;
+        if ($request->string('payment_method')->toString() === 'CASH' || $request->string('payment_method')->toString() === 'BANK_TRANSFER') {
+            $booking->advance_paid = (float) $booking->advance_paid + $amount;
             $booking->balance_due = max(0, (float) $booking->grand_total - (float) $booking->advance_paid);
             $booking->save();
         }
@@ -93,65 +110,69 @@ class PaymentController extends Controller
             return response()->json(['message' => 'Invalid webhook signature.'], 401);
         }
 
-        // Process successful payment
         $bookingReference = $payload['booking_reference'] ?? $payload['pp_TxnRef'] ?? $payload['txnRef'] ?? null;
-        $amount = $payload['amount'] ?? $payload['pp_Amount'] ?? $payload['amount'] ?? 0;
+        $amount = $payload['amount'] ?? $payload['pp_Amount'] ?? 0;
+        $transactionReference = $payload['transaction_reference'] ?? $payload['pp_TxnRef'] ?? $payload['txnRef'] ?? null;
 
-        if ($bookingReference) {
-            $booking = Booking::where('booking_reference', $bookingReference)->first();
-
-            if ($booking) {
-                $payment = $this->paymentService->createPayment(
-                    $booking->tenant_id,
-                    $booking->id,
-                    (float) $amount / 100, // Convert from paisa/cents
-                    'ADVANCE',
-                    strtoupper($gateway),
-                    $payload['transaction_reference'] ?? $payload['pp_TxnRef'] ?? $payload['txnRef'] ?? null,
-                    null,
-                    'Webhook payment from '.$gateway
-                );
-
-                $booking->advance_paid = (float) $booking->advance_paid + (float) $payment->amount;
-                $booking->balance_due = max(0, (float) $booking->grand_total - (float) $booking->advance_paid);
-                $booking->save();
-
-                return response()->json(['status' => 'processed']);
-            }
+        if (! $bookingReference) {
+            return response()->json(['status' => 'ignored']);
         }
 
-        return response()->json(['status' => 'ignored']);
+        $booking = Booking::where('booking_reference', $bookingReference)->first();
+
+        if (! $booking) {
+            return response()->json(['status' => 'ignored']);
+        }
+
+        // ── Idempotency ────────────────────────────────────────────────
+        // Gateways retry webhooks. A replayed gateway reference must never
+        // credit the booking twice.
+        if ($transactionReference && Payment::where('transaction_reference', $transactionReference)->exists()) {
+            return response()->json(['status' => 'already_processed']);
+        }
+
+        $value = round(((float) $amount) / 100, 2);
+
+        if ($value <= 0 || $value > (float) $booking->balance_due + 0.009) {
+            return response()->json(['status' => 'ignored', 'reason' => 'amount_out_of_range']);
+        }
+
+        $payment = $this->paymentService->createPayment(
+            $booking->tenant_id,
+            $booking->id,
+            $value,
+            'ADVANCE',
+            strtoupper($gateway),
+            $transactionReference,
+            null,
+            'Webhook payment from '.$gateway
+        );
+
+        $booking->advance_paid = (float) $booking->advance_paid + (float) $payment->amount;
+        $booking->balance_due = max(0, (float) $booking->grand_total - (float) $booking->advance_paid);
+        $booking->save();
+
+        return response()->json(['status' => 'processed']);
     }
 
     public function summary(Request $request)
     {
-        $user = Auth::user();
+        $user = $this->apiUser($request);
 
-        if (! $user->tenant_id) {
-            return response()->json(['message' => 'No tenant assigned.'], 403);
-        }
+        abort_if(! $user->tenant_id, 403, 'No tenant assigned.');
 
         $period = $request->query('period', 'MONTHLY');
 
-        $summary = $this->paymentService->getPaymentSummary($user->tenant_id, $period);
-
-        return response()->json($summary);
+        return response()->json($this->paymentService->getPaymentSummary($user->tenant_id, $period));
     }
 
     public function list(Request $request)
     {
-        $user = Auth::user();
+        $user = $this->apiUser($request);
 
-        $query = Payment::where('tenant_id', $user->tenant_id)
-            ->with('booking', 'receivedByUser');
+        $query = Payment::with('booking', 'receivedByUser');
 
-        if ($request->has('booking_id')) {
-            $query->where('booking_id', $request->booking_id);
-        }
-
-        if ($request->has('payment_method')) {
-            $query->where('payment_method', $request->payment_method);
-        }
+        $query = $this->scopeToPrincipal($query, $user, 'tenant_id', 'received_by_user_id');
 
         $payments = $query->latest()->paginate(20);
 

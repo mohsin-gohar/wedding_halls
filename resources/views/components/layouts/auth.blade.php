@@ -9,16 +9,16 @@
     <meta name="description" content="Secure access to Riwaj Grand luxury banqueting and wedding management.">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('images/riwaj-grand-logo.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/riwaj-grand-logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/riwaj-grand-mark.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/riwaj-grand-mark-192.png') }}">
 
     <!-- Google Fonts: Preconnect & Asynchronous Loading (High Performance & Zero Render-Blocking) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400&display=swap" media="print" onload="this.media='all'">
     <noscript>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400&display=swap">
     </noscript>
 
     <!-- Styles & Livewire -->
@@ -70,12 +70,9 @@
             <span class="font-bold">Back to Home</span>
         </a>
 
-        <!-- Center Brand Logo -->
-        <a href="{{ route('home') }}" class="flex items-center gap-2.5 group">
-            <img src="{{ asset('images/riwaj-grand-logo.png') }}" width="36" height="36" alt="Riwaj Grand Logo" class="h-9 w-9 object-contain rounded-lg border border-[#C6A15B]/50 bg-[#171513] shadow-sm">
-            <span class="font-cinzel text-sm sm:text-base font-bold tracking-[0.16em] text-[#171513] dark:text-white group-hover:text-[#C6A15B] transition-colors">
-                Riwaj Grand
-            </span>
+        <!-- Center Brand Logo (Riwaj Grand lockup) -->
+        <a href="{{ route('home') }}" aria-label="Riwaj Grand — Home">
+            <x-riwaj-header-logo size="sm" />
         </a>
 
         <!-- Dark / Light Theme Toggle -->

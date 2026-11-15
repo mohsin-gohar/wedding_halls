@@ -29,4 +29,16 @@ return [
     // --------------------------------------------------------------------
     'vendor_registration_open' => env('VENDOR_REGISTRATION_OPEN', true),
 
+    // --------------------------------------------------------------------
+    // White-label vendor websites.
+    //
+    // Each vendor may publish its own branded microsite on a subdomain of
+    // the platform root domain (e.g. nawabcaterers.riwajgrand.pk/site).
+    // Set WHITE_LABEL_ENABLED=false to serve the standard platform branding
+    // everywhere.
+    // --------------------------------------------------------------------
+    'white_label_enabled' => env('WHITE_LABEL_ENABLED', true),
+
+    'root_domain' => env('ROOT_DOMAIN', 'riwajgrand.pk'),
+
 ];

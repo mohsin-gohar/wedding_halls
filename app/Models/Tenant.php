@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
@@ -19,7 +20,6 @@ class Tenant extends Model
 
     protected $fillable = [
         // Core identity
-        'user_id',
         'name',
         'slug',
         'subdomain',
@@ -31,6 +31,23 @@ class Tenant extends Model
         'city',
         'province',
         'country',
+
+        // Multi-vendor ecosystem
+        'vendor_category_id',
+        'about',
+        'cover_image',
+        'service_areas',
+        'rating_avg',
+        'rating_count',
+        'min_budget',
+        'max_budget',
+        'is_featured',
+        'featured_until',
+        'verified_at',
+        'onboarding_completed_at',
+        'onboarding_step',
+        'marketplace_visible',
+        'profile_views',
 
         // Subscription & billing
         'subscription_plan',
@@ -69,14 +86,26 @@ class Tenant extends Model
         'is_active' => 'boolean',
         'website_settings' => 'array',
         'settings' => 'array',
+        'service_areas' => 'array',
         'subscription_starts_at' => 'datetime',
         'subscription_expires_at' => 'datetime',
+        'verified_at' => 'datetime',
+        'onboarding_completed_at' => 'datetime',
+        'featured_until' => 'date:Y-m-d',
         'billing_enabled' => 'boolean',
         'kitchen_module_enabled' => 'boolean',
         'free_access_days' => 'integer',
         'max_halls' => 'integer',
         'max_staff' => 'integer',
         'max_bookings_per_day' => 'integer',
+        'rating_avg' => 'decimal:2',
+        'rating_count' => 'integer',
+        'min_budget' => 'decimal:2',
+        'max_budget' => 'decimal:2',
+        'is_featured' => 'boolean',
+        'marketplace_visible' => 'boolean',
+        'onboarding_step' => 'integer',
+        'profile_views' => 'integer',
     ];
 
     // ─── RELATIONSHIPS ───────────────────────────────────────────
@@ -91,6 +120,66 @@ class Tenant extends Model
     public function venues(): HasMany
     {
         return $this->hasMany(Venue::class);
+    }
+
+    /** * The marketplace category this vendor belongs to. */
+    public function vendorCategory(): BelongsTo
+    {
+        return $this->belongsTo(VendorCategory::class);
+    }
+
+    /** * A tenant has many generic services (any category). */
+    public function vendorServices(): HasMany
+    {
+        return $this->hasMany(VendorService::class);
+    }
+
+    /** * A tenant has many bundle packages (any category). */
+    public function vendorPackages(): HasMany
+    {
+        return $this->hasMany(VendorPackage::class);
+    }
+
+    /** * A tenant's portfolio media (images + videos). */
+    public function portfolioMedia(): HasMany
+    {
+        return $this->hasMany(VendorPortfolioMedia::class)->orderBy('sort');
+    }
+
+    /** * A tenant's verification documents. */
+    public function vendorDocuments(): HasMany
+    {
+        return $this->hasMany(VendorDocument::class);
+    }
+
+    /** * A tenant's availability slots. */
+    public function availability(): HasMany
+    {
+        return $this->hasMany(VendorAvailability::class);
+    }
+
+    /** * A tenant's generic service bookings (non-hall categories). */
+    public function serviceBookings(): HasMany
+    {
+        return $this->hasMany(ServiceBooking::class);
+    }
+
+    /** * A tenant's service payments. */
+    public function servicePayments(): HasMany
+    {
+        return $this->hasMany(ServicePayment::class);
+    }
+
+    /** * A tenant's RFQ bids (vendor staff users' bids via users.tenant_id). */
+    public function rfqBids(): HasManyThrough
+    {
+        return $this->hasManyThrough(RFQBid::class, User::class, 'tenant_id', 'vendor_id', 'id', 'id');
+    }
+
+    /** * RFQ requests targeted at this vendor. */
+    public function rfqTargets(): HasMany
+    {
+        return $this->hasMany(RfqTarget::class);
     }
 
     /** * A tenant has many halls */
@@ -141,6 +230,24 @@ class Tenant extends Model
         return $this->hasMany(AuditLog::class);
     }
 
+    /** * A tenant's wallet ledger transactions (financial audit trail). */
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(WalletTransaction::class);
+    }
+
+    /** * A tenant's payout requests. */
+    public function payouts(): HasMany
+    {
+        return $this->hasMany(VendorPayout::class);
+    }
+
+    /** * A tenant's support tickets. */
+    public function supportTickets(): HasMany
+    {
+        return $this->hasMany(SupportTicket::class);
+    }
+
     /** * A tenant has many staff attendances */
     public function staffAttendances(): HasMany
     {
@@ -183,22 +290,35 @@ class Tenant extends Model
         return $this->hasMany(FloorPlan::class);
     }
 
-    /** * A tenant has many reviews */
-    public function reviews(): HasMany
+    /** * Reviews targeting this vendor (polymorphic: reviewable_type = Tenant). */
+    public function reviews(): MorphMany
     {
-        return $this->hasMany(Review::class);
+        return $this->morphMany(Review::class, 'reviewable');
     }
 
-    /** * A tenant has many chat messages */
-    public function chatMessages(): HasMany
+    /** * Published (approved) reviews targeting this vendor — marketplace display. */
+    public function approvedReviews(): MorphMany
     {
-        return $this->hasMany(HallChatMessage::class);
+        return $this->morphMany(Review::class, 'reviewable')->where('status', 'approved');
     }
 
-    /** * A tenant has many webhook logs */
-    public function whatsappWebhookLogs(): HasMany
+    /** * The physical locations (branches) this business operates */
+    public function vendorLocations(): HasMany
     {
-        return $this->hasMany(WhatsappWebhookLog::class);
+        return $this->hasMany(VendorLocation::class);
+    }
+
+    /** * A tenant has many chat messages (stored per hall) */
+    public function chatMessages(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            HallChatMessage::class,
+            Hall::class,
+            'tenant_id',   // Foreign key on halls
+            'hall_id',     // Foreign key on hall_chat_messages
+            'id',          // Local key on tenants
+            'id'           // Local key on halls
+        );
     }
 
     /** * The subscription plan this tenant belongs to */
@@ -207,10 +327,19 @@ class Tenant extends Model
         return $this->belongsTo(SubscriptionPlan::class);
     }
 
-    /** * Get tenant subscription */
-    public function subscription(): HasOne
+    /** * The most recent subscription payment for this tenant */
+    public function latestSubscriptionPayment(): HasOne
     {
-        return $this->hasOne(Subscription::class);
+        return $this->hasOne(SubscriptionPayment::class)->latestOfMany();
+    }
+
+    /**
+     * Platform commission rate for this vendor, expressed as a percentage
+     * (tenants.commission_rate, e.g. 20.00 = 20%).
+     */
+    public function commissionRate(): float
+    {
+        return (float) ($this->commission_rate ?? 0);
     }
 
     // ─── STATE CHECKS ────────────────────────────────────────────
@@ -282,14 +411,19 @@ class Tenant extends Model
     /** * Check if free access is still active */
     public function hasFreeAccess(): bool
     {
-        if ($this->free_access_days <= 0) return false;
-        if (!$this->trial_ends_at) return false;
+        if ($this->free_access_days <= 0) {
+            return false;
+        }
+        if (! $this->trial_ends_at) {
+            return false;
+        }
+
         return now() < $this->trial_ends_at;
     }
 
     /** * Get formatted capacity */
     public function getMaxCapacityAttribute(): string
     {
-        return $this->max_halls . ' halls / ' . $this->max_staff . ' staff';
+        return $this->max_halls.' halls / '.$this->max_staff.' staff';
     }
 }

@@ -2,15 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DigitalContract extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
 
     protected $fillable = [
         'booking_id',
@@ -25,10 +23,10 @@ class DigitalContract extends Model
     ];
 
     protected $casts = [
-        'booking_id' => 'uuid',
-        'tenant_id' => 'uuid',
-        'client_id' => 'uuid',
-        'vendor_id' => 'uuid',
+        'booking_id' => 'string',
+        'tenant_id' => 'string',
+        'client_id' => 'integer',
+        'vendor_id' => 'integer',
         'contract_number' => 'string',
         'status' => 'string',
         'signature_type' => 'string',
@@ -57,7 +55,7 @@ class DigitalContract extends Model
 
     public function statusLabel(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'DRAFT' => 'Draft',
             'SENT' => 'Sent',
             'SIGNED' => 'Signed',

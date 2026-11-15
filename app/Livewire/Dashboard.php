@@ -319,12 +319,18 @@ class Dashboard extends Component
     public function updateLeadStage(string $bookingId, string $newStage): void
     {
         $tenantId = Auth::user()?->tenant_id;
+        if (! $tenantId) {
+            $this->crmFeedback = 'Session tenant not found. Please log in again.';
+
+            return;
+        }
+
         $allowedStages = ['NEW_INQUIRY', 'SITE_VISIT', 'QUOTATION', 'CONFIRMED', 'CANCELLED'];
         if (! in_array($newStage, $allowedStages)) {
             return;
         }
 
-        $booking = Booking::when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))->findOrFail($bookingId);
+        $booking = Booking::where('tenant_id', $tenantId)->findOrFail($bookingId);
         $updateData = ['crm_stage' => $newStage];
         if ($newStage === 'CONFIRMED' && $booking->status === 'INQUIRY') {
             $updateData['status'] = 'CONFIRMED';
@@ -342,7 +348,12 @@ class Dashboard extends Component
         }
 
         $tenantId = Auth::user()?->tenant_id;
-        $booking = Booking::when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))->findOrFail($this->selectedBookingId);
+        if (! $tenantId) {
+            $this->crmFeedback = 'Session tenant not found. Please log in again.';
+
+            return;
+        }
+        $booking = Booking::where('tenant_id', $tenantId)->findOrFail($this->selectedBookingId);
 
         $timestamp = Carbon::now()->format('d M Y, h:i A');
         $author = Auth::user()?->name ?? 'Staff';
@@ -425,6 +436,10 @@ class Dashboard extends Component
         $now = Carbon::now();
         $user = Auth::user();
         $tenantId = $user ? $user->tenant_id : null;
+
+        // Zero-trust read scope: a session without tenant context must see no
+        // platform-wide aggregates, so match nothing instead of skipping the filter.
+        $tenantScope = fn ($q) => $q->where('tenant_id', $tenantId ?? '00000000-0000-0000-0000-000000000000');
 
         // Fetch Halls strictly scoped by tenant
         $hallsQuery = Hall::where('is_active', true);
@@ -642,26 +657,26 @@ class Dashboard extends Component
         $todayEventsCount = $todayBookings->count();
         $upcomingEventsCount = Booking::where('event_date', '>=', $today)
             ->whereIn('status', ['CONFIRMED', 'HOLD'])
-            ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
+            ->where($tenantScope)
             ->count();
         $pendingInquiriesCount = Booking::whereIn('status', ['INQUIRY', 'PENDING'])
-            ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
+            ->where($tenantScope)
             ->count();
 
         // 12. Hall Analytics: Views, Wishlists, Bookings per hall
-        $hallAnalytics = $halls->map(function ($h) use ($tenantId) {
+        $hallAnalytics = $halls->map(function ($h) use ($tenantScope) {
             $views = HallView::where('hall_id', $h->id)->count();
             $wishlists = HallWishlist::where('hall_id', $h->id)->count();
             $bookings = Booking::where('hall_id', $h->id)
-                ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
+                ->where($tenantScope)
                 ->count();
             $confirmedBookings = Booking::where('hall_id', $h->id)
                 ->where('status', 'CONFIRMED')
-                ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
+                ->where($tenantScope)
                 ->count();
             $totalRevenue = (float) Booking::where('hall_id', $h->id)
                 ->whereIn('status', ['CONFIRMED', 'COMPLETED'])
-                ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
+                ->where($tenantScope)
                 ->sum('grand_total');
 
             return [
@@ -701,7 +716,7 @@ class Dashboard extends Component
 
         // 13. Interactive Kanban CRM Leads (Strictly Scoped to Tenant)
         $crmLeadsQuery = Booking::with(['hall', 'package', 'payments'])
-            ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
+            ->where($tenantScope)
             ->latest();
 
         if ($this->selectedHallId !== 'ALL' && in_array($this->selectedHallId, $tenantHallIds)) {
@@ -731,7 +746,7 @@ class Dashboard extends Component
         $selectedLead = null;
         if ($this->showCustomerModal && $this->selectedBookingId) {
             $selectedLead = Booking::with(['hall', 'package', 'payments'])
-                ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
+                ->where($tenantScope)
                 ->find($this->selectedBookingId);
         }
 

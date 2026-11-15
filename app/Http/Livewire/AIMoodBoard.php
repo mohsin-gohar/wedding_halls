@@ -2,20 +2,26 @@
 
 namespace App\Http\Livewire;
 
-use Livewire\Component;
 use App\Models\MoodBoardGeneration;
 use App\Services\AIMoodBoardService;
-use Illuminate\Support\Carbon;
+use Livewire\Component;
 
 class AIMoodBoard extends Component
 {
     public string $theme = 'Royal Mughal';
+
     public string $color_palette = 'Gold,Maroon,Cream';
+
     public int $guest_count = 200;
+
     public string $ai_result = '';
+
     public bool $is_generating = false;
+
     public string $prompt = '';
+
     public array $vendor_matches = [];
+
     public array $color_scheme = [];
 
     public function mount(): void
@@ -24,7 +30,7 @@ class AIMoodBoard extends Component
         $lastGen = MoodBoardGeneration::where('tenant_id', auth()->user()?->tenant?->id)
             ->latest('created_at')
             ->first();
-            
+
         if ($lastGen && $lastGen->image_url) {
             $this->ai_result = json_encode([
                 'image_url' => $lastGen->image_url,
@@ -40,19 +46,19 @@ class AIMoodBoard extends Component
         $this->ai_result = '';
         $this->vendor_matches = [];
         $this->color_scheme = [];
-        
-        $service = new AIMoodBoardService();
+
+        $service = new AIMoodBoardService;
         $result = $service->generateMoodBoard([
             'theme' => $this->theme,
             'color_palette' => explode(',', $this->color_palette),
             'guest_count' => $this->guest_count,
         ]);
-        
+
         $this->ai_result = json_encode($result);
         $this->vendor_matches = $result['vendor_matches'] ?? [];
         $this->color_scheme = $result['color_scheme'] ?? [];
         $this->prompt = $service->lastPrompt ?? '';
-        
+
         // Save to database
         $tenant = auth()->user()?->tenant;
         if ($tenant) {
@@ -66,7 +72,7 @@ class AIMoodBoard extends Component
                 'color_scheme' => $result['color_scheme'] ?? [],
             ]);
         }
-        
+
         $this->is_generating = false;
     }
 

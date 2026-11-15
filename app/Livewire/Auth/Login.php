@@ -54,10 +54,11 @@ class Login extends Component
 
             $user->recordLogin();
 
-            session()->forget('url.intended');
             session()->flash('message', "Welcome back, {$user->name}!");
 
-            return redirect()->to(route($user->portalHomeRoute()));
+            // Honor the stored intended URL (e.g. a marketplace quote page the
+            // guest was redirected from), falling back to the portal home.
+            return redirect()->intended(route($user->portalHomeRoute()));
         }
 
         RateLimiter::hit($throttleKey, 60);

@@ -24,16 +24,16 @@
     <meta name="twitter:image" content="{{ $ogImage ?? asset('images/riwaj-grand-logo.png') }}">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('images/riwaj-grand-logo.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/riwaj-grand-logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/riwaj-grand-mark.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/riwaj-grand-mark-192.png') }}">
 
     <!-- Google Fonts: Preconnect & Asynchronous Loading (High Performance & Zero Render-Blocking) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400&display=swap" media="print" onload="this.media='all'">
     <noscript>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400&display=swap">
     </noscript>
 
     <!-- Styles & Livewire -->
@@ -85,17 +85,9 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex h-16 items-center justify-between gap-3 sm:gap-5 lg:h-[4.5rem]">
                 
-                <!-- Brand Identity -->
-                <a href="{{ route('home') }}" wire:navigate.hover class="group flex shrink-0 items-center gap-3 max-sm:gap-2.5">
-                    <img src="{{ asset('images/riwaj-grand-logo.png') }}" width="48" height="48" alt="Riwaj Grand" style="max-height: 48px; width: auto;" class="h-10 sm:h-12 w-auto object-contain rounded-lg border border-[#C6A15B]/35 bg-[#171513] shadow-sm group-hover:border-[#C6A15B] transition-all duration-300">
-                    <span class="flex flex-col leading-none">
-                        <span class="font-cinzel text-base font-bold tracking-[0.16em] text-white transition-colors duration-300 group-hover:text-[#F2DE9A] sm:text-lg">
-                            Riwaj Grand
-                        </span>
-                        <span class="mt-1 hidden text-[9px] font-sans font-medium uppercase tracking-[0.22em] text-[#C6A15B]/90 sm:block">
-                            Riwayat bhi, Jiddat bhi
-                        </span>
-                    </span>
+                <!-- Brand Identity (Riwaj Grand lockup) -->
+                <a href="{{ route('home') }}" wire:navigate.hover aria-label="Riwaj Grand — Home">
+                    <x-riwaj-header-logo size="md" />
                 </a>
 
                 <!-- Desktop Navigation Links -->
@@ -233,12 +225,8 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 pb-12 border-b border-white/10">
                 <!-- Brand Info -->
                 <div class="lg:col-span-2 space-y-5">
-                    <a href="{{ route('home') }}" class="flex items-center gap-3 group">
-                        <img src="{{ asset('images/riwaj-grand-logo.png') }}" width="48" height="48" alt="Riwaj Grand Logo" style="max-height: 48px; width: auto;" class="h-12 w-auto object-contain rounded-lg border border-[#C6A15B]/35 bg-[#171513] shadow-sm">
-                        <div>
-                            <span class="font-cinzel text-2xl font-bold tracking-[0.16em] text-white group-hover:text-[#F2DE9A] transition block">Riwaj Grand</span>
-                            <span class="block text-[9px] uppercase tracking-[0.22em] text-[#C6A15B] font-sans font-semibold mt-0.5">Riwayat bhi, Jiddat bhi</span>
-                        </div>
+                    <a href="{{ route('home') }}" aria-label="Riwaj Grand — Home">
+                        <x-riwaj-header-logo size="lg" />
                     </a>
                     <p class="text-sm text-stone-400 font-light leading-relaxed max-w-sm">
                         Pakistan's premier commercial marketplace and management SaaS for luxury wedding banquets, royal marquees, and convention centres. Dedicated to authentic hospitality, zero double-booking reliability, and transparent pricing.
