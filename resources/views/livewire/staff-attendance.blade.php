@@ -20,6 +20,9 @@
             <button wire:click="openLeaveModal" class="btn-outline-gold !h-9 !px-4 text-xs font-mono uppercase font-bold">
                 + Apply Leave
             </button>
+            <a href="{{ route('staff.attendance.calendar') }}" class="btn-outline-gold !h-9 !px-4 text-xs font-mono uppercase font-bold">
+                Attendance Calendar &rarr;
+            </a>
             <a href="{{ route('staff') }}" class="btn-gold !h-9 !px-4 text-xs font-mono uppercase font-bold shadow">
                 Manage Staff Roles &rarr;
             </a>
@@ -185,6 +188,7 @@
                                 <td class="p-3">
                                     <select wire:model="attendanceData.{{ $m->id }}.status" 
                                             class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono font-bold px-2 py-1 outline-none focus:border-[#C6A15B]">
+                                        <option value="">NOT MARKED</option>
                                         <option value="PRESENT" class="text-[#8F7239]">PRESENT (HAZIR)</option>
                                         <option value="ABSENT" class="text-[#171513]">ABSENT (GHAIR HAZIR)</option>
                                         <option value="HALF_DAY" class="text-[#8F7239]">HALF DAY</option>
@@ -476,6 +480,7 @@
                     <div>
                         <label class="block text-[10px] font-mono uppercase text-[#C6A15B] mb-1 font-semibold">Status *</label>
                         <select wire:model="editingStatus" class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
+                            <option value="">NOT MARKED</option>
                             <option value="PRESENT">PRESENT (HAZIR)</option>
                             <option value="HALF_DAY">HALF DAY</option>
                             <option value="ABSENT">ABSENT (GHAIR HAZIR)</option>

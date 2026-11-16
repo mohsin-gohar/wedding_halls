@@ -63,6 +63,8 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
         Livewire::test(StaffAttendance::class)
             ->set('selectedDate', $today)
             ->set("attendanceData.{$chef->id}.status", 'PRESENT')
+            ->set("attendanceData.{$chef->id}.check_in", '09:30')
+            ->set("attendanceData.{$chef->id}.check_out", '22:00')
             ->set("attendanceData.{$chef->id}.overtime_hours", 3.5)
             ->call('saveDailyAttendance');
 

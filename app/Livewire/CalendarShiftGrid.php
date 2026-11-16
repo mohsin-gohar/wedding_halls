@@ -21,6 +21,13 @@ class CalendarShiftGrid extends Component
     // Quick Details Modal
     public ?Booking $viewingBooking = null;
 
+    // Data-integrity warnings: slot keys with >1 blocking (CONFIRMED/HOLD) booking.
+    public array $slotConflicts = [];
+
+    public ?array $conflictDetails = null;
+
+    public bool $showConflictModal = false;
+
     public bool $showDetailsModal = false;
 
     protected $listeners = [
@@ -125,6 +132,36 @@ class CalendarShiftGrid extends Component
         $this->viewingBooking = null;
     }
 
+    /**
+     * Surface two or more blocking bookings on the same hall/date/shift.
+     * Read-only reconciliation view: no record is deleted or modified here.
+     */
+    public function viewSlotConflicts(string $date, string $slot): void
+    {
+        $hall = $this->selectedHallId
+            ? $this->accessibleHalls()->whereKey($this->selectedHallId)->first()
+            : null;
+        $key = $date.'_'.$slot;
+
+        if (! $hall || ! isset($this->slotConflicts[$key])) {
+            return;
+        }
+
+        $this->conflictDetails = [
+            'date' => $date,
+            'slot' => $slot,
+            'hall' => $hall->name,
+            'bookings' => $this->slotConflicts[$key],
+        ];
+        $this->showConflictModal = true;
+    }
+
+    public function closeConflictModal(): void
+    {
+        $this->showConflictModal = false;
+        $this->conflictDetails = null;
+    }
+
     public function render()
     {
         $user = Auth::user();
@@ -148,23 +185,50 @@ class CalendarShiftGrid extends Component
             ? $this->accessibleHalls()->whereKey($this->selectedHallId)->first()
             : null;
 
-        // Fetch bookings strictly scoped to this tenant and hall
+        // Fetch bookings strictly scoped to this tenant and hall.
+        // NOTE: event_date is a DATE column; whereBetween() is the only range
+        // predicate needed. A redundant whereRaw('date(event_date) ...') was
+        // removed: it was driver-coupled (not PostgreSQL-safe) and duplicated
+        // the same range check.
         $bookings = [];
+        $this->slotConflicts = [];
         if ($selectedHall) {
+            $priority = ['CONFIRMED' => 0, 'HOLD' => 1, 'INQUIRY' => 2];
             $bookingsList = Booking::where('tenant_id', $selectedHall->tenant_id)
                 ->where('hall_id', $selectedHall->id)
                 ->whereBetween('event_date', [$startOfMonth->format('Y-m-d'), $endOfMonth->format('Y-m-d')])
                 ->whereIn('status', ['CONFIRMED', 'HOLD', 'INQUIRY'])
-                ->whereRaw('date(event_date) between ? and ?', [$startOfMonth->format('Y-m-d'), $endOfMonth->format('Y-m-d')])
-                ->get();
+                ->get()
+                ->sortBy(fn ($b) => [$priority[strtoupper($b->status)] ?? 9, (string) $b->created_at])
+                ->values();
 
+            // Group ALL bookings per date+shift. The first (by status priority)
+            // is shown; every additional *blocking* booking is surfaced as a
+            // data-integrity warning instead of being silently hidden with ??=.
+            $grouped = [];
             foreach ($bookingsList as $b) {
                 $date = $b->event_date->format('Y-m-d');
                 $slots = strtoupper($b->slot_type) === 'FULL_DAY'
                     ? ['AFTERNOON', 'EVENING', 'NIGHT']
                     : [strtoupper($b->slot_type)];
                 foreach ($slots as $slot) {
-                    $bookings[$date.'_'.$slot] ??= $b;
+                    $grouped[$date.'_'.$slot][] = $b;
+                }
+            }
+
+            foreach ($grouped as $key => $items) {
+                $bookings[$key] = $items[0];
+                $blocking = array_values(array_filter(
+                    $items,
+                    fn ($b) => in_array(strtoupper($b->status), ['CONFIRMED', 'HOLD'], true)
+                ));
+                if (count($blocking) > 1) {
+                    $this->slotConflicts[$key] = array_map(fn ($b) => [
+                        'id' => $b->id,
+                        'customer_name' => $b->customer_name,
+                        'event_type' => $b->event_type,
+                        'status' => strtoupper($b->status),
+                    ], $blocking);
                 }
             }
         }

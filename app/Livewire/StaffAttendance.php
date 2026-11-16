@@ -9,6 +9,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -24,7 +25,8 @@ class StaffAttendance extends Component
 
     public string $selectedStaffId = 'ALL';
 
-    // Daily attendance rows: [user_id => ['status' => 'PRESENT', 'check_in' => '10:00', 'check_out' => '22:00', 'overtime_hours' => 0, 'notes' => '']]
+    // Daily attendance rows: [user_id => ['status' => '', 'check_in' => '', 'check_out' => '', 'overtime_hours' => 0, 'notes' => '']]
+    // Empty status = NOT MARKED. An untouched row must never be saved as PRESENT.
     public array $attendanceData = [];
 
     // Leave request modal state
@@ -49,11 +51,11 @@ class StaffAttendance extends Component
 
     public string $editingRecordDate = '';
 
-    public string $editingStatus = 'PRESENT';
+    public string $editingStatus = '';
 
-    public string $editingCheckIn = '10:00';
+    public string $editingCheckIn = '';
 
-    public string $editingCheckOut = '22:00';
+    public string $editingCheckOut = '';
 
     public float $editingOvertime = 0.0;
 
@@ -73,6 +75,12 @@ class StaffAttendance extends Component
 
         if (request()->has('staff_id')) {
             $this->selectedStaffId = (string) request()->query('staff_id');
+        }
+
+        $requestedDate = request()->query('date');
+        if (is_string($requestedDate) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $requestedDate) && Carbon::canBeCreatedFromFormat($requestedDate, 'Y-m-d')) {
+            $this->selectedDate = $requestedDate;
+            $this->selectedMonth = Carbon::parse($requestedDate)->format('Y-m');
         }
 
         $this->loadAttendanceForDate();
@@ -151,16 +159,18 @@ class StaffAttendance extends Component
                 $rec = $existing->get($member->id);
                 $data[$member->id] = [
                     'status' => $rec->status,
-                    'check_in' => $rec->check_in ? substr($rec->check_in, 0, 5) : '10:00',
-                    'check_out' => $rec->check_out ? substr($rec->check_out, 0, 5) : '22:00',
+                    'check_in' => $rec->check_in ? substr($rec->check_in, 0, 5) : '',
+                    'check_out' => $rec->check_out ? substr($rec->check_out, 0, 5) : '',
                     'overtime_hours' => (float) $rec->overtime_hours,
                     'notes' => $rec->notes ?? '',
                 ];
             } else {
+                // No record yet: leave the row unmarked. The manager must make
+                // an explicit choice (and provide a check-in for worked states).
                 $data[$member->id] = [
-                    'status' => 'PRESENT',
-                    'check_in' => '10:00',
-                    'check_out' => '22:00',
+                    'status' => '',
+                    'check_in' => '',
+                    'check_out' => '',
                     'overtime_hours' => 0.0,
                     'notes' => '',
                 ];
@@ -173,10 +183,19 @@ class StaffAttendance extends Component
     public function markAllPresent()
     {
         $this->authorizeAttendanceManager();
+        // Explicit manager bulk action: a manager is attesting that the whole
+        // team worked, so provide default check-in/out times that satisfy the
+        // same validation applied to individually marked rows.
         foreach ($this->attendanceData as $userId => $val) {
             $this->attendanceData[$userId]['status'] = 'PRESENT';
+            if (empty($this->attendanceData[$userId]['check_in'])) {
+                $this->attendanceData[$userId]['check_in'] = '10:00';
+            }
+            if (empty($this->attendanceData[$userId]['check_out'])) {
+                $this->attendanceData[$userId]['check_out'] = '22:00';
+            }
         }
-        $this->feedbackMessage = 'Marked all team members as Present for '.$this->selectedDate;
+        $this->feedbackMessage = 'Manager-marked all team members as Present for '.$this->selectedDate;
     }
 
     public function saveDailyAttendance()
@@ -194,63 +213,91 @@ class StaffAttendance extends Component
             'attendanceData' => 'array',
         ]);
 
-        foreach ($this->attendanceData as $userId => $data) {
-            if (! in_array((int) $userId, $staffIds, true)) {
-                continue;
-            }
+        $saved = 0;
+        $skipped = 0;
 
-            validator($data, [
-                'status' => 'required|in:PRESENT,ABSENT,HALF_DAY,LATE,ON_LEAVE',
-                'check_in' => 'nullable|date_format:H:i',
-                'check_out' => 'nullable|date_format:H:i',
-                'overtime_hours' => 'nullable|numeric|min:0|max:24',
-                'notes' => 'nullable|string|max:1000',
-            ])->validate();
+        DB::transaction(function () use ($tenantId, $staffIds, &$saved, &$skipped) {
+            foreach ($this->attendanceData as $userId => $data) {
+                if (! in_array((int) $userId, $staffIds, true)) {
+                    continue;
+                }
 
-            $record = AttendanceRecord::where('tenant_id', $tenantId)
-                ->where('user_id', $userId)
-                ->whereDate('date', $this->selectedDate)
-                ->first();
+                // Unmarked rows are NOT persisted. Opening/saving the register
+                // cannot silently turn an employee into PRESENT.
+                if (empty($data['status'])) {
+                    $skipped++;
 
-            $recordData = [
-                'status' => $data['status'] ?? 'PRESENT',
-                'check_in' => ! empty($data['check_in']) ? $data['check_in'] : null,
-                'check_out' => ! empty($data['check_out']) ? $data['check_out'] : null,
-                'overtime_hours' => (float) ($data['overtime_hours'] ?? 0),
-                'notes' => $data['notes'] ?? null,
-                'created_by' => Auth::id(),
-            ];
+                    continue;
+                }
 
-            if ($record) {
-                $record->update($recordData);
-            } else {
-                try {
-                    AttendanceRecord::create(array_merge([
-                        'tenant_id' => $tenantId,
-                        'user_id' => $userId,
-                        'date' => $this->selectedDate,
-                    ], $recordData));
-                } catch (UniqueConstraintViolationException $e) {
-                    $record = AttendanceRecord::where('tenant_id', $tenantId)
-                        ->where('user_id', $userId)
-                        ->whereDate('date', $this->selectedDate)
-                        ->first();
-                    if ($record) {
-                        $record->update($recordData);
+                $workedState = in_array($data['status'], ['PRESENT', 'LATE', 'HALF_DAY'], true);
+                $field = "attendanceData.{$userId}";
+                $this->validate([
+                    "{$field}.status" => 'required|in:PRESENT,ABSENT,HALF_DAY,LATE,ON_LEAVE',
+                    "{$field}.check_in" => $workedState ? 'required|date_format:H:i' : 'nullable|date_format:H:i',
+                    "{$field}.check_out" => [
+                        'nullable',
+                        'date_format:H:i',
+                        function ($attribute, $value, $fail) use ($userId) {
+                            $checkIn = $this->attendanceData[$userId]['check_in'] ?? null;
+                            if (! empty($checkIn) && ! empty($value) && $value <= $checkIn) {
+                                // Overnight shifts are not supported by this
+                                // register: check-out must follow check-in.
+                                $fail('Check-out time must be after check-in time.');
+                            }
+                        },
+                    ],
+                    "{$field}.overtime_hours" => 'nullable|numeric|min:0|max:24',
+                    "{$field}.notes" => 'nullable|string|max:1000',
+                ]);
+
+                $recordData = [
+                    'status' => $data['status'],
+                    'check_in' => ! empty($data['check_in']) ? $data['check_in'] : null,
+                    'check_out' => ! empty($data['check_out']) ? $data['check_out'] : null,
+                    'overtime_hours' => (float) ($data['overtime_hours'] ?? 0),
+                    'notes' => $data['notes'] ?? null,
+                    'created_by' => Auth::id(),
+                ];
+
+                $record = AttendanceRecord::where('tenant_id', $tenantId)
+                    ->where('user_id', $userId)
+                    ->whereDate('date', $this->selectedDate)
+                    ->first();
+
+                if ($record) {
+                    $record->update($recordData);
+                } else {
+                    try {
+                        AttendanceRecord::create(array_merge([
+                            'tenant_id' => $tenantId,
+                            'user_id' => $userId,
+                            'date' => $this->selectedDate,
+                        ], $recordData));
+                    } catch (UniqueConstraintViolationException $e) {
+                        $record = AttendanceRecord::where('tenant_id', $tenantId)
+                            ->where('user_id', $userId)
+                            ->whereDate('date', $this->selectedDate)
+                            ->first();
+                        if ($record) {
+                            $record->update($recordData);
+                        }
                     }
                 }
+                $saved++;
             }
-        }
+        });
 
         AuditLog::log(
             'ATTENDANCE_LOGGED',
-            "Attendance successfully logged for date [{$this->selectedDate}].",
+            "Attendance saved for date [{$this->selectedDate}]: {$saved} marked, {$skipped} left unmarked.",
             $tenantId,
             'StaffAttendance',
             $this->selectedDate
         );
 
-        $this->feedbackMessage = 'Daily attendance recorded successfully for '.Carbon::parse($this->selectedDate)->format('d M Y').'.';
+        $this->loadAttendanceForDate();
+        $this->feedbackMessage = 'Attendance saved for '.Carbon::parse($this->selectedDate)->format('d M Y')." ({$saved} marked".($skipped ? ", {$skipped} left unmarked" : '').').';
     }
 
     public function selectStaff(string $staffId): void
@@ -273,9 +320,9 @@ class StaffAttendance extends Component
         $this->editingUserId = $userId;
         $this->editingStaffName = $user->name;
         $this->editingRecordDate = $date;
-        $this->editingStatus = $rec?->status ?? 'PRESENT';
-        $this->editingCheckIn = $rec?->check_in ? substr($rec->check_in, 0, 5) : '10:00';
-        $this->editingCheckOut = $rec?->check_out ? substr($rec->check_out, 0, 5) : '22:00';
+        $this->editingStatus = $rec?->status ?? '';
+        $this->editingCheckIn = $rec?->check_in ? substr($rec->check_in, 0, 5) : '';
+        $this->editingCheckOut = $rec?->check_out ? substr($rec->check_out, 0, 5) : '';
         $this->editingOvertime = $rec ? (float) $rec->overtime_hours : 0.0;
         $this->editingNotes = $rec?->notes ?? '';
         $this->showEditRecordModal = true;
@@ -291,12 +338,21 @@ class StaffAttendance extends Component
     {
         $this->authorizeAttendanceManager();
         $tenantId = Auth::user()->tenant_id;
+        $workedState = in_array($this->editingStatus, ['PRESENT', 'LATE', 'HALF_DAY'], true);
         $this->validate([
             'editingUserId' => ['required', Rule::exists('users', 'id')->where('tenant_id', $tenantId)],
             'editingRecordDate' => 'required|date_format:Y-m-d',
             'editingStatus' => 'required|in:PRESENT,ABSENT,HALF_DAY,LATE,ON_LEAVE',
-            'editingCheckIn' => 'nullable|date_format:H:i',
-            'editingCheckOut' => 'nullable|date_format:H:i',
+            'editingCheckIn' => $workedState ? 'required|date_format:H:i' : 'nullable|date_format:H:i',
+            'editingCheckOut' => [
+                'nullable',
+                'date_format:H:i',
+                function ($attribute, $value, $fail) {
+                    if (! empty($this->editingCheckIn) && ! empty($value) && $value <= $this->editingCheckIn) {
+                        $fail('Check-out time must be after check-in time.');
+                    }
+                },
+            ],
             'editingOvertime' => 'nullable|numeric|min:0|max:24',
             'editingNotes' => 'nullable|string|max:1000',
         ]);
@@ -377,6 +433,26 @@ class StaffAttendance extends Component
         $end = Carbon::parse($this->leaveEndDate);
         $days = $start->diffInDays($end) + 1;
 
+        // Prevent overlapping PENDING/APPROVED leave for the same employee.
+        $overlap = StaffLeave::where('tenant_id', $tenantId)
+            ->where('user_id', $this->leaveUserId)
+            ->whereIn('status', ['PENDING', 'APPROVED'])
+            ->where(function ($query) use ($start, $end) {
+                $query->whereBetween('start_date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+                    ->orWhereBetween('end_date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+                    ->orWhere(function ($inner) use ($start, $end) {
+                        $inner->where('start_date', '<=', $start->format('Y-m-d'))
+                            ->where('end_date', '>=', $end->format('Y-m-d'));
+                    });
+            })
+            ->exists();
+
+        if ($overlap) {
+            $this->addError('leaveStartDate', 'This employee already has a pending or approved leave covering these dates.');
+
+            return;
+        }
+
         StaffLeave::create([
             'tenant_id' => Auth::user()->tenant_id,
             'user_id' => $this->leaveUserId,
@@ -395,24 +471,71 @@ class StaffAttendance extends Component
     public function approveLeave(string $leaveId)
     {
         $this->authorizeAttendanceManager();
-        $leave = StaffLeave::where('tenant_id', Auth::user()->tenant_id)->findOrFail($leaveId);
-        $leave->update([
-            'status' => 'APPROVED',
-            'action_by' => Auth::id(),
-        ]);
+        $tenantId = Auth::user()->tenant_id;
+        $leave = StaffLeave::where('tenant_id', $tenantId)->findOrFail($leaveId);
 
-        $this->feedbackMessage = "Leave application approved for [{$leave->user->name}].";
+        // Separation of duties: an approver must never approve their own leave.
+        if ((int) $leave->user_id === (int) Auth::id()) {
+            abort(403, 'You cannot approve your own leave request.');
+        }
+        if ($leave->status !== 'PENDING') {
+            $this->errorMessage = 'Only pending leave applications can be approved.';
+
+            return;
+        }
+
+        DB::transaction(function () use ($leave, $tenantId) {
+            $leave->update([
+                'status' => 'APPROVED',
+                'action_by' => Auth::id(),
+            ]);
+
+            // Approved leave must be reflected in attendance records so it is
+            // visible in the register, monthly summary and future calendar.
+            // Existing PRESENT/LATE/HALF_DAY records are left untouched: the
+            // employee actually worked and manual attendance wins.
+            $day = Carbon::parse($leave->start_date)->startOfDay();
+            $last = Carbon::parse($leave->end_date)->startOfDay();
+            while ($day->lte($last)) {
+                $date = $day->format('Y-m-d');
+                $record = AttendanceRecord::where('tenant_id', $tenantId)
+                    ->where('user_id', $leave->user_id)
+                    ->whereDate('date', $date)
+                    ->first();
+                if (! $record) {
+                    AttendanceRecord::create([
+                        'tenant_id' => $tenantId,
+                        'user_id' => $leave->user_id,
+                        'date' => $date,
+                        'status' => 'ON_LEAVE',
+                        'created_by' => Auth::id(),
+                    ]);
+                } elseif ($record->status === 'ABSENT') {
+                    $record->update(['status' => 'ON_LEAVE', 'created_by' => Auth::id()]);
+                }
+                $day->addDay();
+            }
+        });
+
+        AuditLog::log('LEAVE_APPROVED', "Leave application [{$leaveId}] approved.", $tenantId, 'StaffLeave', $leaveId);
+        $this->loadAttendanceForDate();
+        $this->feedbackMessage = "Leave application approved for [{$leave->user->name}] and reflected in attendance.";
     }
 
     public function rejectLeave(string $leaveId)
     {
         $this->authorizeAttendanceManager();
-        $leave = StaffLeave::where('tenant_id', Auth::user()->tenant_id)->findOrFail($leaveId);
+        $tenantId = Auth::user()->tenant_id;
+        $leave = StaffLeave::where('tenant_id', $tenantId)->findOrFail($leaveId);
+        if ((int) $leave->user_id === (int) Auth::id()) {
+            abort(403, 'You cannot reject your own leave request.');
+        }
         $leave->update([
             'status' => 'REJECTED',
             'action_by' => Auth::id(),
         ]);
 
+        AuditLog::log('LEAVE_REJECTED', "Leave application [{$leaveId}] rejected.", $tenantId, 'StaffLeave', $leaveId);
         $this->feedbackMessage = 'Leave application rejected.';
     }
 
