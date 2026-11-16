@@ -1,31 +1,69 @@
 # RIWAJ GRAND — TESTING & QA REPORT
 
 > Commands actually executed in this repository, with their real output.
-> Baseline before this cycle: **138 passed / 1 skipped (935 assertions)**.
 
----
-
-## 1. Test suite status
+**Final authoritative run (2026-11-16, end of enterprise-hardening cycle):**
 
 ```
 $ php artisan test --compact
 
-  Tests:    1 skipped, 173 passed (1101 assertions)
-  Duration: ~430 s
+  Tests:    1 skipped, 195 passed (1219 assertions)
+  Duration: 687.34s
 ```
 
-| Metric | Before | After | Delta |
-|---|---|---|---|
-| Passing tests | 138 | **173** | **+35** |
-| Skipped | 1 | 1 | — |
-| Assertions | 935 | **1101** | **+166** |
-| Regression | — | 0 failures | — |
+**Final authoritative run (2026-11-16, Phase 0 baseline of this cycle):**
 
-**The single skipped test is pre-existing** and unrelated to this work (it was skipped before the first change in this cycle and remains skipped).
+```
+$ php artisan test --compact
+
+  Tests:    1 skipped, 190 passed (1205 assertions)
+  Duration: 887.19s
+```
+
+> Baseline before the multi-vendor enterprise expansion: **173 passed / 1 skipped (1101 assertions)**.
 
 ---
 
-## 2. New test suite: `tests/Feature/EnterpriseExpansionTest.php` (35 tests)
+## 1. Test suite status (final)
+
+| Metric | Final (2026-11-16) | Prior cycle | Delta |
+|---|---|---|---|
+| Passing tests | **195** | 173 | **+22** (incl. new suites) |
+| Skipped | 1 | 1 | — |
+| Assertions | **1219** | 1101 | **+118** |
+| Failures | 0 | 0 | — |
+
+The single skipped test is pre-existing and unrelated to this work.
+
+### Final additions in this session
+- `tests/Feature/FileUploadSecurityTest.php` — **5 tests / 14 assertions — all passing** (MIME allow-list, extension allow-list, size caps, acceptance path).
+
+---
+
+## 2. Final static gates (2026-11-16)
+
+```
+$ composer audit
+No security vulnerability advisories found.
+
+$ npm audit
+found 0 vulnerabilities.
+
+$ npm run build
+vite v7.3.7
+✓ 58 modules transformed.
+public/build/assets/app-BZep80kn.css  185.27 kB │ gzip: 26.79 kB
+public/build/assets/app-BnTiw5fx.js   53.11 kB │ gzip: 20.15 kB
+✓ built in 5.35s
+
+$ vendor/bin/pint --test
+⚠️ BLOCKED BY ENVIRONMENT DEFECT (stale PHAR binary from F:/Xampp/htdocs/alishe-nails/…; reproducible after `composer reinstall laravel/pint`).
+Tooling defect — no code-style verdict could be produced this run.
+```
+
+---
+
+## 3. New test suite: `tests/Feature/EnterpriseExpansionTest.php` (35 tests)
 
 ### RBAC & separation of duties (6)
 - the matrix defines every enterprise role and >100 permissions
@@ -157,6 +195,7 @@ $ php artisan route:list
 | Surface | Interaction verified |
 |---|---|
 | Public marketplace | `/`, `/venues`, `/vendors`, `/vendor/{slug}`, `/site/{slug}`, `/packages`, `/menus`, `/gallery`, `/services`, `/faqs`, `/policies/*` → all 200 |
+| Browser QA (OpenCode, 2026-11-16) | Homepage, `/vendors`, `/site/nawab-caterers`, `/customer/events` — all loaded, **zero console errors**; homepage accessibility snapshot rendered correctly; screenshot captured for visual review |
 | Quote request | Auth-gated form → RFQ created with the correct tenant, category and preferences |
 | Vendor ERP | Quotes board (submit, mark viewed, decline, **award**), bookings board (confirm → in-progress → complete, cancel), service catalog CRUD, portfolio, **locations CRUD**, **finance board + payout request** |
 | Customer portal | Dashboard, bookings, **event workspace (create event, add task, shortlist vendor)**, **support ticket**, profile |
@@ -174,6 +213,7 @@ $ php artisan route:list
 | No load/perf test | Not requested in scope | k6 script for booking concurrency at 50 concurrent users |
 | Mutation testing | Not in scope | Infection on the `ServiceBookingService` money path |
 | Mobile app tests | No app shipped | API contract tests cover the surface |
+| Authenticated browser persona flows | OpenCode browser used for public surfaces this cycle | Drive vendor/customer admin personas through the browser UI |
 
 ---
 

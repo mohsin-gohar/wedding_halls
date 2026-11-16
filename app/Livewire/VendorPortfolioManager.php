@@ -40,6 +40,8 @@ class VendorPortfolioManager extends Component
 
     public string $categoryPlaceholder = '';
 
+    public $file = null;
+
     public function mount(): void
     {
         $user = Auth::user();
@@ -86,7 +88,14 @@ class VendorPortfolioManager extends Component
         $this->resetValidation();
 
         $file = $this->validate([
-            'file' => ['required', 'file', 'mimes:jpeg,png,jpg,webp,mp4,mov,m4v', 'max:51200'],
+            'file' => [
+                'required',
+                'file',
+                // MIME type is authoritative; the extension must also match.
+                'mimetypes:image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/x-matroska',
+                'mimes:jpeg,png,jpg,webp,mp4,mov,m4v',
+                'max:51200', // 50MB
+            ],
         ])['file'] ?? null;
 
         if (! $file) {
