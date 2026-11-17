@@ -62,6 +62,7 @@ class Tenant extends Model
         'timezone',
         'plan',
         'settings',
+        'weekly_off_days',
 
         // Verification
         'verification_status',
@@ -86,6 +87,7 @@ class Tenant extends Model
         'is_active' => 'boolean',
         'website_settings' => 'array',
         'settings' => 'array',
+        'weekly_off_days' => 'array',
         'service_areas' => 'array',
         'subscription_starts_at' => 'datetime',
         'subscription_expires_at' => 'datetime',
@@ -107,6 +109,24 @@ class Tenant extends Model
         'onboarding_step' => 'integer',
         'profile_views' => 'integer',
     ];
+
+    /**
+     * Weekday numbers (Carbon: 0 = Sunday … 6 = Saturday) that are weekly offs.
+     * Missing configuration keeps Sunday so existing venues do not change.
+     * An explicit empty list means the venue has no weekly off.
+     *
+     * @return array<int, int>
+     */
+    public function weeklyOffDays(): array
+    {
+        if ($this->weekly_off_days === null) {
+            return [0];
+        }
+
+        $days = array_values(array_unique(array_map('intval', (array) $this->weekly_off_days)));
+
+        return array_values(array_filter($days, fn (int $day) => $day >= 0 && $day <= 6));
+    }
 
     // ─── RELATIONSHIPS ───────────────────────────────────────────
 

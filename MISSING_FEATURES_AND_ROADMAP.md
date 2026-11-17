@@ -15,9 +15,9 @@
 ## Phase 3 — payroll / finance
 | Feature | Status |
 |---|---|
-| Attendance-aware deductions (absence, late, half-day, paid/unpaid leave) | Missing |
-| Configurable OT rates, allowances, advances, loans | Partial (flat OT rate 250) |
-| Payroll APPROVED state + finalization lock + PAID-record edit guard | Missing |
+| Attendance-aware deductions + approval + finalization lock | **Implemented this cycle** — 6 tests, browser verified |
+| Daily wage / hourly wage, configurable bonus UI, advances/loans ledger | Missing |
+| Tax/provident rules | Deliberately not invented (jurisdiction-specific business decision) |
 | Dispute management entity | Missing |
 | Coupon/promotion engine | Missing |
 | Referral/loyalty programmes | Missing |

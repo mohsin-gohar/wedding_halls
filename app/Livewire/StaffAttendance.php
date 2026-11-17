@@ -2,9 +2,11 @@
 
 namespace App\Livewire;
 
+use App\Models\AttendanceCorrection;
 use App\Models\AuditLog;
 use App\Models\StaffAttendance as AttendanceRecord;
 use App\Models\StaffLeave;
+use App\Models\StaffPayroll;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -61,6 +63,10 @@ class StaffAttendance extends Component
 
     public string $editingNotes = '';
 
+    public bool $editingOvernight = false;
+
+    public string $editingCorrectionReason = '';
+
     public ?string $feedbackMessage = null;
 
     public ?string $errorMessage = null;
@@ -92,6 +98,69 @@ class StaffAttendance extends Component
         if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isAccountant()) || ! $user->tenant_id) {
             abort(403, 'Unauthorized. Only Venue Owners or Managers have access to Attendance ERP.');
         }
+    }
+
+    /** Finalised payroll locks its source attendance period. */
+    private function periodLocked(string $date): bool
+    {
+        return StaffPayroll::where('tenant_id', Auth::user()->tenant_id)
+            ->where('month_year', Carbon::parse($date)->format('Y-m'))
+            ->whereIn('status', ['APPROVED', 'PAID'])
+            ->exists();
+    }
+
+    private function checkOutSequenceError(?string $checkIn, ?string $checkOut, bool $overnight): ?string
+    {
+        if (empty($checkIn) || empty($checkOut)) {
+            return null;
+        }
+
+        if ($overnight) {
+            return $checkOut === $checkIn
+                ? 'Overnight check-out must be a different time from check-in.'
+                : null;
+        }
+
+        return $checkOut <= $checkIn
+            ? 'Check-out must be after check-in. Mark the shift as overnight if it crosses midnight.'
+            : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $next
+     */
+    private function writeCorrection(AttendanceRecord $record, array $next, string $reason): void
+    {
+        $oldIn = $record->check_in ? substr((string) $record->check_in, 0, 5) : null;
+        $oldOut = $record->check_out ? substr((string) $record->check_out, 0, 5) : null;
+        $newIn = $next['check_in'] ? substr((string) $next['check_in'], 0, 5) : null;
+        $newOut = $next['check_out'] ? substr((string) $next['check_out'], 0, 5) : null;
+
+        $changed = $record->status !== $next['status']
+            || $oldIn !== $newIn
+            || $oldOut !== $newOut
+            || (float) $record->overtime_hours !== (float) $next['overtime_hours'];
+
+        if (! $changed) {
+            return;
+        }
+
+        AttendanceCorrection::create([
+            'tenant_id' => $record->tenant_id,
+            'attendance_id' => $record->id,
+            'user_id' => $record->user_id,
+            'date' => $record->date->format('Y-m-d'),
+            'old_status' => $record->status,
+            'new_status' => $next['status'],
+            'old_check_in' => $oldIn,
+            'new_check_in' => $newIn,
+            'old_check_out' => $oldOut,
+            'new_check_out' => $newOut,
+            'old_overtime' => $record->overtime_hours,
+            'new_overtime' => $next['overtime_hours'],
+            'reason' => $reason !== '' ? $reason : 'Attendance correction',
+            'actor_id' => Auth::id(),
+        ]);
     }
 
     public function setTab(string $tab)
@@ -159,10 +228,12 @@ class StaffAttendance extends Component
                 $rec = $existing->get($member->id);
                 $data[$member->id] = [
                     'status' => $rec->status,
-                    'check_in' => $rec->check_in ? substr($rec->check_in, 0, 5) : '',
-                    'check_out' => $rec->check_out ? substr($rec->check_out, 0, 5) : '',
+                    'check_in' => $rec->check_in ? substr((string) $rec->check_in, 0, 5) : '',
+                    'check_out' => $rec->check_out ? substr((string) $rec->check_out, 0, 5) : '',
                     'overtime_hours' => (float) $rec->overtime_hours,
                     'notes' => $rec->notes ?? '',
+                    'overnight' => (bool) $rec->overnight,
+                    'source' => $rec->source ?: 'RECORDED',
                 ];
             } else {
                 // No record yet: leave the row unmarked. The manager must make
@@ -173,6 +244,8 @@ class StaffAttendance extends Component
                     'check_out' => '',
                     'overtime_hours' => 0.0,
                     'notes' => '',
+                    'overnight' => false,
+                    'source' => 'RECORDED',
                 ];
             }
         }
@@ -183,19 +256,11 @@ class StaffAttendance extends Component
     public function markAllPresent()
     {
         $this->authorizeAttendanceManager();
-        // Explicit manager bulk action: a manager is attesting that the whole
-        // team worked, so provide default check-in/out times that satisfy the
-        // same validation applied to individually marked rows.
         foreach ($this->attendanceData as $userId => $val) {
             $this->attendanceData[$userId]['status'] = 'PRESENT';
-            if (empty($this->attendanceData[$userId]['check_in'])) {
-                $this->attendanceData[$userId]['check_in'] = '10:00';
-            }
-            if (empty($this->attendanceData[$userId]['check_out'])) {
-                $this->attendanceData[$userId]['check_out'] = '22:00';
-            }
+            $this->attendanceData[$userId]['source'] = 'MANUAL_ATTESTATION';
         }
-        $this->feedbackMessage = 'Manager-marked all team members as Present for '.$this->selectedDate;
+        $this->feedbackMessage = 'Manager attestation prepared for '.$this->selectedDate.'. No check-in or check-out times were invented. Save to record it.';
     }
 
     public function saveDailyAttendance()
@@ -212,6 +277,12 @@ class StaffAttendance extends Component
             'selectedDate' => 'required|date_format:Y-m-d',
             'attendanceData' => 'array',
         ]);
+
+        if ($this->periodLocked($this->selectedDate)) {
+            $this->errorMessage = 'Attendance for this month is locked because payroll has been finalised. Reopen the payroll to make corrections.';
+
+            return;
+        }
 
         $saved = 0;
         $skipped = 0;
@@ -231,19 +302,23 @@ class StaffAttendance extends Component
                 }
 
                 $workedState = in_array($data['status'], ['PRESENT', 'LATE', 'HALF_DAY'], true);
+                $manualAttestation = ($data['source'] ?? '') === 'MANUAL_ATTESTATION' && empty($data['check_in']) && empty($data['check_out']);
+                $overnight = (bool) ($data['overnight'] ?? false);
                 $field = "attendanceData.{$userId}";
                 $this->validate([
                     "{$field}.status" => 'required|in:PRESENT,ABSENT,HALF_DAY,LATE,ON_LEAVE',
-                    "{$field}.check_in" => $workedState ? 'required|date_format:H:i' : 'nullable|date_format:H:i',
+                    "{$field}.check_in" => ($workedState && ! $manualAttestation) ? 'required|date_format:H:i' : 'nullable|date_format:H:i',
                     "{$field}.check_out" => [
                         'nullable',
                         'date_format:H:i',
-                        function ($attribute, $value, $fail) use ($userId) {
-                            $checkIn = $this->attendanceData[$userId]['check_in'] ?? null;
-                            if (! empty($checkIn) && ! empty($value) && $value <= $checkIn) {
-                                // Overnight shifts are not supported by this
-                                // register: check-out must follow check-in.
-                                $fail('Check-out time must be after check-in time.');
+                        function ($attribute, $value, $fail) use ($userId, $overnight) {
+                            $message = $this->checkOutSequenceError(
+                                $this->attendanceData[$userId]['check_in'] ?? null,
+                                $value,
+                                $overnight
+                            );
+                            if ($message) {
+                                $fail($message);
                             }
                         },
                     ],
@@ -257,6 +332,8 @@ class StaffAttendance extends Component
                     'check_out' => ! empty($data['check_out']) ? $data['check_out'] : null,
                     'overtime_hours' => (float) ($data['overtime_hours'] ?? 0),
                     'notes' => $data['notes'] ?? null,
+                    'source' => $manualAttestation ? 'MANUAL_ATTESTATION' : 'RECORDED',
+                    'overnight' => $overnight,
                     'created_by' => Auth::id(),
                 ];
 
@@ -266,6 +343,7 @@ class StaffAttendance extends Component
                     ->first();
 
                 if ($record) {
+                    $this->writeCorrection($record, $recordData, $data['notes'] ?: 'Daily register update');
                     $record->update($recordData);
                 } else {
                     try {
@@ -280,6 +358,7 @@ class StaffAttendance extends Component
                             ->whereDate('date', $this->selectedDate)
                             ->first();
                         if ($record) {
+                            $this->writeCorrection($record, $recordData, $data['notes'] ?: 'Daily register update');
                             $record->update($recordData);
                         }
                     }
@@ -325,6 +404,8 @@ class StaffAttendance extends Component
         $this->editingCheckOut = $rec?->check_out ? substr($rec->check_out, 0, 5) : '';
         $this->editingOvertime = $rec ? (float) $rec->overtime_hours : 0.0;
         $this->editingNotes = $rec?->notes ?? '';
+        $this->editingOvernight = (bool) ($rec?->overnight);
+        $this->editingCorrectionReason = '';
         $this->showEditRecordModal = true;
     }
 
@@ -348,19 +429,34 @@ class StaffAttendance extends Component
                 'nullable',
                 'date_format:H:i',
                 function ($attribute, $value, $fail) {
-                    if (! empty($this->editingCheckIn) && ! empty($value) && $value <= $this->editingCheckIn) {
-                        $fail('Check-out time must be after check-in time.');
+                    $message = $this->checkOutSequenceError($this->editingCheckIn, $value, $this->editingOvernight);
+                    if ($message) {
+                        $fail($message);
                     }
                 },
             ],
             'editingOvertime' => 'nullable|numeric|min:0|max:24',
             'editingNotes' => 'nullable|string|max:1000',
+            'editingCorrectionReason' => 'nullable|string|min:8|max:500',
         ]);
+
+        if ($this->periodLocked($this->editingRecordDate)) {
+            $this->showEditRecordModal = false;
+            $this->errorMessage = 'Attendance for this month is locked by finalised payroll. Reopen the payroll first.';
+
+            return;
+        }
 
         $record = AttendanceRecord::where('tenant_id', $tenantId)
             ->where('user_id', $this->editingUserId)
             ->whereDate('date', $this->editingRecordDate)
             ->first();
+
+        if ($record && trim($this->editingCorrectionReason) === '') {
+            $this->addError('editingCorrectionReason', 'A correction reason is required when changing an existing attendance record.');
+
+            return;
+        }
 
         $recordData = [
             'status' => $this->editingStatus,
@@ -368,10 +464,13 @@ class StaffAttendance extends Component
             'check_out' => ! empty($this->editingCheckOut) ? $this->editingCheckOut : null,
             'overtime_hours' => $this->editingOvertime,
             'notes' => $this->editingNotes ?: null,
+            'overnight' => $this->editingOvernight,
+            'source' => (! empty($this->editingCheckIn) || ! empty($this->editingCheckOut)) ? 'RECORDED' : ($record?->source ?? 'RECORDED'),
             'created_by' => Auth::id(),
         ];
 
         if ($record) {
+            $this->writeCorrection($record, $recordData, trim($this->editingCorrectionReason));
             $record->update($recordData);
         } else {
             try {
@@ -386,6 +485,7 @@ class StaffAttendance extends Component
                     ->whereDate('date', $this->editingRecordDate)
                     ->first();
                 if ($record) {
+                    $this->writeCorrection($record, $recordData, trim($this->editingCorrectionReason));
                     $record->update($recordData);
                 }
             }
@@ -423,7 +523,7 @@ class StaffAttendance extends Component
         $tenantId = Auth::user()->tenant_id;
         $this->validate([
             'leaveUserId' => ['required', Rule::exists('users', 'id')->where('tenant_id', $tenantId)],
-            'leaveType' => 'required|in:CASUAL,SICK,ANNUAL,EMERGENCY',
+            'leaveType' => 'required|in:CASUAL,SICK,ANNUAL,EMERGENCY,UNPAID',
             'leaveStartDate' => 'required|date',
             'leaveEndDate' => 'required|date|after_or_equal:leaveStartDate',
             'leaveReason' => 'required|string|min:5|max:500',
@@ -480,6 +580,11 @@ class StaffAttendance extends Component
         }
         if ($leave->status !== 'PENDING') {
             $this->errorMessage = 'Only pending leave applications can be approved.';
+
+            return;
+        }
+        if ($this->periodLocked($leave->start_date) || $this->periodLocked($leave->end_date)) {
+            $this->errorMessage = 'Leave cannot modify a locked attendance period. Reopen the payroll first.';
 
             return;
         }

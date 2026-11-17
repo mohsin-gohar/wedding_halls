@@ -23,6 +23,18 @@
                     @endforeach
                 </select>
             </div>
+            <div>
+                <span class="block text-[10px] uppercase font-mono tracking-wider text-[#8F7239] dark:text-[#C6A15B] mb-1 font-bold">Weekly off</span>
+                <div class="flex flex-wrap gap-1">
+                    @foreach(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $index => $label)
+                        <label class="inline-flex items-center gap-1 px-1.5 py-1 border border-[#E7E5E4] dark:border-white/20 text-[10px] font-mono">
+                            <input type="checkbox" value="{{ $index }}" wire:model="weeklyOffDays" class="accent-[#C6A15B]">
+                            {{ $label }}
+                        </label>
+                    @endforeach
+                </div>
+                <button type="button" wire:click="saveWeeklyOffs" class="mt-1 text-[10px] font-mono uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B]">Save weekly off</button>
+            </div>
             <button wire:click="openHolidayModal" class="lux-btn lux-btn--gold lux-btn--sm">+ Add Holiday</button>
             <a href="{{ route('staff.attendance') }}" class="lux-btn lux-btn--outline lux-btn--sm">Daily Register</a>
         </div>

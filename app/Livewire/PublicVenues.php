@@ -13,7 +13,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('components.layouts.public', ['title' => 'Wedding Venues Marketplace â€” Riwaj Grand Pakistan'])]
+#[Layout('components.layouts.public', ['title' => 'Wedding Venues Marketplace — Riwaj Grand Pakistan'])]
 class PublicVenues extends Component
 {
     use WithPagination;
@@ -32,6 +32,12 @@ class PublicVenues extends Component
 
     #[Url]
     public string $guests = '';
+
+    #[Url]
+    public string $priceMin = '';
+
+    #[Url]
+    public string $priceMax = '';
 
     public string $calendarMonth = '';
 
@@ -91,6 +97,8 @@ class PublicVenues extends Component
         $this->date = '';
         $this->shift = '';
         $this->guests = '';
+        $this->priceMin = '';
+        $this->priceMax = '';
         $this->calendarHallId = null;
         $this->resetPage();
     }
@@ -253,6 +261,7 @@ class PublicVenues extends Component
         // 1. Strict SaaS Visibility: Only show active halls belonging to active, verified/approved tenants
         $publicHalls = Hall::with(['venue', 'tenant'])
             ->where('is_active', true)
+            ->where('listing_status', '!=', 'WITHDRAWN')
             ->whereHas('venue', fn ($venueQuery) => $venueQuery->where('is_active', true))
             ->whereHas('tenant', function ($t) {
                 $t->where('is_active', true)
@@ -424,9 +433,10 @@ class PublicVenues extends Component
 
     private function applyDiscoveryFilters($query): void
     {
-        if ($this->city !== 'All' && $this->city !== '') {
-            $query->whereHas('venue', function ($q) {
-                $q->where('city', $this->city);
+        $city = trim($this->city);
+        if ($city !== '' && strcasecmp($city, 'All') !== 0) {
+            $query->whereHas('venue', function ($q) use ($city) {
+                $q->whereRaw('LOWER(TRIM(city)) = ?', [mb_strtolower($city)]);
             });
         }
 
@@ -437,6 +447,15 @@ class PublicVenues extends Component
         $guests = $this->normalizedGuestCount();
         if ($guests > 0) {
             $query->where('max_capacity', '>=', $guests);
+        }
+
+        $min = is_numeric($this->priceMin) ? (float) $this->priceMin : null;
+        $max = is_numeric($this->priceMax) ? (float) $this->priceMax : null;
+        if ($min !== null) {
+            $query->where('base_rent', '>=', $min);
+        }
+        if ($max !== null) {
+            $query->where('base_rent', '<=', $max);
         }
 
         $eventDate = $this->normalizedEventDate();

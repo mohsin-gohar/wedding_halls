@@ -18,12 +18,17 @@
 | Auto-posting | `markAsPaid()` creates `Expense` STAFF_WAGES + `AuditLog PAYROLL_PAID` (`:274-293`) |
 | Gateway live round-trips | **Blocked** — no merchant sandbox credentials; no false claim made |
 
-## Changes this cycle
-- Attendance writes (source of OT and future deductions) are now transactional, explicit, and validated — improving the reliability of payroll's only attendance input.
-- Approved leave now produces `ON_LEAVE` attendance rows, enabling future unpaid-leave deduction logic.
+## Changes this cycle — Phase 3 implemented
+- **Attendance-aware engine**: `StaffPayroll::generateMonthlyPayroll()` now counts PRESENT/ABSENT/LATE/HALF_DAY, sums OT, expands approved **UNPAID** leave days, and derives deductions from a **tenant-configurable `payroll_policies` table**. All money is `decimal(12,2)`, net via `calculateNet()` with `round(...,2)`; nothing trusts frontend totals.
+- **New breakdown columns** on `staff_payrolls`: present/absent/late/half/unpaid-leave days, overtime_pay, each deduction, bonuses, advances, other_deductions, approved_by/at.
+- **Approval + finalization**: `markAsApproved()` (DRAFT→APPROVED) and `reopenPayroll()` (authorized reopen), both audited; `updatePayroll()` rejects PAID/APPROVED; `markAsPaid()` keeps duplicate-payment guard + auto-expense posting.
+- **Attendance lock**: `StaffAttendance::periodLocked()` blocks daily save, quick edit and leave approval for a month whose payroll is APPROVED/PAID. Reopening payroll unlocks it.
+- **Payslips** now show the full attendance-derived breakdown.
+- `tests/Feature/PayrollAttendanceIntegrationTest.php` → **6 passed (17 assertions)**; related suites → 26 passed (180 assertions).
+- Browser QA (owner): Calculation Policy, compile payroll, Approve via confirm → "APPROVED (LOCKED)", salary slip with new breakdown — 0 console errors.
 
-## Open (Phase 3)
-Attendance-aware deduction engine with configurable policies; approval state (`APPROVED` exists in schema but no code path sets it); lock source attendance period after finalization; payslip regeneration versioning; payment gateway sandbox test.
+## Remaining (honest)
+- Daily-wage/hourly-wage employee types, configurable bonus/allowance UI, advances/loans ledger, jurisdiction-specific tax/provident rules (deliberately not invented), payslip versioning, gateway sandbox.
 
 ## Verification
 `php artisan test tests/Feature/ErpStaffPayrollAndInventoryTest.php` → 9 passed (payroll generation, auto-expense, salary-slip route).

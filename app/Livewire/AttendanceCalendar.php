@@ -6,6 +6,7 @@ use App\Models\AttendanceHoliday;
 use App\Models\AuditLog;
 use App\Models\StaffAttendance as AttendanceRecord;
 use App\Models\StaffLeave;
+use App\Models\Tenant;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -33,10 +34,28 @@ class AttendanceCalendar extends Component
 
     public ?string $errorMessage = null;
 
+    /** @var array<int, int> */
+    public array $weeklyOffDays = [0];
+
     public function mount(): void
     {
         $this->authorizeManager();
         $this->selectedMonth = Carbon::today()->format('Y-m');
+        $this->weeklyOffDays = Tenant::find(Auth::user()->tenant_id)?->weeklyOffDays() ?? [0];
+    }
+
+    public function saveWeeklyOffs(): void
+    {
+        $this->authorizeManager();
+        $tenant = Tenant::findOrFail(Auth::user()->tenant_id);
+        $days = array_values(array_unique(array_map('intval', $this->weeklyOffDays)));
+        $days = array_values(array_filter($days, fn (int $day) => $day >= 0 && $day <= 6));
+
+        $tenant->update(['weekly_off_days' => $days]);
+        $this->weeklyOffDays = $days;
+        $this->feedbackMessage = $days === []
+            ? 'Weekly off cleared. No weekday is treated as off.'
+            : 'Weekly off saved for this venue.';
     }
 
     private function authorizeManager(): void
@@ -180,6 +199,8 @@ class AttendanceCalendar extends Component
                 }
             });
 
+        $weeklyOffs = Tenant::find($tenantId)?->weeklyOffDays() ?? [0];
+
         $holidays = AttendanceHoliday::where('tenant_id', $tenantId)
             ->where('is_active', true)
             ->whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
@@ -204,7 +225,7 @@ class AttendanceCalendar extends Component
                 } elseif (isset($leaveDays[$key])) {
                     $status = 'ON_LEAVE';
                     $detail = $leaveDays[$key];
-                } elseif ($day->dayOfWeek === Carbon::SUNDAY) {
+                } elseif (in_array($day->dayOfWeek, $weeklyOffs, true)) {
                     $status = 'WEEKLY_OFF';
                     $detail = 'Weekly off';
                 } else {

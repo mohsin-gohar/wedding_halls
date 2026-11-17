@@ -8,6 +8,7 @@
   - `2026_11_20_000001_create_subscription_plans.php` ← commit `76a1997`, **2026-11-11**
   - `2026_12_07_000001_add_two_factor_columns_to_users_table.php` ← commit `ca39a9d`, **2026-11-16**
 - New this cycle: `2026_11_16_000001_create_attendance_holidays_table.php` — correctly dated for today; UUID PK, unique `(tenant_id,date)`, index `(tenant_id,date)`; applied to local dev DB via `php artisan migrate --force` (non-destructive).
+- Phase 3: `2026_11_16_000002_create_payroll_policies_table.php` (unique tenant, 5 configurable decimal rates) and `2026_11_16_000003_add_payroll_breakdown_to_staff_payrolls_table.php` (days counts, per-type deductions, bonuses/advances, approved_by/at) — both applied locally, backward-compatible defaults (0.00/0), no data loss.
 - Verdict: files are real and applied; **filenames are future-dated**. No fabricated migration. Hygiene issue: a migration created today (2026-11-16) with a correct timestamp sorts *before* them. New migrations should avoid this pattern.
 
 ## 2. Schema facts verified

@@ -28,7 +28,7 @@
 
     <!-- Focused search: city and hall name -->
     <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
-        <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)_auto] gap-4 items-end bg-white dark:bg-[#1C1917] border border-[#C6A15B]/30 rounded-2xl p-5 sm:p-6 shadow-[0_12px_36px_-8px_rgba(23,21,19,0.18)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.7)]">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end bg-white dark:bg-[#1C1917] border border-[#C6A15B]/30 rounded-2xl p-5 sm:p-6 shadow-[0_12px_36px_-8px_rgba(23,21,19,0.18)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.7)]">
             <div>
                 <label for="venue-city" class="block text-[11px] font-semibold uppercase tracking-[0.06em] text-stone-700 dark:text-stone-300 mb-1.5 font-sans">City</label>
                 <select id="venue-city" wire:model.live="city" class="input-luxury w-full text-sm dark:bg-[#171513] dark:text-white dark:border-white/15 rounded-lg focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25">
@@ -41,6 +41,10 @@
             <div>
                 <label for="venue-search" class="block text-[11px] font-semibold uppercase tracking-[0.06em] text-stone-700 dark:text-stone-300 mb-1.5 font-sans">Hall name</label>
                 <input id="venue-search" type="search" wire:model.live.debounce.300ms="search" placeholder="Search by hall name" class="input-luxury w-full text-sm dark:bg-[#171513] dark:text-white dark:border-white/15 dark:placeholder:text-stone-500 rounded-lg focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <input type="number" min="0" wire:model.live.debounce.400ms="priceMin" placeholder="Min PKR" class="input-luxury w-full text-sm dark:bg-[#171513] dark:text-white">
+                <input type="number" min="0" wire:model.live.debounce.400ms="priceMax" placeholder="Max PKR" class="input-luxury w-full text-sm dark:bg-[#171513] dark:text-white">
             </div>
             <button type="button" wire:click="resetFilters" class="btn-outline-gold !h-[42px] !px-5 text-xs font-semibold uppercase tracking-wider rounded-lg">Clear filters</button>
         </div>
@@ -99,7 +103,7 @@
                         <!-- Location Badge (top-left) -->
                         <span class="absolute top-3.5 left-3.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] font-medium font-sans border border-white/15">
                             <svg class="w-3 h-3 text-[#C6A15B]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                            {{ $hall->venue->city ?? 'Lahore' }}
+                            {{ $hall->venue?->city ? \Illuminate\Support\Str::title(trim($hall->venue->city)) : 'Pakistan' }}
                         </span>
 
                         @if($hasVideo)

@@ -84,6 +84,11 @@ class Hall extends Model
         return $this->belongsTo(Venue::class);
     }
 
+    public function inquiries(): HasMany
+    {
+        return $this->hasMany(ListingInquiry::class);
+    }
+
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);

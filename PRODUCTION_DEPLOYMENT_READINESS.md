@@ -5,8 +5,8 @@
 ## Gates
 | Gate | Result |
 |---|---|
-| Full test suite | See `FINAL_ENTERPRISE_DELIVERY_REPORT.md` (authoritative run) |
-| Targeted new suites | 11 passed (calendar + attendance), 21 passed (related existing) |
+| Full test suite | **219 passed / 1 skipped (1285 assertions)** — authoritative final run (see `FINAL_ENTERPRISE_DELIVERY_REPORT.md`) |
+| Targeted new suites | 11 + 7 + 6 passed (calendar, attendance, payroll) |
 | `npm run build` | ✅ Vite 7.3.7, 5.35s |
 | `composer audit` | ✅ clean |
 | `npm audit` | ✅ 0 vulnerabilities |

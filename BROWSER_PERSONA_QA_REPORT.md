@@ -29,6 +29,14 @@
 | Cell deep-link | ✅ Clicking 1 Nov cell → `/staff/attendance?staff_id=2&date=2026-11-01` with "01 November 2026" displayed, **0 console errors** |
 | Note | Initial load returned 500 because the new migration had not been applied to the local dev DB; `php artisan migrate` fixed it. Tests used in-memory RefreshDatabase and were already green. |
 
+### Payroll `/staff/payroll` (Phase 3, authenticated owner)
+| Step | Result |
+|---|---|
+| Page load | ✅ Calculation Policy + Salary Disbursement Registry, 0 console errors |
+| Compile monthly payroll via UI | ✅ DRAFT rows created with attendance-derived breakdown columns |
+| Approve (confirm dialog accepted) | ✅ Status badge became "APPROVED (LOCKED)", REOPEN action appeared, 0 console errors |
+| Salary slip `/documents/salary-slip/{id}` | ✅ Opened with new attendance/deduction breakdown, 0 console errors |
+
 ### Earlier attendance register flow
 - All status selects defaulted to `""` = **NOT MARKED**; marked one employee PRESENT 09:30→18:30, saved → "1 marked, 2 left unmarked"; reload → persisted. 0 console errors.
 
@@ -62,4 +70,12 @@ No 4xx/5xx after the migration was applied. New calendar server-log evidence:
 19:22:02 /livewire-8f9155ee/update ................................. ~ 0.14ms
 19:22:26 /staff/attendance ......................................... ~ 1s
 ```
-No 4xx/5xx were logged after the migration fix. The first server process later exited on its harness 1-hour timeout (SIGTERM); a fresh server was started for the calendar QA.
+No 4xx/5xx were logged after the migration fix. Payroll browser QA (same server, later session):
+```
+19:45:33 /staff/payroll
+19:45:47 /livewire-8f9155ee/update     (compile payroll)
+19:46:35 /livewire-8f9155ee/update     (approve via confirm dialog)
+19:47:07 /livewire-8f9155ee/update     (state verification)
+19:48:38 /documents/salary-slip/01a1e4d2-...  (payslip with breakdown)
+```
+No 4xx/5xx for these paths. Both server processes exited on the harness 1-hour timeout (SIGTERM) — restart with `php artisan serve --host=127.0.0.1 --port=9200` before further browser QA.

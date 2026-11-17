@@ -149,6 +149,36 @@
         </div>
     </div>
 
+    <!-- Attendance-aware payroll policy (tenant configurable) -->
+    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-4 shadow-sm dark:shadow-xl">
+        <div class="border-b border-[#E7E5E4] pb-3 flex items-center justify-between">
+            <h3 class="font-serif text-xl text-[#171513] dark:text-white font-normal">Calculation Policy</h3>
+            <span class="text-[10px] font-mono uppercase tracking-wider text-stone-500">PKR per day / per hour</span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+            @foreach([
+                ['policyOvertimeRate', 'OT rate / hour'],
+                ['policyLateDeduction', 'Late / day'],
+                ['policyAbsenceDeduction', 'Absent / day'],
+                ['policyHalfDayDeduction', 'Half day'],
+                ['policyUnpaidLeaveDeduction', 'Unpaid leave / day'],
+            ] as [$field, $label])
+                <div>
+                    <label class="block text-[10px] uppercase font-mono font-bold text-[#8F7239] dark:text-[#C6A15B] mb-1">{{ $label }}</label>
+                    <input type="number" min="0" step="0.01" wire:model="{{ $field }}" class="w-full bg-[#F8F5EF] dark:bg-[#24211E] border border-[#E7E5E4] dark:border-white/20 px-3 py-2 text-xs font-mono outline-none focus:border-[#C6A15B]">
+                    @error($field) <span class="text-red-600 text-[10px]">{{ $message }}</span> @enderror
+                </div>
+            @endforeach
+        </div>
+        <div class="flex justify-end">
+            <button wire:click="savePolicy" class="btn-gold !h-9 !px-5 text-xs font-bold uppercase">Save Policy</button>
+        </div>
+        <p class="text-[10px] text-stone-500 font-mono">
+            Applied to new and still-DRAFT payrolls. Base: {{ number_format($policy->overtime_rate_per_hour) }} OT/hr;
+            deductions derive from real attendance records and approved UNPAID leave.
+        </p>
+    </div>
+
     <!-- Payroll Master Table -->
     <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-4 shadow-sm dark:shadow-xl">
         <div class="border-b border-[#E7E5E4] pb-3 flex items-center justify-between">
@@ -192,8 +222,9 @@
                             <td class="p-3 text-[#8F7239] font-semibold">
                                 + PKR {{ number_format($p->allowances) }}
                             </td>
-                            <td class="p-3 text-[#171513] font-semibold">
+                            <td class="p-3 text-[#171513] font-semibold" title="Late: {{ $p->late_deduction }} | Absent: {{ $p->absence_deduction }} | Half day: {{ $p->half_day_deduction }} | Unpaid leave: {{ $p->unpaid_leave_deduction }} | Advances: {{ $p->advances }}">
                                 - PKR {{ number_format($p->deductions) }}
+                                <span class="block text-[9px] text-stone-500 font-mono font-normal">P{{ $p->present_days }} A{{ $p->absent_days }} L{{ $p->late_days }} ½{{ $p->half_days }} LV{{ $p->unpaid_leave_days }}</span>
                             </td>
                             <td class="p-3 font-bold text-sm text-[#171513]">
                                 PKR {{ number_format($p->net_salary) }}
@@ -203,6 +234,8 @@
                                     <span class="px-2 py-0.5 bg-[#C6A15B]/20 text-[#8F7239] border border-[#C6A15B]/60 font-bold uppercase text-[10px]">
                                         ✓ PAID ({{ $p->payment_method }})
                                     </span>
+                                @elseif($p->status === 'APPROVED')
+                                    <span class="px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold uppercase text-[10px]">✓ Approved (locked)</span>
                                 @else
                                     <span class="px-2 py-0.5 bg-[#C6A15B]/20 text-[#8F7239] border border-[#C6A15B]/60 font-bold uppercase text-[10px]">
                                         ⏳ DRAFT / UNPAID
@@ -216,6 +249,18 @@
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                         <span>Edit</span>
                                     </button>
+
+                                    @if($p->status === 'DRAFT')
+                                        <button wire:click="markAsApproved('{{ $p->id }}')" wire:confirm="Approve this payroll and lock attendance for the month?"
+                                                class="tbtn tbtn-outline" title="Approve payroll">
+                                            <span>Approve</span>
+                                        </button>
+                                    @elseif($p->status === 'APPROVED')
+                                        <button wire:click="reopenPayroll('{{ $p->id }}')" wire:confirm="Reopen this payroll to draft?"
+                                                class="tbtn tbtn-outline" title="Reopen payroll">
+                                            <span>Reopen</span>
+                                        </button>
+                                    @endif
 
                                     @if($p->status !== 'PAID')
                                         <button wire:click="openPayModal('{{ $p->id }}')" 

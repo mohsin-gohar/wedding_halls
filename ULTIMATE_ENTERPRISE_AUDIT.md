@@ -66,7 +66,7 @@ OpenCode browser (authenticated owner@venuecloud.pk):
 | Hold expiry + scheduler | Missing (legend claim removed) |
 | Attendance daily register + leave | Implemented, hardened this cycle |
 | Visual attendance/leave calendar, holidays, weekly offs | Implemented this cycle (AttendanceCalendar, 7 tests, browser verified) |
-| Payroll attendance-aware deductions, finalization lock | Partial |
+| Payroll attendance-aware deductions, APPROVED/PAID finalization lock | Implemented this cycle (PayrollPolicy + breakdown columns + 6 tests, browser verified) |
 | Live gateways, backups, monitoring | Requires credentials/infrastructure |
 
 *Full-suite result, build and audits are recorded in `FINAL_ENTERPRISE_DELIVERY_REPORT.md`.*

@@ -4,7 +4,9 @@ namespace App\Livewire;
 
 use App\Models\AuditLog;
 use App\Models\Expense;
+use App\Models\PayrollPolicy;
 use App\Models\StaffAttendance;
+use App\Models\StaffLeave;
 use App\Models\StaffPayroll as PayrollModel;
 use App\Models\User;
 use Carbon\Carbon;
@@ -57,11 +59,23 @@ class StaffPayroll extends Component
 
     public string $payDate = '';
 
+    // Tenant-configurable deduction/OT policy (Phase 3)
+    public float $policyOvertimeRate = 250;
+
+    public float $policyLateDeduction = 500;
+
+    public float $policyAbsenceDeduction = 1000;
+
+    public float $policyHalfDayDeduction = 500;
+
+    public float $policyUnpaidLeaveDeduction = 1000;
+
     public function mount()
     {
         $this->authorizePayrollManager();
         $this->selectedMonth = Carbon::today()->format('Y-m');
         $this->payDate = Carbon::today()->format('Y-m-d');
+        $this->loadPolicy();
 
         if (request()->has('staff_id')) {
             $this->selectedStaffId = (string) request()->query('staff_id');
@@ -81,11 +95,47 @@ class StaffPayroll extends Component
         }
     }
 
+    private function loadPolicy(): void
+    {
+        $policy = PayrollPolicy::forTenant(Auth::user()->tenant_id);
+        $this->policyOvertimeRate = (float) $policy->overtime_rate_per_hour;
+        $this->policyLateDeduction = (float) $policy->late_deduction_per_day;
+        $this->policyAbsenceDeduction = (float) $policy->absence_deduction_per_day;
+        $this->policyHalfDayDeduction = (float) $policy->half_day_deduction;
+        $this->policyUnpaidLeaveDeduction = (float) $policy->unpaid_leave_deduction_per_day;
+    }
+
+    public function savePolicy(): void
+    {
+        $this->authorizePayrollManager();
+        $this->validate([
+            'policyOvertimeRate' => 'required|numeric|min:0',
+            'policyLateDeduction' => 'required|numeric|min:0',
+            'policyAbsenceDeduction' => 'required|numeric|min:0',
+            'policyHalfDayDeduction' => 'required|numeric|min:0',
+            'policyUnpaidLeaveDeduction' => 'required|numeric|min:0',
+        ]);
+
+        $tenantId = Auth::user()->tenant_id;
+        PayrollPolicy::forTenant($tenantId)->update([
+            'overtime_rate_per_hour' => $this->policyOvertimeRate,
+            'late_deduction_per_day' => $this->policyLateDeduction,
+            'absence_deduction_per_day' => $this->policyAbsenceDeduction,
+            'half_day_deduction' => $this->policyHalfDayDeduction,
+            'unpaid_leave_deduction_per_day' => $this->policyUnpaidLeaveDeduction,
+            'updated_by' => Auth::id(),
+        ]);
+
+        AuditLog::log('PAYROLL_POLICY_UPDATED', 'Payroll deduction/OT policy updated.', $tenantId, 'PayrollPolicy', $tenantId);
+        $this->feedbackMessage = 'Payroll policy saved. Future DRAFT payrolls use these rates.';
+    }
+
     public function generateMonthlyPayroll()
     {
         $this->authorizePayrollManager();
         validator(['selectedMonth' => $this->selectedMonth], ['selectedMonth' => 'required|date_format:Y-m'])->validate();
         $tenantId = Auth::user()->tenant_id;
+        $policy = PayrollPolicy::forTenant($tenantId);
         $staffQuery = User::hallStaff($tenantId)
             ->where('status', '!=', 'SUSPENDED');
         if ($this->selectedStaffId !== 'ALL') {
@@ -97,24 +147,47 @@ class StaffPayroll extends Component
         $monthEnd = $monthStart->copy()->endOfMonth();
 
         $generatedCount = 0;
+        $lockedCount = 0;
         foreach ($staff as $m) {
-            // Check overtime hours from attendance
-            $otHours = (float) StaffAttendance::where('tenant_id', $tenantId)
+            $attendance = StaffAttendance::where('tenant_id', $tenantId)
                 ->where('user_id', $m->id)
-                ->whereDate('date', '>=', $monthStart->format('Y-m-d'))->whereDate('date', '<=', $monthEnd->format('Y-m-d'))
-                ->sum('overtime_hours');
+                ->whereDate('date', '>=', $monthStart->format('Y-m-d'))
+                ->whereDate('date', '<=', $monthEnd->format('Y-m-d'))
+                ->get();
 
-            // Default basic salary based on role
-            $defaultBasic = $m->base_salary !== null ? (float) $m->base_salary : match ($m->role) {
-                'ROLE_MANAGER' => 75000.00,
-                'ROLE_CHEF' => 60000.00,
-                'ROLE_ACCOUNTANT' => 50000.00,
-                'ROLE_FRONT_DESK' => 38000.00,
-                default => 32000.00,
-            };
+            $counts = ['PRESENT' => 0, 'ABSENT' => 0, 'LATE' => 0, 'HALF_DAY' => 0, 'ON_LEAVE' => 0];
+            foreach ($attendance as $row) {
+                if (isset($counts[$row->status])) {
+                    $counts[$row->status]++;
+                }
+            }
+            $otHours = round((float) $attendance->sum('overtime_hours'), 2);
 
-            $otRate = 250.00;
-            $net = PayrollModel::calculateNet($defaultBasic, $otHours, $otRate, 0, 0);
+            // Approved UNPAID leave days inside this month (paid leave types
+            // never reduce salary). Overlap is clamped to the payroll period.
+            $unpaidLeaveDays = 0;
+            StaffLeave::where('tenant_id', $tenantId)
+                ->where('user_id', $m->id)
+                ->where('status', 'APPROVED')
+                ->where('leave_type', 'UNPAID')
+                ->where('start_date', '<=', $monthEnd->format('Y-m-d'))
+                ->where('end_date', '>=', $monthStart->format('Y-m-d'))
+                ->get()
+                ->each(function ($leave) use (&$unpaidLeaveDays, $monthStart, $monthEnd) {
+                    $day = Carbon::parse($leave->start_date)->startOfDay()->max($monthStart);
+                    $last = Carbon::parse($leave->end_date)->startOfDay()->min($monthEnd);
+                    while ($day->lte($last)) {
+                        $unpaidLeaveDays++;
+                        $day->addDay();
+                    }
+                });
+
+            $otRate = (float) $policy->overtime_rate_per_hour;
+            $otPay = round($otHours * $otRate, 2);
+            $lateDeduction = round($counts['LATE'] * (float) $policy->late_deduction_per_day, 2);
+            $absenceDeduction = round($counts['ABSENT'] * (float) $policy->absence_deduction_per_day, 2);
+            $halfDayDeduction = round($counts['HALF_DAY'] * (float) $policy->half_day_deduction, 2);
+            $unpaidLeaveDeduction = round($unpaidLeaveDays * (float) $policy->unpaid_leave_deduction_per_day, 2);
 
             $existing = PayrollModel::where('tenant_id', $tenantId)
                 ->where('user_id', $m->id)
@@ -122,21 +195,47 @@ class StaffPayroll extends Component
                 ->first();
 
             if ($existing) {
-                // If still draft, sync latest overtime hours and recalculated net salary while preserving existing allowances/deductions
-                if ($existing->status === 'DRAFT') {
-                    $newNet = PayrollModel::calculateNet(
-                        (float) $existing->basic_salary,
-                        $otHours,
-                        (float) $existing->overtime_rate,
-                        (float) $existing->allowances,
-                        (float) $existing->deductions
-                    );
-                    $existing->update([
-                        'overtime_hours' => $otHours,
-                        'net_salary' => $newNet,
-                    ]);
+                // Approved/PAID payrolls are final: source attendance is locked.
+                if ($existing->status !== 'DRAFT') {
+                    $lockedCount++;
+
+                    continue;
                 }
+
+                $bonuses = (float) $existing->bonuses;
+                $advances = (float) $existing->advances;
+                $other = (float) $existing->other_deductions;
+                $allowances = (float) $existing->allowances;
+                $totalDeductions = round($lateDeduction + $absenceDeduction + $halfDayDeduction + $unpaidLeaveDeduction + $advances + $other, 2);
+                $net = PayrollModel::calculateNet((float) $existing->basic_salary, $otHours, $otRate, $allowances + $bonuses, $totalDeductions);
+
+                $existing->update([
+                    'overtime_hours' => $otHours,
+                    'overtime_rate' => $otRate,
+                    'present_days' => $counts['PRESENT'],
+                    'absent_days' => $counts['ABSENT'],
+                    'late_days' => $counts['LATE'],
+                    'half_days' => $counts['HALF_DAY'],
+                    'unpaid_leave_days' => $unpaidLeaveDays,
+                    'overtime_pay' => $otPay,
+                    'late_deduction' => $lateDeduction,
+                    'absence_deduction' => $absenceDeduction,
+                    'half_day_deduction' => $halfDayDeduction,
+                    'unpaid_leave_deduction' => $unpaidLeaveDeduction,
+                    'deductions' => $totalDeductions,
+                    'net_salary' => $net,
+                ]);
             } else {
+                $defaultBasic = $m->base_salary !== null ? (float) $m->base_salary : match ($m->role) {
+                    'ROLE_MANAGER' => 75000.00,
+                    'ROLE_CHEF' => 60000.00,
+                    'ROLE_ACCOUNTANT' => 50000.00,
+                    'ROLE_FRONT_DESK' => 38000.00,
+                    default => 32000.00,
+                };
+                $totalDeductions = round($lateDeduction + $absenceDeduction + $halfDayDeduction + $unpaidLeaveDeduction, 2);
+                $net = PayrollModel::calculateNet($defaultBasic, $otHours, $otRate, 0, $totalDeductions);
+
                 PayrollModel::create([
                     'tenant_id' => $tenantId,
                     'user_id' => $m->id,
@@ -145,7 +244,17 @@ class StaffPayroll extends Component
                     'overtime_hours' => $otHours,
                     'overtime_rate' => $otRate,
                     'allowances' => 0.00,
-                    'deductions' => 0.00,
+                    'deductions' => $totalDeductions,
+                    'present_days' => $counts['PRESENT'],
+                    'absent_days' => $counts['ABSENT'],
+                    'late_days' => $counts['LATE'],
+                    'half_days' => $counts['HALF_DAY'],
+                    'unpaid_leave_days' => $unpaidLeaveDays,
+                    'overtime_pay' => $otPay,
+                    'late_deduction' => $lateDeduction,
+                    'absence_deduction' => $absenceDeduction,
+                    'half_day_deduction' => $halfDayDeduction,
+                    'unpaid_leave_deduction' => $unpaidLeaveDeduction,
                     'net_salary' => $net,
                     'status' => 'DRAFT',
                     'payment_method' => 'CASH',
@@ -156,19 +265,25 @@ class StaffPayroll extends Component
 
         AuditLog::log(
             'PAYROLL_GENERATED',
-            "Generated payroll for month [{$this->selectedMonth}] for {$generatedCount} staff member(s).",
+            "Generated payroll for month [{$this->selectedMonth}] for {$generatedCount} staff member(s); {$lockedCount} finalised record(s) skipped.",
             $tenantId,
             'StaffPayroll',
             $this->selectedMonth
         );
 
-        $this->feedbackMessage = 'Monthly payroll successfully compiled for '.Carbon::parse($this->selectedMonth.'-01')->format('F Y').'!';
+        $this->feedbackMessage = 'Payroll compiled for '.Carbon::parse($this->selectedMonth.'-01')->format('F Y')
+            ." ({$generatedCount} updated".($lockedCount ? ", {$lockedCount} finalised skipped" : '').').';
     }
 
     public function openEditModal(string $payrollId)
     {
         $this->authorizePayrollManager();
         $record = PayrollModel::where('tenant_id', Auth::user()->tenant_id)->with('user')->findOrFail($payrollId);
+        if ($record->status === 'PAID') {
+            $this->errorMessage = 'A paid payroll cannot be edited.';
+
+            return;
+        }
         $this->editingPayrollId = $record->id;
         $this->editingEmployeeName = $record->user->name ?? 'Staff';
         $this->editBasicSalary = (float) $record->basic_salary;
@@ -206,7 +321,21 @@ class StaffPayroll extends Component
             'editDeductions' => 'required|numeric|min:0',
         ]);
 
-        $record = PayrollModel::where('tenant_id', Auth::user()->tenant_id)->with('user')->findOrFail($this->editingPayrollId);
+        $record = PayrollModel::where('tenant_id', Auth::user()->tenant_id)
+            ->with('user')->findOrFail($this->editingPayrollId);
+        if ($record->status === 'PAID') {
+            $this->showEditModal = false;
+            $this->errorMessage = 'A paid payroll cannot be edited. Use a separate adjustment entry.';
+
+            return;
+        }
+        if ($record->status === 'APPROVED') {
+            $this->showEditModal = false;
+            $this->errorMessage = 'This payroll is finalised. Reopen it to DRAFT before editing.';
+
+            return;
+        }
+
         $net = PayrollModel::calculateNet(
             $this->editBasicSalary,
             $this->editOvertimeHours,
@@ -296,6 +425,55 @@ class StaffPayroll extends Component
         $this->feedbackMessage = 'Salary slip marked as PAID and auto-posted to ERP Expense Ledger.';
     }
 
+    public function markAsApproved(string $payrollId): void
+    {
+        $this->authorizePayrollManager();
+        $tenantId = Auth::user()->tenant_id;
+        $record = PayrollModel::where('tenant_id', $tenantId)->findOrFail($payrollId);
+
+        if ($record->status === 'PAID') {
+            $this->errorMessage = 'A paid payroll cannot be re-approved.';
+
+            return;
+        }
+        if ($record->status === 'APPROVED') {
+            $this->errorMessage = 'This payroll is already approved.';
+
+            return;
+        }
+
+        $record->update([
+            'status' => 'APPROVED',
+            'approved_by' => Auth::id(),
+            'approved_at' => now(),
+        ]);
+
+        AuditLog::log('PAYROLL_APPROVED', "Payroll [{$payrollId}] approved; attendance period locked.", $tenantId, 'StaffPayroll', $payrollId);
+        $this->feedbackMessage = 'Payroll approved. Source attendance for this month is now locked.';
+    }
+
+    public function reopenPayroll(string $payrollId): void
+    {
+        $this->authorizePayrollManager();
+        $tenantId = Auth::user()->tenant_id;
+        $record = PayrollModel::where('tenant_id', $tenantId)->findOrFail($payrollId);
+
+        if ($record->status === 'PAID') {
+            $this->errorMessage = 'A paid payroll cannot be reopened. Use a separate adjustment entry.';
+
+            return;
+        }
+
+        $record->update([
+            'status' => 'DRAFT',
+            'approved_by' => null,
+            'approved_at' => null,
+        ]);
+
+        AuditLog::log('PAYROLL_REOPENED', "Payroll [{$payrollId}] reopened to DRAFT by an authorized manager.", $tenantId, 'StaffPayroll', $payrollId);
+        $this->feedbackMessage = 'Payroll reopened to draft; attendance period unlocked.';
+    }
+
     public function render()
     {
         $this->authorizePayrollManager();
@@ -323,6 +501,7 @@ class StaffPayroll extends Component
 
         return view('livewire.staff-payroll', [
             'payrolls' => $payrolls,
+            'policy' => PayrollPolicy::forTenant($tenantId),
             'totalBasic' => $totalBasic,
             'totalOvertime' => $totalOvertime,
             'totalAllowances' => $totalAllowances,
