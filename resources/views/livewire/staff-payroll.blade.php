@@ -27,6 +27,12 @@
     </div>
 
     <!-- Feedback Alerts -->
+    @if($errorMessage)
+        <div class="bg-red-50 dark:bg-red-950/40 border border-red-300 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 text-sm" role="alert">
+            {{ $errorMessage }}
+        </div>
+    @endif
+
     @if($feedbackMessage)
         <div class="p-4 bg-[#171513]/85 border border-[#C6A15B]/50 text-[#C6A15B] text-xs font-mono flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -82,7 +88,7 @@
                         </span>
                     </div>
                     <span class="text-xs font-mono text-stone-500 dark:text-stone-400">
-                        Default Base Salary: {{ $spotlightEmployee->base_salary ? 'PKR ' . number_format((float) $spotlightEmployee->base_salary) : 'Role default' }} • {{ $spotlightEmployee->email }}
+                        Default Base Salary: {{ $spotlightEmployee->base_salary ? 'PKR ' . number_format((float) $spotlightEmployee->base_salary) : 'Not configured' }} • {{ $spotlightEmployee->email }}
                     </span>
                 </div>
             </div>
@@ -155,13 +161,14 @@
             <h3 class="font-serif text-xl text-[#171513] dark:text-white font-normal">Calculation Policy</h3>
             <span class="text-[10px] font-mono uppercase tracking-wider text-stone-500">PKR per day / per hour</span>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
             @foreach([
                 ['policyOvertimeRate', 'OT rate / hour'],
                 ['policyLateDeduction', 'Late / day'],
                 ['policyAbsenceDeduction', 'Absent / day'],
                 ['policyHalfDayDeduction', 'Half day'],
                 ['policyUnpaidLeaveDeduction', 'Unpaid leave / day'],
+                ['policyDefaultSalary', 'Policy salary (optional)'],
             ] as [$field, $label])
                 <div>
                     <label class="block text-[10px] uppercase font-mono font-bold text-[#8F7239] dark:text-[#C6A15B] mb-1">{{ $label }}</label>
@@ -174,8 +181,7 @@
             <button wire:click="savePolicy" class="btn-gold !h-9 !px-5 text-xs font-bold uppercase">Save Policy</button>
         </div>
         <p class="text-[10px] text-stone-500 font-mono">
-            Applied to new and still-DRAFT payrolls. Base: {{ number_format($policy->overtime_rate_per_hour) }} OT/hr;
-            deductions derive from real attendance records and approved UNPAID leave.
+            Applied to new and still-DRAFT payrolls. A new payroll uses the employee base salary, or this policy salary when the employee has none. Staff with neither are skipped. Deductions come from recorded attendance and approved unpaid leave.
         </p>
     </div>
 

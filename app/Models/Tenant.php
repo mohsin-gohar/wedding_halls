@@ -63,6 +63,9 @@ class Tenant extends Model
         'plan',
         'settings',
         'weekly_off_days',
+        'shift_windows',
+        'shift_buffer_minutes',
+        'hold_expiry_hours',
 
         // Verification
         'verification_status',
@@ -88,6 +91,9 @@ class Tenant extends Model
         'website_settings' => 'array',
         'settings' => 'array',
         'weekly_off_days' => 'array',
+        'shift_windows' => 'array',
+        'shift_buffer_minutes' => 'integer',
+        'hold_expiry_hours' => 'integer',
         'service_areas' => 'array',
         'subscription_starts_at' => 'datetime',
         'subscription_expires_at' => 'datetime',

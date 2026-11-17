@@ -53,6 +53,7 @@ class Booking extends Model
         'custom_menu_json',
         'addons_json',
         'status',
+        'hold_expires_at',
         'pipeline_stage',
         'crm_stage',
         'notes',
@@ -60,6 +61,7 @@ class Booking extends Model
 
     protected $casts = [
         'event_date' => 'date',
+        'hold_expires_at' => 'datetime',
         'guest_count' => 'integer',
         'per_head_rate' => 'decimal:2',
         'hall_rent' => 'decimal:2',

@@ -95,7 +95,7 @@
                         </span>
                     </div>
                     <span class="text-xs font-mono text-stone-500 dark:text-stone-400">
-                        Base: {{ $spotlightStaff->base_salary ? 'PKR ' . number_format((float) $spotlightStaff->base_salary) : 'Role default' }} • {{ $spotlightStaff->email }}
+                        Base: {{ $spotlightStaff->base_salary ? 'PKR ' . number_format((float) $spotlightStaff->base_salary) : 'Not configured' }} • {{ $spotlightStaff->email }}
                     </span>
                 </div>
             </div>

@@ -32,7 +32,7 @@ class StaffPayroll extends Component
 
     public string $editingEmployeeName = '';
 
-    public float $editBasicSalary = 35000;
+    public float $editBasicSalary = 0;
 
     public float $editOvertimeHours = 0;
 
@@ -42,7 +42,7 @@ class StaffPayroll extends Component
 
     public float $editDeductions = 0;
 
-    public float $editNetSalary = 35000;
+    public float $editNetSalary = 0;
 
     public string $editPaymentMethod = 'CASH';
 
@@ -69,6 +69,8 @@ class StaffPayroll extends Component
     public float $policyHalfDayDeduction = 500;
 
     public float $policyUnpaidLeaveDeduction = 1000;
+
+    public string $policyDefaultSalary = '';
 
     public function mount()
     {
@@ -103,6 +105,9 @@ class StaffPayroll extends Component
         $this->policyAbsenceDeduction = (float) $policy->absence_deduction_per_day;
         $this->policyHalfDayDeduction = (float) $policy->half_day_deduction;
         $this->policyUnpaidLeaveDeduction = (float) $policy->unpaid_leave_deduction_per_day;
+        $this->policyDefaultSalary = $policy->default_basic_salary !== null
+            ? (string) $policy->default_basic_salary
+            : '';
     }
 
     public function savePolicy(): void
@@ -114,6 +119,7 @@ class StaffPayroll extends Component
             'policyAbsenceDeduction' => 'required|numeric|min:0',
             'policyHalfDayDeduction' => 'required|numeric|min:0',
             'policyUnpaidLeaveDeduction' => 'required|numeric|min:0',
+            'policyDefaultSalary' => 'nullable|numeric|min:1',
         ]);
 
         $tenantId = Auth::user()->tenant_id;
@@ -123,6 +129,7 @@ class StaffPayroll extends Component
             'absence_deduction_per_day' => $this->policyAbsenceDeduction,
             'half_day_deduction' => $this->policyHalfDayDeduction,
             'unpaid_leave_deduction_per_day' => $this->policyUnpaidLeaveDeduction,
+            'default_basic_salary' => $this->policyDefaultSalary === '' ? null : $this->policyDefaultSalary,
             'updated_by' => Auth::id(),
         ]);
 
@@ -133,6 +140,7 @@ class StaffPayroll extends Component
     public function generateMonthlyPayroll()
     {
         $this->authorizePayrollManager();
+        $this->errorMessage = null;
         validator(['selectedMonth' => $this->selectedMonth], ['selectedMonth' => 'required|date_format:Y-m'])->validate();
         $tenantId = Auth::user()->tenant_id;
         $policy = PayrollPolicy::forTenant($tenantId);
@@ -148,6 +156,7 @@ class StaffPayroll extends Component
 
         $generatedCount = 0;
         $lockedCount = 0;
+        $skipped = [];
         foreach ($staff as $m) {
             $attendance = StaffAttendance::where('tenant_id', $tenantId)
                 ->where('user_id', $m->id)
@@ -226,13 +235,12 @@ class StaffPayroll extends Component
                     'net_salary' => $net,
                 ]);
             } else {
-                $defaultBasic = $m->base_salary !== null ? (float) $m->base_salary : match ($m->role) {
-                    'ROLE_MANAGER' => 75000.00,
-                    'ROLE_CHEF' => 60000.00,
-                    'ROLE_ACCOUNTANT' => 50000.00,
-                    'ROLE_FRONT_DESK' => 38000.00,
-                    default => 32000.00,
-                };
+                $defaultBasic = $this->resolvedBasicSalary($m, $policy);
+                if ($defaultBasic === null) {
+                    $skipped[] = $m->name;
+
+                    continue;
+                }
                 $totalDeductions = round($lateDeduction + $absenceDeduction + $halfDayDeduction + $unpaidLeaveDeduction, 2);
                 $net = PayrollModel::calculateNet($defaultBasic, $otHours, $otRate, 0, $totalDeductions);
 
@@ -273,6 +281,22 @@ class StaffPayroll extends Component
 
         $this->feedbackMessage = 'Payroll compiled for '.Carbon::parse($this->selectedMonth.'-01')->format('F Y')
             ." ({$generatedCount} updated".($lockedCount ? ", {$lockedCount} finalised skipped" : '').').';
+        if ($skipped !== []) {
+            $this->errorMessage = 'No salary recorded for: '.implode(', ', $skipped).'. Set each employee base salary or an explicit payroll-policy salary. No amount was invented.';
+        }
+    }
+
+    private function resolvedBasicSalary(User $employee, PayrollPolicy $policy): ?float
+    {
+        if ($employee->base_salary !== null && (float) $employee->base_salary > 0) {
+            return round((float) $employee->base_salary, 2);
+        }
+
+        if ($policy->default_basic_salary !== null && (float) $policy->default_basic_salary > 0) {
+            return round((float) $policy->default_basic_salary, 2);
+        }
+
+        return null;
     }
 
     public function openEditModal(string $payrollId)

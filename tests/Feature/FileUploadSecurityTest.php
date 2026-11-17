@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Livewire\HallChat;
 use App\Livewire\VendorPortfolioManager;
+use App\Models\Hall;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Models\VendorPortfolioMedia;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
@@ -60,7 +62,7 @@ class FileUploadSecurityTest extends TestCase
 
     public function test_vendor_portfolio_accepts_allowed_image_and_persists_it(): void
     {
-        $before = \App\Models\VendorPortfolioMedia::query()->where('tenant_id', $this->cateringVendor()->id)->count();
+        $before = VendorPortfolioMedia::query()->where('tenant_id', $this->cateringVendor()->id)->count();
 
         Livewire::actingAs($this->vendorOwner($this->cateringVendor()))
             ->test(VendorPortfolioManager::class)
@@ -68,7 +70,7 @@ class FileUploadSecurityTest extends TestCase
             ->call('addMedia')
             ->assertHasNoErrors();
 
-        $this->assertSame($before + 1, \App\Models\VendorPortfolioMedia::query()->where('tenant_id', $this->cateringVendor()->id)->count());
+        $this->assertSame($before + 1, VendorPortfolioMedia::query()->where('tenant_id', $this->cateringVendor()->id)->count());
     }
 
     public function test_vendor_portfolio_rejects_oversized_upload(): void
@@ -82,7 +84,7 @@ class FileUploadSecurityTest extends TestCase
 
     public function test_hall_chat_voice_upload_rejects_disallowed_mime_type(): void
     {
-        $hall = \App\Models\Hall::query()
+        $hall = Hall::query()
             ->where('is_active', true)
             ->whereHas('tenant', fn ($q) => $q->where('verification_status', 'APPROVED'))
             ->firstOrFail();

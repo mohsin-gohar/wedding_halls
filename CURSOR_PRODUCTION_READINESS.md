@@ -1,5 +1,20 @@
 # Production readiness
 
+## 17 Nov 2026 checks
+
+| Check | Result |
+| --- | --- |
+| `php artisan test --compact` | 231 passed, 1 skipped, 1334 assertions, 542.91s, exit 0 |
+| `vendor/bin/pint --test` | passed |
+| `composer audit` | no advisories |
+| `npm audit` | 0 vulnerabilities across 161 dependencies |
+| `npm run build` | succeeded |
+| `migrate:status` | new salary/shift/hold migration Ran on local SQLite |
+| MySQL suite | blocked, server not listening |
+| Backup restore | local SQLite copy opened and counted, then removed from the tree |
+| Payment sandbox | blocked, no credentials |
+| HTTPS / debug | local `.env` still debug on and HTTPS not forced; do not deploy that file |
+
 Not production-ready.
 
 | Check | Status |

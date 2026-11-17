@@ -117,7 +117,7 @@
         </div>
     @endif
 
-    <div class="flex-1 flex">
+    <div class="flex-1 flex min-w-0">
         
         <!-- Desktop Luxury Obsidian Sidebar -->
         <aside class="hidden lg:flex lg:flex-col lg:w-64 sticky top-0 h-screen z-30 bg-gradient-to-b from-[#F8F5EF] to-[#E7E5E4] dark:from-[#15130F] dark:to-[#0F0D0A] text-[#171513] dark:text-white border-r border-[#E7E5E4] dark:border-[#C6A15B]/20 shrink-0 shadow-sm overflow-hidden"><div class="flex-1 overflow-y-auto scrollbar-none flex flex-col justify-between"><div>

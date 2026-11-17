@@ -1,5 +1,14 @@
 # Bugs and fixes
 
+## 17 Nov 2026
+
+| Severity | Location | Cause | Fix | Test |
+| --- | --- | --- | --- | --- |
+| High | `StaffPayroll::generateMonthlyPayroll` role `match` (75k/60k/50k/38k/32k) | Missing salaries were fabricated | Skip unless employee salary or explicit policy salary is greater than 0 | `PayrollSalarySourceTest` (4) passed; full suite 231 passed |
+| Medium | `ErpStaffPayrollAndInventoryTest` Kashif fixture | Test depended on the removed role default | Fixture now sets `base_salary` 38000 | That test passed alone (7 assertions) and inside the full suite |
+| Medium | Calendar day query | Same-day `whereBetween` missed a date value on SQLite | `whereDate` range | `CalendarViewsAndHoldExpiryTest` passed |
+| Low | Week toolbar at 360px | Nowrap controls widened the page to 513px | Toolbar wraps; week days stack below `md`; app shell `min-w-0` | 360px payroll page still overflows (543 vs 360) because of the salary table |
+
 Evidence from local branch `enterprise-hardening` at `c5c0320`, plus uncommitted work. No production data was reset.
 
 ## Fixed this session

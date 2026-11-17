@@ -1,5 +1,9 @@
 # Vendor, customer, and admin
 
+## 17 Nov 2026
+
+Browser session confirmed the hall-owner shell: dashboard, calendar, and payroll. Vendor, customer, super admin, and the other staff roles were not signed in during this pass. Route count from `route:list --json` is 114. Scheduler shows `subscriptions:check-expiry` daily and `bookings:expire-holds` hourly.
+
 ## Removed
 
 The agency property marketplace was not a wedding-vendor portal. It listed halls for sale. Those routes and screens are gone. Existing vendor ERP (service vendors, bookings, wallets) from `main` / `ca39a9d` was not rewritten in this pass.

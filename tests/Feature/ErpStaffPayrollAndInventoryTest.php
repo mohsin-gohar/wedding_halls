@@ -321,6 +321,7 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
             'email' => 'kashif@shangrila.pk',
             'password' => bcrypt('password'),
             'role' => 'ROLE_FRONT_DESK',
+            'base_salary' => 38000,
         ]);
 
         $this->actingAs($owner);

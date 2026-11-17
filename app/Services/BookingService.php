@@ -7,6 +7,7 @@ use App\Exceptions\SlotAlreadyBookedException;
 use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\Payment;
+use App\Support\ShiftWindows;
 use Carbon\Carbon;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -81,7 +82,7 @@ class BookingService
                 // A stale or mismatched value would otherwise either violate the
                 // bookings.tenant_id foreign key or file the booking under the
                 // wrong tenant.
-                $hall = Hall::findOrFail($hallId);
+                $hall = Hall::with('tenant')->findOrFail($hallId);
                 $tenantId = $hall->tenant_id;
 
                 // Financial Formulation
@@ -124,6 +125,7 @@ class BookingService
                     'custom_menu_json' => $data['custom_menu_json'] ?? null,
                     'addons_json' => $data['addons_json'] ?? null,
                     'status' => $data['status'] ?? 'CONFIRMED',
+                    'hold_expires_at' => $this->resolveHoldExpiry($hall, $data),
                     'pipeline_stage' => $data['pipeline_stage'] ?? (($data['status'] ?? 'CONFIRMED') === 'INQUIRY' ? 'NEW_INQUIRY' : 'CONFIRMED'),
                     'notes' => $data['notes'] ?? null,
                 ]);
@@ -180,10 +182,51 @@ class BookingService
             ? ['AFTERNOON', 'EVENING', 'NIGHT', 'FULL_DAY']
             : [$normalizedSlot, 'FULL_DAY'];
 
-        return Booking::where('hall_id', $hallId)
+        $named = Booking::where('hall_id', $hallId)
             ->whereDate('event_date', $eventDate)
             ->whereIn('slot_type', $conflictingSlots)
             ->whereIn('status', ['HOLD', 'CONFIRMED']);
+
+        if ($named->exists()) {
+            return $named;
+        }
+
+        $hall = Hall::with('tenant')->find($hallId);
+        $tenant = $hall?->tenant;
+        $buffer = (int) ($tenant->shift_buffer_minutes ?? 0);
+        $storedWindows = $tenant?->shift_windows;
+        if ($buffer <= 0 && $storedWindows === null) {
+            return $named;
+        }
+
+        $windows = ShiftWindows::normalize($storedWindows);
+        $blockingIds = Booking::where('hall_id', $hallId)
+            ->whereDate('event_date', $eventDate)
+            ->whereIn('status', ['HOLD', 'CONFIRMED'])
+            ->get()
+            ->filter(fn (Booking $booking) => ShiftWindows::conflicts($windows, $normalizedSlot, (string) $booking->slot_type, $buffer))
+            ->pluck('id');
+
+        return Booking::whereIn('id', $blockingIds->all());
+    }
+
+    /**
+     * A HOLD receives an expiry only when the venue has configured hold hours
+     * or the caller supplied an explicit timestamp. Nothing is invented otherwise.
+     */
+    private function resolveHoldExpiry(Hall $hall, array $data): mixed
+    {
+        if (strtoupper((string) ($data['status'] ?? 'CONFIRMED')) !== 'HOLD') {
+            return null;
+        }
+
+        if (! empty($data['hold_expires_at'])) {
+            return Carbon::parse($data['hold_expires_at']);
+        }
+
+        $hours = (int) ($hall->tenant?->hold_expiry_hours ?? 0);
+
+        return $hours > 0 ? now()->addHours($hours) : null;
     }
 
     /**

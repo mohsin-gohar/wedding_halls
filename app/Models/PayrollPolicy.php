@@ -18,6 +18,7 @@ class PayrollPolicy extends Model
         'absence_deduction_per_day',
         'half_day_deduction',
         'unpaid_leave_deduction_per_day',
+        'default_basic_salary',
         'updated_by',
     ];
 
@@ -27,6 +28,7 @@ class PayrollPolicy extends Model
         'absence_deduction_per_day' => 'decimal:2',
         'half_day_deduction' => 'decimal:2',
         'unpaid_leave_deduction_per_day' => 'decimal:2',
+        'default_basic_salary' => 'decimal:2',
     ];
 
     public function tenant(): BelongsTo

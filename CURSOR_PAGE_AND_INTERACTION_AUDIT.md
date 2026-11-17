@@ -1,5 +1,12 @@
 # Page and interaction audit
 
+## Browser evidence, 17 Nov 2026, `http://127.0.0.1:9000`
+
+- Hall owner `owner@venuecloud.pk` signed in through the Livewire form and landed on `/dashboard` (Hall Admin Dashboard, three halls in the filter).
+- `/calendar` rendered Month, Week, Day, and Agenda tabs, shift start/end inputs (12:00–16:00, 18:00–22:00, 22:00–02:00, 12:00–02:00), buffer, hold-expiry hours, and Save shift policy. Week view heading became `16 Nov – 22 Nov 2026` and the Week tab `aria-selected` was true. A confirmed evening booking for Hamza Ali was visible in the month grid.
+- `/staff/payroll` rendered Calculation Policy, including the optional policy salary field, Compile Monthly Payroll, and existing slip/pay actions. Compile was not clicked, so no live salary rows were rewritten.
+- Not executed this pass: customer, super admin, finance, support, moderator, manager, accountant, staff, HR, and each vendor login; password recovery; uploads; every button. Login-page demo buttons were covered by a non-interactive overlay at the desktop layout, so they were not activated.
+
 This session did not click every control. Earlier browser sessions on `http://127.0.0.1:8010` opened the homepage, venues, a hall page, hall-owner dashboard, calendar, staff, expenses, media, inventory, and the Super Admin console. Hall owner hitting `/admin` returned 403.
 
 ## This session
