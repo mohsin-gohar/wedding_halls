@@ -1,4 +1,4 @@
-<div class="space-y-6 max-w-7xl mx-auto pb-16">
+<div class="space-y-6 w-full min-w-0 max-w-7xl mx-auto pb-16">
 
     <!-- Header Banner -->
     <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/50 gold-foil-border p-6 sm:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6 shadow-xl transition-colors duration-200">
@@ -27,6 +27,12 @@
     </div>
 
     <!-- Feedback Alerts -->
+    @if($errorMessage)
+        <div class="bg-red-50 dark:bg-red-950/40 border border-red-300 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 text-sm" role="alert">
+            {{ $errorMessage }}
+        </div>
+    @endif
+
     @if($feedbackMessage)
         <div class="p-4 bg-[#171513]/85 border border-[#C6A15B]/50 text-[#C6A15B] text-xs font-mono flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -39,8 +45,8 @@
 
     <!-- 1-Click Payroll Employee Switcher Pill Bar -->
     <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-4 space-y-2.5 shadow-sm transition-colors">
-        <div class="flex items-center justify-between">
-            <span class="text-[10px] font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400 font-bold flex items-center gap-1.5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400 font-bold flex flex-wrap items-center gap-1.5">
                 <span>⚡ 1-Click Employee Payroll Selector</span>
                 <span class="text-stone-400">•</span>
                 <span class="text-[#8F7239] dark:text-[#C6A15B]">Instant Salary &amp; Slip Filter</span>
@@ -82,7 +88,7 @@
                         </span>
                     </div>
                     <span class="text-xs font-mono text-stone-500 dark:text-stone-400">
-                        Default Base Salary: {{ $spotlightEmployee->base_salary ? 'PKR ' . number_format((float) $spotlightEmployee->base_salary) : 'Role default' }} • {{ $spotlightEmployee->email }}
+                        Default Base Salary: {{ $spotlightEmployee->base_salary ? 'PKR ' . number_format((float) $spotlightEmployee->base_salary) : 'Not configured' }} • {{ $spotlightEmployee->email }}
                     </span>
                 </div>
             </div>
@@ -100,8 +106,8 @@
     @endif
 
     <!-- Month Filter & Metric Cards -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-4 transition-colors">
-        <div class="flex items-center gap-3">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-4 transition-colors min-w-0">
+        <div class="flex flex-wrap items-center gap-3 min-w-0">
             <label class="text-xs font-mono uppercase text-[#171513] dark:text-[#C6A15B] font-bold">Payroll Month:</label>
             <input type="month" wire:model.live="selectedMonth" 
                    class="bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 text-[#171513] dark:text-white text-xs font-mono px-3 py-1.5 outline-none focus:border-[#C6A15B]">
@@ -149,6 +155,36 @@
         </div>
     </div>
 
+    <!-- Attendance-aware payroll policy (tenant configurable) -->
+    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-4 shadow-sm dark:shadow-xl">
+        <div class="border-b border-[#E7E5E4] pb-3 flex items-center justify-between">
+            <h3 class="font-serif text-xl text-[#171513] dark:text-white font-normal">Calculation Policy</h3>
+            <span class="text-[10px] font-mono uppercase tracking-wider text-stone-500">PKR per day / per hour</span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+            @foreach([
+                ['policyOvertimeRate', 'OT rate / hour'],
+                ['policyLateDeduction', 'Late / day'],
+                ['policyAbsenceDeduction', 'Absent / day'],
+                ['policyHalfDayDeduction', 'Half day'],
+                ['policyUnpaidLeaveDeduction', 'Unpaid leave / day'],
+                ['policyDefaultSalary', 'Policy salary (optional)'],
+            ] as [$field, $label])
+                <div>
+                    <label class="block text-[10px] uppercase font-mono font-bold text-[#8F7239] dark:text-[#C6A15B] mb-1">{{ $label }}</label>
+                    <input type="number" min="0" step="0.01" wire:model="{{ $field }}" class="w-full bg-[#F8F5EF] dark:bg-[#24211E] border border-[#E7E5E4] dark:border-white/20 px-3 py-2 text-xs font-mono outline-none focus:border-[#C6A15B]">
+                    @error($field) <span class="text-red-600 text-[10px]">{{ $message }}</span> @enderror
+                </div>
+            @endforeach
+        </div>
+        <div class="flex justify-end">
+            <button wire:click="savePolicy" class="btn-gold !h-9 !px-5 text-xs font-bold uppercase">Save Policy</button>
+        </div>
+        <p class="text-[10px] text-stone-500 font-mono">
+            Applied to new and still-DRAFT payrolls. A new payroll uses the employee base salary, or this policy salary when the employee has none. Staff with neither are skipped. Deductions come from recorded attendance and approved unpaid leave.
+        </p>
+    </div>
+
     <!-- Payroll Master Table -->
     <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-4 shadow-sm dark:shadow-xl">
         <div class="border-b border-[#E7E5E4] pb-3 flex items-center justify-between">
@@ -192,8 +228,9 @@
                             <td class="p-3 text-[#8F7239] font-semibold">
                                 + PKR {{ number_format($p->allowances) }}
                             </td>
-                            <td class="p-3 text-[#171513] font-semibold">
+                            <td class="p-3 text-[#171513] font-semibold" title="Late: {{ $p->late_deduction }} | Absent: {{ $p->absence_deduction }} | Half day: {{ $p->half_day_deduction }} | Unpaid leave: {{ $p->unpaid_leave_deduction }} | Advances: {{ $p->advances }}">
                                 - PKR {{ number_format($p->deductions) }}
+                                <span class="block text-[9px] text-stone-500 font-mono font-normal">P{{ $p->present_days }} A{{ $p->absent_days }} L{{ $p->late_days }} ½{{ $p->half_days }} LV{{ $p->unpaid_leave_days }}</span>
                             </td>
                             <td class="p-3 font-bold text-sm text-[#171513]">
                                 PKR {{ number_format($p->net_salary) }}
@@ -203,21 +240,35 @@
                                     <span class="px-2 py-0.5 bg-[#C6A15B]/20 text-[#8F7239] border border-[#C6A15B]/60 font-bold uppercase text-[10px]">
                                         ✓ PAID ({{ $p->payment_method }})
                                     </span>
+                                @elseif($p->status === 'APPROVED')
+                                    <span class="px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold uppercase text-[10px]">✓ Approved (locked)</span>
                                 @else
                                     <span class="px-2 py-0.5 bg-[#C6A15B]/20 text-[#8F7239] border border-[#C6A15B]/60 font-bold uppercase text-[10px]">
                                         ⏳ DRAFT / UNPAID
                                     </span>
                                 @endif
                             </td>
-                            <td class="p-3 text-right whitespace-nowrap">
-                                <div class="inline-flex items-center justify-end gap-1.5 font-sans">
+                            <td class="p-3 text-right">
+                                <div class="flex flex-wrap items-center justify-end gap-1.5 font-sans max-w-full">
                                     <button wire:click="openEditModal('{{ $p->id }}')" 
                                             class="tbtn tbtn-outline" title="Edit Payroll Entry">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                         <span>Edit</span>
                                     </button>
 
-                                    @if($p->status !== 'PAID')
+                                    @if($p->status === 'DRAFT')
+                                        <button wire:click="markAsApproved('{{ $p->id }}')" wire:confirm="Approve this payroll and lock attendance for the month?"
+                                                class="tbtn tbtn-outline" title="Approve payroll">
+                                            <span>Approve</span>
+                                        </button>
+                                    @elseif($p->status === 'APPROVED')
+                                        <button wire:click="reopenPayroll('{{ $p->id }}')" wire:confirm="Reopen this payroll to draft?"
+                                                class="tbtn tbtn-outline" title="Reopen payroll">
+                                            <span>Reopen</span>
+                                        </button>
+                                    @endif
+
+                                    @if($p->status === 'APPROVED')
                                         <button wire:click="openPayModal('{{ $p->id }}')" 
                                                 class="tbtn tbtn-gold" title="Disburse Salary">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>

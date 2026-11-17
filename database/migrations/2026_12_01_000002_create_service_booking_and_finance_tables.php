@@ -27,7 +27,10 @@ return new class extends Migration
                 $table->nullableUuidMorphs('bookable');          // VendorService | VendorPackage | PhotographerPackage | CarFleet…
                 $table->foreignId('customer_id')->constrained('users')->cascadeOnDelete();
                 $table->foreignId('rfq_bid_id')->nullable()->constrained('rfq_bids')->nullOnDelete();
-                $table->foreignUuid('customer_event_id')->nullable()->constrained('customer_events')->nullOnDelete();
+                // Column only here: customer_events is created in the NEXT migration file.
+                // The foreign key is added afterwards (driver-supported backends) so the
+                // migration order stays valid on MySQL/MariaDB/PostgreSQL.
+                $table->uuid('customer_event_id')->nullable();
 
                 $table->string('booking_reference', 30)->unique();
                 $table->string('event_name', 150)->nullable();
@@ -101,7 +104,31 @@ return new class extends Migration
         }
 
         // ------------------------------------------------------------------
-        // 3. Wallet ledger (immutable, balance_after snapshot per row).
+        // 3. Payout requests (vendor withdrawal → admin approval).
+        // Created before wallet_transactions because the wallet ledger
+        // references vendor_payouts (MySQL rejects FKs to later tables).
+        // ------------------------------------------------------------------
+        if (! Schema::hasTable('vendor_payouts')) {
+            Schema::create('vendor_payouts', function (Blueprint $table) {
+                $table->uuid('id')->primary();
+                $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
+                $table->decimal('amount', 12, 2);
+                $table->string('method', 30)->default('BANK_TRANSFER');
+                $table->json('account_details')->nullable();     // Bank/IBAN/JazzCash account
+                // REQUESTED | PROCESSING | PAID | REJECTED
+                $table->string('status', 20)->default('REQUESTED')->index();
+                $table->string('reference', 60)->nullable();
+                $table->text('note')->nullable();
+                $table->foreignId('processed_by')->nullable()->constrained('users')->nullOnDelete();
+                $table->timestamp('requested_at')->useCurrent();
+                $table->timestamps();
+
+                $table->index(['tenant_id', 'status']);
+            });
+        }
+
+        // ------------------------------------------------------------------
+        // 4. Wallet ledger (immutable, balance_after snapshot per row).
         // ------------------------------------------------------------------
         if (! Schema::hasTable('wallet_transactions')) {
             Schema::create('wallet_transactions', function (Blueprint $table) {
@@ -121,28 +148,6 @@ return new class extends Migration
 
                 $table->index(['tenant_id', 'type']);
                 $table->index('created_at');
-            });
-        }
-
-        // ------------------------------------------------------------------
-        // 4. Payout requests (vendor withdrawal → admin approval).
-        // ------------------------------------------------------------------
-        if (! Schema::hasTable('vendor_payouts')) {
-            Schema::create('vendor_payouts', function (Blueprint $table) {
-                $table->uuid('id')->primary();
-                $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
-                $table->decimal('amount', 12, 2);
-                $table->string('method', 30)->default('BANK_TRANSFER');
-                $table->json('account_details')->nullable();     // Bank/IBAN/JazzCash account
-                // REQUESTED | PROCESSING | PAID | REJECTED
-                $table->string('status', 20)->default('REQUESTED')->index();
-                $table->string('reference', 60)->nullable();
-                $table->text('note')->nullable();
-                $table->foreignId('processed_by')->nullable()->constrained('users')->nullOnDelete();
-                $table->timestamp('requested_at')->useCurrent();
-                $table->timestamps();
-
-                $table->index(['tenant_id', 'status']);
             });
         }
 

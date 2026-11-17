@@ -22,12 +22,15 @@ class StaffAttendance extends Model
         'check_out',
         'overtime_hours',
         'notes',
+        'source',
+        'overnight',
         'created_by',
     ];
 
     protected $casts = [
         'date' => 'date',
         'overtime_hours' => 'decimal:2',
+        'overnight' => 'boolean',
     ];
 
     public function tenant(): BelongsTo

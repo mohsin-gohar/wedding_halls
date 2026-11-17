@@ -158,7 +158,9 @@ class BookingController extends ApiController
             ->firstOrFail();
 
         $validator = Validator::make($request->all(), [
-            'status' => 'sometimes|in:INQUIRY,HOLD,CONFIRMED,COMPLETED,CANCELLED,REFUNDED',
+            // Mirror the bookings.status DB enum exactly: REFUNDED is NOT a
+            // valid column value and would fail on MySQL strict enums.
+            'status' => 'sometimes|in:INQUIRY,HOLD,CONFIRMED,COMPLETED,CANCELLED',
             'notes' => 'sometimes|string|max:1000',
             'advance_paid' => 'sometimes|numeric|min:0',
         ]);

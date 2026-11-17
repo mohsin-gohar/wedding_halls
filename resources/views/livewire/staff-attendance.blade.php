@@ -20,6 +20,9 @@
             <button wire:click="openLeaveModal" class="btn-outline-gold !h-9 !px-4 text-xs font-mono uppercase font-bold">
                 + Apply Leave
             </button>
+            <a href="{{ route('staff.attendance.calendar') }}" class="btn-outline-gold !h-9 !px-4 text-xs font-mono uppercase font-bold">
+                Attendance Calendar &rarr;
+            </a>
             <a href="{{ route('staff') }}" class="btn-gold !h-9 !px-4 text-xs font-mono uppercase font-bold shadow">
                 Manage Staff Roles &rarr;
             </a>
@@ -92,7 +95,7 @@
                         </span>
                     </div>
                     <span class="text-xs font-mono text-stone-500 dark:text-stone-400">
-                        Base: {{ $spotlightStaff->base_salary ? 'PKR ' . number_format((float) $spotlightStaff->base_salary) : 'Role default' }} • {{ $spotlightStaff->email }}
+                        Base: {{ $spotlightStaff->base_salary ? 'PKR ' . number_format((float) $spotlightStaff->base_salary) : 'Not configured' }} • {{ $spotlightStaff->email }}
                     </span>
                 </div>
             </div>
@@ -148,8 +151,8 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <button wire:click="markAllPresent" type="button" class="btn-secondary !h-8 !px-3 text-xs font-mono">
-                        Mark All Present
+                    <button wire:click="markAllPresent" wire:confirm="This is a manager attestation. It marks Present and does not invent check-in or check-out times." type="button" class="btn-secondary !h-8 !px-3 text-xs font-mono">
+                        Attest all present
                     </button>
                     <button wire:click="saveDailyAttendance" type="button" class="btn-gold !h-8 !px-4 text-xs font-bold font-mono uppercase shadow">
                         💾 Save Attendance
@@ -185,6 +188,7 @@
                                 <td class="p-3">
                                     <select wire:model="attendanceData.{{ $m->id }}.status" 
                                             class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono font-bold px-2 py-1 outline-none focus:border-[#C6A15B]">
+                                        <option value="">NOT MARKED</option>
                                         <option value="PRESENT" class="text-[#8F7239]">PRESENT (HAZIR)</option>
                                         <option value="ABSENT" class="text-[#171513]">ABSENT (GHAIR HAZIR)</option>
                                         <option value="HALF_DAY" class="text-[#8F7239]">HALF DAY</option>
@@ -199,6 +203,13 @@
                                 <td class="p-3">
                                     <input type="time" wire:model="attendanceData.{{ $m->id }}.check_out" 
                                            class="w-24 bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono px-2 py-1 outline-none focus:border-[#C6A15B]">
+                                    <label class="mt-1 flex items-center gap-1 text-[10px] font-mono text-stone-500">
+                                        <input type="checkbox" wire:model="attendanceData.{{ $m->id }}.overnight" class="accent-[#C6A15B]">
+                                        Overnight
+                                    </label>
+                                    @if(($attendanceData[$m->id]['source'] ?? '') === 'MANUAL_ATTESTATION')
+                                        <span class="mt-1 block text-[10px] font-mono text-[#8F7239]">Manager attestation, not a punch</span>
+                                    @endif
                                 </td>
                                 <td class="p-3">
                                     <input type="number" step="0.5" min="0" max="12" wire:model="attendanceData.{{ $m->id }}.overtime_hours" 
@@ -425,6 +436,7 @@
                             <option value="SICK">Medical / Sick Leave (Bemari)</option>
                             <option value="ANNUAL">Annual Paid Leave</option>
                             <option value="EMERGENCY">Emergency Family Leave</option>
+                            <option value="UNPAID">Unpaid Leave (deducted from payroll)</option>
                         </select>
                     </div>
 
@@ -476,6 +488,7 @@
                     <div>
                         <label class="block text-[10px] font-mono uppercase text-[#C6A15B] mb-1 font-semibold">Status *</label>
                         <select wire:model="editingStatus" class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
+                            <option value="">NOT MARKED</option>
                             <option value="PRESENT">PRESENT (HAZIR)</option>
                             <option value="HALF_DAY">HALF DAY</option>
                             <option value="ABSENT">ABSENT (GHAIR HAZIR)</option>
@@ -483,6 +496,11 @@
                             <option value="ON_LEAVE">ON LEAVE (RUKHSAT)</option>
                         </select>
                     </div>
+
+                    <label class="flex items-center gap-2 text-[10px] font-mono uppercase text-[#C6A15B]">
+                        <input type="checkbox" wire:model="editingOvernight" class="accent-[#C6A15B]">
+                        Overnight shift (check-out is the next day)
+                    </label>
 
                     <div class="grid grid-cols-2 gap-3 font-mono">
                         <div>
@@ -499,6 +517,12 @@
                         <label class="block text-[10px] font-mono uppercase text-[#C6A15B] mb-1 font-semibold">Overtime Hours (Hours)</label>
                         <input type="number" step="0.5" min="0" max="24" wire:model="editingOvertime" class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B] font-mono">
                         @error('editingOvertime') <span class="text-rose-400 text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-mono uppercase text-[#C6A15B] mb-1 font-semibold">Correction reason (required when changing a saved record)</label>
+                        <textarea wire:model="editingCorrectionReason" rows="2" placeholder="Why this historical record is being changed" class="w-full bg-[#171513] border border-white/20 text-white text-xs p-2.5 outline-none focus:border-[#C6A15B]"></textarea>
+                        @error('editingCorrectionReason') <span class="text-rose-400 text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     <div>

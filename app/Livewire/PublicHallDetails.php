@@ -2,14 +2,17 @@
 
 namespace App\Livewire;
 
+use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\HallView;
 use App\Models\HallWishlist;
+use App\Models\ListingInquiry;
 use App\Models\Package;
 use App\Models\PageVisit;
 use App\Support\CalendarWindow;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -37,6 +40,16 @@ class PublicHallDetails extends Component
 
     public int $totalViews = 0;
 
+    public string $inquiryName = '';
+
+    public string $inquiryPhone = '';
+
+    public string $inquiryEmail = '';
+
+    public string $inquiryMessage = '';
+
+    public ?string $inquiryFeedback = null;
+
     public function mount(?string $slug = null, ?string $id = null)
     {
         $identifier = $slug ?? $id;
@@ -56,7 +69,7 @@ class PublicHallDetails extends Component
             })
             ->firstOrFail();
 
-        if (! $this->hall->is_active) {
+        if (! $this->hall->is_active || $this->hall->listing_status === 'WITHDRAWN') {
             abort(404, 'This venue space is currently inactive.');
         }
 
@@ -110,6 +123,46 @@ class PublicHallDetails extends Component
         } else {
             $this->selectFirstBookableDateForCurrentMonth();
         }
+    }
+
+    public function submitInquiry(): void
+    {
+        $key = 'listing-inquiry:'.request()->ip().':'.$this->hall->id;
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $this->addError('inquiryMessage', 'Too many inquiries. Try again in a minute.');
+
+            return;
+        }
+
+        $this->validate([
+            'inquiryName' => 'required|string|min:2|max:120',
+            'inquiryPhone' => 'required|string|min:7|max:30',
+            'inquiryEmail' => 'nullable|email|max:160',
+            'inquiryMessage' => 'required|string|min:10|max:1000',
+        ]);
+
+        ListingInquiry::create([
+            'tenant_id' => $this->hall->tenant_id,
+            'hall_id' => $this->hall->id,
+            'name' => $this->inquiryName,
+            'phone' => $this->inquiryPhone,
+            'email' => $this->inquiryEmail ?: null,
+            'purpose' => 'BOOKING',
+            'message' => $this->inquiryMessage,
+            'status' => 'NEW',
+        ]);
+
+        RateLimiter::hit($key, 60);
+        AuditLog::log(
+            'LISTING_INQUIRY',
+            "Inquiry for [{$this->hall->name}] from {$this->inquiryName}.",
+            $this->hall->tenant_id,
+            'Hall',
+            $this->hall->id
+        );
+
+        $this->reset('inquiryName', 'inquiryPhone', 'inquiryEmail', 'inquiryMessage');
+        $this->inquiryFeedback = 'Your inquiry was sent to '.$this->hall->tenant->name.'.';
     }
 
     public string $calendarMonth = '';

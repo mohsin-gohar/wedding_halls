@@ -109,7 +109,7 @@
                         <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">{{ $wishlistCount }}</span>
                     </button>
 
-                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}' })" 
+                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}' })"
                             class="btn-gold !h-11 !px-6 text-xs font-bold font-sans tracking-wide">
                         Reserve Event Shift &rarr;
                     </button>
@@ -134,6 +134,21 @@
                         <span>{{ $hall->min_capacity }} - {{ $hall->max_capacity }} Capacity</span>
                     </div>
                 </div>
+
+                <form wire:submit="submitInquiry" class="max-w-xl mt-6 space-y-3 border border-white/15 bg-black/30 p-4">
+                    <p class="text-[11px] font-mono uppercase tracking-wider text-[#C6A15B]">Ask about this hall</p>
+                    @if($inquiryFeedback)
+                        <p class="text-sm text-emerald-300">{{ $inquiryFeedback }}</p>
+                    @endif
+                    <input wire:model="inquiryName" placeholder="Your name" class="w-full bg-transparent border border-white/20 px-3 py-2 text-sm">
+                    @error('inquiryName') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                    <input wire:model="inquiryPhone" placeholder="Phone" class="w-full bg-transparent border border-white/20 px-3 py-2 text-sm">
+                    @error('inquiryPhone') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                    <input wire:model="inquiryEmail" type="email" placeholder="Email (optional)" class="w-full bg-transparent border border-white/20 px-3 py-2 text-sm">
+                    <textarea wire:model="inquiryMessage" rows="3" placeholder="Tell the hall about your event date, shift, and guest count" class="w-full bg-transparent border border-white/20 px-3 py-2 text-sm"></textarea>
+                    @error('inquiryMessage') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                    <button type="submit" class="btn-gold !h-10 !px-4 text-xs">Send inquiry</button>
+                </form>
             </div>
 
         </div>

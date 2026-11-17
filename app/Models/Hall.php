@@ -58,12 +58,16 @@ class Hall extends Model
         'has_generator_backup',
         'has_bridal_room',
         'is_active',
+        'listing_status',
+        'listing_purpose',
+        'sale_price',
     ];
 
     protected $casts = [
         'min_capacity' => 'integer',
         'max_capacity' => 'integer',
         'base_rent' => 'decimal:2',
+        'sale_price' => 'decimal:2',
         'services' => 'array',
         'website_settings' => 'array',
         'images' => 'array',
@@ -82,6 +86,11 @@ class Hall extends Model
     public function venue(): BelongsTo
     {
         return $this->belongsTo(Venue::class);
+    }
+
+    public function inquiries(): HasMany
+    {
+        return $this->hasMany(ListingInquiry::class);
     }
 
     public function bookings(): HasMany

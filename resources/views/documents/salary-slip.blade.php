@@ -86,24 +86,30 @@
                 <tr>
                     <td>Basic Monthly Wage</td>
                     <td class="text-right">{{ number_format($payroll->basic_salary, 2) }}</td>
-                    <td>Tax / Provident Deduction</td>
-                    <td class="text-right">0.00</td>
+                    <td>Late arrival ({{ $payroll->late_days }} day/s)</td>
+                    <td class="text-right">{{ number_format($payroll->late_deduction, 2) }}</td>
                 </tr>
                 <tr>
                     <td>Overtime Hours ({{ number_format($payroll->overtime_hours, 1) }}h @ {{ number_format($payroll->overtime_rate, 2) }}/h)</td>
-                    <td class="text-right">{{ number_format($payroll->overtime_hours * $payroll->overtime_rate, 2) }}</td>
-                    <td>Advances &amp; Disciplinary Deductions</td>
-                    <td class="text-right">{{ number_format($payroll->deductions, 2) }}</td>
+                    <td class="text-right">{{ number_format($payroll->overtime_pay ?? ($payroll->overtime_hours * $payroll->overtime_rate), 2) }}</td>
+                    <td>Absence ({{ $payroll->absent_days }} day/s)</td>
+                    <td class="text-right">{{ number_format($payroll->absence_deduction, 2) }}</td>
                 </tr>
                 <tr>
                     <td>Special Allowances / Event Bonus</td>
-                    <td class="text-right">{{ number_format($payroll->allowances, 2) }}</td>
-                    <td>Other Recoveries</td>
-                    <td class="text-right">0.00</td>
+                    <td class="text-right">{{ number_format($payroll->allowances + $payroll->bonuses, 2) }}</td>
+                    <td>Half day ({{ $payroll->half_days }}), unpaid leave ({{ $payroll->unpaid_leave_days }} day/s)</td>
+                    <td class="text-right">{{ number_format($payroll->half_day_deduction + $payroll->unpaid_leave_deduction, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>Attendance recorded: {{ $payroll->present_days }} present / {{ $payroll->absent_days }} absent / {{ $payroll->late_days }} late</td>
+                    <td class="text-right">&mdash;</td>
+                    <td>Advances &amp; other deductions</td>
+                    <td class="text-right">{{ number_format($payroll->advances + $payroll->other_deductions, 2) }}</td>
                 </tr>
                 <tr style="font-weight: bold; background: #FFFFFF;">
                     <td>Total Gross Earnings</td>
-                    <td class="text-right">{{ number_format($payroll->basic_salary + ($payroll->overtime_hours * $payroll->overtime_rate) + $payroll->allowances, 2) }}</td>
+                    <td class="text-right">{{ number_format($payroll->basic_salary + ($payroll->overtime_hours * $payroll->overtime_rate) + $payroll->allowances + $payroll->bonuses, 2) }}</td>
                     <td>Total Deductions</td>
                     <td class="text-right">{{ number_format($payroll->deductions, 2) }}</td>
                 </tr>

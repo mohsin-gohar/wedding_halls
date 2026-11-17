@@ -407,7 +407,7 @@ class HallMediaManager extends Component
     public function uploadImages()
     {
         $this->validate([
-            'imageUploads.*' => 'image|max:5120', // 5MB per image
+            'imageUploads.*' => 'image|mimes:jpg,jpeg,png,webp|max:5120', // 5MB per image
         ]);
 
         if (empty($this->imageUploads)) {

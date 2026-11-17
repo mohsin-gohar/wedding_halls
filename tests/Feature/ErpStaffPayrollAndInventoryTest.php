@@ -63,6 +63,8 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
         Livewire::test(StaffAttendance::class)
             ->set('selectedDate', $today)
             ->set("attendanceData.{$chef->id}.status", 'PRESENT')
+            ->set("attendanceData.{$chef->id}.check_in", '09:30')
+            ->set("attendanceData.{$chef->id}.check_out", '22:00')
             ->set("attendanceData.{$chef->id}.overtime_hours", 3.5)
             ->call('saveDailyAttendance');
 
@@ -319,6 +321,7 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
             'email' => 'kashif@shangrila.pk',
             'password' => bcrypt('password'),
             'role' => 'ROLE_FRONT_DESK',
+            'base_salary' => 38000,
         ]);
 
         $this->actingAs($owner);
@@ -338,7 +341,21 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
         $this->assertNotNull($payrollRecord);
         $this->assertEquals('DRAFT', $payrollRecord->status);
 
-        // Disburse and mark as PAID
+        Livewire::test(StaffPayroll::class)
+            ->set('payingPayrollId', $payrollRecord->id)
+            ->set('payDate', Carbon::today()->format('Y-m-d'))
+            ->set('payMethod', 'BANK_TRANSFER')
+            ->call('markAsPaid');
+
+        $payrollRecord->refresh();
+        $this->assertSame('DRAFT', $payrollRecord->status);
+        $this->assertDatabaseMissing('expenses', [
+            'payroll_id' => $payrollRecord->id,
+        ]);
+
+        Livewire::test(StaffPayroll::class)
+            ->call('markAsApproved', $payrollRecord->id);
+
         Livewire::test(StaffPayroll::class)
             ->set('payingPayrollId', $payrollRecord->id)
             ->set('payMethod', 'BANK_TRANSFER')

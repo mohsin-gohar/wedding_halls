@@ -215,16 +215,11 @@ class WalkInBookingModal extends Component
             return;
         }
 
-        $normalizedSlot = strtoupper($this->slot_type);
-        $conflictingSlots = $normalizedSlot === 'FULL_DAY'
-            ? ['AFTERNOON', 'EVENING', 'NIGHT', 'FULL_DAY']
-            : [$normalizedSlot, 'FULL_DAY'];
-
-        $exists = Booking::where('hall_id', $this->hall_id)
-            ->whereDate('event_date', $this->event_date)
-            ->whereIn('slot_type', $conflictingSlots)
-            ->whereIn('status', ['HOLD', 'CONFIRMED'])
-            ->exists();
+        $exists = ! app(BookingService::class)->checkSlotAvailability(
+            $this->hall_id,
+            $this->event_date,
+            $this->slot_type
+        );
 
         if ($exists) {
             $this->isSlotAvailable = false;

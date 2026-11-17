@@ -111,6 +111,7 @@ class StaffAttendanceUniqueConstraintRegressionTest extends TestCase
             ->call('openEditRecordModal', $staff1->id, $targetDate)
             ->set('editingStatus', 'ON_LEAVE')
             ->set('editingNotes', 'Changed to leave')
+            ->set('editingCorrectionReason', 'Employee was on approved leave')
             ->call('saveEditedRecord')
             ->assertHasNoErrors();
 

@@ -141,7 +141,7 @@ class VenueChatWidget extends Component
     public function uploadVoice(): void
     {
         $this->validate([
-            'voiceRecording' => 'required|file|mimes:mp3,wav,ogg,m4a,webm|max:5120',
+            'voiceRecording' => 'required|file|mimetypes:audio/mpeg,audio/mp4,audio/ogg,audio/wav,audio/m4a,audio/webm|mimes:mp3,wav,ogg,m4a,webm|max:5120', // 5MB
         ]);
 
         $user = Auth::user();

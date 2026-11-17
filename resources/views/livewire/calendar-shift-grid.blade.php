@@ -1,4 +1,4 @@
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 min-w-0">
 
     <!-- ===================================================================
          1. EXECUTIVE HEADER BANNER (Obsidian & Champagne Gold)
@@ -52,22 +52,27 @@
          =================================================================== -->
     <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
         <!-- Month Controller -->
-        <div class="flex items-center space-x-2">
-            <button wire:click="prevMonth" class="w-8 h-8 border border-[#E7E5E4] dark:border-white/10 hover:border-[#171513] dark:hover:border-white bg-[#F8F5EF] dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-stone-700 dark:text-stone-300 flex items-center justify-center transition">
+        <div class="flex flex-wrap items-center gap-2 max-w-full">
+            <button wire:click="navigatePrevious" class="w-8 h-8 border border-[#E7E5E4] dark:border-white/10 hover:border-[#171513] dark:hover:border-white bg-[#F8F5EF] dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-stone-700 dark:text-stone-300 flex items-center justify-center transition" aria-label="Previous period">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
             </button>
 
             <h2 class="font-cinzel text-xl sm:text-2xl text-[#171513] dark:text-white font-bold px-3 min-w-[200px] text-center">
-                {{ $monthTitle }}
+                {{ $viewMode === 'month' ? $monthTitle : $rangeTitle }}
             </h2>
 
-            <button wire:click="nextMonth" class="w-8 h-8 border border-[#E7E5E4] dark:border-white/10 hover:border-[#171513] dark:hover:border-white bg-[#F8F5EF] dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-stone-700 dark:text-stone-300 flex items-center justify-center transition">
+            <button wire:click="navigateNext" class="w-8 h-8 border border-[#E7E5E4] dark:border-white/10 hover:border-[#171513] dark:hover:border-white bg-[#F8F5EF] dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-stone-700 dark:text-stone-300 flex items-center justify-center transition" aria-label="Next period">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </button>
 
             <button wire:click="goToToday" class="ml-2 px-3 py-1.5 border border-[#E7E5E4] dark:border-white/10 bg-white dark:bg-white/10 hover:bg-[#F8F5EF] dark:hover:bg-white/15 text-stone-800 dark:text-stone-200 text-xs font-mono uppercase tracking-wider font-semibold transition">
                 Today
             </button>
+            <div class="flex border border-[#E7E5E4] dark:border-white/10" role="tablist" aria-label="Calendar view">
+                @foreach(['month' => 'Month', 'week' => 'Week', 'day' => 'Day', 'agenda' => 'Agenda'] as $mode => $label)
+                    <button type="button" wire:click="setView('{{ $mode }}')" role="tab" aria-selected="{{ $viewMode === $mode ? 'true' : 'false' }}" class="px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider {{ $viewMode === $mode ? 'bg-[#171513] text-[#F8F5EF]' : 'bg-white dark:bg-transparent text-stone-600 dark:text-stone-300' }}">{{ $label }}</button>
+                @endforeach
+            </div>
         </div>
 
         <!-- Restrained Status Legend (Zero-Pill) -->
@@ -75,8 +80,14 @@
             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#C6A15B]/15 dark:bg-[#171513]/85 border border-[#C6A15B]/60 dark:border-[#C6A15B]/70 text-[#8F7239] dark:text-[#C6A15B] text-[11px] font-bold">
                 <span class="w-2 h-2 bg-[#C6A15B]"></span> Confirmed Shift
             </span>
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#C6A15B]/15 dark:bg-[#171513]/85 border border-[#C6A15B]/60 dark:border-[#C6A15B]/70 text-[#8F7239] dark:text-[#C6A15B] text-[11px] font-bold">
-                <span class="w-2 h-2 bg-[#C6A15B]"></span> On Hold (24H)
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 text-[11px] font-bold">
+                <span class="w-2 h-2 bg-amber-500"></span> On Hold (awaiting confirmation)
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-stone-100 dark:bg-white/5 border border-stone-300 dark:border-white/10 text-stone-600 dark:text-stone-300 text-[11px] font-medium">
+                <span class="w-2 h-2 bg-stone-400"></span> Inquiry (non-blocking)
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 text-red-800 dark:text-red-300 text-[11px] font-bold">
+                <span class="w-2 h-2 bg-red-500"></span> Conflict warning
             </span>
             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#F8F5EF] dark:bg-white/5 border border-[#E7E5E4] dark:border-white/10 text-stone-600 dark:text-stone-300 text-[11px] font-medium">
                 <span class="w-2 h-2 bg-stone-300"></span> Available
@@ -84,10 +95,87 @@
         </div>
     </div>
 
+    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-4 shadow-sm space-y-3">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+            <div>
+                <h3 class="font-serif text-lg text-[#171513] dark:text-white">Shift windows and turnover</h3>
+                <p class="text-xs text-stone-500">These times apply to new conflict checks. Buffer is the required gap between shifts. Hold expiry is used only when a hold is created and hours are set.</p>
+            </div>
+            @if($calendarMessage)
+                <p class="text-xs text-[#8F7239]" role="status">{{ $calendarMessage }}</p>
+            @endif
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            @foreach($shiftWindows as $key => $window)
+                <div class="border border-[#E7E5E4] dark:border-white/10 p-3 space-y-2">
+                    <div class="text-[10px] font-mono uppercase tracking-wider text-[#8F7239]">{{ $key }}</div>
+                    <label class="block text-[10px] uppercase text-stone-500">Start
+                        <input type="time" wire:model="shiftStarts.{{ $key }}" class="mt-1 w-full bg-[#F8F5EF] dark:bg-[#24211E] border border-[#E7E5E4] dark:border-white/15 px-2 py-1 text-xs">
+                    </label>
+                    <label class="block text-[10px] uppercase text-stone-500">End
+                        <input type="time" wire:model="shiftEnds.{{ $key }}" class="mt-1 w-full bg-[#F8F5EF] dark:bg-[#24211E] border border-[#E7E5E4] dark:border-white/15 px-2 py-1 text-xs">
+                    </label>
+                </div>
+            @endforeach
+        </div>
+        <div class="flex flex-wrap items-end gap-3">
+            <label class="text-[10px] uppercase font-mono text-stone-500">Buffer minutes
+                <input type="number" min="0" max="720" wire:model="bufferMinutes" class="mt-1 block w-28 bg-[#F8F5EF] dark:bg-[#24211E] border border-[#E7E5E4] dark:border-white/15 px-2 py-1 text-xs">
+            </label>
+            <label class="text-[10px] uppercase font-mono text-stone-500">Hold expiry hours
+                <input type="number" min="1" max="720" wire:model="holdExpiryHours" placeholder="Off" class="mt-1 block w-28 bg-[#F8F5EF] dark:bg-[#24211E] border border-[#E7E5E4] dark:border-white/15 px-2 py-1 text-xs">
+            </label>
+            <button type="button" wire:click="saveShiftPolicy" class="lux-btn lux-btn--gold lux-btn--sm">Save shift policy</button>
+            <span class="text-[11px] font-mono text-stone-500">Active buffer: {{ $shiftBuffer }} min</span>
+        </div>
+        @error('bufferMinutes') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+        @error('holdExpiryHours') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+    </div>
+
+    @if($viewMode === 'week' || $viewMode === 'day')
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 shadow-sm overflow-x-auto">
+            <div class="grid {{ $viewMode === 'day' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-7' }} divide-y md:divide-y-0 md:divide-x divide-[#E7E5E4] dark:divide-white/10">
+                @foreach($visibleDays as $day)
+                    <div class="min-h-[180px] p-2 space-y-2">
+                        <div class="text-xs font-mono font-bold text-[#171513] dark:text-white">{{ $day->format('D j M') }}</div>
+                        @foreach(['AFTERNOON', 'EVENING', 'NIGHT'] as $slot)
+                            @php
+                                $key = $day->format('Y-m-d').'_'.$slot;
+                                $booking = $bookings[$key] ?? null;
+                                $window = $shiftWindows[$slot] ?? null;
+                            @endphp
+                            <button type="button" wire:click="{{ $booking ? "viewBookingDetails('{$booking->id}')" : "openWalkInModal('{$day->format('Y-m-d')}', '{$slot}')" }}" class="w-full text-left border px-2 py-1.5 text-[11px] {{ $booking ? 'border-[#C6A15B] bg-[#C6A15B]/10' : 'border-[#E7E5E4] dark:border-white/10' }}">
+                                <div class="font-mono uppercase text-[#8F7239]">{{ $slot }} {{ $window['start'] ?? '' }}–{{ $window['end'] ?? '' }}</div>
+                                <div class="truncate text-[#171513] dark:text-stone-200">{{ $booking->customer_name ?? 'Open' }}</div>
+                            </button>
+                        @endforeach
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @elseif($viewMode === 'agenda')
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 shadow-sm">
+            <ul class="divide-y divide-[#E7E5E4] dark:divide-white/10">
+                @forelse($bookings as $key => $booking)
+                    <li>
+                        <button type="button" wire:click="viewBookingDetails('{{ $booking->id }}')" class="w-full text-left px-4 py-3 flex items-center justify-between gap-3 hover:bg-[#F8F5EF] dark:hover:bg-white/5">
+                            <span class="font-mono text-xs text-stone-500">{{ $booking->event_date->format('D j M') }} · {{ $booking->slot_type }}</span>
+                            <span class="font-serif text-[#171513] dark:text-white">{{ $booking->customer_name }}</span>
+                            <span class="text-[10px] uppercase font-mono">{{ $booking->status }}</span>
+                        </button>
+                    </li>
+                @empty
+                    <li class="px-4 py-8 text-center text-sm text-stone-500">No holds, inquiries, or confirmed events in this agenda.</li>
+                @endforelse
+            </ul>
+        </div>
+    @endif
+
+    @if($viewMode === 'month')
     <!-- ===================================================================
          3. CALENDAR MONTH SHIFT GRID (Refined Editorial Design)
          =================================================================== -->
-    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 shadow-sm overflow-x-auto">
+    <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 shadow-sm overflow-x-auto max-w-full">
       <div class="min-w-[980px]">
         <!-- Day Names Header -->
         <div class="grid grid-cols-7 bg-[#F8F5EF] dark:bg-[#171513] border-b border-[#E7E5E4] dark:border-white/10 text-center text-xs tracking-wider uppercase text-stone-600 dark:text-stone-400 py-3 font-mono font-bold">
@@ -136,20 +224,45 @@
                             @endphp
 
                             @if($booking)
-                                <!-- Booked Slot Card (Zero-Pill) -->
-                                <button wire:click="viewBookingDetails('{{ $booking->id }}')" 
-                                        class="w-full text-left p-1.5 border border-[#C6A15B]/60 dark:border-[#C6A15B]/70 bg-[#C6A15B]/15 dark:bg-[#171513]/85 hover:bg-[#C6A15B]/20 dark:hover:bg-[#171513]/85 transition flex items-center justify-between text-xs group">
-                                    <div class="truncate">
-                                        <div class="flex items-center gap-1">
-                                            <span class="font-mono text-[10px] uppercase font-bold text-[#8F7239] dark:text-[#C6A15B]">{{ $slotLabel }}:</span>
-                                            <span class="text-[11px] font-semibold text-[#8F7239] dark:text-[#E8DCBE] truncate">{{ $booking->event_type }}</span>
+                                @php
+                                    $status = strtoupper($booking->status);
+                                    $isHold = $status === 'HOLD';
+                                    $isInquiry = $status === 'INQUIRY';
+                                    $hasConflict = isset($slotConflicts[$key]);
+                                    $cardClasses = $isInquiry
+                                        ? 'border-stone-300 dark:border-white/20 bg-stone-100 dark:bg-white/5'
+                                        : ($isHold
+                                            ? 'border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/20'
+                                            : 'border-[#C6A15B]/60 dark:border-[#C6A15B]/70 bg-[#C6A15B]/15 dark:bg-[#171513]/85');
+                                    $labelClasses = $isInquiry
+                                        ? 'text-stone-600 dark:text-stone-300'
+                                        : ($isHold ? 'text-amber-800 dark:text-amber-300' : 'text-[#8F7239] dark:text-[#C6A15B]');
+                                @endphp
+                                <div class="space-y-1">
+                                    <!-- Booked Slot Card (status-aware) -->
+                                    <button wire:click="viewBookingDetails('{{ $booking->id }}')" 
+                                            class="w-full text-left p-1.5 border {{ $cardClasses }} hover:opacity-80 transition flex items-center justify-between text-xs group"
+                                            aria-label="{{ $slotFull }}: {{ $booking->customer_name }} - {{ $status }}">
+                                        <div class="truncate">
+                                            <div class="flex items-center gap-1">
+                                                <span class="font-mono text-[10px] uppercase font-bold {{ $labelClasses }}">{{ $slotLabel }}:</span>
+                                                <span class="text-[11px] font-semibold {{ $labelClasses }} truncate">{{ $booking->event_type }}</span>
+                                            </div>
+                                            <span class="text-[10px] {{ $labelClasses }} block truncate font-sans">{{ $booking->customer_name }}</span>
                                         </div>
-                                        <span class="text-[10px] text-[#8F7239] dark:text-[#C6A15B] block truncate font-sans">{{ $booking->customer_name }}</span>
-                                    </div>
-                                    <span class="text-[9px] font-mono px-1 py-0.2 bg-[#C6A15B]/35 dark:bg-[#C6A15B] text-[#8F7239] dark:text-[#E8DCBE] font-bold shrink-0 ml-1">
-                                        {{ $booking->guests_count ?? $booking->guest_count }}p
-                                    </span>
-                                </button>
+                                        <span class="text-[9px] font-mono px-1 py-0.2 {{ $labelClasses }} font-bold shrink-0 ml-1">
+                                            {{ $isInquiry ? 'INQ' : ($isHold ? 'HOLD' : 'CNF') }}
+                                        </span>
+                                    </button>
+                                    @if($hasConflict)
+                                        <!-- Data-integrity warning: overlapping blocking bookings -->
+                                        <button wire:click="viewSlotConflicts('{{ $dateStr }}', '{{ $slot }}')"
+                                                class="w-full text-left px-1.5 py-1 border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 text-[10px] font-mono font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition"
+                                                aria-label="Review {{ count($slotConflicts[$key]) }} conflicting bookings">
+                                            ⚠ {{ count($slotConflicts[$key]) }} conflicting bookings — review
+                                        </button>
+                                    @endif
+                                </div>
                             @else
                                 <!-- Available Slot Button -->
                                 <button wire:click="openWalkInModal('{{ $dateStr }}', '{{ $slot }}')" 
@@ -166,6 +279,7 @@
       </div>
     </div>
     @endif
+    @endif
 
     <!-- ===================================================================
          4. BOOKING DETAILS MODAL (Executive Clean Business Card)
@@ -177,7 +291,7 @@
                 <div class="flex items-start justify-between border-b border-[#E7E5E4] dark:border-white/10 pb-4">
                     <div>
                         <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#C6A15B]/15 dark:bg-[#171513]/85 border border-[#C6A15B]/60 dark:border-[#C6A15B]/70 text-[#8F7239] dark:text-[#C6A15B] text-[10px] font-mono font-bold uppercase mb-1">
-                            <span class="w-1.5 h-1.5 bg-[#C6A15B]"></span> Confirmed Event Reservation
+                            <span class="w-1.5 h-1.5 bg-[#C6A15B]"></span> {{ strtoupper($viewingBooking->status) === 'HOLD' ? 'On Hold' : (strtoupper($viewingBooking->status) === 'INQUIRY' ? 'Inquiry (non-blocking)' : 'Confirmed Event Reservation') }}
                         </div>
                         <h3 class="font-cinzel text-2xl text-[#171513] dark:text-white font-bold">
                             {{ $viewingBooking->event_type }} Ceremony
@@ -245,6 +359,39 @@
                             🍳 Chef KOT
                         </a>
                     @endif
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if($showConflictModal && $conflictDetails)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <div class="bg-white dark:bg-[#171513] border-2 border-red-500 max-w-lg w-full shadow-2xl p-6 sm:p-8 space-y-4 relative text-[#171513] dark:text-stone-200" role="alertdialog" aria-modal="true" aria-labelledby="conflict-title">
+                <div class="flex items-start justify-between border-b border-red-200 dark:border-red-900 pb-4">
+                    <div>
+                        <h3 id="conflict-title" class="font-cinzel text-xl text-red-700 dark:text-red-400 font-bold">Data Integrity Warning</h3>
+                        <p class="text-xs text-stone-500 dark:text-stone-400 font-mono mt-1">
+                            {{ $conflictDetails['hall'] }} &middot; {{ $conflictDetails['date'] }} &middot; {{ $conflictDetails['slot'] }}
+                        </p>
+                    </div>
+                    <button wire:click="closeConflictModal" class="w-8 h-8 border border-stone-300 dark:border-white/20 text-stone-600 dark:text-stone-300 flex items-center justify-center text-lg font-bold leading-none" aria-label="Close conflict details">&times;</button>
+                </div>
+                <p class="text-sm text-stone-600 dark:text-stone-300">
+                    {{ count($conflictDetails['bookings']) }} blocking bookings exist for this hall, date and shift. New reservations are still blocked by the server-side conflict check. Review with an administrator; no records have been changed automatically.
+                </p>
+                <ul class="divide-y divide-[#E7E5E4] dark:divide-white/10 border border-[#E7E5E4] dark:border-white/10">
+                    @foreach($conflictDetails['bookings'] as $conflict)
+                        <li class="p-3 flex items-center justify-between gap-3 text-xs font-mono">
+                            <div class="min-w-0">
+                                <div class="font-bold text-[#171513] dark:text-white truncate">{{ $conflict['customer_name'] }}</div>
+                                <div class="text-stone-500 dark:text-stone-400">{{ $conflict['event_type'] }}</div>
+                            </div>
+                            <span class="px-2 py-0.5 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 font-bold shrink-0">{{ $conflict['status'] }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+                <div class="flex justify-end">
+                    <button wire:click="closeConflictModal" class="btn-gold !h-9 !px-5 text-xs font-bold">Close</button>
                 </div>
             </div>
         </div>
