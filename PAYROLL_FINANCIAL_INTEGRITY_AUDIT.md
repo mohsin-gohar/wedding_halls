@@ -1,5 +1,14 @@
 # PAYROLL & FINANCIAL INTEGRITY AUDIT — Riwaj Grand
 
+> **Repair cycle, 17 Nov 2026 — verified against actual source and browser.** The three concerns raised in review are fixed and proven:
+> 1. **Approval gate enforced** — `markAsPaid()` re-reads the row inside the transaction and refuses any status other than `APPROVED` (`not-approved` outcome → "Approve the payroll before it can be paid. A draft was not paid."). The blade also renders the Pay button **only** on `APPROVED` rows.
+> 2. **Atomic payment** — status update + wage expense + audit log all inside one `DB::transaction` with `lockForUpdate()`; `expenses.payroll_id` is UNIQUE (migration `2026_11_17_130000`), so a duplicate payment is impossible even under a race (`UniqueConstraintViolationException` → friendly error, no second expense, status untouched).
+> 3. **PAID immutability** — `updatePayroll()`, `reopenPayroll()`, `markAsApproved()` all reject `PAID`.
+>
+> Evidence: `tests/Feature/PayrollPaymentIntegrityTest.php` → **4 passed (13 assertions)** incl. draft-refusal, double-pay idempotency, orphan-expense block, PAID immutability. Browser QA (owner): DRAFT rows render no Pay button → Approve via confirm → Pay Now appears → payout → badge `PAID (BANK_TRANSFER)` → DB shows exactly 1 expense `payroll_id`-linked, receipt `PAYROLL-{id}`, 2 DRAFT rows untouched. 0 console errors.
+
+> Historical note, 17 Nov 2026. Role-based salary defaults were removed after this audit. Payment now requires APPROVED, then PAID inside one database transaction, with one wage expense per payroll (`expenses.payroll_id`). A DRAFT cannot be paid. See `PayrollPaymentIntegrityTest`. The findings below are the earlier review, not the current code.
+
 **Date:** 2026-11-16
 
 ## Inspected
@@ -28,7 +37,10 @@
 - Browser QA (owner): Calculation Policy, compile payroll, Approve via confirm → "APPROVED (LOCKED)", salary slip with new breakdown — 0 console errors.
 
 ## Remaining (honest)
-- Daily-wage/hourly-wage employee types, configurable bonus/allowance UI, advances/loans ledger, jurisdiction-specific tax/provident rules (deliberately not invented), payslip versioning, gateway sandbox.
+- Daily-wage/hourly-wage employee types, configurable bonus/allowance UI, advances/loans ledger, jurisdiction-specific tax/provident rules (deliberately not invented), payslip versioning, live payment gateway integration (manual-method recording in use).
 
-## Verification
-`php artisan test tests/Feature/ErpStaffPayrollAndInventoryTest.php` → 9 passed (payroll generation, auto-expense, salary-slip route).
+## Verification (updated 17 Nov 2026 — repair cycle)
+- `tests/Feature/PayrollPaymentIntegrityTest.php` → **4 passed (13 assertions)**: DRAFT cannot be paid (no expense created); double-pay idempotency + auto-expense (1 per payroll); orphan expense blocks second payment; PAID cannot be reopened or edited.
+- `tests/Feature/PayrollAttendanceIntegrationTest.php` → **6 passed (17 assertions)**; related `ErpStaffPayrollAndInventoryTest.php` → 9 passed (86 assertions), `StaffAttendanceUniqueConstraintRegressionTest` → 1 passed, etc.
+- Browser QA (17 Nov): DRAFT rows → no Pay button → Approve (confirm) → APPROVED (LOCKED) → Pay Now → "Salary slip marked as PAID and auto-posted to ERP Expense Ledger." → badge `PAID (BANK_TRANSFER)`; DB cross-check: 1 expense linked via `payroll_id`, receipt `PAYROLL-{id}`; 2 DRAFT rows untouched.
+- Full suite on MariaDB 10.4.32: re-run in progress (`sh_1e824729...`), first run: 224 passed / 10 failed (incl. `listing_status` drift) — all 10 now targeted for re-run; drift fixed via migration + `HallListingContractTest`.

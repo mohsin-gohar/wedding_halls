@@ -321,6 +321,7 @@ class PublicVenues extends Component
 
         $calendarHallsQuery = Hall::with(['venue', 'tenant'])
             ->where('is_active', true)
+            ->where('listing_status', '!=', 'WITHDRAWN')
             ->whereHas('venue', fn ($venueQuery) => $venueQuery->where('is_active', true))
             ->whereHas('tenant', fn ($t) => $t->where('is_active', true)->where('verification_status', 'APPROVED'));
 

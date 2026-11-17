@@ -52,10 +52,13 @@ Existing suites re-run green: `ErpStaffPayrollAndInventoryTest` (9), `StaffAtten
 - `tests/Feature/AttendanceCalendarTest.php` → **7 passed (21 assertions)**. Browser-verified.
 
 ## 6. Remaining gaps (Phase 2 remainder)
-- Employee check-in/check-out self-service (currently manager-only ERP), correction approval workflow with old/new value audit, attendance locking after payroll.
-- Configurable weekly-off days (current implementation uses Sunday), shift roster calendar.
+- Employee check-in/check-out self-service (currently manager-only ERP).
+- ~~correction approval workflow with old/new value audit~~ → **implemented 16–17 Nov**: `attendance_corrections` table + `writeCorrection()` (old/new snapshot + reason), applied on register saves and quick edits.
+- ~~attendance locking after payroll~~ → **implemented**: `StaffAttendance::periodLocked()` blocks daily save, quick edit and leave approval for a month with APPROVED/PAID payroll; `PayrollAttendanceIntegrationTest` covers lock→reopen.
+- ~~Configurable weekly-off days~~ → **implemented**: tenant `weekly_off_days` (UI in `AttendanceCalendar::saveWeeklyOffs()`, default Sunday).
+- ~~Overnight shift support deliberately excluded~~ → **implemented** (`overnight` flag + `checkOutSequenceError()` validation).
 - Manager can still submit leave for self and an *other* manager can approve — acceptable, but a future policy may disallow.
-- Overnight shift support deliberately excluded (validation enforces same-day ordering).
+- Shift roster calendar still missing.
 
 ## 7. Commands
 ```

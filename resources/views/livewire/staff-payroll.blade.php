@@ -1,4 +1,4 @@
-<div class="space-y-6 max-w-7xl mx-auto pb-16">
+<div class="space-y-6 w-full min-w-0 max-w-7xl mx-auto pb-16">
 
     <!-- Header Banner -->
     <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/50 gold-foil-border p-6 sm:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6 shadow-xl transition-colors duration-200">
@@ -45,8 +45,8 @@
 
     <!-- 1-Click Payroll Employee Switcher Pill Bar -->
     <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-4 space-y-2.5 shadow-sm transition-colors">
-        <div class="flex items-center justify-between">
-            <span class="text-[10px] font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400 font-bold flex items-center gap-1.5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400 font-bold flex flex-wrap items-center gap-1.5">
                 <span>⚡ 1-Click Employee Payroll Selector</span>
                 <span class="text-stone-400">•</span>
                 <span class="text-[#8F7239] dark:text-[#C6A15B]">Instant Salary &amp; Slip Filter</span>
@@ -106,8 +106,8 @@
     @endif
 
     <!-- Month Filter & Metric Cards -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-4 transition-colors">
-        <div class="flex items-center gap-3">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-4 transition-colors min-w-0">
+        <div class="flex flex-wrap items-center gap-3 min-w-0">
             <label class="text-xs font-mono uppercase text-[#171513] dark:text-[#C6A15B] font-bold">Payroll Month:</label>
             <input type="month" wire:model.live="selectedMonth" 
                    class="bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 text-[#171513] dark:text-white text-xs font-mono px-3 py-1.5 outline-none focus:border-[#C6A15B]">
@@ -248,8 +248,8 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="p-3 text-right whitespace-nowrap">
-                                <div class="inline-flex items-center justify-end gap-1.5 font-sans">
+                            <td class="p-3 text-right">
+                                <div class="flex flex-wrap items-center justify-end gap-1.5 font-sans max-w-full">
                                     <button wire:click="openEditModal('{{ $p->id }}')" 
                                             class="tbtn tbtn-outline" title="Edit Payroll Entry">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -268,7 +268,7 @@
                                         </button>
                                     @endif
 
-                                    @if($p->status !== 'PAID')
+                                    @if($p->status === 'APPROVED')
                                         <button wire:click="openPayModal('{{ $p->id }}')" 
                                                 class="tbtn tbtn-gold" title="Disburse Salary">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>

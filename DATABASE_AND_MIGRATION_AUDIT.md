@@ -1,6 +1,17 @@
 # DATABASE & MIGRATION AUDIT — Riwaj Grand
 
-**Date:** 2026-11-16
+**Date:** 2026-11-16 · **Repair cycle update: 17 Nov 2026**
+
+## 0. 17 Nov repair cycle — real MySQL/MariaDB verification (was: never tested)
+- Environment: local MariaDB **10.4.32-MariaDB** (XAMPP binary) started with a **fresh disposable datadir** (`%TEMP%\opencode\mysql_test_data`, port 3307, `--no-defaults`). The user's XAMPP datadir was found **corrupted** (privilege tables + unrelated `edusphere` InnoDB page corruption from a 15 Nov crash) — deliberately NOT touched; nothing of the user's was modified or deleted.
+- Result of first `migrate:fresh` on MariaDB: **FAILED — errno 150** on `service_bookings` → then on `wallet_transactions`. These were **real latent bugs invisible on SQLite** (SQLite does not enforce FK creation order):
+  1. `service_bookings` (2026_12_01_000002) declared an inline FK to `customer_events`, which is created in the **next** file (000003). Fixed: column declared without constraint; FK added by new migration `2026_12_07_000002_add_service_bookings_customer_event_foreign_key.php` (skips SQLite, which cannot ALTER-add FKs and runs tests with FKs off; MySQL/PostgreSQL get the real constraint — semantics unchanged: `nullOnDelete`, and app code already nulls `customer_event_id` before deleting an event).
+  2. `wallet_transactions` referenced `vendor_payouts` created **later in the same file**. Fixed by reordering (payouts before wallet) — no behavior change.
+- After fixes: `migrate:fresh` on MariaDB → **0 pending, all migrations Ran**.
+- Static FK-order audit added (`fk_order_audit.php`, scratch): no `Schema::create` block references a not-yet-created table; bare `->constrained()` (single occurrence → `halls`, created much earlier) checked manually.
+- Full PHPUnit suite re-run **against MariaDB** with real env overrides (see repair report for exact output).
+- Honest caveat: MariaDB 10.4 is **below** Laravel 12's officially supported minimum (MySQL 8.0+/MariaDB 10.6+); migrations/tests passing on 10.4 is a stronger result than the requirement, but production should still target MySQL 8.0+/MariaDB 10.6+.
+- `.gitignore` was corrupted into UTF-16 (NUL bytes → git saw a "binary" file) by an earlier `wedding_halls/` append; rewritten as clean UTF-8, still ignoring the untracked nested `wedding_halls/` copy (13.9 MB, left untouched on disk, never committed).
 
 ## 1. Migration date discrepancy — resolved with git evidence
 - `php artisan migrate:status`: all migrations `Ran`, batches 1–3 (incl. `2026_11_20_*` … `2026_12_07_*`).

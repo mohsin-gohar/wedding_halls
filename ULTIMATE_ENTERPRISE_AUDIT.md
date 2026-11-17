@@ -35,7 +35,7 @@
 8. No check-out > check-in validation. **FIXED** (closure rule, both register and quick-edit).
 9. `approveLeave():395` allowed self-approval, no overlap check, no attendance side-effect. **FIXED** — SoD 403, overlap rejection, ON_LEAVE records created on approval.
 10. No visual attendance/leave month calendar — only a monthly **summary table**. **OPEN** (Phase 2 remainder).
-11. Payroll reads **only overtime** from attendance (`StaffPayroll.php:102-105`); no absence/late/half-day/leave deductions; PAID rows editable (`:198-235` no status guard). **OPEN** (Phase 3).
+11. Payroll reads **only overtime** from attendance (`StaffPayroll.php:102-105`); no absence/late/half-day/leave deductions; PAID rows editable (`:198-235` no status guard). **FIXED 16 Nov** (Phase 3) and **hardened 17 Nov** (DRAFT→APPROVED→PAID gate, atomic payment + unique `expenses.payroll_id`, PAID immutability; `PayrollPaymentIntegrityTest` 4 tests; browser-verified).
 12. No holidays / weekly-offs anywhere (grep: zero matches). **OPEN** (Phase 2 remainder).
 
 ## 3. Verification executed

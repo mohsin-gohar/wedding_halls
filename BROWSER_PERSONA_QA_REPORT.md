@@ -1,8 +1,46 @@
 # BROWSER PERSONA QA REPORT — Riwaj Grand
 
-**Date:** 2026-11-16 · Tool: OpenCode in-app Chromium · App: `php artisan serve --host=127.0.0.1 --port=9200`
+**Date:** 2026-11-16 · **Repair-cycle QA added: 17 Nov 2026** · Tool: OpenCode in-app Chromium · App: `php artisan serve --host=127.0.0.1 --port=9200`
 
-## Persona exercised this cycle
+## 17 Nov repair cycle — role coverage (all real browser logins)
+| Persona | Login | Verified behaviour | Console errors |
+|---|---|---|---|
+| Venue Owner | `owner@venuecloud.pk` | Full DRAFT→APPROVED→PAID payroll flow (below), calendar views, 360px audit | 0 |
+| Front Desk | `reception@venuecloud.pk` | `/staff/payroll` and `/staff/attendance` **redirected to `/calendar`** (RBAC gate); own calendar page renders | 0 |
+| Chef | `chef@venuecloud.pk` | `/staff/payroll` **redirected to `/inventory`** (RBAC gate); Inventory & Kitchen Procurement renders | 0 |
+| Customer | `customer@example.com` | `/staff/payroll` **redirected to `/customer/dashboard`**; Marketplace renders | 0 |
+| Super Admin | `admin@eventhub.com` / `admin1235` | `/staff/payroll` **redirected to `/admin`**; Super Admin Console + Marketplace render | 0 |
+
+## Payroll financial flow (owner, December 2026, fresh DRAFT rows)
+| Step | Observed |
+|---|---|
+| Compile without salary source | ✅ Honest refusal: "No salary recorded for: … Set each employee base salary or an explicit payroll-policy salary. **No amount was invented.**" |
+| Set policy default salary (PKR 35,000) → Save Policy → Compile | ✅ "Payroll compiled for December 2026 (3 updated)" — 3 DRAFT rows |
+| **DRAFT gating** | ✅ Pay button **absent** on all DRAFT rows (only EDIT / APPROVE / SLIP) |
+| Approve (confirm dialog: "Approve this payroll and lock attendance for the month?") | ✅ Badge → "APPROVED (LOCKED)", REOPEN + **PAY NOW** now present, feedback "Source attendance for this month is now locked." |
+| PAY NOW → "CONFIRM PAYOUT →" | ✅ "Salary slip marked as PAID and auto-posted to ERP Expense Ledger."; badge `PAID (BANK_TRANSFER)` |
+| DB cross-check (tinker) | ✅ payroll `status=PAID`, `paid_at=2026-11-17`; exactly **1** expense `payroll_id`-linked: "Salary Payout - Usman Tariq (Front Desk) (2026-12)", PKR 35,000, `STAFF_WAGES`, receipt `PAYROLL-{id}`; other 2 rows stayed DRAFT |
+
+## 360px responsive audit (methodology: same-origin 360px iframe, page-level overflow scan)
+| Page | Page-level overflow at 360px | Notes |
+|---|---|---|
+| `/staff/payroll` | **0 page-breakers** — `docScrollWidth == docClientWidth` | Enterprise table scrolls **inside** `.table-wrapper-enterprise` (`overflow-x: auto`) — the accepted pattern |
+| `/calendar` | **0 page-breakers** | |
+| `/dashboard` | **0 page-breakers** | |
+| `/staff/attendance` | **0 page-breakers** | |
+| `/staff/attendance/calendar` | **0 page-breakers** | |
+| `/staff/hr` | **0 page-breakers** | |
+| Desktop viewport sanity | `scrollWidth > clientWidth` = false on payroll | |
+
+## Calendar view modes (owner, `/calendar`)
+| Mode | Toolbar range shown | Result |
+|---|---|---|
+| MONTH | "November 2026" | ✅ |
+| WEEK | "16 Nov – 22 Nov 2026" | ✅ |
+| DAY | "17 Nov – 17 Nov 2026" | ✅ |
+| AGENDA | "17 Nov – 30 Nov 2026" | ✅ |
+
+## Persona exercised this cycle (16 Nov, historical)
 **Venue Owner** (seeded demo account `owner@venuecloud.pk`, local isolated SQLite data — no production accounts/data).
 
 ## Flows executed (real browser, not HTTP-only)

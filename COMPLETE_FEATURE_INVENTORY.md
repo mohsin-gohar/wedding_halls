@@ -19,7 +19,7 @@
 | Staff attendance daily register | Implemented; hardened this cycle | AttendanceCoreRulesTest (7 pass), browser verified |
 | Leave management | Implemented; hardened this cycle | SoD + overlap + ON_LEAVE sync |
 | Visual attendance/leave calendar, holidays, weekly offs | Implemented this cycle — `AttendanceCalendar`, 7 tests, browser verified | Only monthly **summary table** exists |
-| Payroll generation + payslips | Implemented + Phase 3 hardened | Attendance-aware deductions, approval, finalization lock, breakdown payslips — 6 tests, browser verified |
+| Payroll generation + payslips | Implemented + Phase 3 hardened + 17 Nov repair | Attendance-aware deductions, approval, finalization lock, breakdown payslips; **DRAFT→APPROVED→PAID enforced, atomic payment, PAID immutable** — 10 payroll tests, browser verified end-to-end |
 | Inventory / expenses / kitchen KOT | Implemented | ErpStaffPayrollAndInventoryTest |
 | File downloads (agreements, receipts, salary slips, payment proof) | Implemented + authorized | DocumentController |
 | Notifications (in-app/email/WhatsApp) | Partial | Queues exist; live WhatsApp requires config |

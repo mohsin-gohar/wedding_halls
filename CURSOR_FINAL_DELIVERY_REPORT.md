@@ -1,5 +1,7 @@
 # Final delivery
 
+> **Repair-cycle banner, 17 Nov 2026 — READ FIRST.** This report described the state at Cursor's HEAD `0cb426a` and is now **historical**. Three concerns raised in review are fixed and verified in the repair cycle (see `FINAL_ENTERPRISE_DELIVERY_REPORT.md` §0, authoritative): (1) DRAFT payroll can no longer be paid — `markAsPaid()` enforces APPROVED inside a transaction; (2) payroll payment is atomic (status + expense + audit in one `DB::transaction` with `lockForUpdate`, unique `expenses.payroll_id`); (3) the 360px payroll overflow is fixed and verified on 6 pages. Additionally, MySQL **is now actually verified**: on MariaDB 10.4.32 (disposable datadir, port 3307) `migrate:fresh` runs clean after fixing 3 real FK-order/schema-drift bugs that SQLite silently tolerated; the full suite was re-run on MySQL. `PayrollPaymentIntegrityTest` (4) and `HallListingContractTest` (3) pin the fixed contracts. Reports below keep their original wording as historical record.
+
 Work continued from `enterprise-hardening` HEAD `d9a9b93`. Existing committed work was not reset. New code is uncommitted.
 
 ## What was executed

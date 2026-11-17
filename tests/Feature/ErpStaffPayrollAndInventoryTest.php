@@ -341,7 +341,21 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
         $this->assertNotNull($payrollRecord);
         $this->assertEquals('DRAFT', $payrollRecord->status);
 
-        // Disburse and mark as PAID
+        Livewire::test(StaffPayroll::class)
+            ->set('payingPayrollId', $payrollRecord->id)
+            ->set('payDate', Carbon::today()->format('Y-m-d'))
+            ->set('payMethod', 'BANK_TRANSFER')
+            ->call('markAsPaid');
+
+        $payrollRecord->refresh();
+        $this->assertSame('DRAFT', $payrollRecord->status);
+        $this->assertDatabaseMissing('expenses', [
+            'payroll_id' => $payrollRecord->id,
+        ]);
+
+        Livewire::test(StaffPayroll::class)
+            ->call('markAsApproved', $payrollRecord->id);
+
         Livewire::test(StaffPayroll::class)
             ->set('payingPayrollId', $payrollRecord->id)
             ->set('payMethod', 'BANK_TRANSFER')

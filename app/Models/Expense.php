@@ -14,6 +14,7 @@ class Expense extends Model
     protected $fillable = [
         'tenant_id',
         'hall_id',
+        'payroll_id',
         'category',
         'title',
         'amount',

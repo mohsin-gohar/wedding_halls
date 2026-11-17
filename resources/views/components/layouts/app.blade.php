@@ -489,18 +489,18 @@
         <div class="flex-1 flex flex-col min-w-0">
             
             <!-- Top App Bar -->
-            <header class="bg-white dark:bg-[#171513] border-b border-[#E7E5E4] dark:border-white/10 px-4 sm:px-8 py-3.5 flex items-center justify-between transition-colors duration-200">
-                <div class="flex items-center gap-3">
+            <header class="bg-white dark:bg-[#171513] border-b border-[#E7E5E4] dark:border-white/10 px-4 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-2 min-w-0 transition-colors duration-200">
+                <div class="flex items-center gap-3 min-w-0">
                     <!-- Mobile Hamburger -->
                     <button type="button" @click="sidebarOpen = !sidebarOpen" class="lg:hidden p-2 rounded-lg text-stone-600 dark:text-stone-300 border border-[#E7E5E4] dark:border-white/10">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
                     </button>
 
                     <!-- Context Heading -->
-                    <div class="flex items-center gap-2 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">
+                    <div class="flex items-center gap-2 min-w-0 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">
                         <span>Management</span>
                         <span>/</span>
-                        <span class="text-[#171513] dark:text-[#C6A15B] font-bold">
+                        <span class="text-[#171513] dark:text-[#C6A15B] font-bold truncate">
                             @if(request()->routeIs('dashboard')) Executive Analytics &amp; Revenue
                             @elseif(request()->routeIs('calendar')) Shift Concurrency Matrix
                             @elseif(request()->routeIs('hall.media')) Hall Media &amp; Information
@@ -666,7 +666,7 @@
             </div>
 
             <!-- Content Slot -->
-            <main id="main-content" class="app-page-content flex-1 p-4 sm:p-8 bg-[#F8F5EF] dark:bg-[#171513] transition-colors duration-200">
+            <main id="main-content" class="app-page-content flex-1 min-w-0 overflow-x-auto p-4 sm:p-8 bg-[#F8F5EF] dark:bg-[#171513] transition-colors duration-200">
                 {{ $slot }}
             </main>
 

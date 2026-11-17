@@ -6,16 +6,19 @@
 | Feature | Status | Priority |
 |---|---|---|
 | Visual monthly attendance calendar (employee × day grid) | **Implemented this cycle** — 7 tests, browser verified | — |
-| Leave overlay + holiday calendar + weekly offs | Implemented in `AttendanceCalendar`; shift roster still missing | Medium |
-| Employee self check-in/check-out, correction approval workflow, old/new audit | Missing | High |
-| Hold expiry column + scheduled release | Missing | Medium |
-| Configurable venue shifts (use existing shift tables, resolve slug mismatch) | Backend-only/dead schema | Medium |
-| Calendar week/day/agenda views, search, print/export | Missing | Medium |
+| Leave overlay + holiday calendar + weekly offs | Implemented in `AttendanceCalendar`; **tenant-configurable weekly offs** now in UI (`weekly_off_days` on tenants) | — |
+| Employee self check-in/check-out, correction approval workflow | Self-service still missing; **correction history implemented** (`attendance_corrections` table + `writeCorrection()` with reason) | Medium |
+| Hold expiry column + scheduled release | **Implemented** — `ExpireBookingHoldsCommand`, scheduler `bookings:expire-holds` hourly, audit-logged | — |
+| Configurable venue shifts | **Implemented** — `app/Support/ShiftWindows.php` (shift timings + buffer) | — |
+| Calendar week/day/agenda views | **Implemented + browser verified** — MONTH / WEEK / DAY / AGENDA switch, distinct ranges; search/print/export still missing | Low |
 
 ## Phase 3 — payroll / finance
 | Feature | Status |
 |---|---|
 | Attendance-aware deductions + approval + finalization lock | **Implemented this cycle** — 6 tests, browser verified |
+| **DRAFT→APPROVED→PAID enforcement + atomic payment + PAID immutability** | **Fixed in 17 Nov repair cycle** — 4 tests (`PayrollPaymentIntegrityTest`), browser verified end-to-end |
+| **360px payroll horizontal overflow** | **Fixed** — layout constrained (min-w-0, flex-wrap, scroll-contained tables); 0 page-breakers at 360px on 6 ERP pages (iframe methodology) |
+| Salary source integrity (no invented defaults) | **Implemented** — compile refuses rows without explicit base salary / policy salary and lists them; never invents amounts (browser-verified message) |
 | Daily wage / hourly wage, configurable bonus UI, advances/loans ledger | Missing |
 | Tax/provident rules | Deliberately not invented (jurisdiction-specific business decision) |
 | Dispute management entity | Missing |

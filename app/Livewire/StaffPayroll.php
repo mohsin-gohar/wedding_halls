@@ -10,7 +10,9 @@ use App\Models\StaffLeave;
 use App\Models\StaffPayroll as PayrollModel;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -396,6 +398,11 @@ class StaffPayroll extends Component
 
             return;
         }
+        if ($record->status !== 'APPROVED') {
+            $this->errorMessage = 'Approve the payroll before it can be paid.';
+
+            return;
+        }
         $this->payingPayrollId = $record->id;
         $this->payMethod = 'BANK_TRANSFER';
         $this->payDate = Carbon::today()->format('Y-m-d');
@@ -410,42 +417,74 @@ class StaffPayroll extends Component
             'payDate' => 'required|date',
             'payMethod' => 'required|in:CASH,BANK_TRANSFER,CHEQUE',
         ]);
-        if ($record->status === 'PAID') {
+        $tenantId = Auth::user()->tenant_id;
+        $payDate = $this->payDate;
+        $payMethod = $this->payMethod;
+
+        try {
+            $outcome = DB::transaction(function () use ($tenantId, $payDate, $payMethod) {
+                $locked = PayrollModel::where('tenant_id', $tenantId)
+                    ->whereKey($this->payingPayrollId)
+                    ->lockForUpdate()
+                    ->with('user')
+                    ->firstOrFail();
+
+                if ($locked->status === 'PAID') {
+                    return 'already';
+                }
+                if ($locked->status !== 'APPROVED') {
+                    return 'not-approved';
+                }
+
+                $locked->update([
+                    'status' => 'PAID',
+                    'paid_at' => Carbon::parse($payDate),
+                    'payment_method' => $payMethod,
+                ]);
+
+                Expense::create([
+                    'tenant_id' => $tenantId,
+                    'payroll_id' => $locked->id,
+                    'category' => 'STAFF_WAGES',
+                    'title' => 'Salary Payout - '.($locked->user->name ?? 'Staff')." ({$locked->month_year})",
+                    'amount' => $locked->net_salary,
+                    'expense_date' => $payDate,
+                    'payee' => $locked->user->name ?? 'Staff',
+                    'payment_method' => $payMethod,
+                    'receipt_number' => 'PAYROLL-'.$locked->id,
+                    'notes' => "Monthly staff salary disbursed via {$payMethod}.",
+                    'created_by_user_id' => Auth::id(),
+                ]);
+
+                AuditLog::log(
+                    'PAYROLL_PAID',
+                    'Disbursed salary of PKR '.number_format((float) $locked->net_salary).' to ['.($locked->user->name ?? 'Staff').'].',
+                    $tenantId,
+                    'StaffPayroll',
+                    $locked->id
+                );
+
+                return 'paid';
+            });
+        } catch (UniqueConstraintViolationException) {
             $this->showPayModal = false;
-            $this->errorMessage = 'This payroll entry has already been paid.';
+            $this->errorMessage = 'This payroll already has a disbursement. No second payment was recorded.';
 
             return;
         }
 
-        $record->update([
-            'status' => 'PAID',
-            'paid_at' => Carbon::parse($this->payDate),
-            'payment_method' => $this->payMethod,
-        ]);
-
-        // Auto-post expense to ERP ledger so net profit / loss includes payroll
-        Expense::create([
-            'tenant_id' => Auth::user()->tenant_id,
-            'category' => 'STAFF_WAGES',
-            'title' => "Salary Payout - {$record->user->name} ({$record->month_year})",
-            'amount' => $record->net_salary,
-            'expense_date' => $this->payDate,
-            'payee' => $record->user->name,
-            'payment_method' => $this->payMethod,
-            'receipt_number' => 'SLIP-'.strtoupper(substr($record->id, 0, 8)),
-            'notes' => "Monthly staff salary disbursed via {$this->payMethod}.",
-            'created_by_user_id' => Auth::id(),
-        ]);
-
-        AuditLog::log(
-            'PAYROLL_PAID',
-            'Disbursed salary of PKR '.number_format($record->net_salary)." to [{$record->user->name}].",
-            Auth::user()->tenant_id,
-            'StaffPayroll',
-            $record->id
-        );
-
         $this->showPayModal = false;
+        if ($outcome === 'already') {
+            $this->errorMessage = 'This payroll entry has already been paid.';
+
+            return;
+        }
+        if ($outcome === 'not-approved') {
+            $this->errorMessage = 'Approve the payroll before it can be paid. A draft was not paid.';
+
+            return;
+        }
+
         $this->feedbackMessage = 'Salary slip marked as PAID and auto-posted to ERP Expense Ledger.';
     }
 
