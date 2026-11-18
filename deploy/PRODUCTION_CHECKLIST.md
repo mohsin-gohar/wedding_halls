@@ -18,7 +18,7 @@ short enough to copy into a release ticket.
 ## 2. Server and PHP runtime
 
 - [ ] PHP 8.2+ with `bcmath ctype curl dom fileinfo json mbstring openssl pcre pdo tokenizer xml redis`.
-- [ ] Composer 2.x, Node 20 LTS (build can run in CI), Nginx, Redis 7+, MySQL 8+ or PostgreSQL 15+.
+- [ ] Composer 2.x, Node 20 LTS (build can run in CI), Nginx, Redis 7+, MySQL 8+.
 - [ ] `storage/` and `bootstrap/cache/` are writable by the web user (`www-data`).
 - [ ] `php artisan storage:link` has been run **if** `FILESYSTEM_DISK=public`.
       With S3/R2 the link is not required, but the bucket policy must allow the
@@ -51,7 +51,6 @@ short enough to copy into a release ticket.
 
 - [ ] Take a verified database backup **before** running migrations.
 - [ ] `php artisan migrate --force` completes; no pending migrations remain.
-- [ ] PostgreSQL only: confirm UUID columns/defaults are correct after the
       migration (`SELECT column_name, data_type, column_default FROM
       information_schema.columns WHERE table_name = 'bookings';`).
 - [ ] Seed/reference data (subscription plans, platform settings) exists.

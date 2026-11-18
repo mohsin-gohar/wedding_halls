@@ -10,7 +10,7 @@ live production server. It complements the automated pieces added in `deploy/`.
 | OS | Ubuntu 22.04 LTS+ | |
 | PHP | 8.2+ | Extensions: `bcmath ctype curl dom fileinfo json mbstring openssl pcre pdo tokenizer xml redis` |
 | Web server | Nginx | + PHP-FPM 8.2 |
-| Database | MySQL 8.0+ (or PostgreSQL 15+) | SQLite is dev-only |
+| Database | MySQL 8.0+ only | No SQLite/PostgreSQL fallback |
 | Cache/Queue | Redis 7+ | |
 | Node | 20 LTS | For `npm ci && npm run build` |
 | Composer | 2.x | |

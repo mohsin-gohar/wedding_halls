@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Media;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,11 +38,11 @@ class VendorPortfolioMedia extends Model
 
     public function url(): string
     {
-        return asset('storage/'.$this->path);
+        return Media::publicUrl($this->path);
     }
 
     public function thumbUrl(): string
     {
-        return asset('storage/'.($this->thumbnail_path ?: $this->path));
+        return Media::publicUrl($this->thumbnail_path ?: $this->path);
     }
 }

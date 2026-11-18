@@ -20,7 +20,7 @@ Riwaj Grand is a multi-tenant wedding & event marketplace and operations platfor
 
 - PHP 8.2+, Laravel 12, Livewire 4, and Spatie Laravel Permission.
 - Vite 7, Tailwind CSS 4, and Alpine.js.
-- SQLite for local development/tests; MySQL or PostgreSQL and Redis are recommended for production.
+- MySQL 8 is the only supported database. Redis is recommended for production caches and queues.
 - Currency PKR, timezone `Asia/Karachi`.
 
 ## Local Setup

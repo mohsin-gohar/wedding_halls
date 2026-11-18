@@ -17,7 +17,7 @@ return new class extends Migration
                 $table->text('budget_range');  // e.g., "500,000 - 1,000,000 PKR"
                 $table->text('requirements');  // Detailed needs description
                 $table->enum('status', ['OPEN', 'CLOSED', 'AWARDED', 'CANCELLED'])->default('OPEN');  // OPEN, CLOSED, AWARDED, CANCELLED
-                $table->json('preferences')->default('[]');  // Theme, color palette, guest count, etc.
+                $table->json('preferences')->nullable();  // Theme, color palette, guest count, etc.
                 $table->timestamps();
 
                 $table->index(['tenant_id', 'status']);
@@ -88,8 +88,8 @@ return new class extends Migration
                 $table->string('prompt', 500);
                 $table->string('status')->default('PENDING'); // PENDING, GENERATING, COMPLETED, FAILED
                 $table->string('image_url')->nullable();
-                $table->json('vendor_matches')->default('[]');
-                $table->json('color_scheme')->default('[]');
+                $table->json('vendor_matches')->nullable();
+                $table->json('color_scheme')->nullable();
                 $table->timestamps();
 
                 $table->index(['tenant_id', 'status']);

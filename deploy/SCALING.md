@@ -7,8 +7,7 @@ before there is evidence they are needed. Review it together with
 
 ## What the application already supports
 
-- MySQL and PostgreSQL connections are available in Laravel's database config;
-  SQLite is intended for development and tests.
+- MySQL 8 is the only supported database connection.
 - Redis cache, queue, and session drivers are available. Production deployment
   guidance already calls for Redis, and the Supervisor example runs Redis queue
   workers.
@@ -28,7 +27,7 @@ storage, or APM integration is provisioned by this repository.
 
 ## Production baseline (single application node)
 
-1. Use a managed MySQL/PostgreSQL instance and a shared, authenticated Redis
+1. Use a managed MySQL 8 instance and a shared, authenticated Redis
    service. Keep credentials and network access private; require TLS where the
    service/network requires it.
 2. Set `APP_ENV=production`, `APP_DEBUG=false`, and a unique `APP_KEY`. For

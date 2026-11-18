@@ -21,7 +21,7 @@ class CartManager extends Component
 
     public int $guest_count = 0;
 
-    public decimal $estimated_total = 0.00;
+    public float $estimated_total = 0.0;
 
     public function mount(): void
     {
@@ -64,7 +64,7 @@ class CartManager extends Component
         $this->calculateTotals();
     }
 
-    private function calculateVendorShare($bookable): decimal
+    private function calculateVendorShare($bookable): float
     {
         // Default vendor share based on type
         $baseShare = match (get_class($bookable)) {

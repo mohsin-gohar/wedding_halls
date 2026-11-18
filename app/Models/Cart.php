@@ -40,14 +40,14 @@ class Cart extends Model
         return $this->hasMany(CartItem::class);
     }
 
-    public function totalBeforeCommission(): decimal
+    public function totalBeforeCommission(): float
     {
-        return $this->items()->sum(fn ($item) => $item->vendor_share + $item->vendor_commission);
+        return (float) $this->items()->sum(fn ($item) => (float) $item->vendor_share + (float) $item->vendor_commission);
     }
 
-    public function totalVendorCommission(): decimal
+    public function totalVendorCommission(): float
     {
-        return $this->items()->sum(fn ($item) => $item->vendor_commission);
+        return (float) $this->items()->sum(fn ($item) => (float) $item->vendor_commission);
     }
 
     public function statusLabel(): string

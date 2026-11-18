@@ -11,11 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // In SQLite tests, the initial table migration already uses a non-unique index.
-        if (Schema::getConnection()->getDriverName() === 'sqlite') {
-            return;
-        }
-
         try {
             Schema::table('bookings', function (Blueprint $table) {
                 $table->dropUnique('uq_hall_event_slot');
