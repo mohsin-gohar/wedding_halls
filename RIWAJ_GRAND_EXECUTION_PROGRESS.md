@@ -1,10 +1,11 @@
 # RIWAJ GRAND — Execution Progress
 
 **Execution spec:** `CODEX MASTER EXECUTION — RIWAJ GRAND COMPLETE EVENT INDUSTRY ECOSYSTEM` (user-provided, 2026-11-19)  
-**Branch:** `main` (local working copy; uncommitted work on top of pushed `origin/main`)  
-**Latest pushed HEAD on `origin/main` (verified):** `2f774e0` (2026-11-19) — "Category hierarchy & SEO/media foundation + DocumentController auth fix"  
-**Earlier baseline ref noted in prior docs:** `933efe3` (kept for historical context; superseded as "current HEAD")  
-**Execution started:** 2026-11-19; **reconciled:** 2026-11-19 (this update)
+**Current branch:** `feature/enterprise-transformation`
+**Current HEAD (local and origin):** `74035f5` — "fix: CI workflow, gitignore, and test configuration updates" (**not pushed to `origin/main`**)
+**`origin/main` at last verification:** `444ff83` — "Add scopeActive method with ordering"
+**Local uncommitted changes:** deterministic `VendorCategory::scopeActive()` ordering fix and focused regression test
+**Execution started:** 2026-11-19; **reconciled:** 2026-11-20
 
 > **Honesty constraint:** I will not claim tests/browser verification/infrastructure readiness without actually running/proving them. Environment blockers (no Redis service, no payment gateway sandbox creds, no production infra/multi-instance/LB, limited full-browser E2E capacity in one pass) will be documented explicitly. Completion is evidence-based.
 
@@ -12,19 +13,19 @@
 
 ## Current phase
 - **Phase 0 — Baseline & backup:** completed (baseline captured)
-- **Phase 1 — Security & tenant isolation:** completed for this target batch (isolation suite + webhook hardening green)
-- **Phase 2 — Category & generic onboarding:** completed for this target batch (admin taxonomy UI + generic registration + 14-category seeder green)
-- **Phase 3 — Marketplace:** completed for this target batch (browse/SEO/profile/similar-rail/nav + customer quotes portal + quote-acceptance funnel — 43-test gate green)
-- **Phase 4 — Universal service & booking engine:** completed for this target batch (direct Book Now, server-side pricing, APPOINTMENT/HOURLY slot guards — 20-test suite green)
-- **Phase 5 — Event workspace:** completed for this target batch (audited existing workspace; booking link/unlink + shortlist sync + nav; tests green)
+- **Phase 1 — Security & tenant isolation:** completed for the verified target batch (isolation + webhook hardening)
+- **Phase 2 — Category & generic onboarding:** completed for the verified target batch (admin taxonomy + generic registration + 97-row seeder)
+- **Phase 3 — Marketplace:** completed for the verified target batch (browse/SEO/profile/quote acceptance + nav)
+- **Phase 4 — Universal service & booking engine:** completed for the verified target batch (direct Book Now + slot guards)
+- **Phase 5 — Customer event workspace:** completed for the verified target batch (booking link/unlink + shortlist sync + nav)
 
 ## Phase checklist (0–13)
 - [x] Phase 0 — Baseline & backup
-- [x] Phase 1 — Security & tenant isolation (target batch: cross-tenant isolation + payment webhook hardening)
-- [x] Phase 2 — Category & generic onboarding (target batch: hierarchical admin taxonomy + generic registration + full seeder)
-- [x] Phase 3 — Marketplace (target batch: category browse/SEO + customer quotes portal + quote acceptance + profile rail + discoverability)
-- [x] Phase 4 — Universal service & booking engine (target batch: direct Book Now creating ACCEPTED ServiceBookings; slot guards for APPOINTMENT/HOURLY)
-- [x] Phase 5 — Customer event workspace (target batch: booking link/unlink + shortlist sync + nav discoverability)
+- [x] Phase 1 — Security & tenant isolation (verified target batch; full-phase audit not claimed)
+- [x] Phase 2 — Category & generic onboarding (verified target batch)
+- [x] Phase 3 — Marketplace (verified target batch)
+- [x] Phase 4 — Universal service & booking engine (verified target batch)
+- [x] Phase 5 — Customer event workspace (verified target batch)
 - [ ] Phase 6 — Vendor ERP completion
 - [ ] Phase 7 — CRM / Finance / Inventory / Procurement / HR
 - [ ] Phase 8 — Super Admin & SaaS
@@ -73,70 +74,25 @@
 - [x] Prior (this session): added `EVENT_ECOSYSTEM_GAP_ANALYSIS.md`, `config/cors.php`, hardened `.env.example`; pushed `933efe3` to `origin/main`.
 - [x] Phase 1 (targeted): audited high-risk access paths (`DocumentController`, `Api/*`, `ApiTokenController`, key policies/middleware, `WalkInBookingModal`, vendor boards) for tenant/ownership controls.
 - [x] Phase 1 (fix): fixed runtime bug in `DocumentController::vendorPaymentProof` (`auth::user()` instead of invalid `auth::user()` static call) to restore authorized proof download path.
-- [x] Phase 1 (fix): added `tests/Feature/CrossTenantIsolationRegressionTest.php` — 11 adversarial cross-tenant tests, all green.
-- [x] Phase 1 (fix): **hardened payment gateway webhooks** (`PaymentService::verifyWebhook`) — JazzCash/Easypaisa previously accepted payloads on the success field alone (`pp_ResponseCode=000` / `resultCode=SUCCESS`) with **no cryptographic verification** (HIGH risk: forged webhook could credit a booking). Now fail-closed: unset secret ⇒ reject; canonical sorted `key=value&…` HMAC (sha256/JAZZCASH_PASSWORD, sha512/EASYPAISA_SECRET_KEY) constant-time compared; success code still required. Stripe branch already failed closed (Stripe SDK not installed — `class_exists('Stripe\Webhook')` = false — so it only ever returns false; documented, not a working integration).
-- [x] Phase 1 (fix): fixed **real bug found by the new webhook tests** — `PaymentService::createPayment` was called with `payment_type='ADVANCE'`, which is not in the `payments.payment_type` enum (`TOKEN_ADVANCE|SECOND_INSTALLMENT|FINAL_SETTLEMENT|SECURITY_DEPOSIT|REFUND`) → MySQL data-truncation exception (HTTP 500) on the *valid signed* webhook and on `/payments/initiate`. Normalized `'ADVANCE' → 'TOKEN_ADVANCE'` at the single choke point.
-- [x] Phase 2 (foundation): added category hierarchy/SEO/media foundation — migration `2026_12_08_000001_add_hierarchy_and_seo_to_vendor_categories` (`parent_id`, `image`, `seo_title`, `seo_description`, index), updated `App\Models\VendorCategory`, hierarchy-compatible seeder. Applied on local MySQL test DB.
-- [x] Phase 2 (UI): new `App\Livewire\AdminCategoryManager` + `resources/views/livewire/admin-category-manager.blade.php` + route `admin.categories` in the `super.admin` group — hierarchical CRUD (create/edit/subcategory), slug uniqueness, SEO fields, enable/disable with subcategory cascade, sibling reordering (parent sort-band aware), cycle-safe parenting, reference-aware safe delete, defence-in-depth `mount()` 403 guard alongside route middleware.
-- [x] Phase 2 (onboarding): refactored `App\Livewire\Auth\Register` + view to be **category-generic** — business-category select from active top-level categories, venue-only fields (capacity/baseRent) validated only when the selected category's `booking_mode === 'SHIFT_VENUE'`, non-venue tenants skip Venue/Hall creation and redirect to the category-mapped dashboard (`vendor.dashboard.photography|catering|decoration|beauty-bridal|wedding-planners` else `vendor.dashboard.generic`); legacy venue path byte-compatible (still → `hall.media`).
-- [x] Phase 2 (taxonomy): expanded `VendorCategorySeeder` to **14 top-level categories (sorts 1–14) + 83 subcategories = 97 rows**; original 9 slugs/sorts byte-identical; globally-unique slugs; subcategory sorts in parent bands (`parentSort*100+n`); idempotent (`updateOrCreate` by slug); orphan-safe (skips children if parent missing).
-- [x] Phase 2 (marketplace): `PublicVendors` public tabs now show **top-level categories only** (83 subcategories don't flood the filter bar), and filtering a parent tab **includes tenants registered under its subcategories**.
-- [x] Quality: Pint passed on all changed files; `php -l` passed on all changed files.
-- [x] Phase 3 (browse UX): `PublicVendors` subcategory drill-down — `activeParentSlug` computed prop (parent tab stays lit while a subcategory filter is active), `subcategories` computed prop (chips row under a selected top-level category showing siblings when a subcategory is active), results heading resolves subcategory names.
-- [x] Phase 3 (SEO): category `seo_title`/`seo_description` now actually rendered — `PublicVendors::render()` passes category-aware `title`/`metaDescription` to the public layout (fallback: name + tagline), so admin-managed taxonomy SEO reaches `<title>`/`<meta description>`.
-- [x] Phase 3 (profile SEO): `PublicVendorProfile::render()` meta chain — vendor `about` → category `seo_description`/`tagline` → generated "Hire {name} — verified {category}…" sentence (previously an empty `<meta description>` when `about` was null); `MarketplaceCategoryBrowseTest` extended with 4 vendor-profile tests (title, both fallbacks, hidden-vendor 404) — **this route had zero test coverage before**.
-- [x] Phase 3 (nav): Super Admin sidebar + mobile menu now link to `admin.categories` (route existed with no UI entry point) with active-state styling and a top-level category count badge.
-- [x] Phase 3 (funnel closure): **customer-side quote acceptance** — previously only a vendor could award (`rfq.award`), leaving customers with no way to choose between quotes. New `CustomerDashboard::acceptQuote($rfqBidId)` with component-level ownership check (bid → RFQ `client_id` must equal signed-in customer, else 404) delegating to `ServiceBookingService::acceptQuote` (row-locked OPEN/PENDING re-check, competing bids rejected, ServiceBooking created with `customer_id` defaulting to the RFQ client). Accept button rendered on PENDING bids of OPEN RFQs with loading state; `errorMessage` property + red flash banner added; `switchTab` clears it.
-- [x] Phase 3 (similar vendors): `PublicVendorProfile::similarVendors` computed prop (same category, marketplace-visible/approved/active, featured+rating ordered, capped at 3, excludes self) + card rail with cover/gradient monogram, rating and "View all →" category link.
-- [x] Phase 3 (discoverability): the multi-vendor marketplace (`/vendors`) was **orphaned from navigation** — added a "Marketplace" desktop-nav entry (with active patterns for vendor profile/quote pages) and a footer "Vendor Marketplace" link; locked by a homepage nav/footer test.
-- [x] Phase 3 (customer portal): new **My Quotes & Services** tab on `CustomerDashboard` — customer's own RFQs with vendor quote responses (bid amount/proposal/status, vendor tenant name) + marketplace `ServiceBooking`s (reference/event/amount/status), both strictly scoped to `client_id`/`customer_id` of the signed-in customer with no request parameter able to widen the query; `switchTab` whitelist extended to `quotes`; empty states included.
-- [x] Phase 3 (tests): `MarketplaceCategoryBrowseTest` 15 tests (11 browse/SEO + 4 vendor-profile SEO/404 — the profile route had zero coverage before); `CustomerQuotesPortalTest` 14 tests (tab structure, own RFQ/quote/service visibility, empty states, cross-customer leak checks, count scoping, quote acceptance happy path + foreign-RFQ 404 + double-award refusal, bookings-tab regression).
+- [x] Phase 2 (foundation): added category hierarchy/SEO/media foundation for dynamic categories — migration `2026_12_08_000001_add_hierarchy_and_seo_to_vendor_categories` (`parent_id`, `image`, `seo_title`, `seo_description`, index), updated `App\Models\VendorCategory` (fillable/casts, parent/children/scopes/helpers), and made `VendorCategorySeeder` hierarchy-compatible (`parent_id => null` for top-level seeds). Migration applied successfully on local MySQL test DB (`127.0.0.1:3307`, `wedding_hall_mysql_test`).
+- [x] Quality: Pint passed on changed files (`VendorCategory`, `DocumentController`, migration, seeder, `config/cors.php`).
 
 ## Modified files (this execution run)
 - `RIWAJ_GRAND_EXECUTION_PROGRESS.md` (created, updated)
 - `app/Http/Controllers/DocumentController.php` (fixed `vendorPaymentProof` auth resolution bug)
-- `app/Models/VendorCategory.php` (hierarchy/SEO/media fields, relations, scopes, helpers)
+- `app/Models/VendorCategory.php` (added hierarchy/SEO/media fields, relations, scopes, helpers)
 - `database/migrations/2026_12_08_000001_add_hierarchy_and_seo_to_vendor_categories.php` (new)
-- `database/seeders/VendorCategorySeeder.php` (expanded to 14 categories + 83 subcategories)
-- `app/Livewire/AdminCategoryManager.php` (new — Super Admin hierarchical taxonomy manager)
-- `resources/views/livewire/admin-category-manager.blade.php` (new)
-- `routes/web.php` (`admin.categories` route + import)
-- `app/Livewire/Auth/Register.php` (generic category-aware business registration)
-- `resources/views/livewire/auth/register.blade.php` (category select + conditional venue fields + generic copy)
-- `app/Livewire/PublicVendors.php` (top-level-only tabs + subcategory-inclusive filter)
-- `app/Services/PaymentService.php` (fail-closed webhook HMAC verification + `payment_type` enum normalization)
-- `tests/Feature/CrossTenantIsolationRegressionTest.php` (new — 11 tests)
-- `tests/Feature/AdminCategoryManagerTest.php` (new — 16 tests)
-- `tests/Feature/GenericVendorRegistrationTest.php` (new — 6 tests)
-- `tests/Feature/PaymentWebhookSecurityTest.php` (new — 10 tests)
-- `tests/Feature/VendorCategoryTaxonomyTest.php` (new — 8 tests)
-- `tests/Feature/MarketplaceCategoryBrowseTest.php` (new — 11 tests, Phase 3)
-- `tests/Feature/CustomerQuotesPortalTest.php` (new — 11 tests, Phase 3)
-- `app/Livewire/CustomerDashboard.php` (quotes tab: RFQ + ServiceBooking queries scoped to signed-in customer, `switchTab` whitelist, `acceptQuote` ownership-checked action, `errorMessage`)
-- `resources/views/livewire/customer-dashboard.blade.php` (quotes tab button + RFQ/quote-response/service-booking panel + accept-quote button + flash banners)
-- `app/Livewire/PublicVendorProfile.php` (meta description fallback chain + `similarVendors` computed prop)
-- `resources/views/livewire/public-vendor-profile.blade.php` (similar-vendors rail)
-- `resources/views/components/layouts/app.blade.php` (super-admin sidebar + mobile nav link to `admin.categories`)
-- `resources/views/components/layouts/public.blade.php` (Marketplace nav entry + footer marketplace link)
-- `config/cors.php`, `.env.example`, `EVENT_ECOSYSTEM_GAP_ANALYSIS.md` (earlier in session)
+- `database/seeders/VendorCategorySeeder.php` (explicit top-level `parent_id` compatibility)
+- `config/cors.php` (created earlier in session)
+- `.env.example` (hardened earlier in session)
+- `EVENT_ECOSYSTEM_GAP_ANALYSIS.md` (created earlier in session)
 
 ## Tests run (this execution run)
-- `php -l config/cors.php` → **PASS**
-- `php artisan migrate --force` (MySQL `127.0.0.1:3307` / `wedding_hall_mysql_test`) → **PASS** (hierarchy migration DONE; later `migrate:status --pending` → no pending migrations)
-- `./vendor/bin/pint <all changed files>` → **PASS** (AdminCategoryManager, Register, PublicVendors, PaymentService, seeder, all 5 new tests, routes)
-- `php artisan test tests/Feature/VendorErpBoardsTest.php tests/Feature/VendorQuoteRequestTest.php` → **PASS** (21 passed, 81 assertions, 186.16s)
-- `php artisan test tests/Feature/CrossTenantIsolationRegressionTest.php` → **PASS** (11 passed, 28 assertions, 92.25s)
-- `php artisan test tests/Feature/AdminCategoryManagerTest.php tests/Feature/GenericVendorRegistrationTest.php` → **PASS** (22 passed, 77 assertions, 183.13s)
-- `php artisan test tests/Feature/HallOwnerAuthAndMediaTest.php tests/Feature/EnterpriseExpansionTest.php tests/Feature/TenantPrivacyAndSecurityAuditTest.php tests/Feature/EndToEndSystemAuditTest.php` → **PASS** (50 passed, 258 assertions, 351.61s) — proves the registration refactor kept the legacy venue flow byte-compatible.
-- `php artisan test tests/Feature/PaymentWebhookSecurityTest.php` → first run **2 failed, 8 passed** (real bug: `payment_type` enum truncation on the success path — fixed); re-run → **PASS** (10 passed, 32 assertions, 115.65s)
-- `php artisan db:seed --class=VendorCategorySeeder` (MySQL) → **PASS**; integrity check: `total=97 top=14 children=83 distinct_slugs=97 orphans=0 dup_slugs=0 sort_bands_ok=Y original_9_unchanged=Y`
-- `php artisan test tests/Feature/VendorCategoryTaxonomyTest.php tests/Feature/AdminCategoryManagerTest.php tests/Feature/GenericVendorRegistrationTest.php` → **PASS** (30 passed, 461 assertions, 254.69s) — taxonomy integrity + public tabs top-level-only + parent-tab includes subcategory vendors + registration offers top-level only, alongside the admin manager and generic registration suites.
-- `php artisan test tests/Feature/MarketplaceCategoryBrowseTest.php` → first run 11 failed (view bug: `$activeParentSlug` must be `$this->activeParentSlug` — fixed; one run hit a MySQL test-server outage, restarted `mysqld` on 3307; one assertion needed `e()` for `&` escaping — fixed) → **PASS** (11 passed, 58 assertions, 138.25s)
-- `php artisan test tests/Feature/CustomerQuotesPortalTest.php tests/Feature/CustomerProfileTest.php` → first run 1 failed/10 passed (test asserted tab panel headings on a default-tab HTTP GET — fixed; one earlier run raced mid-edit and hit an undefined `$errorMessage` before the property landed — fixed) → **PASS** (17 passed, 50 assertions, 370.00s) — includes quote-acceptance happy path, foreign-RFQ 404 with zero persistence, double-award refusal with exactly 1 booking
-- `php artisan test tests/Feature/MarketplaceCategoryBrowseTest.php` (expanded with vendor-profile SEO ×4 + similar-vendors ×2) → **PASS** (17 passed, 71 assertions, 134.11s)
-- `php artisan test tests/Feature/DashboardClickAuditTest.php tests/Feature/PlatformRouteCrawlTest.php` → **PASS** (10 passed, 126 assertions, 184.84s) — regression for the sidebar nav link + customer dashboard changes (all ERP/admin pages, persona crawl, guest redirects still green)
-- `php artisan test tests/Feature/MarketplaceCategoryBrowseTest.php tests/Feature/CustomerQuotesPortalTest.php tests/Feature/VendorCategoryTaxonomyTest.php tests/Feature/CustomerProfileTest.php` → **PASS (Phase 3 gate: 43 passed, 509 assertions, 279.55s)** — browse/SEO/profile/similar-rail/nav (18) + quotes portal & quote acceptance (14) + taxonomy integrity (8) + profile BC (3), all green in one run
-- Attempted: `php artisan test --filter=Vendor` → **timed out/killed at 300s** in this environment (not a verified pass/fail)
+- `php -l config/cors.php` → **PASS** (no syntax errors)
+- `php artisan migrate --force` (MySQL `127.0.0.1:3307` / `wedding_hall_mysql_test`) → **PASS** (`2026_12_08_000001_add_hierarchy_and_seo_to_vendor_categories` DONE)
+- `./vendor/bin/pint app/Models/VendorCategory.php app/Http/Controllers/DocumentController.php database/migrations/2026_12_08_000001_add_hierarchy_and_seo_to_vendor_categories.php database/seeders/VendorCategorySeeder.php config/cors.php` → **PASS**
+- `php artisan test tests/Feature/VendorErpBoardsTest.php tests/Feature/VendorQuoteRequestTest.php` (MySQL env) → **PASS** (21 passed, 81 assertions, 186.16s)
+- Attempted: `php artisan test --filter=Vendor` → **timed out/killed at 300s** in this environment before completion (not a verified pass/fail for full filtered set)
 
 ## Actual results
 - **Phase 1 cross-tenant regression (MySQL):** 11/11 green (28 assertions) — documents, receipts, salary slips, KOT, guest redirect, API direct-ID 404s, cross-tenant payment recording 403 with zero persistence, vendor board listing/action isolation, payment-proof authz.
@@ -150,7 +106,7 @@
 - **Phase 3 customer quotes portal (MySQL):** `CustomerQuotesPortalTest` 14/14 + `CustomerProfileTest` 3/3 green (50 assertions) — tab structure, own RFQs + quote responses + service bookings visible, empty states, cross-customer RFQ/bid/ServiceBooking leak checks (assertDontSee + count = 2 scoping), quote acceptance happy path (ServiceBooking created with correct `rfq_bid_id`/amount, RFQ → AWARDED), foreign-RFQ bid acceptance → 404 with **zero persistence**, double-award refused with `errorMessage` and exactly 1 booking (2nd bid REJECTED), bookings/profile tabs regression.
 - **Phase 3 marketplace browse/SEO/profile (MySQL):** `MarketplaceCategoryBrowseTest` 18/18 green (incl. similar-vendors rail same-category-only + never-self + cap 3, vendor-profile meta fallback chain ×3, hidden-profile 404, homepage nav/footer Marketplace links).
 - **Phase 3 gate (MySQL):** all four suites together → **43 passed, 509 assertions, 279.55s**. Plus dashboard/route regression 10/10 (126 assertions).
-- Blockers unchanged: no Redis, no gateway sandbox creds, no production infra; full 13-phase scope / full browser E2E / k6 load not achievable or claimable in one pass. **No commit/push since `2f774e0` — all of the above is uncommitted work.**
+- Blockers unchanged: no Redis, no gateway sandbox creds, no production infra; full 13-phase scope / full browser E2E / k6 load not achievable or claimable in one pass. The CI/DB remediation is in local commit `74035f5`; it has **not** been pushed. The `scopeActive()` fix and its regression test are uncommitted.
 
 ## Phase 4 — implementation notes (target batch complete)
 - **Service layer** (`app/Services/ServiceBookingService.php`): `createDirectBooking()` creates an `ACCEPTED` `ServiceBooking` directly from a `VendorService`/`VendorPackage` (no RFQ) under `DB::transaction` + `Tenant::lockForUpdate()` serialization; `ServiceBookingCreatedEvent` fired; `booking_reference` via `ServiceBooking::generateReference()`.
@@ -169,22 +125,25 @@
 - **Files:** `app/Livewire/CustomerEventWorkspace.php`, `resources/views/livewire/customer-event-workspace.blade.php`, `resources/views/livewire/customer-dashboard.blade.php`, `tests/Feature/CustomerEventWorkspaceTest.php` (new).
 - **Tests (MySQL):** `CustomerEventWorkspaceTest` — run 1 **10 passed, 2 failed (47 assertions)** (ownership tests used `expectException` instead of Livewire `assertStatus(404)`; fixed), **run 2 PASS — 12 passed (47 assertions), 122.69s**. Covers guest redirect, open workspace + dashboard nav link, event create/select/edit, delete detaches bookings, cross-customer event 404, tasks add/toggle/delete, vendor shortlist/status/detach, booking link/unlink, shortlist BOOKED sync on link, cross-customer booking link 404 with zero linkage, budget totals.
 
-## CI / test-environment / deployment remediation (2026-11-19, in response to external review)
-- **phpunit.xml ↔ CI DB mismatch fixed in code:** `phpunit.xml` now defaults to disposable MySQL 8 test DB `eventhub_test` / user `eventhub` / password `rootpassword` on `127.0.0.1:3306` (aligned with `.github/workflows/ci.yml` service). CI workflow updated to current env var names (`CACHE_STORE`, `QUEUE_CONNECTION`), MySQL readiness check, `pdo_mysql`/`redis` extensions, `npm ci`, removed separate `db:seed` step (tests manage state), and **deploy job explicitly disabled/manual** (`if: false`, no fake production deploy). This addresses the reported `SQLSTATE[HY000] [1045]` root/no-password mismatch root cause in config; **GitHub Actions green status not re-verified from this environment** (cannot run CI here).
-- **Local test runs:** I continue to run targeted suites against a local disposable MySQL instance by overriding env vars (`DB_HOST/DB_PORT/DB_DATABASE/DB_USERNAME/DB_PASSWORD`) before `php artisan test` (verified working after config change: `tests/Unit/ExampleTest.php` 1/1 passed).
-- **Tracked artifacts:** `test-results/` and image artifacts are present in git history/index in places despite gitignore entries; not removed/untracked here (no destructive/index changes without explicit direction). `wedding_halls/` duplicate copies exist in tree and appear in gitignore patterns — needs careful hygiene decision.
-- **Progress doc reconciled:** baseline/HEAD clarified (pushed `2f774e0` on `origin/main`; local uncommitted work on top). Phases marked done only for verified target batches with evidence above.
+## CI / test-environment / deployment remediation (2026-11-19; **local commit `74035f5`, not pushed**)
+- **Root cause addressed:** `phpunit.xml` ↔ CI DB mismatch. `phpunit.xml` now defaults to the same disposable MySQL 8 test DB as the workflow: `eventhub_test` / `eventhub` / `rootpassword` @ `127.0.0.1:3306` (previously hardcoded `wedding_hall_mysql_test` / `root` / empty password, which caused the CI `SQLSTATE[HY000] [1045] using password: NO` failure).
+- **Workflow hardened:** MySQL health-check with explicit credentials, readiness loop, `pdo_mysql`/`redis` PHP extensions, `actions/checkout@v4`, `setup-node@v4`, `npm ci && npm run build`, current env var names (`CACHE_STORE`/`QUEUE_CONNECTION`/`SESSION_DRIVER`), removed separate `db:seed` step, `php artisan test` remains the failing gate.
+- **Deployment:** deploy job intentionally disabled/manual (`if: false`) with a clear "no automatic deployment" step — **no fake production deploy**. No push, no production change.
+- **Local DB recovery (2026-11-20):** C: free space verified at **5.95 GB**; disposable MariaDB on `127.0.0.1:3307` restarted and readiness confirmed (`TcpTestSucceeded=True`), with datadir `C:\Users\mohsi\AppData\Local\Temp\opencode\mysql_test_data`. The disposable `eventhub_test` DB and `eventhub`@`%` / `rootpassword` account were recreated and migrated. No production DB or user data was touched.
+- **Verified locally with CI-style credentials (2026-11-20):** `DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3307 DB_DATABASE=eventhub_test DB_USERNAME=eventhub DB_PASSWORD=rootpassword php artisan test tests/Feature/VendorCategoryTaxonomyTest.php tests/Feature/AdminCategoryManagerTest.php` → **PASS: 25 passed (432 assertions), 244.84s**. This includes the new deterministic-ordering regression test.
+- **Deterministic ordering fix + regression (uncommitted):** `VendorCategory::scopeActive()` now orders by `sort`, then `name`; `VendorCategoryTaxonomyTest::test_active_scope_orders_by_sort_then_name_and_excludes_inactive_categories` inserts rows out of order, asserts the `sort`/`name` sequence, and asserts inactive rows are excluded. Pint, `php -l`, and `view:cache` all pass after the change.
+- **Not verified here:** actual GitHub Actions green run (requires push + CI; needs explicit authorization). The stale `238 failed · 3 passed` run remains the last recorded CI result.
 
 ## Remaining tasks (immediate next)
-1. **Phase 6–8, 10–13:** category-specific ERP modules, CRM/finance/inventory/HR, Super Admin/SaaS, infra/Redis, security hardening, browser QA, regression/production readiness — large scope, sequential, evidence-based; prioritize high-value tested increments.
-2. **Full regression / CI proof:** run full PHPUnit suite on aligned MySQL config (time-consuming) and/or verify CI on GitHub after push (requires your authorization to push) — not yet done.
-3. Phase 4/5 follow-ups (optional): same-day/capacity guards for non-slot booking modes, customer-side cancel/reschedule for direct bookings, richer workspace timeline/docs.
-4. More Phase 9: extend safe reveal animations to other flows; targeted browser QA possible now if requested.
-5. Blockers unchanged: no Redis service locally, no gateway sandbox creds, no production infra/multi-instance/LB/object storage/monitoring/restore proof, no k6 load evidence. **No commit/push/deploy without explicit authorization.**
+1. **CI verification / push:** capture green GitHub Actions run for the `phpunit.xml`/workflow fix — requires explicit authorization to push local `74035f5` (and any follow-up fix commits) to `origin/main`. Not yet pushed. Branch divergence must be resolved first: `HEAD` has 3 commits not on `origin/main`; `origin/main` has `444ff83` (equivalent `scopeActive()` ordering commit, but with unresolved conflict markers in the progress doc) not on this branch. No merge/rebase/cherry-pick has been performed.
+2. **Full regression:** run broader/full PHPUnit suite on aligned MySQL config; record actual outputs (time-consuming; targeted suites already green).
+3. **Phase 6–8, 10–13:** category-specific ERP modules, CRM/finance/inventory/HR, Super Admin/SaaS, infra/Redis, security hardening, browser QA, production-readiness — large scope; continue high-value, test-backed increments.
+4. Phase 4/5 follow-ups (optional): same-day/capacity guards for non-slot booking modes, customer cancel/reschedule for direct bookings, richer workspace timeline/docs.
+5. More Phase 9: extend safe reveal animations to other flows; targeted browser QA possible now if requested.
+6. Blockers unchanged: no Redis service locally, no gateway sandbox creds, no production infra/multi-instance/LB/object storage/monitoring/restore proof, no k6 load evidence.
 
 ## Next exact steps
-- Continue with next feasible high-value, test-backed increments (ERP/category modules, finance/CRM hardening, further UI polish, security hardening) and run targeted MySQL suites per change.
-- Continue evidence-based; never claim 100%/$1000T completion without proof; no commit/push without explicit permission.
+- Continue next feasible high-value, test-backed increments; keep one authoritative progress file; never claim 100%/$1000T completion without proof; no push/deploy without explicit permission.
 
 ---
-*Last updated: 2026-11-19 (Phases 0–5 target batches complete with evidence; incremental Phase 9 scroll-reveal on marketplace/profile green — MarketplaceCategoryBrowseTest 18 passed / 75 assertions)*
+*Last updated: 2026-11-20 (CI/DB config fix in local commit `74035f5` — not pushed; taxonomy ordering fix + regression test uncommitted and verified 25 passed / 432 assertions; Phases 0–5 target batches + Phase 9 reveal increment previously evidenced; GitHub CI green still pending push/verification)*

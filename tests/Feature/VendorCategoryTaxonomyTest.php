@@ -110,6 +110,56 @@ class VendorCategoryTaxonomyTest extends TestCase
         $this->assertSame($before, VendorCategory::query()->distinct()->count('slug'));
     }
 
+    public function test_active_scope_orders_by_sort_then_name_and_excludes_inactive_categories(): void
+    {
+        // Insert in a deliberately different order from the expected result so
+        // storage order cannot satisfy the assertion by accident.
+        $zuluLast = VendorCategory::create([
+            'name' => 'Zulu Scope Category',
+            'slug' => 'scope-zulu-last',
+            'booking_mode' => 'DATE_EVENT',
+            'is_active' => true,
+            'sort' => 900,
+        ]);
+
+        $alphaSameSort = VendorCategory::create([
+            'name' => 'Alpha Scope Category',
+            'slug' => 'scope-alpha-same-sort',
+            'booking_mode' => 'DATE_EVENT',
+            'is_active' => true,
+            'sort' => 900,
+        ]);
+
+        $bravoLowerSort = VendorCategory::create([
+            'name' => 'Bravo Scope Category',
+            'slug' => 'scope-bravo-lower-sort',
+            'booking_mode' => 'DATE_EVENT',
+            'is_active' => true,
+            'sort' => 800,
+        ]);
+
+        $inactive = VendorCategory::create([
+            'name' => 'Aaa Inactive Scope Category',
+            'slug' => 'scope-aaa-inactive',
+            'booking_mode' => 'DATE_EVENT',
+            'is_active' => false,
+            'sort' => 700,
+        ]);
+
+        $ordered = VendorCategory::query()
+            ->whereKey([$zuluLast->id, $alphaSameSort->id, $bravoLowerSort->id, $inactive->id])
+            ->active()
+            ->pluck('slug')
+            ->all();
+
+        $this->assertSame(
+            [$bravoLowerSort->slug, $alphaSameSort->slug, $zuluLast->slug],
+            $ordered,
+            'Active categories must be sorted by sort, then name, regardless of insertion order.'
+        );
+        $this->assertNotContains($inactive->slug, $ordered, 'Inactive categories must be excluded.');
+    }
+
     // ─────────────────────────────────────────────────────────────
     // Public marketplace — tabs and subcategory-aware filtering
     // ─────────────────────────────────────────────────────────────
