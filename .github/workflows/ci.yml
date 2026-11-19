@@ -21,72 +21,91 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd "mysqladmin ping"
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -uroot -prootpassword"
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
 
       redis:
         image: redis:alpine
         ports:
           - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, exif, pcntl, bcmath, gd, zip
+          extensions: mbstring, exif, pcntl, bcmath, gd, zip, pdo_mysql, redis
           coverage: none
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
-      - name: Install NPM dependencies
-        run: npm install && npm run build
+      - name: Install NPM dependencies and build
+        run: npm ci && npm run build
 
       - name: Setup environment
         run: |
           cp .env.example .env
           php artisan key:generate
-          echo "DB_CONNECTION=mysql" >> .env
-          echo "DB_HOST=127.0.0.1" >> .env
-          echo "DB_PORT=3306" >> .env
-          echo "DB_DATABASE=eventhub_test" >> .env
-          echo "DB_USERNAME=eventhub" >> .env
-          echo "DB_PASSWORD=rootpassword" >> .env
-          echo "BROADCAST_DRIVER=log" >> .env
-          echo "CACHE_DRIVER=redis" >> .env
-          echo "SESSION_DRIVER=redis" >> .env
-          echo "QUEUE_DRIVER=redis" >> .env
+          {
+            echo "APP_ENV=testing"
+            echo "DB_CONNECTION=mysql"
+            echo "DB_HOST=127.0.0.1"
+            echo "DB_PORT=3306"
+            echo "DB_DATABASE=eventhub_test"
+            echo "DB_USERNAME=eventhub"
+            echo "DB_PASSWORD=rootpassword"
+            echo "BROADCAST_CONNECTION=log"
+            echo "CACHE_STORE=array"
+            echo "SESSION_DRIVER=array"
+            echo "QUEUE_CONNECTION=sync"
+            echo "REDIS_HOST=127.0.0.1"
+            echo "REDIS_PORT=6379"
+          } >> .env
+
+      - name: Verify MySQL is ready
+        run: |
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -ueventhub -prootpassword --silent; then
+              echo "MySQL is ready"
+              exit 0
+            fi
+            echo "Waiting for MySQL... ($i/30)"
+            sleep 2
+          done
+          echo "MySQL did not become ready in time" >&2
+          exit 1
 
       - name: Run migrations
         run: php artisan migrate --force
-
-      - name: Run seeders
-        run: php artisan db:seed --force
 
       - name: Run tests
         run: php artisan test
 
   deploy:
+    name: deploy (disabled - manual only)
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    # Production/staging deployment is intentionally disabled: no verified
+    # credentials or infrastructure are configured in this repo. Never deploy
+    # to production automatically. Enable only with explicit, reviewed config.
+    if: false
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Deploy to production
-        run: |
-          echo "Deploying EventHub to production..."
-          # Add your deployment steps here (e.g., SSH to server, pull, migrate, etc.)
+      - name: Deployment intentionally disabled
+        run: echo "Automatic deployment is disabled. Configure and run manual deployment only with explicit authorization."

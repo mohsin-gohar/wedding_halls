@@ -1,9 +1,10 @@
 # RIWAJ GRAND — Execution Progress
 
 **Execution spec:** `CODEX MASTER EXECUTION — RIWAJ GRAND COMPLETE EVENT INDUSTRY ECOSYSTEM` (user-provided, 2026-11-19)  
-**Branch:** `main` (synced with `origin/main`)  
-**HEAD at start:** `933efe3` docs: add event ecosystem gap analysis and baseline hardening config  
-**Started:** 2026-11-19
+**Branch:** `main` (local working copy; uncommitted work on top of pushed `origin/main`)  
+**Latest pushed HEAD on `origin/main` (verified):** `2f774e0` (2026-11-19) — "Category hierarchy & SEO/media foundation + DocumentController auth fix"  
+**Earlier baseline ref noted in prior docs:** `933efe3` (kept for historical context; superseded as "current HEAD")  
+**Execution started:** 2026-11-19; **reconciled:** 2026-11-19 (this update)
 
 > **Honesty constraint:** I will not claim tests/browser verification/infrastructure readiness without actually running/proving them. Environment blockers (no Redis service, no payment gateway sandbox creds, no production infra/multi-instance/LB, limited full-browser E2E capacity in one pass) will be documented explicitly. Completion is evidence-based.
 
@@ -168,15 +169,22 @@
 - **Files:** `app/Livewire/CustomerEventWorkspace.php`, `resources/views/livewire/customer-event-workspace.blade.php`, `resources/views/livewire/customer-dashboard.blade.php`, `tests/Feature/CustomerEventWorkspaceTest.php` (new).
 - **Tests (MySQL):** `CustomerEventWorkspaceTest` — run 1 **10 passed, 2 failed (47 assertions)** (ownership tests used `expectException` instead of Livewire `assertStatus(404)`; fixed), **run 2 PASS — 12 passed (47 assertions), 122.69s**. Covers guest redirect, open workspace + dashboard nav link, event create/select/edit, delete detaches bookings, cross-customer event 404, tasks add/toggle/delete, vendor shortlist/status/detach, booking link/unlink, shortlist BOOKED sync on link, cross-customer booking link 404 with zero linkage, budget totals.
 
+## CI / test-environment / deployment remediation (2026-11-19, in response to external review)
+- **phpunit.xml ↔ CI DB mismatch fixed in code:** `phpunit.xml` now defaults to disposable MySQL 8 test DB `eventhub_test` / user `eventhub` / password `rootpassword` on `127.0.0.1:3306` (aligned with `.github/workflows/ci.yml` service). CI workflow updated to current env var names (`CACHE_STORE`, `QUEUE_CONNECTION`), MySQL readiness check, `pdo_mysql`/`redis` extensions, `npm ci`, removed separate `db:seed` step (tests manage state), and **deploy job explicitly disabled/manual** (`if: false`, no fake production deploy). This addresses the reported `SQLSTATE[HY000] [1045]` root/no-password mismatch root cause in config; **GitHub Actions green status not re-verified from this environment** (cannot run CI here).
+- **Local test runs:** I continue to run targeted suites against a local disposable MySQL instance by overriding env vars (`DB_HOST/DB_PORT/DB_DATABASE/DB_USERNAME/DB_PASSWORD`) before `php artisan test` (verified working after config change: `tests/Unit/ExampleTest.php` 1/1 passed).
+- **Tracked artifacts:** `test-results/` and image artifacts are present in git history/index in places despite gitignore entries; not removed/untracked here (no destructive/index changes without explicit direction). `wedding_halls/` duplicate copies exist in tree and appear in gitignore patterns — needs careful hygiene decision.
+- **Progress doc reconciled:** baseline/HEAD clarified (pushed `2f774e0` on `origin/main`; local uncommitted work on top). Phases marked done only for verified target batches with evidence above.
+
 ## Remaining tasks (immediate next)
-1. **Phase 9 (UI/animations, incremental):** marketplace and vendor profile already have parallax; add scroll-reveal (`.reveal-on-scroll` / stagger delays) to key sections for a fuller animated feel (engine + reduced-motion handling already exist). Run `view:cache` + targeted marketplace/profile tests.
-2. **Phase 6–8, 10–13:** category-specific ERP modules, CRM/finance/inventory/HR, Super Admin/SaaS, infra/Redis, security hardening, browser QA, regression/production readiness — large scope, sequential, evidence-based; prioritize high-value tested increments.
+1. **Phase 6–8, 10–13:** category-specific ERP modules, CRM/finance/inventory/HR, Super Admin/SaaS, infra/Redis, security hardening, browser QA, regression/production readiness — large scope, sequential, evidence-based; prioritize high-value tested increments.
+2. **Full regression / CI proof:** run full PHPUnit suite on aligned MySQL config (time-consuming) and/or verify CI on GitHub after push (requires your authorization to push) — not yet done.
 3. Phase 4/5 follow-ups (optional): same-day/capacity guards for non-slot booking modes, customer-side cancel/reschedule for direct bookings, richer workspace timeline/docs.
-4. Blockers unchanged: no Redis, no gateway sandbox creds, no production infra/multi-instance/LB/object storage, no full browser E2E/k6 in this environment. **No commit/push since `2f774e0` — all work uncommitted.**
+4. More Phase 9: extend safe reveal animations to other flows; targeted browser QA possible now if requested.
+5. Blockers unchanged: no Redis service locally, no gateway sandbox creds, no production infra/multi-instance/LB/object storage/monitoring/restore proof, no k6 load evidence. **No commit/push/deploy without explicit authorization.**
 
 ## Next exact steps
-- Apply scroll-reveal pass to marketplace/vendor-profile views; run Pint + `view:cache` + `MarketplaceCategoryBrowseTest` regression; then continue with next feasible high-value phase increments and tests.
+- Continue with next feasible high-value, test-backed increments (ERP/category modules, finance/CRM hardening, further UI polish, security hardening) and run targeted MySQL suites per change.
 - Continue evidence-based; never claim 100%/$1000T completion without proof; no commit/push without explicit permission.
 
 ---
-*Last updated: 2026-11-19 (Phase 5 target batch COMPLETE: CustomerEventWorkspaceTest 12 passed / 47 assertions; continuing with incremental Phase 9/UI + further phases)*
+*Last updated: 2026-11-19 (Phases 0–5 target batches complete with evidence; incremental Phase 9 scroll-reveal on marketplace/profile green — MarketplaceCategoryBrowseTest 18 passed / 75 assertions)*
