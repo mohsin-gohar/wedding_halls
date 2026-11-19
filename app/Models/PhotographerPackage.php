@@ -56,19 +56,19 @@ class PhotographerPackage extends Model
         return $this->name === 'PLATINUM' || $this->slug === 'platinum';
     }
 
-    public function priceForGuestCount(int $guestCount): decimal
+    public function priceForGuestCount(int $guestCount): float
     {
         // Full day rate typically covers 6-8 hours
         $dayRate = $this->full_day_rate;
         $hourlyEquivalent = $this->hourly_rate * 6; // Assume 6 hour minimum
 
-        return max($dayRate, $hourlyEquivalent);
+        return (float) max((float) $dayRate, (float) $hourlyEquivalent);
     }
 
-    public function addonPrice(string $addon): decimal
+    public function addonPrice(string $addon): float
     {
         $addons = $this->addons ?? [];
 
-        return $addons[$addon] ?? 0;
+        return (float) ($addons[$addon] ?? 0);
     }
 }

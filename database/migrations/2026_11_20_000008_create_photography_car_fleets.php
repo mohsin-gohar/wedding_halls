@@ -18,7 +18,7 @@ return new class extends Migration
                 $table->decimal('full_day_rate', 10, 2);
                 $table->boolean('includes_drone')->default(false);
                 $table->boolean('includes_sameday_edit')->default(false);
-                $table->text('addons')->default('[]');  // JSON array of add-ons
+                $table->json('addons')->nullable();  // JSON array of add-ons
                 $table->boolean('is_active')->default(true);
                 $table->timestamps();
             });

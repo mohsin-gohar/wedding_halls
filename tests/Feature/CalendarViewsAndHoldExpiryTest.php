@@ -38,7 +38,7 @@ class CalendarViewsAndHoldExpiryTest extends TestCase
     public function test_week_day_and_agenda_views_show_the_booking(): void
     {
         $hall = $this->hall();
-        $date = Carbon::now()->startOfWeek(Carbon::MONDAY)->addDays(2)->toDateString();
+        $date = Carbon::now()->addDays(40)->toDateString();
         Booking::create([
             'tenant_id' => $hall->tenant_id,
             'hall_id' => $hall->id,
@@ -49,18 +49,24 @@ class CalendarViewsAndHoldExpiryTest extends TestCase
             'status' => 'CONFIRMED',
         ]);
 
-        $component = Livewire::actingAs($this->owner($hall))
+        $owner = $this->owner($hall);
+
+        foreach (['week', 'day', 'agenda'] as $mode) {
+            Livewire::actingAs($owner)
+                ->test(CalendarShiftGrid::class)
+                ->set('anchorDate', $date)
+                ->set('selectedHallId', $hall->id)
+                ->call('setView', $mode)
+                ->assertSet('viewMode', $mode)
+                ->assertSee('Agenda Walima Host');
+        }
+
+        Livewire::actingAs($owner)
             ->test(CalendarShiftGrid::class)
             ->set('anchorDate', $date)
-            ->set('selectedHallId', $hall->id)
-            ->call('setView', 'week')
-            ->assertSee('Agenda Walima Host')
-            ->call('setView', 'day')
-            ->assertSee('Agenda Walima Host')
             ->call('setView', 'agenda')
-            ->assertSee('Agenda Walima Host');
-
-        $component->call('navigateNext')->assertSet('viewMode', 'agenda');
+            ->call('navigateNext')
+            ->assertSet('viewMode', 'agenda');
     }
 
     public function test_owner_can_save_shift_windows_buffer_and_hold_hours(): void

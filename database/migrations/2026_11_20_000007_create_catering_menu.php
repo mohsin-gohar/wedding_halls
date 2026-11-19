@@ -20,7 +20,7 @@ return new class extends Migration
                 $table->integer('min_guest_count')->default(50);
                 $table->boolean('is_active')->default(true);
                 $table->text('ingredients')->nullable();
-                $table->json('allergens')->default('[]');
+                $table->json('allergens')->nullable();
                 $table->timestamps();
             });
         }

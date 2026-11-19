@@ -4,8 +4,10 @@ namespace App\Livewire;
 
 use App\Models\Tenant;
 use App\Models\VendorPortfolioMedia;
+use App\Support\Media;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -77,9 +79,7 @@ class VendorPortfolioManager extends Component
         $this->mediaUrls = [];
 
         foreach ($this->media as $item) {
-            $this->mediaUrls[(string) $item['id']] = $item['type'] === 'VIDEO'
-                ? asset('storage/'.$item['path'])
-                : asset('storage/'.$item['path']);
+            $this->mediaUrls[(string) $item['id']] = Media::publicUrl($item['path']);
         }
     }
 

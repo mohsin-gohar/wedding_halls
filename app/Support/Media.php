@@ -4,6 +4,28 @@ namespace App\Support;
 
 class Media
 {
+    public static function publicUrl(?string $path): string
+    {
+        $path = trim((string) $path);
+        if ($path === '') {
+            return '';
+        }
+
+        if (preg_match('#^https?://#i', $path) || str_starts_with($path, 'data:')) {
+            return $path;
+        }
+
+        if (str_starts_with($path, '/')) {
+            return asset(ltrim($path, '/'));
+        }
+
+        if (str_starts_with($path, 'storage/')) {
+            return asset($path);
+        }
+
+        return asset('storage/'.$path);
+    }
+
     /**
      * Convert any video URL (YouTube, Vimeo, direct file) into an embeddable URL.
      */
