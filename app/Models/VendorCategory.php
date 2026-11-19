@@ -52,9 +52,16 @@ class VendorCategory extends Model
         return $this->hasMany(VendorService::class);
     }
 
+    /**
+     * Active categories, ordered deterministically (sort then name).
+     *
+     * Explicit ordering is part of the contract: callers rely on a stable
+     * tab order for the public taxonomy (previously only `children()` was
+     * ordered, so top-level lists could come back in storage order).
+     */
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('is_active', true)->orderBy('sort')->orderBy('name');
     }
 
     public function scopeTopLevel($query)

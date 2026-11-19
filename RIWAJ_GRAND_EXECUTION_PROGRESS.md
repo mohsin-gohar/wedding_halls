@@ -1,9 +1,17 @@
 # RIWAJ GRAND — Execution Progress
 
 **Execution spec:** `CODEX MASTER EXECUTION — RIWAJ GRAND COMPLETE EVENT INDUSTRY ECOSYSTEM` (user-provided, 2026-11-19)  
+<<<<<<< Updated upstream
 **Branch:** `main` (synced with `origin/main`)  
 **HEAD at start:** `933efe3` docs: add event ecosystem gap analysis and baseline hardening config  
 **Started:** 2026-11-19
+=======
+**Branch:** `main` (local working copy; uncommitted work on top of pushed `origin/main`)  
+**Latest pushed HEAD on `origin/main` (verified):** `2f774e0` (2026-11-19) — "Category hierarchy & SEO/media foundation + DocumentController auth fix"  
+**Local working branch HEAD:** `74035f5` — "fix: CI workflow, gitignore, and test configuration updates" (local commit on `main`; **not pushed**; plus local uncommitted working-tree changes: `app/Models/VendorCategory.php` `scopeActive()` deterministic ordering fix)  
+**Earlier baseline ref noted in prior docs:** `933efe3` (kept for historical context; superseded as "current HEAD")  
+**Execution started:** 2026-11-19; **reconciled:** 2026-11-19 (this update)
+>>>>>>> Stashed changes
 
 > **Honesty constraint:** I will not claim tests/browser verification/infrastructure readiness without actually running/proving them. Environment blockers (no Redis service, no payment gateway sandbox creds, no production infra/multi-instance/LB, limited full-browser E2E capacity in one pass) will be documented explicitly. Completion is evidence-based.
 
@@ -90,6 +98,7 @@
 - Attempted: `php artisan test --filter=Vendor` → **timed out/killed at 300s** in this environment before completion (not a verified pass/fail for full filtered set)
 
 ## Actual results
+<<<<<<< Updated upstream
 - N/A (implementation/fix work starting).
 
 ## Remaining tasks (immediate next)
@@ -108,3 +117,57 @@
 
 ---
 *Last updated: 2026-11-19 (Phase 0 baseline initialized)*
+=======
+- **Phase 1 cross-tenant regression (MySQL):** 11/11 green (28 assertions) — documents, receipts, salary slips, KOT, guest redirect, API direct-ID 404s, cross-tenant payment recording 403 with zero persistence, vendor board listing/action isolation, payment-proof authz.
+- **Phase 1 webhook hardening (MySQL):** 10/10 green (32 assertions) — unsigned forged, wrong signature, tampered-after-signing, fail-closed-when-secret-unset (both gateways), forged Easypaisa success, declined-code-with-valid-signature, unknown gateway 404, valid signed JazzCash (processed + replay idempotent, exactly 1 payment row), valid signed Easypaisa (processed). Forged/tampered paths assert **zero payment rows and unchanged balance**.
+- **Phase 2 admin taxonomy (MySQL):** 16/16 green — route authz (guest redirect / non-super-admin 403 / super-admin 200 / mount defence-in-depth 403), CRUD + auto-slug, subcategory create, duplicate slug rejection, SEO edit, invalid booking-mode rejection, disable cascade, reorder (incl. boundary), cycle prevention (self-parent + nested-in-own-child), safe delete (unused deletes; with children/tenants refuses).
+- **Phase 2 generic onboarding (MySQL):** 6/6 green — photographer registers with deliberately-invalid venue fields and gets **no Venue/Hall rows** + lands on photography dashboard; legacy venue registration still creates Venue+Hall → `hall.media`; venue still requires hall fields; unknown category rejected; generic page copy verified.
+- **Phase 2 registration BC regression:** 50/50 green (258 assertions) across HallOwnerAuthAndMedia, EnterpriseExpansion, TenantPrivacyAndSecurityAudit, EndToEndSystemAudit.
+- **Phase 2 taxonomy seeding (MySQL):** 97 rows verified (14 top / 83 child), unique slugs, no orphans, sort bands correct, original 9 unchanged, idempotent re-seed.
+- **Phase 3 taxonomy + admin + registration combo (MySQL):** 30/30 green (461 assertions).
+- **Phase 3 marketplace browse/SEO (MySQL):** `MarketplaceCategoryBrowseTest` 11/11 green (58 assertions) — drill-down chip visibility (none/top-level/subcategory-sibling/unrelated/unknown-slug), subcategory filter returns only that subcategory's vendors while the parent tab includes all children, default + category `<title>`/meta with seo → name+tagline fallback chain, per-category title on HTTP GET.
+- **Phase 3 customer quotes portal (MySQL):** `CustomerQuotesPortalTest` 14/14 + `CustomerProfileTest` 3/3 green (50 assertions) — tab structure, own RFQs + quote responses + service bookings visible, empty states, cross-customer RFQ/bid/ServiceBooking leak checks (assertDontSee + count = 2 scoping), quote acceptance happy path (ServiceBooking created with correct `rfq_bid_id`/amount, RFQ → AWARDED), foreign-RFQ bid acceptance → 404 with **zero persistence**, double-award refused with `errorMessage` and exactly 1 booking (2nd bid REJECTED), bookings/profile tabs regression.
+- **Phase 3 marketplace browse/SEO/profile (MySQL):** `MarketplaceCategoryBrowseTest` 18/18 green (incl. similar-vendors rail same-category-only + never-self + cap 3, vendor-profile meta fallback chain ×3, hidden-profile 404, homepage nav/footer Marketplace links).
+- **Phase 3 gate (MySQL):** all four suites together → **43 passed, 509 assertions, 279.55s**. Plus dashboard/route regression 10/10 (126 assertions).
+- Blockers unchanged: no Redis, no gateway sandbox creds, no production infra; full 13-phase scope / full browser E2E / k6 load not achievable or claimable in one pass. **No commit/push since `2f774e0` — all of the above is uncommitted work.**
+
+## Phase 4 — implementation notes (target batch complete)
+- **Service layer** (`app/Services/ServiceBookingService.php`): `createDirectBooking()` creates an `ACCEPTED` `ServiceBooking` directly from a `VendorService`/`VendorPackage` (no RFQ) under `DB::transaction` + `Tenant::lockForUpdate()` serialization; `ServiceBookingCreatedEvent` fired; `booking_reference` via `ServiceBooking::generateReference()`.
+- **Server-side pricing only** (no price/status/money inputs accepted): package = `price ?? price_from`; service = `price_from × guests` for `PER_HEAD`, `price_from × hours` for `HOURLY`, flat base otherwise. Non-priced items throw `ServiceBookingException` (quote-only path). Financials via existing `calculateFinancials($quoted, 0, $tenant)`.
+- **Slot exclusivity**: `APPOINTMENT` rejects exact same `start_time`; `HOURLY` rejects interval overlap (bookings without stored duration treated as 1h). Checked against active statuses `PENDING_VENDOR|QUOTE_SENT|ACCEPTED|CONFIRMED|IN_PROGRESS` on same `event_date`; cancelled/declined free the slot. **Limitation (honest):** DATE_EVENT/PROJECT/TRANSPORT/CONSULTATION/PACKAGE modes do not yet enforce same-day capacity conflicts — only time-slot modes guarded in this batch.
+- **UI**: `app/Livewire/DirectBooking.php` + `resources/views/livewire/direct-booking.blade.php`, route `GET /vendor/{slug}/book` → `public.vendor-book` (`auth`, `throttle:public-pages`). Booking-mode-driven validation mirrors `VendorQuoteRequest`; guest redirect preserves intended URL; 10/hour per-user throttle; hidden/unapproved vendor → 404; bookable must belong to vendor & be active (IDOR-safe); live server-computed price preview; success state shows reference/date/agreed+advance.
+- **CTAs**: `PublicVendorProfile::directBookableIds` (probe priced items) → "Book Now" (+ secondary quote link) for priced services/packages; unpriced remain quote-only.
+- **Files:** `app/Services/ServiceBookingService.php`, `app/Livewire/DirectBooking.php`, `resources/views/livewire/direct-booking.blade.php`, `app/Livewire/PublicVendorProfile.php`, `resources/views/livewire/public-vendor-profile.blade.php`, `routes/web.php`, `tests/Feature/DirectServiceBookingTest.php` (new).
+- **Quality**: Pint/php -l/view:cache clean on changed files; route `public.vendor-book` registered.
+- **Tests (MySQL):** `tests/Feature/DirectServiceBookingTest.php` — run 1 **10f/10p (28)** (blade `$this->bookingMode`), run 2 **18p/2f (69)** (empty TIME normalized; HOURLY startTime required+collected), **run 3 PASS — 20 passed (79 assertions), 145.22s**. Covers guest redirect/404s, PER_HEAD server-computed pricing + financial pipeline, tampered money/status ignored, flat package pricing, required guests/past-date, quote-only (no fixed price), APPOINTMENT double-book + slot freed after cancel, HOURLY overlap reject + free-range accept with hourly pricing, cross-tenant/inactive IDOR guards, customer portal + vendor board visibility/no leak, vendor confirm ACCEPTED→CONFIRMED, profile Book Now CTAs only for priced items.
+- **Phase 4 regression (MySQL):** `VendorQuoteRequestTest` + `VendorErpBoardsTest` → **PASS** (21 passed, 81 assertions, 131.69s).
+
+## Phase 5 — event workspace (target batch complete)
+- **Audit:** existing implementation present — route `customer.events` (`/customer/events`, auth+customer), `CustomerEventWorkspace` component, models `CustomerEvent`/`CustomerEventTask`/`CustomerEventVendor`, migration `2026_12_01_000003_*`. Core covered: create/edit/delete events (scoped to `user_id`), checklist add/toggle/delete, vendor shortlist attach/status/detach, budget/task summary, display of linked `ServiceBooking`s (`customer_event_id`). Gaps addressed: no way to link/unlink existing bookings; route orphaned from nav.
+- **Implemented:** `linkBooking`/`unlinkBooking` actions (ownership-checked: booking must belong to signed-in customer; link scoped to selected owned event; cannot link a booking already attached to another event) + `unlinkedBookings` list; linking syncs matching shortlist row to `BOOKED` and stores `service_booking_id`; unlinking clears shortlist booking ref; UI controls in bookings section. Added "My Event Workspace" nav link in `CustomerDashboard`.
+- **Files:** `app/Livewire/CustomerEventWorkspace.php`, `resources/views/livewire/customer-event-workspace.blade.php`, `resources/views/livewire/customer-dashboard.blade.php`, `tests/Feature/CustomerEventWorkspaceTest.php` (new).
+- **Tests (MySQL):** `CustomerEventWorkspaceTest` — run 1 **10 passed, 2 failed (47 assertions)** (ownership tests used `expectException` instead of Livewire `assertStatus(404)`; fixed), **run 2 PASS — 12 passed (47 assertions), 122.69s**. Covers guest redirect, open workspace + dashboard nav link, event create/select/edit, delete detaches bookings, cross-customer event 404, tasks add/toggle/delete, vendor shortlist/status/detach, booking link/unlink, shortlist BOOKED sync on link, cross-customer booking link 404 with zero linkage, budget totals.
+
+## CI / test-environment / deployment remediation (2026-11-19; **local commit `74035f5`, not pushed**)
+- **Root cause addressed:** `phpunit.xml` ↔ CI DB mismatch. `phpunit.xml` now defaults to the same disposable MySQL 8 test DB as the workflow: `eventhub_test` / `eventhub` / `rootpassword` @ `127.0.0.1:3306` (previously hardcoded `wedding_hall_mysql_test` / `root` / empty password, which caused the CI `SQLSTATE[HY000] [1045] using password: NO` failure).
+- **Workflow hardened:** MySQL health-check with explicit credentials, readiness loop, `pdo_mysql`/`redis` PHP extensions, `actions/checkout@v4`, `setup-node@v4`, `npm ci && npm run build`, current env var names (`CACHE_STORE`/`QUEUE_CONNECTION`/`SESSION_DRIVER`), removed separate `db:seed` step, `php artisan test` remains the failing gate.
+- **Deployment:** deploy job intentionally disabled/manual (`if: false`) with a clear "no automatic deployment" step — **no fake production deploy**. No push, no production change.
+- **Verified locally:** `tests/Unit/ExampleTest.php` **1/1 passed** after config change with local env overrides (`DB_PORT=3307`, `wedding_hall_mysql_test`, `root`, empty password) — local test workflow intact.
+- **Not verified here:** actual GitHub Actions green run (requires push + CI; needs explicit authorization).
+- **Additional fix (uncommitted):** `VendorCategory::scopeActive()` now orders deterministically (`sort`, then `name`) — restores stable taxonomy ordering; callers (`PublicVendors`, `AdminCategoryManager`, etc.) rely on stable order.
+- **Regression attempt (taxonomy/admin) — NOT a pass:** `VendorCategoryTaxonomyTest` + `AdminCategoryManagerTest` run → **24 failed (0 assertions)**, all `SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it` (Host 127.0.0.1, Port 3307). Cause: local disposable MySQL/MariaDB test server died; on restart it aborted with `InnoDB: Disk is full` because the C: drive reports **0 bytes free** (`Get-PSDrive`: C Free=0). This is an **infrastructure failure, not a code/test failure** — the suite is not verified green in this attempt. Must free C: space / restart DB and re-run before claiming anything.
+
+## Remaining tasks (immediate next)
+1. **CI verification / push:** capture green GitHub Actions run for the `phpunit.xml`/workflow fix — requires explicit authorization to push local `74035f5` (and any follow-up fix commits) to `origin/main`. Not yet pushed.
+2. **Full regression:** run broader/full PHPUnit suite on aligned MySQL config; record actual outputs (time-consuming; targeted suites already green).
+3. **Phase 6–8, 10–13:** category-specific ERP modules, CRM/finance/inventory/HR, Super Admin/SaaS, infra/Redis, security hardening, browser QA, production-readiness — large scope; continue high-value, test-backed increments.
+4. Phase 4/5 follow-ups (optional): same-day/capacity guards for non-slot booking modes, customer cancel/reschedule for direct bookings, richer workspace timeline/docs.
+5. More Phase 9: extend safe reveal animations to other flows; targeted browser QA possible now if requested.
+6. Blockers unchanged: no Redis service locally, no gateway sandbox creds, no production infra/multi-instance/LB/object storage/monitoring/restore proof, no k6 load evidence.
+
+## Next exact steps
+- Continue next feasible high-value, test-backed increments; keep one authoritative progress file; never claim 100%/$1000T completion without proof; no push/deploy without explicit permission.
+
+---
+*Last updated: 2026-11-19 (CI/DB config fix committed locally as `74035f5` — not pushed; taxonomy ordering fix uncommitted; Phases 0–5 target batches + Phase 9 reveal increment previously evidenced; GitHub CI green still pending push/verification)*
+>>>>>>> Stashed changes
