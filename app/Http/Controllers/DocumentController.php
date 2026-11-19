@@ -230,7 +230,7 @@ class DocumentController extends Controller
     {
         $payment = ServicePayment::with(['booking.tenant', 'booking.customer'])->findOrFail($id);
 
-        $user = auth::user();
+        $user = auth()->user();
 
         if (! $user) {
             abort(403, 'Unauthorized. Please sign in to view payment proofs.');

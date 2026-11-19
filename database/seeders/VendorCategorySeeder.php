@@ -37,7 +37,7 @@ class VendorCategorySeeder extends Seeder
         foreach ($categories as $category) {
             VendorCategory::query()->updateOrCreate(
                 ['slug' => $category['slug']],
-                $category + ['is_active' => true]
+                $category + ['is_active' => true, 'parent_id' => null]
             );
         }
     }
