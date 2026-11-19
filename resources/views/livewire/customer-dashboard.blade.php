@@ -45,6 +45,10 @@
                     class="px-4 py-2 text-xs font-sans font-bold uppercase tracking-wider rounded-xl transition flex items-center gap-2 cursor-pointer {{ $activeTab === 'bookings' ? 'bg-[#C6A15B] text-[#171513] shadow-md font-extrabold' : 'bg-stone-100 dark:bg-white/5 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B]' }}">
                 <span>📋 My Reservations &amp; Contracts ({{ $bookings->count() }})</span>
             </button>
+            <button type="button" wire:click="switchTab('quotes')" 
+                    class="px-4 py-2 text-xs font-sans font-bold uppercase tracking-wider rounded-xl transition flex items-center gap-2 cursor-pointer {{ $activeTab === 'quotes' ? 'bg-[#C6A15B] text-[#171513] shadow-md font-extrabold' : 'bg-stone-100 dark:bg-white/5 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B]' }}">
+                <span>💬 My Quotes &amp; Services ({{ $rfqs->count() + $serviceBookings->count() }})</span>
+            </button>
             <button type="button" wire:click="switchTab('profile')" 
                     class="px-4 py-2 text-xs font-sans font-bold uppercase tracking-wider rounded-xl transition flex items-center gap-2 cursor-pointer {{ $activeTab === 'profile' ? 'bg-[#C6A15B] text-[#171513] shadow-md font-extrabold' : 'bg-stone-100 dark:bg-white/5 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B]' }}">
                 <span>👤 My Profile &amp; Account Settings</span>
@@ -187,6 +191,145 @@
 
                 </div>
             </div>
+        @elseif($activeTab === 'quotes')
+            <!-- ===================================================================
+                 MARKETPLACE QUOTES & SERVICES (RFQs + responses + service bookings)
+                 Strictly scoped to the signed-in customer (client_id/customer_id).
+                 =================================================================== -->
+            <div class="space-y-8">
+
+                @if($feedbackMessage)
+                    <div class="p-4 rounded-xl bg-[#171513]/90 border border-[#C6A15B]/60 text-[#C6A15B] text-xs font-semibold shadow-md flex items-center justify-between">
+                        <span>✓ {{ $feedbackMessage }}</span>
+                        <button wire:click="$set('feedbackMessage', null)" class="text-[#C6A15B] text-lg font-bold leading-none">&times;</button>
+                    </div>
+                @endif
+
+                @if($errorMessage)
+                    <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/40 text-red-600 dark:text-red-400 text-xs font-semibold shadow-md flex items-center justify-between">
+                        <span>⚠ {{ $errorMessage }}</span>
+                        <button wire:click="$set('errorMessage', null)" class="text-red-500 text-lg font-bold leading-none">&times;</button>
+                    </div>
+                @endif
+
+                <!-- RFQ list with vendor quote responses -->
+                <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/40 rounded-2xl p-6 sm:p-7 shadow-md space-y-5">
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                        <div>
+                            <h2 class="font-serif-luxury text-xl text-[#171513] dark:text-[#C6A15B]">My Quote Requests</h2>
+                            <p class="text-xs text-stone-500 dark:text-stone-400 font-sans mt-1">Requests you sent to vendors and the quotations they returned.</p>
+                        </div>
+                        <a href="{{ route('public.vendors') }}" class="btn-outline-gold !h-9 !px-4 text-[11px] font-bold font-sans uppercase tracking-wider rounded-lg">
+                            + Request Another Quote
+                        </a>
+                    </div>
+
+                    @if($rfqs->isEmpty())
+                        <div class="py-10 text-center space-y-3">
+                            <p class="text-sm text-stone-500 dark:text-stone-400 font-sans">You haven't requested any quotes yet.</p>
+                            <a href="{{ route('public.vendors') }}" class="inline-flex items-center gap-2 btn-gold !h-10 !px-5 text-xs font-bold font-sans uppercase tracking-wider rounded-lg">
+                                <span>Browse the Marketplace</span>
+                            </a>
+                        </div>
+                    @else
+                        <div class="space-y-4">
+                            @foreach($rfqs as $rfq)
+                                <div class="border border-[#E7E5E4] dark:border-white/10 rounded-xl p-5 space-y-4 hover:border-[#C6A15B]/50 transition-colors">
+                                    <div class="flex items-start justify-between gap-3 flex-wrap">
+                                        <div class="space-y-1">
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <h3 class="font-serif-luxury text-base text-[#171513] dark:text-[#F8F5EF]">{{ $rfq->title }}</h3>
+                                                @if($rfq->vendorCategory)
+                                                    <span class="px-2 py-0.5 rounded-full bg-[#C6A15B]/15 border border-[#C6A15B]/40 text-[10px] font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B]">{{ $rfq->vendorCategory->name }}</span>
+                                                @endif
+                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $rfq->status === 'OPEN' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-stone-500/15 text-stone-500 dark:text-stone-400 border border-stone-500/30' }}">{{ $rfq->statusLabel() }}</span>
+                                            </div>
+                                            <p class="text-[11px] text-stone-500 dark:text-stone-400 font-sans">
+                                                @if($rfq->event_date) Event: <strong>{{ $rfq->event_date->format('d M Y') }}</strong> · @endif
+                                                @if($rfq->city) {{ $rfq->city }} · @endif
+                                                @if($rfq->guest_count) {{ $rfq->guest_count }} guests · @endif
+                                                @if($rfq->budget_range) Budget: {{ $rfq->budget_range }}@endif
+                                            </p>
+                                        </div>
+                                        <span class="text-[10px] font-mono uppercase tracking-widest text-stone-400">{{ $rfq->created_at->format('d M Y') }}</span>
+                                    </div>
+
+                                    @if($rfq->bids->isEmpty())
+                                        <p class="text-xs text-stone-500 dark:text-stone-400 font-sans italic border-t border-dashed border-[#E7E5E4] dark:border-white/10 pt-3">
+                                            No quotations received yet — vendors usually respond within 24 hours.
+                                        </p>
+                                    @else
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-dashed border-[#E7E5E4] dark:border-white/10 pt-3">
+                                            @foreach($rfq->bids as $bid)
+                                                <div class="rounded-lg border {{ $bid->status === 'AWARDED' || $bid->status === 'ACCEPTED' ? 'border-[#C6A15B] bg-[#C6A15B]/5' : 'border-[#E7E5E4] dark:border-white/10' }} p-4 space-y-2">
+                                                    <div class="flex items-center justify-between gap-2">
+                                                        <span class="text-xs font-bold text-[#171513] dark:text-[#F8F5EF] font-sans truncate">
+                                                            {{ $bid->vendor?->tenant?->name ?? $bid->vendor?->name ?? 'Vendor' }}
+                                                        </span>
+                                                        <span class="text-[10px] font-bold uppercase tracking-wider {{ in_array($bid->status, ['AWARDED', 'ACCEPTED']) ? 'text-[#8F7239] dark:text-[#C6A15B]' : 'text-stone-400' }}">{{ $bid->statusLabel() }}</span>
+                                                    </div>
+                                                    <p class="text-lg font-serif-luxury text-[#8F7239] dark:text-[#C6A15B]">PKR {{ number_format((float) $bid->bid_amount, 0) }}</p>
+                                                    <p class="text-[11px] text-stone-600 dark:text-stone-300 font-sans leading-relaxed">{{ \Illuminate\Support\Str::limit($bid->proposal, 180) }}</p>
+                                                    @if($bid->status === 'PENDING' && $rfq->status === 'OPEN')
+                                                        <button type="button" wire:click="acceptQuote({{ $bid->id }})"
+                                                                wire:loading.attr="disabled"
+                                                                class="w-full mt-1 btn-gold !h-9 !px-4 text-[11px] font-bold font-sans uppercase tracking-wider rounded-lg disabled:opacity-60">
+                                                            <span wire:loading.remove wire:target="acceptQuote">Accept This Quote</span>
+                                                            <span wire:loading wire:target="acceptQuote">Accepting…</span>
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Service bookings created from awarded quotes -->
+                <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/40 rounded-2xl p-6 sm:p-7 shadow-md space-y-5">
+                    <div>
+                        <h2 class="font-serif-luxury text-xl text-[#171513] dark:text-[#C6A15B]">My Service Bookings</h2>
+                        <p class="text-xs text-stone-500 dark:text-stone-400 font-sans mt-1">Confirmed marketplace services — photography, catering, décor and more.</p>
+                    </div>
+
+                    @if($serviceBookings->isEmpty())
+                        <p class="py-6 text-center text-sm text-stone-500 dark:text-stone-400 font-sans">No service bookings yet — award a quotation and it will appear here.</p>
+                    @else
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs font-sans">
+                                <thead>
+                                    <tr class="border-b border-[#C6A15B]/30 text-[10px] uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B]">
+                                        <th class="py-3 pr-4 font-bold">Reference</th>
+                                        <th class="py-3 pr-4 font-bold">Service</th>
+                                        <th class="py-3 pr-4 font-bold">Event Date</th>
+                                        <th class="py-3 pr-4 font-bold">Amount</th>
+                                        <th class="py-3 pr-4 font-bold">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-[#E7E5E4] dark:divide-white/10">
+                                    @foreach($serviceBookings as $sb)
+                                        <tr class="hover:bg-[#C6A15B]/5 transition-colors">
+                                            <td class="py-3 pr-4 font-mono text-[11px] text-stone-600 dark:text-stone-300">{{ $sb->booking_reference }}</td>
+                                            <td class="py-3 pr-4">
+                                                <span class="font-bold text-[#171513] dark:text-[#F8F5EF]">{{ $sb->event_name }}</span>
+                                                <span class="block text-[10px] text-stone-500 dark:text-stone-400">{{ $sb->tenant?->name ?? $sb->vendorCategory?->name ?? 'Marketplace vendor' }}</span>
+                                            </td>
+                                            <td class="py-3 pr-4 text-stone-600 dark:text-stone-300">{{ $sb->event_date?->format('d M Y') ?? '—' }}</td>
+                                            <td class="py-3 pr-4 font-bold text-[#8F7239] dark:text-[#C6A15B]">PKR {{ number_format((float) $sb->quoted_amount, 0) }}</td>
+                                            <td class="py-3 pr-4">
+                                                <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider {{ in_array($sb->status, ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED']) ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : ($sb->status === 'CANCELLED' || $sb->status === 'DECLINED' ? 'bg-red-500/15 text-red-600 dark:text-red-400' : 'bg-[#C6A15B]/15 text-[#8F7239] dark:text-[#C6A15B]') }}">{{ str_replace('_', ' ', $sb->status) }}</span>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
         @else
         <!-- Feedback & Status Flash Messages -->
         @if(session('message'))
@@ -200,6 +343,13 @@
             <div class="p-4 rounded-xl bg-[#171513]/90 border border-[#C6A15B]/60 text-[#C6A15B] text-xs font-semibold shadow-md flex items-center justify-between">
                 <span>✓ {{ $feedbackMessage }}</span>
                 <button wire:click="$set('feedbackMessage', null)" class="text-[#C6A15B] text-lg font-bold leading-none">&times;</button>
+            </div>
+        @endif
+
+        @if($errorMessage)
+            <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/40 text-red-600 dark:text-red-400 text-xs font-semibold shadow-md flex items-center justify-between">
+                <span>⚠ {{ $errorMessage }}</span>
+                <button wire:click="$set('errorMessage', null)" class="text-red-500 text-lg font-bold leading-none">&times;</button>
             </div>
         @endif
 

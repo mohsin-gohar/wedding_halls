@@ -64,6 +64,58 @@ class PublicVendors extends Component
         $this->resetPage();
     }
 
+    /**
+     * Top-level ancestor of the currently selected category slug.
+     * Drives tab highlighting: picking a subcategory keeps its parent tab lit.
+     */
+    public function getActiveParentSlugProperty(): string
+    {
+        if ($this->category === 'all') {
+            return 'all';
+        }
+
+        $categoryId = VendorCategory::query()->where('slug', $this->category)->value('id');
+
+        if ($categoryId === null) {
+            return 'all';
+        }
+
+        $parentId = VendorCategory::query()->where('id', $categoryId)->value('parent_id');
+
+        if ($parentId === null) {
+            return (string) VendorCategory::query()->where('id', $categoryId)->value('slug');
+        }
+
+        return (string) (VendorCategory::query()->where('id', $parentId)->value('slug') ?? 'all');
+    }
+
+    /**
+     * Subcategory chips for the drill-down row — only shown while a
+     * top-level category (or one of its children) is selected. When a
+     * subcategory is active the row shows its siblings.
+     */
+    public function getSubcategoriesProperty()
+    {
+        $parentSlug = $this->activeParentSlug;
+
+        if ($parentSlug === 'all') {
+            return collect();
+        }
+
+        $parentId = VendorCategory::query()->where('slug', $parentSlug)->value('id');
+
+        if ($parentId === null) {
+            return collect();
+        }
+
+        return VendorCategory::query()
+            ->where('parent_id', $parentId)
+            ->where('is_active', true)
+            ->orderBy('sort')
+            ->orderBy('name')
+            ->get();
+    }
+
     public function resetFilters(): void
     {
         $this->category = 'all';
@@ -77,7 +129,10 @@ class PublicVendors extends Component
 
     public function getCategoriesProperty()
     {
+        // Public tabs show top-level categories only — subcategories live
+        // inside each category and must not flood the marketplace filter bar.
         return VendorCategory::query()
+            ->whereNull('parent_id')
             ->where('is_active', true)
             ->orderBy('sort')
             ->withCount(['tenants' => fn ($q) => $q
@@ -110,7 +165,17 @@ class PublicVendors extends Component
             ->withCount(['vendorServices as services_count' => fn ($q) => $q->where('is_active', true)]);
 
         if ($this->category !== 'all') {
-            $query->whereHas('vendorCategory', fn ($q) => $q->where('slug', $this->category));
+            // Match vendors in the selected category AND in any of its
+            // subcategories (businesses may register against either level).
+            $selectedIds = VendorCategory::query()
+                ->where('slug', $this->category)
+                ->pluck('id');
+
+            $categoryIds = $selectedIds->merge(
+                VendorCategory::query()->whereIn('parent_id', $selectedIds)->pluck('id')
+            );
+
+            $query->whereIn('vendor_category_id', $categoryIds);
         }
 
         if ($this->city !== 'All') {
@@ -165,6 +230,28 @@ class PublicVendors extends Component
 
     public function render()
     {
-        return view('livewire.public-vendors');
+        // Category-aware SEO: use the category's own seo_title/seo_description
+        // when a filter is active, falling back to name/tagline, else the
+        // marketplace default set on the layout attribute.
+        $title = 'Wedding Services Marketplace — Photographers, Caterers, Decorators | Riwaj Grand Pakistan';
+        $metaDescription = null;
+
+        if ($this->category !== 'all') {
+            $active = VendorCategory::query()->where('slug', $this->category)->first();
+
+            if ($active) {
+                $title = $active->seo_title
+                    ?: $active->name.' in Pakistan — Verified Vendors | Riwaj Grand';
+                $metaDescription = $active->seo_description
+                    ?: $active->tagline
+                    ?: $active->description;
+            }
+        }
+
+        return view('livewire.public-vendors')
+            ->layout('components.layouts.public', [
+                'title' => $title,
+                'metaDescription' => $metaDescription,
+            ]);
     }
 }

@@ -35,11 +35,31 @@
                 </button>
                 @foreach($this->categories as $cat)
                     <button type="button" wire:click="selectCategory('{{ $cat->slug }}')"
-                            class="shrink-0 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider border transition-all duration-200 {{ $category === $cat->slug ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513] border-[#171513] dark:border-[#C6A15B]' : 'border-[#C6A15B]/40 text-stone-600 dark:text-stone-300 hover:bg-[#C6A15B]/10' }}">
+                            class="shrink-0 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider border transition-all duration-200 {{ $this->activeParentSlug === $cat->slug ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513] border-[#171513] dark:border-[#C6A15B]' : 'border-[#C6A15B]/40 text-stone-600 dark:text-stone-300 hover:bg-[#C6A15B]/10' }}">
                         {{ $cat->name }} <span class="opacity-60">({{ $cat->tenants_count }})</span>
                     </button>
                 @endforeach
             </div>
+
+            <!-- Subcategory drill-down: appears only under a selected top-level category -->
+            @if($this->subcategories->isNotEmpty())
+                <div class="flex flex-wrap items-center gap-2 mt-3 pb-1 border-b border-[#C6A15B]/15 pb-3"
+                     role="tablist" aria-label="Subcategories">
+                    <span class="text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-500 dark:text-stone-400 mr-1">
+                        Refine:
+                    </span>
+                    <button type="button" wire:click="selectCategory('{{ $this->activeParentSlug }}')"
+                            class="shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all duration-200 {{ $category === $this->activeParentSlug ? 'bg-[#C6A15B]/15 border-[#C6A15B] text-[#8F7239] dark:text-[#C6A15B]' : 'border-[#C6A15B]/30 text-stone-600 dark:text-stone-300 hover:bg-[#C6A15B]/10' }}">
+                        All
+                    </button>
+                    @foreach($this->subcategories as $sub)
+                        <button type="button" wire:click="selectCategory('{{ $sub->slug }}')"
+                                class="shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all duration-200 {{ $category === $sub->slug ? 'bg-[#C6A15B]/15 border-[#C6A15B] text-[#8F7239] dark:text-[#C6A15B]' : 'border-[#C6A15B]/30 text-stone-600 dark:text-stone-300 hover:bg-[#C6A15B]/10' }}">
+                            {{ $sub->name }}
+                        </button>
+                    @endforeach
+                </div>
+            @endif
 
             <!-- Filters -->
             <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 mt-4 pt-4 border-t border-[#C6A15B]/20">
@@ -95,7 +115,12 @@
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div class="flex items-center justify-between mb-6">
             <p class="text-sm text-stone-600 dark:text-stone-300 font-sans">
-                <strong class="text-[#171513] dark:text-[#C6A15B]">{{ $this->vendors->total() }}</strong> verified {{ $category === 'all' ? 'vendors' : ($this->categories->firstWhere('slug', $category)?->name ?? 'vendors') }}
+                <strong class="text-[#171513] dark:text-[#C6A15B]">{{ $this->vendors->total() }}</strong>
+                verified {{ $category === 'all'
+                    ? 'vendors'
+                    : ($this->categories->firstWhere('slug', $category)?->name
+                        ?? $this->subcategories->firstWhere('slug', $category)?->name
+                        ?? 'vendors') }}
             </p>
             @if($search || $city !== 'All' || $budget || $rating || $category !== 'all')
                 <button type="button" wire:click="resetFilters" class="text-xs font-semibold uppercase tracking-wider text-[#8F7239] hover:text-[#C6A15B] transition-colors">Clear all</button>

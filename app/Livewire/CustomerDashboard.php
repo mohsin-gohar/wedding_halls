@@ -2,7 +2,12 @@
 
 namespace App\Livewire;
 
+use App\Exceptions\ServiceBookingException;
 use App\Models\Booking;
+use App\Models\RFQ;
+use App\Models\RFQBid;
+use App\Models\ServiceBooking;
+use App\Services\ServiceBookingService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Layout;
@@ -18,6 +23,8 @@ class CustomerDashboard extends Component
     public string $cancellationReason = '';
 
     public ?string $feedbackMessage = null;
+
+    public ?string $errorMessage = null;
 
     public string $activeTab = 'bookings';
 
@@ -61,8 +68,9 @@ class CustomerDashboard extends Component
 
     public function switchTab(string $tab): void
     {
-        $this->activeTab = in_array($tab, ['bookings', 'profile']) ? $tab : 'bookings';
+        $this->activeTab = in_array($tab, ['bookings', 'quotes', 'profile']) ? $tab : 'bookings';
         $this->profileFeedback = null;
+        $this->errorMessage = null;
     }
 
     public function updateProfile(): void
@@ -137,15 +145,69 @@ class CustomerDashboard extends Component
         $this->cancellationReason = '';
     }
 
+    /**
+     * Customer accepts one of the quotations received on their own RFQ.
+     *
+     * Ownership is enforced here (not just in the service): the bid must
+     * belong to an RFQ whose client_id is the signed-in customer, so a
+     * tampered bid ID from someone else's RFQ can never be awarded.
+     * The service itself re-checks OPEN/PENDING state under a row lock,
+     * so a concurrent double-award is impossible.
+     */
+    public function acceptQuote(int $rfqBidId): void
+    {
+        $user = Auth::user();
+
+        if (! $user) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $bid = RFQBid::query()->with('rfq')->find($rfqBidId);
+
+        if (! $bid || ! $bid->rfq || (int) $bid->rfq->client_id !== (int) $user->id) {
+            abort(404, 'Quotation not found.');
+        }
+
+        try {
+            app(ServiceBookingService::class)
+                ->acceptQuote($bid->id, $user->id);
+
+            $this->feedbackMessage = 'Quotation accepted — your service booking has been created.';
+        } catch (ServiceBookingException $e) {
+            $this->feedbackMessage = null;
+            $this->errorMessage = $e->getMessage();
+        }
+    }
+
     public function render()
     {
         $user = Auth::user();
         if (! $user) {
-            return view('livewire.customer-dashboard', ['bookings' => collect(), 'totalSpent' => 0, 'totalDue' => 0]);
+            return view('livewire.customer-dashboard', [
+                'bookings' => collect(),
+                'rfqs' => collect(),
+                'serviceBookings' => collect(),
+                'totalSpent' => 0,
+                'totalDue' => 0,
+            ]);
         }
 
         $bookings = Booking::where('customer_id', $user->id)
             ->with(['hall.venue', 'package', 'payments'])
+            ->latest()
+            ->get();
+
+        // Marketplace side: the customer's own RFQs (with vendor quote
+        // responses) and any ServiceBookings created from awarded quotes.
+        // Both are strictly scoped to the signed-in customer — there is no
+        // request parameter that could widen either query.
+        $rfqs = RFQ::where('client_id', $user->id)
+            ->with(['vendorCategory', 'targets.tenant', 'bids.vendor.tenant'])
+            ->latest()
+            ->get();
+
+        $serviceBookings = ServiceBooking::where('customer_id', $user->id)
+            ->with(['tenant', 'vendorCategory'])
             ->latest()
             ->get();
 
@@ -156,6 +218,8 @@ class CustomerDashboard extends Component
 
         return view('livewire.customer-dashboard', [
             'bookings' => $bookings,
+            'rfqs' => $rfqs,
+            'serviceBookings' => $serviceBookings,
             'totalSpent' => $totalSpent,
             'totalDue' => $totalDue,
             'totalGuests' => $totalGuests,

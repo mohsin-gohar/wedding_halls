@@ -10,10 +10,10 @@
         <!-- Heading Section (Clean, Universal Luxury) -->
         <div class="text-center space-y-1.5">
             <h1 class="font-serif-luxury text-2xl sm:text-3xl text-[#171513] dark:text-white font-normal tracking-tight">
-                Register Your Venue
+                Register Your Business
             </h1>
             <p class="text-xs text-stone-500 dark:text-stone-400 font-sans max-w-md mx-auto leading-relaxed">
-                List your ballrooms and manage banquet operations on Pakistan's premier venue network.
+                Halls, photographers, caterers, decor, transport, planners &mdash; list your event business and manage it on Pakistan's premier event network.
             </p>
             <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#C6A15B]/10 border border-[#C6A15B]/40 text-[#8F7239] dark:text-[#C6A15B] text-[10px] font-sans font-bold uppercase tracking-wider">
                 <span class="w-1.5 h-1.5 rounded-full bg-[#C6A15B]"></span>
@@ -37,17 +37,36 @@
         <!-- Registration Form -->
         <form wire:submit="register" class="space-y-6">
             
-            <!-- Venue & Hall Details -->
+            <!-- Business Details -->
             <div class="space-y-3.5 pb-2 border-b border-[#E7E5E4] dark:border-white/10">
                 <div class="text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300 font-sans flex items-center gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-[#C6A15B]"></span>
-                    <span>Venue Information</span>
+                    <span>Business Information</span>
                 </div>
-                
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    @if(count($categories) > 0)
+                        <div class="sm:col-span-2">
+                            <label for="business-category" class="block text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5 font-sans">
+                                Business Category *
+                            </label>
+                            <select id="business-category"
+                                    name="vendorCategoryId"
+                                    wire:model.live="vendorCategoryId"
+                                    required
+                                    class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm w-full">
+                                @foreach($categories as $category)
+                                    <option value="{{ $category['id'] }}">{{ $category['name'] }}</option>
+                                @endforeach
+                            </select>
+                            <span class="text-[11px] text-stone-400 dark:text-stone-500 mt-1 block font-sans">Choose what your business actually does — hall fields only appear for venue categories.</span>
+                            @error('vendorCategoryId') <span class="text-rose-500 text-xs mt-1 block font-sans">{{ $message }}</span> @enderror
+                        </div>
+                    @endif
+
                     <div class="sm:col-span-2">
                         <label for="hall-name" class="block text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5 font-sans">
-                            Wedding Hall / Marquee Name *
+                            Business / Brand Name *
                         </label>
                         <input id="hall-name" 
                                name="hallName" 
@@ -55,7 +74,7 @@
                                wire:model="hallName" 
                                required 
                                autofocus
-                               placeholder="e.g. The Royal Crystal Ballroom"
+                               placeholder="e.g. The Royal Crystal Ballroom / Lens & Lantern Studio"
                                class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm w-full">
                         @error('hallName') <span class="text-rose-500 text-xs mt-1 block font-sans">{{ $message }}</span> @enderror
                     </div>
@@ -74,38 +93,40 @@
                         @error('city') <span class="text-rose-500 text-xs mt-1 block font-sans">{{ $message }}</span> @enderror
                     </div>
 
-                    <div>
-                        <label for="capacity" class="block text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5 font-sans">
-                            Max Guest Capacity *
-                        </label>
-                        <input id="capacity" 
-                               name="capacity" 
-                               type="number" 
-                               wire:model="capacity" 
-                               required 
-                               min="50" 
-                               max="5000" 
-                               placeholder="500"
-                               class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm w-full">
-                        @error('capacity') <span class="text-rose-500 text-xs mt-1 block font-sans">{{ $message }}</span> @enderror
-                    </div>
+                    @if($this->isVenueSelection())
+                        <div>
+                            <label for="capacity" class="block text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5 font-sans">
+                                Max Guest Capacity *
+                            </label>
+                            <input id="capacity" 
+                                   name="capacity" 
+                                   type="number" 
+                                   wire:model="capacity" 
+                                   required 
+                                   min="50" 
+                                   max="5000" 
+                                   placeholder="500"
+                                   class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm w-full">
+                            @error('capacity') <span class="text-rose-500 text-xs mt-1 block font-sans">{{ $message }}</span> @enderror
+                        </div>
 
-                    <div class="sm:col-span-2">
-                        <label for="base-rent" class="block text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5 font-sans">
-                            Standard Base Shift Rental (PKR) *
-                        </label>
-                        <input id="base-rent" 
-                               name="baseRent" 
-                               type="number" 
-                               wire:model="baseRent" 
-                               required 
-                               min="10000" 
-                               step="5000" 
-                               placeholder="150000"
-                               class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm font-semibold w-full">
-                        <span class="text-[11px] text-stone-400 dark:text-stone-500 mt-1 block font-sans">Starting shift rental fee (Afternoon or Evening)</span>
-                        @error('baseRent') <span class="text-rose-500 text-xs mt-1 block font-sans">{{ $message }}</span> @enderror
-                    </div>
+                        <div class="sm:col-span-2">
+                            <label for="base-rent" class="block text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5 font-sans">
+                                Standard Base Shift Rental (PKR) *
+                            </label>
+                            <input id="base-rent" 
+                                   name="baseRent" 
+                                   type="number" 
+                                   wire:model="baseRent" 
+                                   required 
+                                   min="10000" 
+                                   step="5000" 
+                                   placeholder="150000"
+                                   class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-sm font-semibold w-full">
+                            <span class="text-[11px] text-stone-400 dark:text-stone-500 mt-1 block font-sans">Starting shift rental fee (Afternoon or Evening)</span>
+                            @error('baseRent') <span class="text-rose-500 text-xs mt-1 block font-sans">{{ $message }}</span> @enderror
+                        </div>
+                    @endif
                 </div>
             </div>
 

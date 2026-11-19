@@ -94,6 +94,7 @@
                 @php
                     $primaryNavLinks = [
                         ['label' => 'Venues', 'route' => 'public.venues', 'patterns' => ['public.venues*', 'public.venue.details*', 'hall.showcase', 'marketplace']],
+                        ['label' => 'Marketplace', 'route' => 'public.vendors', 'patterns' => ['public.vendors*', 'public.vendor-profile*', 'public.vendor-quote*']],
                         ['label' => 'Services', 'route' => 'public.services', 'patterns' => ['public.services*']],
                         ['label' => 'About', 'route' => 'public.about', 'patterns' => ['public.about*']],
                         ['label' => 'Contact', 'route' => 'public.contact', 'patterns' => ['public.contact*']],
@@ -243,6 +244,7 @@
                     <h4 class="font-cinzel text-xs font-bold uppercase tracking-[0.15em] text-[#C6A15B]">Marketplace</h4>
                     <ul class="space-y-2.5 text-xs text-stone-200 font-normal">
                         <li><a href="{{ route('public.venues') }}" wire:navigate.hover class="hover:text-white transition">Explore Venues</a></li>
+                        <li><a href="{{ route('public.vendors') }}" wire:navigate.hover class="hover:text-white transition">Vendor Marketplace</a></li>
                         <li><a href="{{ route('public.packages') }}" wire:navigate.hover class="hover:text-white transition">Wedding Packages</a></li>
                         <li><a href="{{ route('public.packages') }}" wire:navigate.hover class="hover:text-white transition">Catering & Bawarchi</a></li>
                         <li><a href="{{ route('public.gallery') }}" wire:navigate.hover class="hover:text-white transition">Photo & Video Gallery</a></li>

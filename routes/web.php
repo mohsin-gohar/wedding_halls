@@ -3,6 +3,7 @@
 use App\Http\Controllers\ApiTokenController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\WhatsAppWebhookController;
+use App\Livewire\AdminCategoryManager;
 use App\Livewire\AdminDashboard;
 use App\Livewire\AttendanceCalendar;
 use App\Livewire\Auth\ForgotPassword;
@@ -20,6 +21,7 @@ use App\Livewire\CustomerLogin;
 use App\Livewire\CustomerRegister;
 use App\Livewire\Dashboard;
 use App\Livewire\DecoratorDashboard;
+use App\Livewire\DirectBooking;
 use App\Livewire\ExpenseTracker;
 use App\Livewire\FloorPlanDesigner;
 use App\Livewire\HallChat;
@@ -393,6 +395,7 @@ Route::middleware(['auth', 'tenant.staff'])->group(function () {
 */
 Route::get('/vendor/{slug}', PublicVendorProfile::class)->middleware('throttle:public-pages')->name('public.vendor-profile');
 Route::get('/vendor/{slug}/request-quote', VendorQuoteRequest::class)->middleware(['auth', 'throttle:public-pages'])->name('public.vendor-quote');
+Route::get('/vendor/{slug}/book', DirectBooking::class)->middleware(['auth', 'throttle:public-pages'])->name('public.vendor-book');
 
 // White-label vendor microsite — the vendor's own branded website.
 Route::get('/site/{slug}', WhiteLabelSite::class)->middleware('throttle:public-pages')->name('public.vendor-site');
@@ -405,6 +408,8 @@ Route::get('/site/{slug}', WhiteLabelSite::class)->middleware('throttle:public-p
 Route::middleware(['auth', 'super.admin'])->prefix('admin')->group(function () {
     Route::get('/', AdminDashboard::class)->name('admin.dashboard');
     Route::get('/dashboard', AdminDashboard::class);
+    // Marketplace taxonomy management (hierarchical categories/subcategories).
+    Route::get('/categories', AdminCategoryManager::class)->name('admin.categories');
 });
 
 /*

@@ -148,6 +148,17 @@
                                         </span>
                                     </a>
 
+                                    <a href="{{ route('admin.categories') }}"
+                                       class="flex items-center justify-between px-3 py-2 rounded-lg border text-xs transition {{ request()->routeIs('admin.categories') ? 'bg-[#C6A15B]/20 text-[#171513] dark:text-[#C6A15B] border-[#C6A15B]/60' : 'border-transparent text-stone-600 dark:text-stone-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#C6A15B]' }}">
+                                        <div class="flex items-center gap-2.5">
+                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.999 1.999 0 013 12V7a4 4 0 014-4z"/></svg>
+                                            <span>Vendor Categories</span>
+                                        </div>
+                                        <span class="text-[10px] font-sans font-bold px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 text-stone-600 dark:text-stone-300">
+                                            {{ \App\Models\VendorCategory::whereNull('parent_id')->count() }}
+                                        </span>
+                                    </a>
+
                                     <a href="{{ route('admin.dashboard', ['tab' => 'halls']) }}" 
                                        @click="$dispatch('set-admin-tab', { tab: 'halls' })"
                                        class="flex items-center justify-between px-3 py-2 rounded-lg border text-xs transition {{ request('tab') === 'halls' ? 'bg-[#C6A15B]/20 text-[#171513] dark:text-[#C6A15B] border-[#C6A15B]/60' : 'border-transparent text-stone-600 dark:text-stone-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#C6A15B]' }}">
@@ -622,6 +633,7 @@
                 <div class="grid grid-cols-2 gap-2 text-xs font-semibold text-stone-300">
                     @if(auth()->user()->isSuperAdmin())
                         <a href="{{ route('admin.dashboard', ['tab' => 'vendors']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'vendors' })" class="py-2 hover:text-[#C6A15B]">Vendors</a>
+                        <a href="{{ route('admin.categories') }}" @click="sidebarOpen = false" class="py-2 hover:text-[#C6A15B]">Categories</a>
                         <a href="{{ route('admin.dashboard', ['tab' => 'halls']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'halls' })" class="py-2 hover:text-[#C6A15B]">Halls</a>
                         @if(config('platform.billing_enabled'))
                         <a href="{{ route('admin.dashboard', ['tab' => 'plans']) }}" @click="sidebarOpen = false; $dispatch('set-admin-tab', { tab: 'plans' })" class="py-2 hover:text-[#C6A15B]">SaaS Plans</a>

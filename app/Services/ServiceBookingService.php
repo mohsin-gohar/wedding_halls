@@ -10,6 +10,7 @@ use App\Models\RFQBid;
 use App\Models\ServiceBooking;
 use App\Models\ServicePayment;
 use App\Models\Tenant;
+use App\Models\VendorPackage;
 use App\Models\VendorPayout;
 use App\Models\VendorService;
 use App\Models\VendorWallet;
@@ -133,6 +134,217 @@ class ServiceBookingService
             ->where('rfq_id', $rfq->id)
             ->where('status', 'PENDING')
             ->update(['status' => 'REJECTED']);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Direct booking ("Book Now" — no RFQ round-trip)
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Create a direct booking from a vendor's service/package card.
+     *
+     * Guarantees:
+     *  - the price is resolved SERVER-SIDE from the bookable's own pricing
+     *    fields (there is no price input, so a tampered amount is impossible);
+     *  - the write runs in a transaction with the tenant row locked, so two
+     *    concurrent bookings for the same slot cannot both succeed;
+     *  - slot exclusivity per booking mode (APPOINTMENT: exact start_time;
+     *    HOURLY: interval overlap) against every active booking of this vendor;
+     *  - the booking starts as ACCEPTED — the vendor still confirms it
+     *    through the existing bookings board (ACCEPTED → CONFIRMED).
+     *
+     * @param  array{event_name:string,event_date:string,start_time?:?string,hours?:?float,guest_count?:?int,requirements?:?string}  $attributes
+     */
+    public function createDirectBooking(
+        Tenant $tenant,
+        int $customerId,
+        VendorService|VendorPackage $bookable,
+        array $attributes
+    ): ServiceBooking {
+        $category = $tenant->vendorCategory;
+        $mode = $category?->booking_mode ?? 'DATE_EVENT';
+        $price = $this->resolveDirectPrice($bookable, $mode, $attributes);
+
+        return DB::transaction(function () use ($tenant, $customerId, $bookable, $attributes, $mode, $price) {
+            // Serialize every booking write for this vendor: the lock is held
+            // for the rest of the transaction, so a concurrent direct booking
+            // (or RFQ award) waits here and then sees our row.
+            Tenant::query()->whereKey($tenant->id)->lockForUpdate()->first();
+
+            $eventDate = (string) $attributes['event_date'];
+            $startTime = $attributes['start_time'] ?? null;
+            $hours = isset($attributes['hours']) && (float) $attributes['hours'] > 0
+                ? (float) $attributes['hours']
+                : null;
+
+            if (in_array($mode, ['APPOINTMENT', 'HOURLY'], true)) {
+                $this->assertSlotFree($tenant, $mode, $eventDate, $startTime, $hours);
+            }
+
+            $financials = $this->calculateFinancials($price, 0.0, $tenant);
+
+            $booking = ServiceBooking::create([
+                'tenant_id' => $tenant->id,
+                'vendor_category_id' => $tenant->vendor_category_id,
+                'bookable_type' => $bookable->getMorphClass(),
+                'bookable_id' => $bookable->getKey(),
+                'customer_id' => $customerId,
+                'rfq_bid_id' => null,
+                'customer_event_id' => null,
+                'booking_reference' => ServiceBooking::generateReference(),
+                'event_name' => (string) $attributes['event_name'],
+                'event_date' => $eventDate,
+                'start_time' => $startTime,
+                'end_time' => $this->resolveEndTime(['start_time' => $startTime, 'hours' => $hours]),
+                'hours' => $hours,
+                'guest_count' => $attributes['guest_count'] ?? null,
+                'requirements' => $attributes['requirements'] ?? null,
+                'requirements_json' => [
+                    'booking_mode' => $mode,
+                    'bookable_label' => $bookable->name,
+                    'source' => 'direct',
+                ],
+                'quoted_amount' => $financials['quoted_amount'],
+                'discount_amount' => 0.0,
+                'advance_amount' => $financials['advance_amount'],
+                'paid_amount' => 0.0,
+                'commission_amount' => $financials['commission_amount'],
+                'net_vendor_amount' => $financials['net_vendor_amount'],
+                'status' => 'ACCEPTED',
+                'payment_status' => 'UNPAID',
+            ]);
+
+            event(new ServiceBookingCreatedEvent($booking));
+
+            return $booking;
+        });
+    }
+
+    /**
+     * Non-throwing price preview for the booking form (null = not directly
+     * bookable, i.e. "request a quote" is the only path for this item).
+     *
+     * @param  array{guest_count?:?int,hours?:?float}  $attributes
+     */
+    public function previewDirectPrice(
+        VendorService|VendorPackage $bookable,
+        string $mode,
+        array $attributes = []
+    ): ?float {
+        try {
+            return $this->resolveDirectPrice($bookable, $mode, $attributes);
+        } catch (ServiceBookingException) {
+            return null;
+        }
+    }
+
+    /**
+     * Server-side price resolution — packages are flat-priced; services are
+     * per-head (× guests) or hourly (× hours) when the category says so.
+     *
+     * @param  array{guest_count?:?int,hours?:?float}  $attributes
+     *
+     * @throws ServiceBookingException when the item has no fixed price
+     */
+    protected function resolveDirectPrice(
+        VendorService|VendorPackage $bookable,
+        string $mode,
+        array $attributes
+    ): float {
+        $base = $bookable instanceof VendorPackage
+            ? ($bookable->price ?? $bookable->price_from)
+            : ($bookable->price_from ?? $bookable->price_to);
+
+        if ($base === null || (float) $base <= 0) {
+            throw ServiceBookingException::notAwardable(
+                'This item does not have a fixed price yet — please request a quotation instead.'
+            );
+        }
+
+        $base = (float) $base;
+
+        // Packages carry a package total regardless of mode.
+        if ($bookable instanceof VendorPackage) {
+            return round($base, 2);
+        }
+
+        return match ($mode) {
+            'PER_HEAD' => round($base * $this->requirePositive($attributes['guest_count'] ?? null, 'guest count'), 2),
+            'HOURLY' => round($base * $this->requirePositive($attributes['hours'] ?? null, 'hours'), 2),
+            default => round($base, 2),
+        };
+    }
+
+    /**
+     * @throws ServiceBookingException
+     */
+    protected function requirePositive(mixed $value, string $label): float
+    {
+        $value = $value !== null ? (float) $value : 0.0;
+
+        if ($value <= 0) {
+            throw ServiceBookingException::invalidState(
+                'A '.$label.' is required before this service can be booked directly.'
+            );
+        }
+
+        return $value;
+    }
+
+    /**
+     * Slot exclusivity for APPOINTMENT (exact start_time) and HOURLY
+     * (interval overlap) modes, evaluated under the tenant row lock.
+     *
+     * @throws ServiceBookingException 409 when the slot is taken
+     */
+    protected function assertSlotFree(
+        Tenant $tenant,
+        string $mode,
+        string $eventDate,
+        ?string $startTime,
+        ?float $hours
+    ): void {
+        if (! $startTime) {
+            throw ServiceBookingException::invalidState('A start time is required for this booking.');
+        }
+
+        $existing = ServiceBooking::query()
+            ->where('tenant_id', $tenant->id)
+            ->where('event_date', $eventDate)
+            ->whereIn('status', ['PENDING_VENDOR', 'QUOTE_SENT', 'ACCEPTED', 'CONFIRMED', 'IN_PROGRESS'])
+            ->whereNotNull('start_time')
+            ->get(['id', 'booking_reference', 'start_time', 'hours']);
+
+        $start = Carbon::parse($startTime);
+
+        foreach ($existing as $booking) {
+            $existingStart = Carbon::parse($booking->start_time);
+
+            if ($mode === 'APPOINTMENT') {
+                if ($existingStart->format('H:i') === $start->format('H:i')) {
+                    throw ServiceBookingException::invalidState(
+                        'That time slot is already booked. Please pick another time.'
+                    );
+                }
+
+                continue;
+            }
+
+            // HOURLY: interval overlap. Bookings without a stored duration
+            // are treated as one hour so a bare start time still reserves it.
+            $existingHours = max(1.0, (float) ($booking->hours ?? 0));
+            $existingEnd = $existingStart->copy()->addMinutes((int) round($existingHours * 60));
+
+            $newEnd = ($hours !== null && $hours > 0)
+                ? $start->copy()->addMinutes((int) round($hours * 60))
+                : $start->copy()->addMinute();
+
+            if ($start->lt($existingEnd) && $existingStart->lt($newEnd)) {
+                throw ServiceBookingException::invalidState(
+                    'That time range overlaps an existing booking ('.$booking->booking_reference.'). Please pick another slot.'
+                );
+            }
+        }
     }
 
     // ─────────────────────────────────────────────────────────────

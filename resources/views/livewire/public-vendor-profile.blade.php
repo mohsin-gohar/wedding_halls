@@ -94,10 +94,21 @@
                                         @endforeach
                                     </ul>
                                 @endif
-                                <a href="{{ route('public.vendor-quote', ['slug' => $vendor->slug, 'service' => $service->id]) }}"
-                                   class="inline-flex items-center gap-1.5 mt-4 text-xs font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B] hover:gap-2.5 transition-all">
-                                    Get quote for this <span aria-hidden="true">→</span>
-                                </a>
+                                @if(in_array('s'.$service->id, $this->directBookableIds, true))
+                                    <div class="flex flex-wrap items-center gap-3 mt-4">
+                                        <a href="{{ route('public.vendor-book', ['slug' => $vendor->slug, 'service' => $service->id]) }}"
+                                           class="btn-gold !h-9 !px-4 text-[11px] font-bold uppercase tracking-wider rounded-lg">Book Now</a>
+                                        <a href="{{ route('public.vendor-quote', ['slug' => $vendor->slug, 'service' => $service->id]) }}"
+                                           class="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 hover:text-[#8F7239] dark:hover:text-[#C6A15B] transition-colors">
+                                            Or get a quote →
+                                        </a>
+                                    </div>
+                                @else
+                                    <a href="{{ route('public.vendor-quote', ['slug' => $vendor->slug, 'service' => $service->id]) }}"
+                                       class="inline-flex items-center gap-1.5 mt-4 text-xs font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B] hover:gap-2.5 transition-all">
+                                        Get quote for this <span aria-hidden="true">→</span>
+                                    </a>
+                                @endif
                             </article>
                         @endforeach
                     </div>
@@ -128,7 +139,16 @@
                                             @endforeach
                                         </ul>
                                     @endif
-                                    <a href="{{ route('public.vendor-quote', ['slug' => $vendor->slug]) }}" class="btn-outline-gold px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg text-center mt-auto">Book package</a>
+                                    @if(in_array('p'.$package->id, $this->directBookableIds, true))
+                                        <a href="{{ route('public.vendor-book', ['slug' => $vendor->slug, 'package' => $package->id]) }}"
+                                           class="btn-gold px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg text-center mt-auto">Book Now</a>
+                                        <a href="{{ route('public.vendor-quote', ['slug' => $vendor->slug]) }}"
+                                           class="mt-2 text-[11px] font-bold uppercase tracking-wider text-center text-stone-500 dark:text-stone-400 hover:text-[#8F7239] dark:hover:text-[#C6A15B] transition-colors">
+                                            Or get a custom quote →
+                                        </a>
+                                    @else
+                                        <a href="{{ route('public.vendor-quote', ['slug' => $vendor->slug]) }}" class="btn-outline-gold px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg text-center mt-auto">Request quote</a>
+                                    @endif
                                 </div>
                             </article>
                         @endforeach
@@ -177,6 +197,52 @@
                             <time datetime="{{ $review->created_at->toDateString() }}">{{ $review->created_at->format('M d, Y') }}</time>
                         </footer>
                     </article>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
+    <!-- Similar vendors in the same category -->
+    @if($this->similarVendors->isNotEmpty())
+        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-14">
+            <div class="flex items-end justify-between gap-4 mb-6">
+                <div>
+                    <h2 class="font-serif-luxury text-2xl sm:text-3xl">Similar {{ $category?->name ?? 'vendors' }}</h2>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 font-sans mt-1">Other verified providers you may also like.</p>
+                </div>
+                <a href="{{ route('public.vendors', ['category' => $category?->slug ?? 'all']) }}"
+                   class="text-xs font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B] hover:gap-2 transition-all shrink-0">
+                    View all →
+                </a>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($this->similarVendors as $similar)
+                    <a href="{{ route('public.vendor-profile', ['slug' => $similar->slug]) }}"
+                       class="group bg-white dark:bg-[#1C1917] rounded-2xl border border-[#C6A15B]/25 overflow-hidden hover:border-[#C6A15B]/60 hover:-translate-y-1 transition-all duration-300">
+                        @if($similar->cover_image)
+                            <img src="{{ $similar->cover_image }}" alt="{{ $similar->name }}" loading="lazy"
+                                 class="h-36 w-full object-cover group-hover:scale-[1.04] transition-transform duration-500">
+                        @else
+                            <div class="h-36 w-full bg-gradient-to-br from-[#C6A15B]/25 to-[#171513] flex items-center justify-center">
+                                <span class="font-serif-luxury text-3xl text-[#C6A15B]">{{ strtoupper(substr($similar->name, 0, 1)) }}</span>
+                            </div>
+                        @endif
+                        <div class="p-4 space-y-1">
+                            <div class="flex items-center justify-between gap-2">
+                                <h3 class="font-serif-luxury text-base truncate">{{ $similar->name }}</h3>
+                                @if($similar->is_featured)
+                                    <span class="shrink-0 px-2 py-0.5 rounded-full bg-[#C6A15B]/15 border border-[#C6A15B]/40 text-[9px] font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B]">Featured</span>
+                                @endif
+                            </div>
+                            <p class="text-[11px] text-stone-500 dark:text-stone-400 font-sans">
+                                {{ $similar->city ?? 'Pakistan' }}
+                                @if($similar->rating_avg > 0)
+                                    · ★ {{ number_format($similar->rating_avg, 1) }}
+                                    <span class="text-stone-400">({{ $similar->rating_count }})</span>
+                                @endif
+                            </p>
+                        </div>
+                    </a>
                 @endforeach
             </div>
         </section>

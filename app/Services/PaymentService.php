@@ -23,6 +23,12 @@ class PaymentService
         ?string $receivedByUserId = null,
         ?string $notes = null
     ): Payment {
+        // `payments.payment_type` is a strict enum (TOKEN_ADVANCE,
+        // SECOND_INSTALLMENT, FINAL_SETTLEMENT, SECURITY_DEPOSIT, REFUND).
+        // Historical callers pass the shorthand 'ADVANCE' — normalize it so
+        // MySQL never throws a data-truncation error on the success path.
+        $paymentType = $paymentType === 'ADVANCE' ? 'TOKEN_ADVANCE' : $paymentType;
+
         return Payment::create([
             'tenant_id' => $tenantId,
             'booking_id' => $bookingId,
@@ -275,12 +281,83 @@ class PaymentService
                     return false;
                 }
             case 'jazzcash':
-                return isset($payload['pp_ResponseCode']) && $payload['pp_ResponseCode'] === '000';
+                return $this->verifyGatewayHash(
+                    $payload,
+                    'pp_SecureHash',
+                    config('services.jazzcash.password'),
+                    'sha256',
+                    'pp_ResponseCode',
+                    '000'
+                );
             case 'easypaisa':
-                return isset($payload['resultCode']) && $payload['resultCode'] === 'SUCCESS';
+                return $this->verifyGatewayHash(
+                    $payload,
+                    'secureHash',
+                    config('services.easypaisa.secret_key'),
+                    'sha512',
+                    'resultCode',
+                    'SUCCESS'
+                );
             default:
                 return false;
         }
+    }
+
+    /**
+     * Fail-closed HMAC verification for the local gateways (JazzCash, Easypaisa).
+     *
+     * A webhook is only accepted when:
+     *   1. the shared secret is configured (unset secret ⇒ reject, never
+     *      "trust because unconfigured"), and
+     *   2. the canonical sorted `key=value&…` string of every field except
+     *      the hash field itself reproduces the supplied hash with the
+     *      gateway's algorithm (constant-time compare), and
+     *   3. the gateway's response/success code reports success.
+     *
+     * Success-field-only checks are NOT sufficient: anyone who can reach the
+     * endpoint could otherwise forge `pp_ResponseCode=000` / `resultCode=SUCCESS`
+     * and credit a booking with a fake payment.
+     */
+    private function verifyGatewayHash(
+        array $payload,
+        string $hashField,
+        ?string $secret,
+        string $algo,
+        string $successCodeField,
+        string $successCode
+    ): bool {
+        if (! is_string($secret) || $secret === '') {
+            Log::error("Webhook rejected (fail-closed): {$hashField} verification secret is not configured.");
+
+            return false;
+        }
+
+        $provided = $payload[$hashField] ?? null;
+
+        if (! is_string($provided) || $provided === '') {
+            return false;
+        }
+
+        unset($payload[$hashField]);
+        ksort($payload);
+
+        $pairs = [];
+        foreach ($payload as $key => $value) {
+            if (is_array($value) || is_object($value)) {
+                continue; // Gateway hash strings are built from flat scalar fields only.
+            }
+            $pairs[] = $key.'='.$value;
+        }
+
+        $expected = hash_hmac($algo, implode('&', $pairs), $secret);
+
+        if (! hash_equals(strtolower($expected), strtolower($provided))) {
+            Log::warning("Webhook rejected: {$hashField} HMAC mismatch.");
+
+            return false;
+        }
+
+        return isset($payload[$successCodeField]) && (string) $payload[$successCodeField] === $successCode;
     }
 
     public function getPaymentSummary(string $tenantId, string $period = 'MONTHLY'): array
