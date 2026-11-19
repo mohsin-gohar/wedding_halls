@@ -42,7 +42,7 @@ class DirectBooking extends Component
 
     public string $eventDate = '';
 
-    public string $startTime = '';
+    public ?string $startTime = null;
 
     public ?float $hours = null;
 
@@ -169,6 +169,7 @@ class DirectBooking extends Component
         switch ($mode) {
             case 'HOURLY':
                 $rules['hours'] = ['required', 'numeric', 'min:1', 'max:24'];
+                $rules['startTime'] = ['required', 'date_format:H:i'];
                 $rules['guestCount'] = ['nullable', 'integer', 'min:1', 'max:20000'];
                 break;
             case 'PER_HEAD':
@@ -214,6 +215,12 @@ class DirectBooking extends Component
             $this->addError('eventName', "Bohat zyada bookings bhej di hain. Baraye meherbani {$seconds} seconds intezar karein.");
 
             return;
+        }
+
+        // Normalize empty optional time to null so `nullable|date_format`
+        // validation and the DB TIME column both behave.
+        if ($this->startTime === '') {
+            $this->startTime = null;
         }
 
         $validated = $this->validate();

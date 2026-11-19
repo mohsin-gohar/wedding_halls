@@ -7,7 +7,7 @@
         <div class="parallax-bg opacity-60" data-parallax="0.25" style="background-image: url('{{ $cover }}');"></div>
         <div class="absolute inset-0 bg-gradient-to-t from-[#171513] via-[#171513]/55 to-[#171513]/75"></div>
 
-        <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 reveal-on-scroll">
             <nav class="text-[11px] font-sans uppercase tracking-wider text-stone-400 mb-4 flex items-center gap-2" aria-label="Breadcrumb">
                 <a href="{{ route('public.vendors') }}" class="hover:text-[#C6A15B] transition-colors">Marketplace</a>
                 <span>/</span>
@@ -70,7 +70,7 @@
 
     <!-- Services & Packages -->
     @if($vendor->vendorServices->isNotEmpty() || $vendor->vendorPackages->isNotEmpty())
-        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 space-y-10">
+        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 space-y-10 reveal-on-scroll">
             @if($vendor->vendorServices->isNotEmpty())
                 <div>
                     <h2 class="font-serif-luxury text-2xl sm:text-3xl mb-6">Services &amp; Pricing</h2>
@@ -160,7 +160,7 @@
 
     <!-- Portfolio -->
     @if($this->portfolio->isNotEmpty())
-        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-14">
+        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 reveal-on-scroll">
             <h2 class="font-serif-luxury text-2xl sm:text-3xl mb-6">Portfolio</h2>
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 @foreach($this->portfolio as $media)
@@ -180,7 +180,7 @@
 
     <!-- Reviews -->
     @if($this->reviews->isNotEmpty())
-        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-14">
+        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 reveal-on-scroll">
             <h2 class="font-serif-luxury text-2xl sm:text-3xl mb-6">Client Reviews</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @foreach($this->reviews as $review)
@@ -204,7 +204,7 @@
 
     <!-- Similar vendors in the same category -->
     @if($this->similarVendors->isNotEmpty())
-        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-14">
+        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 reveal-on-scroll">
             <div class="flex items-end justify-between gap-4 mb-6">
                 <div>
                     <h2 class="font-serif-luxury text-2xl sm:text-3xl">Similar {{ $category?->name ?? 'vendors' }}</h2>
@@ -250,7 +250,7 @@
 
     <!-- CTA -->
     <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div class="rounded-3xl bg-[#171513] text-white p-8 sm:p-12 text-center border border-[#C6A15B]/30">
+        <div class="rounded-3xl bg-[#171513] text-white p-8 sm:p-12 text-center border border-[#C6A15B]/30 reveal-on-scroll">
             <h2 class="font-serif-luxury text-2xl sm:text-3xl mb-3">Planning a wedding in {{ $vendor->city ?? 'Pakistan' }}?</h2>
             <p class="text-sm text-stone-300 max-w-xl mx-auto mb-6 font-light">Get a free, no-obligation quote from {{ $vendor->name }} — usually within 24 hours.</p>
             <a href="{{ route('public.vendor-quote', ['slug' => $vendor->slug]) }}" class="btn-gold px-8 py-3 text-sm font-bold uppercase tracking-wider rounded-xl inline-block">Request Quote</a>

@@ -53,6 +53,10 @@
                     class="px-4 py-2 text-xs font-sans font-bold uppercase tracking-wider rounded-xl transition flex items-center gap-2 cursor-pointer {{ $activeTab === 'profile' ? 'bg-[#C6A15B] text-[#171513] shadow-md font-extrabold' : 'bg-stone-100 dark:bg-white/5 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B]' }}">
                 <span>👤 My Profile &amp; Account Settings</span>
             </button>
+            <a href="{{ route('customer.events') }}"
+               class="px-4 py-2 text-xs font-sans font-bold uppercase tracking-wider rounded-xl transition flex items-center gap-2 bg-stone-100 dark:bg-white/5 text-stone-600 dark:text-stone-300 hover:text-[#C6A15B]">
+                <span>🗂️ My Event Workspace</span>
+            </a>
         </div>
 
         @if($profileFeedback)

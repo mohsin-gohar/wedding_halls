@@ -7,7 +7,7 @@
              style="background-image: url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2000&auto=format&fit=crop');"></div>
         <div class="absolute inset-0 bg-gradient-to-t from-[#171513] via-[#171513]/50 to-[#171513]/70"></div>
 
-        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 text-center">
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 text-center reveal-on-scroll">
             <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-[#C6A15B]/40 bg-[#171513]/90 text-[#E8DCBE] text-[11px] font-semibold tracking-[0.18em] uppercase font-sans">
                 <span class="w-1.5 h-1.5 rounded-full bg-[#C6A15B]"></span>
                 <span>Every Wedding Service, One Royal Platform</span>
@@ -27,7 +27,7 @@
          SECTION 2: CATEGORY TABS
          =================================================================== -->
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
-        <div class="bg-white dark:bg-[#1C1917] border border-[#C6A15B]/30 rounded-2xl p-4 sm:p-5 shadow-[0_12px_36px_-8px_rgba(23,21,19,0.18)]">
+        <div class="bg-white dark:bg-[#1C1917] border border-[#C6A15B]/30 rounded-2xl p-4 sm:p-5 shadow-[0_12px_36px_-8px_rgba(23,21,19,0.18)] reveal-on-scroll">
             <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-thin" role="tablist" aria-label="Vendor categories">
                 <button type="button" wire:click="selectCategory('all')"
                         class="shrink-0 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider border transition-all duration-200 {{ $category === 'all' ? 'bg-[#171513] dark:bg-[#C6A15B] text-white dark:text-[#171513] border-[#171513] dark:border-[#C6A15B]' : 'border-[#C6A15B]/40 text-stone-600 dark:text-stone-300 hover:bg-[#C6A15B]/10' }}">

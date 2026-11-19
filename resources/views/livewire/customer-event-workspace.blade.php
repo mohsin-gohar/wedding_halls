@@ -207,10 +207,15 @@
 
                 <!-- Bookings -->
                 <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-6 shadow-sm dark:shadow-xl">
-                    <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white mb-4">Bookings on this event</h3>
+                    <div class="flex items-start justify-between gap-3 flex-wrap mb-4">
+                        <div>
+                            <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white">Bookings on this event</h3>
+                            <p class="text-xs text-stone-500 dark:text-stone-400 font-sans mt-1">Service bookings you’ve made (direct or via accepted quotations) linked to this function.</p>
+                        </div>
+                    </div>
 
                     @if($this->eventBookings->isEmpty())
-                        <p class="text-sm text-stone-500 dark:text-stone-400 font-sans">No service bookings linked yet. Accepted quotations appear here.</p>
+                        <p class="text-sm text-stone-500 dark:text-stone-400 font-sans">No service bookings linked yet. Link one of your existing bookings below, or book vendors from the marketplace.</p>
                     @else
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs font-sans">
@@ -220,23 +225,48 @@
                                         <th class="py-2 pr-4">Vendor</th>
                                         <th class="py-2 pr-4">Amount</th>
                                         <th class="py-2 pr-4">Status</th>
-                                        <th class="py-2">Payment</th>
+                                        <th class="py-2 pr-4">Payment</th>
+                                        <th class="py-2">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-[#E7E5E4] dark:divide-white/10">
                                     @foreach($this->eventBookings as $booking)
                                         <tr>
                                             <td class="py-2 pr-4 font-mono text-[11px] text-[#8F7239] dark:text-[#C6A15B]">{{ $booking->booking_reference }}</td>
-                                            <td class="py-2 pr-4 text-[#171513] dark:text-white">{{ $booking->tenant?->name ?? '—' }}</td>
-                                            <td class="py-2 pr-4 text-[#171513] dark:text-white">{{ number_format((float) $booking->quoted_amount) }}</td>
+                                            <td class="py-2 pr-4">
+                                                <span class="text-[#171513] dark:text-white">{{ $booking->tenant?->name ?? '—' }}</span>
+                                                <span class="block text-[10px] text-stone-500 dark:text-stone-400">{{ $booking->vendorCategory?->name ?? 'Service' }}</span>
+                                            </td>
+                                            <td class="py-2 pr-4 text-[#171513] dark:text-white">PKR {{ number_format((float) $booking->quoted_amount, 0) }}</td>
                                             <td class="py-2 pr-4">{{ str_replace('_', ' ', $booking->status) }}</td>
-                                            <td class="py-2">{{ str_replace('_', ' ', $booking->payment_status) }}</td>
+                                            <td class="py-2 pr-4">{{ str_replace('_', ' ', $booking->payment_status) }}</td>
+                                            <td class="py-2">
+                                                <button type="button" wire:click="unlinkBooking('{{ $booking->id }}')" class="text-[10px] font-mono uppercase text-stone-400 hover:text-red-600">Unlink</button>
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
                     @endif
+
+                    <div class="mt-5 pt-5 border-t border-[#E7E5E4] dark:border-white/10">
+                        <label for="link-booking" class="block text-[10px] font-semibold uppercase tracking-[0.08em] text-stone-600 dark:text-stone-400 mb-2">Link an existing booking</label>
+                        @if($this->unlinkedBookings->isEmpty())
+                            <p class="text-xs text-stone-500 dark:text-stone-400 font-sans">No unlinked service bookings. <a href="{{ route('public.vendors') }}" class="text-[#8F7239] dark:text-[#C6A15B] font-semibold hover:underline">Book a vendor</a> or <a href="{{ route('customer.dashboard') }}" class="text-[#8F7239] dark:text-[#C6A15B] font-semibold hover:underline">accept a quotation</a> first.</p>
+                        @else
+                            <div class="flex flex-wrap items-center gap-2">
+                                <select id="link-booking" class="input-luxury flex-1 min-w-[240px] text-sm">
+                                    @foreach($this->unlinkedBookings as $ub)
+                                        <option value="{{ $ub->id }}">
+                                            {{ $ub->booking_reference }} — {{ $ub->tenant?->name ?? 'Vendor' }} (PKR {{ number_format((float) $ub->quoted_amount, 0) }}, {{ str_replace('_', ' ', $ub->status) }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <button type="button" wire:click="linkBooking($el.querySelector('#link-booking').value)" class="btn-gold !h-10 !px-5 text-[11px] font-mono uppercase">Link</button>
+                            </div>
+                        @endif
+                    </div>
                 </div>
             @endif
         </div>

@@ -14,14 +14,16 @@
 - **Phase 1 — Security & tenant isolation:** completed for this target batch (isolation suite + webhook hardening green)
 - **Phase 2 — Category & generic onboarding:** completed for this target batch (admin taxonomy UI + generic registration + 14-category seeder green)
 - **Phase 3 — Marketplace:** completed for this target batch (browse/SEO/profile/similar-rail/nav + customer quotes portal + quote-acceptance funnel — 43-test gate green)
+- **Phase 4 — Universal service & booking engine:** completed for this target batch (direct Book Now, server-side pricing, APPOINTMENT/HOURLY slot guards — 20-test suite green)
+- **Phase 5 — Event workspace:** completed for this target batch (audited existing workspace; booking link/unlink + shortlist sync + nav; tests green)
 
 ## Phase checklist (0–13)
 - [x] Phase 0 — Baseline & backup
 - [x] Phase 1 — Security & tenant isolation (target batch: cross-tenant isolation + payment webhook hardening)
 - [x] Phase 2 — Category & generic onboarding (target batch: hierarchical admin taxonomy + generic registration + full seeder)
 - [x] Phase 3 — Marketplace (target batch: category browse/SEO + customer quotes portal + quote acceptance + profile rail + discoverability)
-- [ ] Phase 4 — Universal service & booking engine
-- [ ] Phase 5 — Customer event workspace
+- [x] Phase 4 — Universal service & booking engine (target batch: direct Book Now creating ACCEPTED ServiceBookings; slot guards for APPOINTMENT/HOURLY)
+- [x] Phase 5 — Customer event workspace (target batch: booking link/unlink + shortlist sync + nav discoverability)
 - [ ] Phase 6 — Vendor ERP completion
 - [ ] Phase 7 — CRM / Finance / Inventory / Procurement / HR
 - [ ] Phase 8 — Super Admin & SaaS
@@ -149,14 +151,32 @@
 - **Phase 3 gate (MySQL):** all four suites together → **43 passed, 509 assertions, 279.55s**. Plus dashboard/route regression 10/10 (126 assertions).
 - Blockers unchanged: no Redis, no gateway sandbox creds, no production infra; full 13-phase scope / full browser E2E / k6 load not achievable or claimable in one pass. **No commit/push since `2f774e0` — all of the above is uncommitted work.**
 
+## Phase 4 — implementation notes (target batch complete)
+- **Service layer** (`app/Services/ServiceBookingService.php`): `createDirectBooking()` creates an `ACCEPTED` `ServiceBooking` directly from a `VendorService`/`VendorPackage` (no RFQ) under `DB::transaction` + `Tenant::lockForUpdate()` serialization; `ServiceBookingCreatedEvent` fired; `booking_reference` via `ServiceBooking::generateReference()`.
+- **Server-side pricing only** (no price/status/money inputs accepted): package = `price ?? price_from`; service = `price_from × guests` for `PER_HEAD`, `price_from × hours` for `HOURLY`, flat base otherwise. Non-priced items throw `ServiceBookingException` (quote-only path). Financials via existing `calculateFinancials($quoted, 0, $tenant)`.
+- **Slot exclusivity**: `APPOINTMENT` rejects exact same `start_time`; `HOURLY` rejects interval overlap (bookings without stored duration treated as 1h). Checked against active statuses `PENDING_VENDOR|QUOTE_SENT|ACCEPTED|CONFIRMED|IN_PROGRESS` on same `event_date`; cancelled/declined free the slot. **Limitation (honest):** DATE_EVENT/PROJECT/TRANSPORT/CONSULTATION/PACKAGE modes do not yet enforce same-day capacity conflicts — only time-slot modes guarded in this batch.
+- **UI**: `app/Livewire/DirectBooking.php` + `resources/views/livewire/direct-booking.blade.php`, route `GET /vendor/{slug}/book` → `public.vendor-book` (`auth`, `throttle:public-pages`). Booking-mode-driven validation mirrors `VendorQuoteRequest`; guest redirect preserves intended URL; 10/hour per-user throttle; hidden/unapproved vendor → 404; bookable must belong to vendor & be active (IDOR-safe); live server-computed price preview; success state shows reference/date/agreed+advance.
+- **CTAs**: `PublicVendorProfile::directBookableIds` (probe priced items) → "Book Now" (+ secondary quote link) for priced services/packages; unpriced remain quote-only.
+- **Files:** `app/Services/ServiceBookingService.php`, `app/Livewire/DirectBooking.php`, `resources/views/livewire/direct-booking.blade.php`, `app/Livewire/PublicVendorProfile.php`, `resources/views/livewire/public-vendor-profile.blade.php`, `routes/web.php`, `tests/Feature/DirectServiceBookingTest.php` (new).
+- **Quality**: Pint/php -l/view:cache clean on changed files; route `public.vendor-book` registered.
+- **Tests (MySQL):** `tests/Feature/DirectServiceBookingTest.php` — run 1 **10f/10p (28)** (blade `$this->bookingMode`), run 2 **18p/2f (69)** (empty TIME normalized; HOURLY startTime required+collected), **run 3 PASS — 20 passed (79 assertions), 145.22s**. Covers guest redirect/404s, PER_HEAD server-computed pricing + financial pipeline, tampered money/status ignored, flat package pricing, required guests/past-date, quote-only (no fixed price), APPOINTMENT double-book + slot freed after cancel, HOURLY overlap reject + free-range accept with hourly pricing, cross-tenant/inactive IDOR guards, customer portal + vendor board visibility/no leak, vendor confirm ACCEPTED→CONFIRMED, profile Book Now CTAs only for priced items.
+- **Phase 4 regression (MySQL):** `VendorQuoteRequestTest` + `VendorErpBoardsTest` → **PASS** (21 passed, 81 assertions, 131.69s).
+
+## Phase 5 — event workspace (target batch complete)
+- **Audit:** existing implementation present — route `customer.events` (`/customer/events`, auth+customer), `CustomerEventWorkspace` component, models `CustomerEvent`/`CustomerEventTask`/`CustomerEventVendor`, migration `2026_12_01_000003_*`. Core covered: create/edit/delete events (scoped to `user_id`), checklist add/toggle/delete, vendor shortlist attach/status/detach, budget/task summary, display of linked `ServiceBooking`s (`customer_event_id`). Gaps addressed: no way to link/unlink existing bookings; route orphaned from nav.
+- **Implemented:** `linkBooking`/`unlinkBooking` actions (ownership-checked: booking must belong to signed-in customer; link scoped to selected owned event; cannot link a booking already attached to another event) + `unlinkedBookings` list; linking syncs matching shortlist row to `BOOKED` and stores `service_booking_id`; unlinking clears shortlist booking ref; UI controls in bookings section. Added "My Event Workspace" nav link in `CustomerDashboard`.
+- **Files:** `app/Livewire/CustomerEventWorkspace.php`, `resources/views/livewire/customer-event-workspace.blade.php`, `resources/views/livewire/customer-dashboard.blade.php`, `tests/Feature/CustomerEventWorkspaceTest.php` (new).
+- **Tests (MySQL):** `CustomerEventWorkspaceTest` — run 1 **10 passed, 2 failed (47 assertions)** (ownership tests used `expectException` instead of Livewire `assertStatus(404)`; fixed), **run 2 PASS — 12 passed (47 assertions), 122.69s**. Covers guest redirect, open workspace + dashboard nav link, event create/select/edit, delete detaches bookings, cross-customer event 404, tasks add/toggle/delete, vendor shortlist/status/detach, booking link/unlink, shortlist BOOKED sync on link, cross-customer booking link 404 with zero linkage, budget totals.
+
 ## Remaining tasks (immediate next)
-1. **Phase 4 (universal service & booking engine):** no direct "Book Now" path exists — every non-venue service (even fixed-price packages) goes through the RFQ round-trip; implement direct booking per `booking_mode` (APPOINTMENT slots, HOURLY, PER_HEAD menus, DATE_EVENT, PROJECT, TRANSPORT) creating `ServiceBooking` rows without an RFQ, with concurrency/double-booking guards + tests.
-2. **Phase 5+:** event workspace, category-specific ERP modules, CRM/finance/inventory/HR, Super Admin/SaaS, UI/animations pass (marketplace pages currently have parallax but no scroll-reveal), infra/Redis, security hardening, browser QA, regression/production readiness — sequential with tests per phase.
-3. Optional leftovers: subcategory selection inside vendor service catalog, reviews display QA, k6 load + full browser E2E (blocked in this environment).
+1. **Phase 9 (UI/animations, incremental):** marketplace and vendor profile already have parallax; add scroll-reveal (`.reveal-on-scroll` / stagger delays) to key sections for a fuller animated feel (engine + reduced-motion handling already exist). Run `view:cache` + targeted marketplace/profile tests.
+2. **Phase 6–8, 10–13:** category-specific ERP modules, CRM/finance/inventory/HR, Super Admin/SaaS, infra/Redis, security hardening, browser QA, regression/production readiness — large scope, sequential, evidence-based; prioritize high-value tested increments.
+3. Phase 4/5 follow-ups (optional): same-day/capacity guards for non-slot booking modes, customer-side cancel/reschedule for direct bookings, richer workspace timeline/docs.
+4. Blockers unchanged: no Redis, no gateway sandbox creds, no production infra/multi-instance/LB/object storage, no full browser E2E/k6 in this environment. **No commit/push since `2f774e0` — all work uncommitted.**
 
 ## Next exact steps
-- Start Phase 4: audit `ServiceBookingService`/booking modes; design the direct-booking entry (vendor profile "Book" per booking_mode) with server-side availability/double-booking checks; implement + tests on MySQL; Pint gate.
-- Continue evidence-based; run Pint + targeted MySQL suites per change; no commit/push without explicit permission.
+- Apply scroll-reveal pass to marketplace/vendor-profile views; run Pint + `view:cache` + `MarketplaceCategoryBrowseTest` regression; then continue with next feasible high-value phase increments and tests.
+- Continue evidence-based; never claim 100%/$1000T completion without proof; no commit/push without explicit permission.
 
 ---
-*Last updated: 2026-11-19 (Phase 3 target batch COMPLETE: 43-test gate green — 43 passed / 509 assertions; Phase 4 universal booking engine next)*
+*Last updated: 2026-11-19 (Phase 5 target batch COMPLETE: CustomerEventWorkspaceTest 12 passed / 47 assertions; continuing with incremental Phase 9/UI + further phases)*

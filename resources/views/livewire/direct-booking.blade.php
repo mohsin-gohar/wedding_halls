@@ -116,12 +116,18 @@
                         @error('eventDate') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                     </div>
 
-                    @if($bookingMode === 'APPOINTMENT')
+                    @if(in_array($this->bookingMode, ['APPOINTMENT', 'HOURLY'], true))
                         <div>
-                            <label for="book-start-time" class="block text-[10px] font-semibold uppercase tracking-[0.08em] text-stone-600 dark:text-stone-400 mb-1.5">Time slot <span class="text-[#8F7239]">*</span></label>
+                            <label for="book-start-time" class="block text-[10px] font-semibold uppercase tracking-[0.08em] text-stone-600 dark:text-stone-400 mb-1.5">Start time <span class="text-[#8F7239]">*</span></label>
                             <input id="book-start-time" type="time" wire:model="startTime"
                                    class="input-luxury w-full text-sm dark:bg-[#171513] dark:text-white dark:border-white/15 rounded-lg">
-                            <p class="mt-1 text-[11px] text-stone-400 font-sans">Ek waqt ek hi booking ke liye mojood hota hai.</p>
+                            <p class="mt-1 text-[11px] text-stone-400 font-sans">
+                                @if($this->bookingMode === 'APPOINTMENT')
+                                    Ek waqt ek hi booking ke liye mojood hota hai.
+                                @else
+                                    Coverage is waqt se shuru hogi — overlap slots book nahi honge.
+                                @endif
+                            </p>
                             @error('startTime') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                         </div>
                     @else
@@ -130,14 +136,14 @@
                 </div>
 
                 {{-- Category-specific fields (driven by vendor_categories.booking_mode) --}}
-                @if($bookingMode === 'HOURLY')
+                @if($this->bookingMode === 'HOURLY')
                     <div>
                         <label for="book-hours" class="block text-[10px] font-semibold uppercase tracking-[0.08em] text-stone-600 dark:text-stone-400 mb-1.5">Coverage hours <span class="text-[#8F7239]">*</span></label>
                         <input id="book-hours" type="number" wire:model="hours" min="1" max="24" step="1" placeholder="e.g. 6"
                                class="input-luxury w-full text-sm dark:bg-[#171513] dark:text-white dark:border-white/15 rounded-lg">
                         @error('hours') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                     </div>
-                @elseif($bookingMode === 'PER_HEAD')
+                @elseif($this->bookingMode === 'PER_HEAD')
                     <div>
                         <label for="book-guests" class="block text-[10px] font-semibold uppercase tracking-[0.08em] text-stone-600 dark:text-stone-400 mb-1.5">Guest count <span class="text-[#8F7239]">*</span></label>
                         <input id="book-guests" type="number" wire:model="guestCount" min="1" max="20000" placeholder="e.g. 400"
@@ -182,15 +188,15 @@
                     <div class="sm:ml-auto text-right shrink-0">
                         @if($this->pricePreview !== null)
                             <p class="font-serif-luxury text-2xl text-[#8F7239] dark:text-[#C6A15B]">PKR {{ number_format($this->pricePreview, 0) }}</p>
-                            @if($bookingMode === 'PER_HEAD')
+                            @if($this->bookingMode === 'PER_HEAD')
                                 <p class="text-[11px] text-stone-500 dark:text-stone-400 font-sans">{{ number_format((int) $guestCount) }} guests × per-head rate</p>
-                            @elseif($bookingMode === 'HOURLY')
+                            @elseif($this->bookingMode === 'HOURLY')
                                 <p class="text-[11px] text-stone-500 dark:text-stone-400 font-sans">{{ rtrim(rtrim(number_format((float) $hours, 2), '0'), '.') }} hours × hourly rate</p>
                             @endif
                         @else
                             <p class="text-xs font-semibold text-stone-500 dark:text-stone-400 font-sans">
-                                @if($bookingMode === 'PER_HEAD') Guest count daalein taake price calculate ho.
-                                @elseif($bookingMode === 'HOURLY') Hours daalein taake price calculate ho.
+                                @if($this->bookingMode === 'PER_HEAD') Guest count daalein taake price calculate ho.
+                                @elseif($this->bookingMode === 'HOURLY') Hours daalein taake price calculate ho.
                                 @else Price calculated at confirmation.
                                 @endif
                             </p>

@@ -173,6 +173,9 @@ class ServiceBookingService
 
             $eventDate = (string) $attributes['event_date'];
             $startTime = $attributes['start_time'] ?? null;
+            if ($startTime === '') {
+                $startTime = null;
+            }
             $hours = isset($attributes['hours']) && (float) $attributes['hours'] > 0
                 ? (float) $attributes['hours']
                 : null;
@@ -182,6 +185,8 @@ class ServiceBookingService
             }
 
             $financials = $this->calculateFinancials($price, 0.0, $tenant);
+
+            $endTime = $this->resolveEndTime(['start_time' => $startTime, 'hours' => $hours]);
 
             $booking = ServiceBooking::create([
                 'tenant_id' => $tenant->id,
@@ -194,8 +199,8 @@ class ServiceBookingService
                 'booking_reference' => ServiceBooking::generateReference(),
                 'event_name' => (string) $attributes['event_name'],
                 'event_date' => $eventDate,
-                'start_time' => $startTime,
-                'end_time' => $this->resolveEndTime(['start_time' => $startTime, 'hours' => $hours]),
+                'start_time' => $startTime ?: null,
+                'end_time' => $endTime ?: null,
                 'hours' => $hours,
                 'guest_count' => $attributes['guest_count'] ?? null,
                 'requirements' => $attributes['requirements'] ?? null,

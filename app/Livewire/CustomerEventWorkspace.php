@@ -148,6 +148,17 @@ class CustomerEventWorkspace extends Component
         ];
     }
 
+    /** The signed-in customer's service bookings not yet linked to any event. */
+    public function getUnlinkedBookingsProperty()
+    {
+        return ServiceBooking::query()
+            ->where('customer_id', Auth::id())
+            ->whereNull('customer_event_id')
+            ->with(['tenant:id,name', 'vendorCategory:id,name'])
+            ->orderByDesc('created_at')
+            ->get();
+    }
+
     public function getMarketplaceVendorsProperty()
     {
         // Approved vendors the customer can shortlist, excluding those already
@@ -422,6 +433,68 @@ class CustomerEventWorkspace extends Component
         $row->update(['status' => $status]);
 
         $this->feedbackMessage = 'Vendor status updated.';
+    }
+
+    // ── Booking links ─────────────────────────────────────────────
+
+    public function linkBooking(string $bookingId): void
+    {
+        $event = $this->currentEvent();
+
+        $booking = ServiceBooking::query()
+            ->where('id', $bookingId)
+            ->where('customer_id', Auth::id())
+            ->first();
+
+        if (! $booking) {
+            abort(404, 'Booking not found.');
+        }
+
+        if ($booking->customer_event_id && $booking->customer_event_id !== $event->id) {
+            $this->errorMessage = 'This booking is already linked to another event. Unlink it there first.';
+
+            return;
+        }
+
+        $booking->update(['customer_event_id' => $event->id]);
+
+        // If the booked vendor is on the shortlist, mark them booked and
+        // attach the reference so the shortlist reflects reality.
+        CustomerEventVendor::query()
+            ->where('customer_event_id', $event->id)
+            ->where('tenant_id', $booking->tenant_id)
+            ->update([
+                'status' => 'BOOKED',
+                'service_booking_id' => $booking->id,
+            ]);
+
+        $this->feedbackMessage = 'Booking '.$booking->booking_reference.' linked to this event.';
+    }
+
+    public function unlinkBooking(string $bookingId): void
+    {
+        $event = $this->currentEvent();
+
+        $booking = ServiceBooking::query()
+            ->where('id', $bookingId)
+            ->where('customer_id', Auth::id())
+            ->where('customer_event_id', $event->id)
+            ->first();
+
+        if (! $booking) {
+            abort(404, 'Booking not found.');
+        }
+
+        $booking->update(['customer_event_id' => null]);
+
+        // Keep the shortlist row, but drop the booking link so it no longer
+        // claims a reference that isn't attached to this event.
+        CustomerEventVendor::query()
+            ->where('customer_event_id', $event->id)
+            ->where('service_booking_id', $booking->id)
+            ->update(['service_booking_id' => null]);
+
+        $this->feedbackMessage = 'Booking unlinked from this event.';
     }
 
     // ── Internals ─────────────────────────────────────────────────
