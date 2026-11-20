@@ -496,9 +496,11 @@ class ServiceBookingService
     }
 
     /**
-     * Verify an incoming (gateway/webhook/off-site) service payment and apply
-     * it. Full settlements trigger vendor wallet credit + commission revenue
-     * recognition + payout request; refunds reverse the paid balance.
+     * Verify a manually submitted service payment after the staff member has
+     * physically confirmed the cash/offline transfer, and apply it. Nothing is
+     * credited while the record is PENDING. Full settlements trigger vendor
+     * wallet credit + commission revenue recognition + payout request; refunds
+     * reverse the paid balance.
      *
      * @return array{success: bool, message: string, booking?: ServiceBooking}
      */
@@ -532,7 +534,9 @@ class ServiceBookingService
 
             $booking->update(['paid_amount' => (float) $booking->paid_amount + (float) $payment->amount]);
 
-            if ($payment->kind === 'FULL' || $booking->balanceDue() <= 0) {
+            // A caller-supplied "FULL" label must never settle a booking: only
+            // the actual summed amounts can drive the paid state.
+            if ($booking->balanceDue() <= 0) {
                 $booking->update(['payment_status' => 'PAID']);
                 $this->settleServiceBookingPayment($booking);
             } elseif ($payment->kind === 'ADVANCE') {
@@ -766,7 +770,7 @@ class ServiceBookingService
 
         $booking->update(['paid_amount' => (float) $booking->paid_amount + (float) $payment->amount]);
 
-        if ($payment->kind === 'FULL' || $booking->balanceDue() <= 0) {
+        if ($booking->balanceDue() <= 0) {
             $booking->update(['payment_status' => 'PAID']);
             $this->settleServiceBookingPayment($booking);
         } elseif ($payment->kind === 'ADVANCE') {
@@ -784,8 +788,9 @@ class ServiceBookingService
             return null;
         }
 
-        $balance = (float) $wallet->balance + $amount;
-        $wallet->update(['balance' => $balance]);
+        // Atomic increment: two concurrent settlements must not lose a credit.
+        $wallet->increment('balance', $amount);
+        $balance = (float) $wallet->balance;
 
         WalletTransaction::create([
             'tenant_id' => $booking->tenant_id,

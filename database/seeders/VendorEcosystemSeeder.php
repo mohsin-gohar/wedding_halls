@@ -20,6 +20,10 @@ class VendorEcosystemSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->environment('production')) {
+            throw new \RuntimeException('Demo seeding is disabled in the production environment.');
+        }
+
         // ---------------------------------------------------------------
         // Platform settings (commission + defaults)
         // ---------------------------------------------------------------

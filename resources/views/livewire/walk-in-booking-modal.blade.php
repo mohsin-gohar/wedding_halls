@@ -310,17 +310,13 @@
                         <label class="block text-[11px] uppercase tracking-[0.1em] text-[#8F7239] dark:text-[#C6A15B] mb-1.5 font-mono font-bold">Payment Method</label>
                         <select wire:model="payment_method" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 text-sm font-medium">
                             <option value="CASH">Cash at Front Desk</option>
-                            <option value="BANK_TRANSFER">Online Bank Transfer</option>
-                            <option value="JAZZCASH">JazzCash Direct</option>
-                            <option value="EASYPAISA">EasyPaisa</option>
-                            <option value="CREDIT_CARD">POS Card Terminal</option>
                         </select>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-[11px] uppercase tracking-[0.1em] text-[#8F7239] dark:text-[#C6A15B] mb-1.5 font-mono font-bold">Transaction Reference / Slip No (If Digital)</label>
-                    <input type="text" wire:model="transaction_reference" placeholder="e.g. HBL-FT-992104" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 text-sm placeholder-stone-400">
+                    <label class="block text-[11px] uppercase tracking-[0.1em] text-[#8F7239] dark:text-[#C6A15B] mb-1.5 font-mono font-bold">Cash Receipt / Voucher No (Optional)</label>
+                    <input type="text" wire:model="transaction_reference" placeholder="e.g. RCP-1042" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 text-sm placeholder-stone-400">
                 </div>
                 @endif
 

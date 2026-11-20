@@ -58,12 +58,9 @@ class CustomerDashboard extends Component
         $this->profileName = $user->name ?? '';
         $this->profilePhone = $user->phone ?? '';
 
-        // Claim orphan walk-in bookings that already store this customer's email
-        // so future access is by customer_id only (prevents email-registration IDOR).
-        Booking::query()
-            ->whereNull('customer_id')
-            ->whereRaw('LOWER(customer_email) = ?', [strtolower($user->email)])
-            ->update(['customer_id' => $user->id]);
+        // Ownership is granted only through an explicit staff action that sets
+        // bookings.customer_id. Matching an email string here would let anyone
+        // register a known customer's address and take over their bookings.
     }
 
     public function switchTab(string $tab): void

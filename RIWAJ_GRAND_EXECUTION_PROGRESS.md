@@ -1,5 +1,26 @@
 # RIWAJ GRAND — Execution Progress
 
+> ## ⚠️ AUTHORITATIVE CURRENT STATE (read this first)
+>
+> The entries below are a **historical session log**. Several describe an
+> earlier online-payment (Stripe / JazzCash / EasyPaisa / gateway webhook)
+> design that has since been **removed**. They are retained for auditability,
+> not as a description of the current system.
+>
+> **The application is now cash-only / manual-payment:**
+> - No gateway initiation, callback, webhook or automatic verification exists.
+> - Only authorized staff may mark cash as received after physical verification;
+>   customers can only read their own receipts and submit *unverified* manual
+>   service payments.
+> - SaaS subscriptions remain manual and are activated/renewed/suspended only
+>   by a Super Admin.
+> - Historical payment rows with legacy method labels are preserved, but all
+>   new writes are cash-only.
+>
+> See `CASH_ONLY_PAYMENTS.md` and `API_DOCUMENTATION.md` for the current contract.
+>
+> ---
+
 **Execution spec:** `CODEX MASTER EXECUTION — RIWAJ GRAND COMPLETE EVENT INDUSTRY ECOSYSTEM` (user-provided, 2026-11-19)  
 **Current branch:** `main` (feature branch `feature/enterprise-transformation` merged; see below)
 **Current HEAD (local and origin):** `3a9d126` — merge commit that was pushed successfully to `origin/main` (`444ff83..3a9d126`)

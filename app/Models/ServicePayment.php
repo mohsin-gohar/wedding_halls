@@ -24,7 +24,11 @@ class ServicePayment extends Model
         'paid_at' => 'datetime',
     ];
 
-    public const METHODS = ['JAZZCASH', 'EASYPAISA', 'BANK_TRANSFER', 'CARD', 'CASH', 'WALLET'];
+    /** Methods accepted for NEW manual/offline records. */
+    public const METHODS = ['CASH', 'BANK_TRANSFER'];
+
+    /** Legacy labels retained only so historical records remain readable. */
+    public const LEGACY_METHODS = ['JAZZCASH', 'EASYPAISA', 'CARD', 'WALLET', 'ONLINE', 'CREDIT_CARD'];
 
     public const STATUSES = ['PENDING', 'VERIFIED', 'REJECTED', 'REFUNDED'];
 
@@ -53,6 +57,6 @@ class ServicePayment extends Model
     /** Safe invoice document stream (authorization checked in controller). */
     public function proofUrl(): ?string
     {
-        return $this->proof_path ? route('documents.vendor-payment-proof', ['payment' => $this->id]) : null;
+        return $this->proof_path ? route('documents.vendor-payment-proof', ['id' => $this->id]) : null;
     }
 }

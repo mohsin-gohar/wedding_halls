@@ -136,7 +136,11 @@ class Booking extends Model
 
     public function updatePaymentBalance(): void
     {
-        $paid = (float) $this->payments()->sum('amount');
+        // Refunds must reduce, never increase, the amount received.
+        $paid = (float) $this->payments()
+            ->selectRaw("SUM(CASE WHEN payment_type = 'REFUND' THEN -amount ELSE amount END) as net_paid")
+            ->value('net_paid');
+        $paid = max(0, $paid);
         $this->advance_paid = $paid;
         $this->balance_due = max(0, (float) $this->grand_total - $paid);
         $this->save();

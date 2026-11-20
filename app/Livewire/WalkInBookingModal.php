@@ -17,6 +17,14 @@ use Livewire\Component;
 #[Eager]
 class WalkInBookingModal extends Component
 {
+    private const DEFAULT_ADDON_PRICES = [
+        'sparklers' => 15000.00,
+        'dj_lighting' => 30000.00,
+        'ac_extra' => 20000.00,
+        'valet' => 12000.00,
+        'stage_flowers' => 35000.00,
+    ];
+
     public bool $isOpen = false;
 
     public int $step = 1;
@@ -57,13 +65,7 @@ class WalkInBookingModal extends Component
 
     public float $hall_rent = 120000.00;
 
-    public array $addonPrices = [
-        'sparklers' => 15000.00,
-        'dj_lighting' => 30000.00,
-        'ac_extra' => 20000.00,
-        'valet' => 12000.00,
-        'stage_flowers' => 35000.00,
-    ];
+    public array $addonPrices = self::DEFAULT_ADDON_PRICES;
 
     public array $selected_addons = [];
 
@@ -276,10 +278,14 @@ class WalkInBookingModal extends Component
 
     public function updatedPackageId($packageId)
     {
-        if ($packageId) {
-            $pkg = Package::find($packageId);
-            if ($pkg) {
-                $this->per_head_rate = (float) $pkg->per_head_price;
+        if ($packageId && $this->hall_id) {
+            $hall = Hall::find($this->hall_id);
+
+            if ($hall) {
+                $pkg = $this->scopedPackage((string) $packageId, (string) $hall->tenant_id);
+                if ($pkg) {
+                    $this->per_head_rate = (float) $pkg->per_head_price;
+                }
             }
         }
         $this->calculateTotals();
@@ -407,6 +413,9 @@ class WalkInBookingModal extends Component
             'customer_phone' => 'required|string|min:7|max:30',
             'customer_email' => 'nullable|email|max:120',
             'guest_count' => 'required|integer|min:20',
+            'advance_paid' => 'required|numeric|min:0',
+            'payment_method' => 'required|in:CASH',
+            'transaction_reference' => 'nullable|string|max:100',
         ]);
 
         $hall = Hall::with('tenant')->findOrFail($this->hall_id);
@@ -431,18 +440,38 @@ class WalkInBookingModal extends Component
             return;
         }
 
-        // Authoritative Server-Side Base Rent Check
+        // Authoritative server-side pricing: never trust client-provided rates.
         $this->hall_rent = (float) $hall->base_rent;
+        $this->tax_rate_percent = 5.00;
+        $this->addonPrices = self::DEFAULT_ADDON_PRICES;
+
+        if (! $this->isStaff) {
+            // Public inquiries cannot negotiate discounts or pay a deposit.
+            $this->discount_amount = 0.00;
+            $this->advance_paid = 0.00;
+        }
 
         if ($this->package_id) {
-            $pkg = Package::findOrFail($this->package_id);
-            if ($this->isStaff && ! $user->isSuperAdmin() && $pkg->tenant_id && $pkg->tenant_id !== $user->tenant_id) {
-                abort(403, 'Unauthorized package selection.');
+            $pkg = $this->scopedPackage($this->package_id, (string) $hall->tenant_id);
+
+            if (! $pkg) {
+                $this->errorMessage = 'The selected package is not available for this venue.';
+
+                return;
             }
+
             $this->per_head_rate = (float) $pkg->per_head_price;
+        } elseif (! $this->isStaff) {
+            $this->per_head_rate = 0.00;
         }
 
         $this->calculateTotals();
+
+        if ($this->isStaff && $this->advance_paid > $this->grand_total + 0.009) {
+            $this->errorMessage = 'Cash advance cannot exceed the booking total.';
+
+            return;
+        }
 
         // Public vs Staff distinction:
         // - Staff walk-in terminal: Creates CONFIRMED booking, collects token deposit, creates KOT.
@@ -558,5 +587,17 @@ class WalkInBookingModal extends Component
             'packages' => $packages,
             'menuItems' => $menuItems,
         ]);
+    }
+
+    /** A package is usable only when global or owned by the selected hall's tenant. */
+    private function scopedPackage(string $packageId, string $tenantId): ?Package
+    {
+        return Package::query()
+            ->whereKey($packageId)
+            ->where('is_active', true)
+            ->where(function ($query) use ($tenantId): void {
+                $query->whereNull('tenant_id')->orWhere('tenant_id', $tenantId);
+            })
+            ->first();
     }
 }

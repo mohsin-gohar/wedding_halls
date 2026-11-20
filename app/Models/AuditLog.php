@@ -14,6 +14,16 @@ class AuditLog extends Model
 
     protected static function booted(): void
     {
+        // Audit history is append-only: financial accountability requires that
+        // entries can never be rewritten or erased through the application.
+        static::updating(static function (): void {
+            throw new \LogicException('Audit log entries are append-only and cannot be modified.');
+        });
+
+        static::deleting(static function (): void {
+            throw new \LogicException('Audit log entries are append-only and cannot be deleted.');
+        });
+
         // Any privileged mutation that is audited must also invalidate the
         // cached Super Admin counters immediately.
         static::created(static function (): void {

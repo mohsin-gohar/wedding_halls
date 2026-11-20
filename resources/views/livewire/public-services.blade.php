@@ -280,7 +280,7 @@
                     </div>
                     <h4 class="font-serif-luxury text-lg text-[#171513] dark:text-white font-semibold">Free Registration (0 PKR)</h4>
                     <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
-                        Sign up in 2 minutes with your venue name, city, guest capacity, and contact number. Zero upfront rent and zero credit card needed.
+                        Sign up in 2 minutes with your venue name, city, guest capacity, and contact number. Zero upfront rent and no online payment needed.
                     </p>
                 </div>
 
@@ -332,7 +332,7 @@
                     Put Your Hall on Riwaj Grand Today
                 </h3>
                 <p class="text-xs text-stone-300 font-light max-w-xl">
-                    Join the platform where couples check availability, book shifts, and pay advances online — while you manage everything from one dashboard.
+                    Join the platform where couples check availability, send booking requests and confirm details with venues — while you manage everything, including manual cash advances, from one dashboard.
                 </p>
             </div>
 

@@ -114,35 +114,32 @@ POST /api/v1/bookings
 
 ```http
 POST /api/v1/service-bookings/{id}/payments
-{ "amount": 735000, "method": "JAZZCASH", "kind": "ADVANCE", "reference": "JC-88213" }
+{ "amount": 735000, "method": "CASH", "kind": "ADVANCE", "reference": "RCP-88213" }
 ```
 ```json
 { "success": true, "payment": { "id": "…", "status": "PENDING", "kind": "ADVANCE", "amount": "735000.00" },
-  "message": "Payment recorded and awaiting verification." }
+  "message": "Payment submitted and awaiting staff verification." }
 ```
-Amounts above the outstanding balance are rejected with **422**.
+Only `CASH` and `BANK_TRANSFER` (offline, physically verified) are accepted for new records. A customer submission stays **PENDING** and never changes a balance; only authorized staff may verify it. Amounts above the outstanding balance are rejected with **422**.
 
-### 3.4 Payments (hall engine)
+### 3.4 Payments (hall engine) — cash only
 
 | Method | Path | Permission | Notes |
 |---|---|---|---|
-| GET | `/api/v1/payments` | scoped | Paginated |
-| POST | `/api/v1/payments/initiate` | customer (own) / `payments.record` | Amount must not exceed `balance_due`; returns gateway redirect data for JazzCash/Easypaisa/Stripe |
-| GET | `/api/v1/payments/summary` | tenant staff | `period = DAILY|WEEKLY|MONTHLY|YEARLY` |
+| GET | `/api/v1/payments` | scoped | Customers see only their own receipts; staff see their tenant |
+| POST | `/api/v1/payments/record` | `payments.record` (staff) | Physically verified cash; atomically updates the booking ledger |
+| POST | `/api/v1/payments/refund` | `payments.refund` (staff) | Authorized cash refund; reverses the ledger |
+| GET | `/api/v1/payments/summary` | tenant staff | `period = DAILY|WEEKLY|MONTHLY|YEARLY`; refunds are netted out |
 
-### 3.5 Gateway webhooks (no session, signature required)
-
+Recording a payment:
 ```http
-POST /api/v1/webhooks/{stripe|jazzcash|easypaisa}
-X-Signature: …
+POST /api/v1/payments/record
+{ "booking_id": "<uuid>", "amount": 50000,
+  "payment_type": "TOKEN_ADVANCE", "transaction_reference": "RCP-1042" }
 ```
+The caller must be an active staff principal with the matching permission and tenant ownership of the booking. Overpayments, non-cash methods and customer-originated writes are rejected. Repeating a `transaction_reference` is idempotent — it never double-credits a booking. Every mutation writes a tamper-evident audit entry.
 
-| Situation | Response |
-|---|---|
-| Invalid signature | `401 {"message":"Invalid webhook signature."}` |
-| New valid payment | `{"status":"processed"}` |
-| Replayed reference | `{"status":"already_processed"}` (no double credit) |
-| Amount out of range / unknown booking | `{"status":"ignored", …}` |
+There are **no** online checkout, gateway-initiation, callback, webhook or automatic-verification endpoints. Historical rows with legacy method labels remain readable for reporting; new writes are cash-only.
 
 ---
 
@@ -164,7 +161,7 @@ X-Signature: …
 | Stateless auth | ✅ hashed bearer tokens, revocation, expiry |
 | Scoped data access | ✅ tenant + customer scoping on every read |
 | Offline-friendly reads | ✅ paginated, filterable list endpoints |
-| Write path for payments | ✅ `POST /service-bookings/{id}/payments` |
+| Write path for payments | ✅ staff-only `POST /payments/record` / `POST /payments/refund`; customer manual submissions stay `PENDING` |
 | Push notifications | ⛔ pending — the notification table exists, the transport does not |
 | OAuth / social login | ⛔ pending (optional; local auth is complete) |
 | Rate limiting | ✅ 60/min per token |

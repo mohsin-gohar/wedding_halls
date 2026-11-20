@@ -29,6 +29,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Demo seeders contain well-known credentials for local QA. They must
+        // never create accounts on a production database.
+        if (app()->environment('production')) {
+            throw new \RuntimeException('Demo seeding is disabled in the production environment.');
+        }
+
         // Idempotency guard: on an already-seeded database (or a re-run of
         // `db:seed`), only refresh the enterprise-expansion seeders and skip
         // the core demo dataset so unique constraints are never violated.
@@ -144,7 +150,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@eventhub.com',
             'phone' => '+92 42 35789000',
             'role' => 'ROLE_SUPER_ADMIN',
-            'password' => Hash::make('admin1235'),
+            'password' => Hash::make($this->demoPassword('DEMO_ADMIN_PASSWORD', 'admin1235')),
         ]);
         $adminUser->assignRole('ROLE_SUPER_ADMIN');
 
@@ -154,7 +160,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'owner@venuecloud.pk',
             'phone' => '+92 300 7654321',
             'role' => 'ROLE_TENANT_OWNER',
-            'password' => Hash::make('password'),
+            'password' => Hash::make($this->demoPassword()),
         ]);
         $ownerUser->assignRole('ROLE_TENANT_OWNER');
 
@@ -164,7 +170,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'customer@example.com',
             'phone' => '+92 301 1122334',
             'role' => 'ROLE_CUSTOMER',
-            'password' => Hash::make('password'),
+            'password' => Hash::make($this->demoPassword()),
         ]);
         $customerUser->assignRole('ROLE_CUSTOMER');
 
@@ -174,7 +180,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'reception@venuecloud.pk',
             'phone' => '+92 321 4455667',
             'role' => 'ROLE_FRONT_DESK',
-            'password' => Hash::make('password'),
+            'password' => Hash::make($this->demoPassword()),
         ]);
         $frontDeskUser->assignRole('ROLE_FRONT_DESK');
 
@@ -184,7 +190,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'chef@venuecloud.pk',
             'phone' => '+92 333 9988776',
             'role' => 'ROLE_CHEF',
-            'password' => Hash::make('password'),
+            'password' => Hash::make($this->demoPassword()),
         ]);
         $chefUser->assignRole('ROLE_CHEF');
 
@@ -738,5 +744,13 @@ class DatabaseSeeder extends Seeder
             PermissionMatrixSeeder::class,
             VendorEcosystemSeeder::class,
         ]);
+    }
+
+    /** Local/testing only. Override with DEMO_*_PASSWORD environment variables. */
+    private function demoPassword(string $key = 'DEMO_PASSWORD', string $fallback = 'password'): string
+    {
+        $value = env($key);
+
+        return is_string($value) && $value !== '' ? $value : $fallback;
     }
 }

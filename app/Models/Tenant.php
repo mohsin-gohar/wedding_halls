@@ -58,7 +58,6 @@ class Tenant extends Model
         'subscription_expires_at',
         'currency',
         'billing_enabled',
-        'payment_gateway',
         'timezone',
         'plan',
         'settings',

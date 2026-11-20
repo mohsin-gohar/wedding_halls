@@ -137,7 +137,9 @@ class BookingService
                         'booking_id' => $booking->id,
                         'amount' => $advancePaid,
                         'payment_type' => 'TOKEN_ADVANCE',
-                        'payment_method' => $data['payment_method'] ?? 'CASH',
+                        // Cash-only: new payments are always CASH, regardless of
+                        // any caller-supplied method label.
+                        'payment_method' => 'CASH',
                         'receipt_no' => Payment::generateReceiptNumber(),
                         'transaction_reference' => $data['transaction_reference'] ?? null,
                         'received_by_user_id' => $data['created_by_user_id'] ?? auth()->id(),

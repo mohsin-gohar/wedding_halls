@@ -219,8 +219,9 @@ class DocumentController extends Controller
     }
 
     /**
-     * Serve a customer-uploaded service payment proof (bank transfer receipt,
-     * JazzCash/Easypaisa screenshot) from private storage.
+     * Serve a customer-uploaded manual payment proof (bank transfer receipt or
+     * cash deposit slip) from private storage. Legacy historical uploads with
+     * old payment labels remain readable.
      *
      * The file is NEVER served directly by the web server — it lives outside
      * the public directory and every download is authorised. The stored path

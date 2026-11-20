@@ -6,10 +6,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Signed gateway webhooks still need a durable idempotency key. Enforce the
- * gateway reference at the database level and allow Stripe as a real payment
- * method (the strict enum previously rejected it). Pre-existing duplicate
- * references are preserved but renamed deterministically before indexing.
+ * HISTORICAL MIGRATION — retained so existing installations keep a valid
+ * migration history. This originally added gateway idempotency indexes and the
+ * Stripe method label. Those online-payment paths have since been removed; the
+ * later cash-only migration supersedes the unique index. Historical rows and
+ * enum labels are deliberately preserved and are never rewritten or deleted.
  */
 return new class extends Migration
 {

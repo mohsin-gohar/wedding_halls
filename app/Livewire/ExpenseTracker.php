@@ -73,7 +73,7 @@ class ExpenseTracker extends Component
         'amount' => 'required|numeric|min:1',
         'expense_date' => 'required|date',
         'payee' => 'nullable|string|max:150',
-        'payment_method' => 'required|in:CASH,BANK_TRANSFER,JAZZCASH,EASYPAISA',
+        'payment_method' => 'required|in:CASH,BANK_TRANSFER',
         'receipt_number' => 'nullable|string|max:80',
         'notes' => 'nullable|string',
     ];
@@ -174,7 +174,7 @@ class ExpenseTracker extends Component
             'edit_amount' => 'required|numeric|min:1',
             'edit_expense_date' => 'required|date',
             'edit_payee' => 'nullable|string|max:150',
-            'edit_payment_method' => 'required|in:CASH,BANK_TRANSFER,JAZZCASH,EASYPAISA',
+            'edit_payment_method' => 'required|in:CASH,BANK_TRANSFER',
             'edit_receipt_number' => 'nullable|string|max:80',
             'edit_notes' => 'nullable|string',
         ]);

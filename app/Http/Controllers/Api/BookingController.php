@@ -224,6 +224,19 @@ class BookingController extends ApiController
         abort_unless($user->isSuperAdmin(), 403, 'Only super admin can delete bookings.');
 
         $booking = Booking::findOrFail($id);
+
+        // Payment and receipt history is immutable. Never hard-delete a booking
+        // that has any financial records; archive it by cancelling instead.
+        if ($booking->payments()->exists()) {
+            $booking->update(['status' => 'CANCELLED']);
+
+            return response()->json([
+                'success' => true,
+                'archived' => true,
+                'message' => 'Booking has payment history and was archived (cancelled) instead of deleted to preserve financial records.',
+            ]);
+        }
+
         $booking->delete();
 
         return response()->json([

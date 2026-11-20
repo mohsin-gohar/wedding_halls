@@ -8,6 +8,7 @@ use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\Writer\SvgWriter;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -179,17 +180,28 @@ class TwoFactorAuthComponent extends Component
             return;
         }
 
+        $throttleKey = '2fa-verify:'.$user->id.'|'.request()->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $this->errorMessage = 'Too many verification attempts. Please try again in '
+                .RateLimiter::availableIn($throttleKey).' seconds.';
+
+            return;
+        }
+
         $code = trim($this->code);
 
         // A recovery code (XXXX-XXXX) is accepted instead of the 6-digit TOTP.
         if (str_contains($code, '-')) {
             if ($this->consumeRecoveryCode($user, $code)) {
+                RateLimiter::clear($throttleKey);
                 session()->put('2fa_verified', true);
                 $this->redirect($this->intended, navigate: true);
 
                 return;
             }
 
+            RateLimiter::hit($throttleKey, 600);
             $this->errorMessage = 'That recovery code is not valid or has already been used.';
 
             return;
@@ -198,9 +210,11 @@ class TwoFactorAuthComponent extends Component
         $google2fa = new Google2FA;
 
         if ($google2fa->verifyKey($user->two_factor_secret, $code)) {
+            RateLimiter::clear($throttleKey);
             session()->put('2fa_verified', true);
             $this->redirect($this->intended, navigate: true);
         } else {
+            RateLimiter::hit($throttleKey, 600);
             $this->errorMessage = 'Invalid verification code. Please try again.';
         }
     }

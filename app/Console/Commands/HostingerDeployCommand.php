@@ -13,7 +13,7 @@ class HostingerDeployCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'hostinger:setup {--seed : Seed database with initial halls and demo data}';
+    protected $signature = 'hostinger:setup';
 
     /**
      * The console command description.
@@ -68,17 +68,8 @@ class HostingerDeployCommand extends Command
             return self::FAILURE;
         }
 
-        // 4. Optional Seeding
-        if ($this->option('seed')) {
-            $this->info('Seeding database with production demo data...');
-            try {
-                Artisan::call('db:seed', ['--force' => true]);
-                $this->line(trim(Artisan::output()));
-                $this->line('<info>✅</info> Database seeding completed');
-            } catch (\Throwable $e) {
-                $this->warn('! Database seeding skipped or failed: '.$e->getMessage());
-            }
-        }
+        // 4. Seeding is intentionally not available. Demo seeders create
+        //    known credentials and must never run against production data.
 
         // 5. Caching for peak performance on Hostinger LiteSpeed/Apache
         $this->info('Optimizing caches for production...');

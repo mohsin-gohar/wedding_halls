@@ -11,7 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * Vendor ERP — Service bookings board (Phase 2/3 gateway).
+ * Vendor ERP — Service bookings board.
  *
  * Vendors operate service bookings created via the marketplace RFQ engine
  * (photography, catering, decoration, beauty, planning, transport…).

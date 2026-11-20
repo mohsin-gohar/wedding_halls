@@ -2,16 +2,38 @@
 
 namespace App\Services;
 
+use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\Payment;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\RateLimiter;
-use Stripe\Exception\ApiErrorException;
-use Stripe\PaymentIntent;
-use Stripe\Stripe;
+use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 
+/**
+ * Cash-only, manual payment ledger.
+ *
+ * This service deliberately contains NO online payment gateway code. Every
+ * financial mutation is performed by an authenticated, permission-checked
+ * staff member, inside a database transaction with a row lock on the booking.
+ * Historical rows with legacy method labels are never rewritten or deleted.
+ */
 class PaymentService
 {
+    /** Only physical cash may be recorded as a new booking payment. */
+    public const NEW_PAYMENT_METHODS = ['CASH'];
+
+    public const PAYMENT_TYPES = [
+        'TOKEN_ADVANCE',
+        'SECOND_INSTALLMENT',
+        'FINAL_SETTLEMENT',
+        'SECURITY_DEPOSIT',
+        'REFUND',
+    ];
+
+    /**
+     * Low-level insertion used by the manual recording methods and by trusted
+     * server-side booking creation. Online/gateway method labels are rejected.
+     */
     public function createPayment(
         string $tenantId,
         string $bookingId,
@@ -22,16 +44,24 @@ class PaymentService
         ?string $receivedByUserId = null,
         ?string $notes = null
     ): Payment {
-        // `payments.payment_type` is a strict enum (TOKEN_ADVANCE,
-        // SECOND_INSTALLMENT, FINAL_SETTLEMENT, SECURITY_DEPOSIT, REFUND).
-        // Historical callers pass the shorthand 'ADVANCE' — normalize it so
-        // MySQL never throws a data-truncation error on the success path.
         $paymentType = $paymentType === 'ADVANCE' ? 'TOKEN_ADVANCE' : $paymentType;
+
+        if (! in_array($paymentMethod, self::NEW_PAYMENT_METHODS, true)) {
+            throw new \InvalidArgumentException('Only manual cash payments may be recorded.');
+        }
+
+        if (! in_array($paymentType, self::PAYMENT_TYPES, true)) {
+            throw new \InvalidArgumentException('Unsupported payment type.');
+        }
+
+        if ($amount <= 0) {
+            throw new \InvalidArgumentException('Payment amount must be greater than zero.');
+        }
 
         return Payment::create([
             'tenant_id' => $tenantId,
             'booking_id' => $bookingId,
-            'amount' => $amount,
+            'amount' => round($amount, 2),
             'payment_type' => $paymentType,
             'payment_method' => $paymentMethod,
             'receipt_no' => Payment::generateReceiptNumber(),
@@ -41,377 +71,205 @@ class PaymentService
         ]);
     }
 
-    public function processPayment(
-        string $bookingId,
+    /**
+     * Record physically received cash and update the booking ledger atomically.
+     * Callers MUST have already performed tenant and permission checks.
+     *
+     * @throws \InvalidArgumentException|\RuntimeException
+     */
+    public function recordCashPayment(
+        Booking $booking,
         float $amount,
-        string $paymentMethod,
-        array $gatewayData = []
-    ): array {
-        $booking = Booking::findOrFail($bookingId);
+        string $paymentType,
+        User $receivedBy,
+        ?string $transactionReference = null,
+        ?string $notes = null
+    ): Payment {
+        $amount = round($amount, 2);
 
-        $throttleKey = 'payment_process|'.$bookingId.'|'.$paymentMethod;
-
-        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            return [
-                'success' => false,
-                'message' => 'Too many payment attempts. Please wait and try again.',
-                'retry_after' => RateLimiter::availableIn($throttleKey),
-            ];
+        if ($amount <= 0) {
+            throw new \InvalidArgumentException('Cash amount must be greater than zero.');
         }
 
-        RateLimiter::hit($throttleKey, 60);
+        if (! in_array($paymentType, self::PAYMENT_TYPES, true) || $paymentType === 'REFUND') {
+            throw new \InvalidArgumentException('Unsupported cash payment type.');
+        }
 
-        try {
-            switch ($paymentMethod) {
-                case 'STRIPE':
-                    return $this->processStripePayment($booking, $amount, $gatewayData);
-                case 'JAZZCASH':
-                    return $this->processJazzCashPayment($booking, $amount, $gatewayData);
-                case 'EASYPAISA':
-                    return $this->processEasyPaisaPayment($booking, $amount, $gatewayData);
-                case 'BANK_TRANSFER':
-                    return $this->processBankTransfer($booking, $amount, $gatewayData);
-                case 'CASH':
-                    return $this->processCashPayment($booking, $amount, $gatewayData);
-                default:
-                    return [
-                        'success' => false,
-                        'message' => 'Unsupported payment method: '.$paymentMethod,
-                    ];
+        if ($receivedBy->isCustomer()) {
+            throw new \RuntimeException('Only authorized staff may record cash payments.');
+        }
+
+        return DB::transaction(function () use ($booking, $amount, $paymentType, $receivedBy, $transactionReference, $notes): Payment {
+            $locked = Booking::whereKey($booking->id)->lockForUpdate()->firstOrFail();
+
+            $reference = $this->normalizeReference($transactionReference);
+            $existing = $this->findByReference($locked, $reference, 'CASH', $paymentType);
+
+            if ($existing) {
+                return $existing;
             }
-        } catch (\Throwable $e) {
-            Log::error('Payment processing failed', [
-                'booking_id' => $bookingId,
-                'amount' => $amount,
-                'method' => $paymentMethod,
-                'error' => $e->getMessage(),
+
+            $balance = round((float) $locked->grand_total - (float) $locked->advance_paid, 2);
+
+            if ($amount > $balance + 0.009) {
+                throw new \RuntimeException(
+                    'Amount exceeds the outstanding balance of PKR '.number_format(max(0, $balance), 2).'.'
+                );
+            }
+
+            try {
+                $payment = $this->createPayment(
+                    $locked->tenant_id,
+                    $locked->id,
+                    $amount,
+                    $paymentType,
+                    'CASH',
+                    $reference,
+                    $receivedBy->id,
+                    $notes ?: 'Cash received and physically verified at the venue.'
+                );
+            } catch (UniqueConstraintViolationException) {
+                // A concurrent request won the race for this reference. Return
+                // the canonical row rather than double-crediting the booking.
+                $canonical = $this->findByReference($locked, $reference, 'CASH', $paymentType);
+
+                if (! $canonical) {
+                    throw new \RuntimeException('Duplicate cash reference could not be resolved.');
+                }
+
+                return $canonical;
+            }
+
+            $locked->advance_paid = round((float) $locked->advance_paid + $amount, 2);
+            $locked->balance_due = round(max(0, (float) $locked->grand_total - (float) $locked->advance_paid), 2);
+            $locked->save();
+
+            AuditLog::create([
+                'tenant_id' => $locked->tenant_id,
+                'user_id' => $receivedBy->id,
+                'action' => 'payments.record',
+                'entity_type' => 'Payment',
+                'entity_id' => $payment->id,
+                'description' => sprintf(
+                    'Recorded %s cash payment of PKR %s for booking %s (receipt %s).',
+                    $paymentType,
+                    number_format($amount, 2),
+                    $locked->booking_reference,
+                    $payment->receipt_no
+                ),
+                'ip_address' => request()?->ip(),
             ]);
 
-            return [
-                'success' => false,
-                'message' => 'Payment processing failed. Please try again.',
-            ];
-        }
-    }
-
-    protected function processStripePayment(Booking $booking, float $amount, array $data): array
-    {
-        $stripeKey = config('services.stripe.key');
-        $stripeSecret = config('services.stripe.secret');
-
-        if (! $stripeKey || ! $stripeSecret) {
-            return [
-                'success' => false,
-                'message' => 'Stripe is not configured. Please contact the platform administrator.',
-            ];
-        }
-
-        Stripe::setApiKey($stripeSecret);
-
-        $idempotencyKey = $data['idempotency_key'] ?? null;
-        if (! is_string($idempotencyKey) || $idempotencyKey === '' || strlen($idempotencyKey) > 255) {
-            // Unique per attempt. Returned to the caller so a genuine retry can
-            // send the same key and stay safe against duplicate charges.
-            $idempotencyKey = 'booking-intent-'.$booking->id.'-'.(int) ($amount * 100).'-'.bin2hex(random_bytes(6));
-        }
-
-        try {
-            $paymentIntent = PaymentIntent::create([
-                'amount' => (int) ($amount * 100),
-                'currency' => 'pkr',
-                'metadata' => [
-                    'booking_id' => $booking->id,
-                    'booking_reference' => $booking->booking_reference,
-                    'tenant_id' => $booking->tenant_id,
-                ],
-                'description' => 'Riwaj Grand Booking: '.$booking->booking_reference,
-            ], [
-                // A caller-supplied key makes a retry of the SAME request
-                // return the same intent. When none is supplied, generate a
-                // unique attempt key: a booking+amount-only key would collapse
-                // two legitimate equal-value installments into one intent.
-                'idempotency_key' => $idempotencyKey,
-            ]);
-
-            return [
-                'success' => true,
-                'payment_intent_id' => $paymentIntent->id,
-                'client_secret' => $paymentIntent->client_secret,
-                'amount' => $amount,
-                'currency' => 'PKR',
-                'idempotency_key' => $idempotencyKey,
-                'message' => 'Payment intent created. Complete payment via Stripe.',
-            ];
-        } catch (ApiErrorException $e) {
-            return [
-                'success' => false,
-                'message' => 'Stripe error: '.$e->getMessage(),
-            ];
-        }
-    }
-
-    protected function processJazzCashPayment(Booking $booking, float $amount, array $data): array
-    {
-        $merchantId = config('services.jazzcash.merchant_id');
-        $password = config('services.jazzcash.password');
-        $returnUrl = config('services.jazzcash.return_url');
-
-        if (! $merchantId || ! $password) {
-            return [
-                'success' => false,
-                'message' => 'JazzCash is not configured. Please contact the platform administrator.',
-            ];
-        }
-
-        $pp_TxnType = 'MWALLET';
-        $pp_TxnDateTime = now()->format('YmdHis');
-        // One booking can legitimately have several installments. Reusing the
-        // booking reference as the gateway transaction reference would make
-        // every later installment look like a replay of the first one.
-        $pp_TxnRef = $this->generateGatewayReference($booking->booking_reference);
-        $pp_Amount = (int) ($amount * 100);
-        $pp_BillToPhone = $data['phone'] ?? $booking->customer_phone;
-        $pp_Description = 'Riwaj Grand Booking: '.$booking->booking_reference;
-        $pp_TxnExpiryDateTime = now()->addHours(24)->format('YmdHis');
-        $pp_ReturnURL = $returnUrl;
-
-        $pp_SecureHash = hash_hmac('sha256',
-            $pp_TxnType.$pp_TxnDateTime.$pp_TxnRef.$pp_Amount.$pp_BillToPhone.$pp_Description.$pp_TxnExpiryDateTime.$pp_ReturnURL,
-            $password
-        );
-
-        return [
-            'success' => true,
-            'gateway_url' => 'https://sandbox.jazzcash.com.pk/CustomerPortal/transactionservices/merchantcustomform',
-            'post_data' => [
-                'pp_Version' => '1.0',
-                'pp_TxnType' => $pp_TxnType,
-                'pp_TxnDateTime' => $pp_TxnDateTime,
-                'pp_TxnRef' => $pp_TxnRef,
-                'pp_Amount' => $pp_Amount,
-                'pp_BillToPhone' => $pp_BillToPhone,
-                'pp_Description' => $pp_Description,
-                'pp_TxnExpiryDateTime' => $pp_TxnExpiryDateTime,
-                'pp_ReturnURL' => $pp_ReturnURL,
-                'pp_MerchantID' => $merchantId,
-                'pp_SecureHash' => $pp_SecureHash,
-                'pp_Language' => 'EN',
-                'pp_TokenizedCC' => 'false',
-            ],
-            'amount' => $amount,
-            'currency' => 'PKR',
-            'message' => 'Redirect to JazzCash for payment.',
-        ];
-    }
-
-    protected function processEasyPaisaPayment(Booking $booking, float $amount, array $data): array
-    {
-        $merchantId = config('services.easypaisa.merchant_id');
-        $secretKey = config('services.easypaisa.secret_key');
-        $returnUrl = config('services.easypaisa.return_url');
-
-        if (! $merchantId || ! $secretKey) {
-            return [
-                'success' => false,
-                'message' => 'EasyPaisa is not configured. Please contact the platform administrator.',
-            ];
-        }
-
-        // A unique per-attempt reference keeps installments distinguishable
-        // while still encoding the booking reference for webhook lookup.
-        $txnRef = $this->generateGatewayReference($booking->booking_reference);
-        $txnDateTime = now()->format('YmdHis');
-        $amountInPaisa = (int) ($amount * 100);
-        $msisdn = $data['phone'] ?? $booking->customer_phone;
-
-        $signature = hash_hmac('sha256',
-            $merchantId.$txnRef.$txnDateTime.$amountInPaisa.$msisdn,
-            $secretKey
-        );
-
-        return [
-            'success' => true,
-            'gateway_url' => 'https://api.easypaisa.com.pk/payment',
-            'post_data' => [
-                'merchantId' => $merchantId,
-                'txnRef' => $txnRef,
-                'txnDateTime' => $txnDateTime,
-                'amount' => $amountInPaisa,
-                'msisdn' => $msisdn,
-                'signature' => $signature,
-                'returnUrl' => $returnUrl,
-                'description' => 'Riwaj Grand Booking: '.$booking->booking_reference,
-            ],
-            'amount' => $amount,
-            'currency' => 'PKR',
-            'message' => 'Redirect to EasyPaisa for payment.',
-        ];
+            return $payment;
+        });
     }
 
     /**
-     * Build a stable, parseable reference for each payment attempt.
-     *
-     * Format: <booking-reference>-<8 hex chars>. Webhooks that only receive
-     * the gateway reference can recover the booking with the RG-SB-XXXXXX
-     * prefix, while each installment gets its own durable idempotency key.
+     * Record an authorized cash refund and reverse the booking ledger.
+     * Callers MUST have already performed tenant and permission checks.
      */
-    protected function generateGatewayReference(string $bookingReference): string
-    {
-        return $bookingReference.'-'.strtoupper(bin2hex(random_bytes(4)));
-    }
+    public function recordCashRefund(
+        Booking $booking,
+        float $amount,
+        User $authorizedBy,
+        ?string $transactionReference = null,
+        ?string $notes = null
+    ): Payment {
+        $amount = round($amount, 2);
 
-    protected function processBankTransfer(Booking $booking, float $amount, array $data): array
-    {
-        return [
-            'success' => true,
-            'payment_method' => 'BANK_TRANSFER',
-            'amount' => $amount,
-            'currency' => 'PKR',
-            'message' => 'Bank transfer initiated. Please deposit to the venue account and upload the receipt.',
-            'bank_details' => [
-                'account_title' => $booking->tenant->name,
-                'account_number' => $data['account_number'] ?? 'To be provided by venue',
-                'bank_name' => $data['bank_name'] ?? 'To be provided by venue',
-                'branch' => $data['branch'] ?? 'To be provided by venue',
-            ],
-            'requires_verification' => true,
-        ];
-    }
-
-    protected function processCashPayment(Booking $booking, float $amount, array $data): array
-    {
-        return [
-            'success' => true,
-            'payment_method' => 'CASH',
-            'amount' => $amount,
-            'currency' => 'PKR',
-            'message' => 'Cash payment recorded. Pay at the venue reception.',
-            'requires_verification' => false,
-        ];
-    }
-
-    public function verifyWebhook(array $payload, string $signature, string $gateway, ?string $rawBody = null): bool
-    {
-        switch ($gateway) {
-            case 'stripe':
-                $secret = config('services.stripe.webhook_secret');
-                // Stripe signs the exact bytes it sends. A parsed/re-encoded
-                // array can never be verified, so require the raw body.
-                if (! $secret || $rawBody === null || $rawBody === '') {
-                    return false;
-                }
-
-                $parts = [];
-                foreach (explode(',', $signature) as $part) {
-                    [$key, $value] = array_pad(explode('=', trim($part), 2), 2, '');
-                    $parts[$key][] = $value;
-                }
-
-                $timestamp = (int) ($parts['t'][0] ?? 0);
-                $signatures = $parts['v1'] ?? [];
-
-                // Reject stale, missing or malformed signatures before doing
-                // any cryptographic work.
-                if ($timestamp <= 0 || abs(time() - $timestamp) > 300 || ! $signatures) {
-                    return false;
-                }
-
-                $expected = hash_hmac('sha256', $timestamp.'.'.$rawBody, $secret);
-                $matches = false;
-                foreach ($signatures as $candidate) {
-                    if (hash_equals($expected, $candidate)) {
-                        $matches = true;
-                        break;
-                    }
-                }
-
-                if (! $matches) {
-                    Log::error('Stripe webhook verification failed: invalid signature.');
-
-                    return false;
-                }
-
-                $event = json_decode($rawBody, true);
-
-                return is_array($event) && ($event['type'] ?? null) === 'payment_intent.succeeded';
-            case 'jazzcash':
-                return $this->verifyGatewayHash(
-                    $payload,
-                    'pp_SecureHash',
-                    config('services.jazzcash.password'),
-                    'sha256',
-                    'pp_ResponseCode',
-                    '000'
-                );
-            case 'easypaisa':
-                return $this->verifyGatewayHash(
-                    $payload,
-                    'secureHash',
-                    config('services.easypaisa.secret_key'),
-                    'sha512',
-                    'resultCode',
-                    'SUCCESS'
-                );
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * Fail-closed HMAC verification for the local gateways (JazzCash, Easypaisa).
-     *
-     * A webhook is only accepted when:
-     *   1. the shared secret is configured (unset secret ⇒ reject, never
-     *      "trust because unconfigured"), and
-     *   2. the canonical sorted `key=value&…` string of every field except
-     *      the hash field itself reproduces the supplied hash with the
-     *      gateway's algorithm (constant-time compare), and
-     *   3. the gateway's response/success code reports success.
-     *
-     * Success-field-only checks are NOT sufficient: anyone who can reach the
-     * endpoint could otherwise forge `pp_ResponseCode=000` / `resultCode=SUCCESS`
-     * and credit a booking with a fake payment.
-     */
-    private function verifyGatewayHash(
-        array $payload,
-        string $hashField,
-        ?string $secret,
-        string $algo,
-        string $successCodeField,
-        string $successCode
-    ): bool {
-        if (! is_string($secret) || $secret === '') {
-            Log::error("Webhook rejected (fail-closed): {$hashField} verification secret is not configured.");
-
-            return false;
+        if ($amount <= 0) {
+            throw new \InvalidArgumentException('Refund amount must be greater than zero.');
         }
 
-        $provided = $payload[$hashField] ?? null;
-
-        if (! is_string($provided) || $provided === '') {
-            return false;
+        if ($authorizedBy->isCustomer()) {
+            throw new \RuntimeException('Only authorized staff may record cash refunds.');
         }
 
-        unset($payload[$hashField]);
-        ksort($payload);
+        return DB::transaction(function () use ($booking, $amount, $authorizedBy, $transactionReference, $notes): Payment {
+            $locked = Booking::whereKey($booking->id)->lockForUpdate()->firstOrFail();
 
-        $pairs = [];
-        foreach ($payload as $key => $value) {
-            if (is_array($value) || is_object($value)) {
-                continue; // Gateway hash strings are built from flat scalar fields only.
+            $reference = $this->normalizeReference($transactionReference);
+            $existing = $this->findByReference($locked, $reference, 'CASH', 'REFUND');
+
+            if ($existing) {
+                return $existing;
             }
-            $pairs[] = $key.'='.$value;
+
+            if ($amount > (float) $locked->advance_paid + 0.009) {
+                throw new \RuntimeException('Refund exceeds the amount received for this booking.');
+            }
+
+            try {
+                $payment = $this->createPayment(
+                    $locked->tenant_id,
+                    $locked->id,
+                    $amount,
+                    'REFUND',
+                    'CASH',
+                    $reference,
+                    $authorizedBy->id,
+                    $notes ?: 'Cash refund recorded by authorized staff.'
+                );
+            } catch (UniqueConstraintViolationException) {
+                $canonical = $this->findByReference($locked, $reference, 'CASH', 'REFUND');
+
+                if (! $canonical) {
+                    throw new \RuntimeException('Duplicate refund reference could not be resolved.');
+                }
+
+                return $canonical;
+            }
+
+            $locked->advance_paid = round(max(0, (float) $locked->advance_paid - $amount), 2);
+            $locked->balance_due = round(max(0, (float) $locked->grand_total - (float) $locked->advance_paid), 2);
+            $locked->save();
+
+            AuditLog::create([
+                'tenant_id' => $locked->tenant_id,
+                'user_id' => $authorizedBy->id,
+                'action' => 'payments.refund',
+                'entity_type' => 'Payment',
+                'entity_id' => $payment->id,
+                'description' => sprintf(
+                    'Recorded cash refund of PKR %s for booking %s (receipt %s).',
+                    number_format($amount, 2),
+                    $locked->booking_reference,
+                    $payment->receipt_no
+                ),
+                'ip_address' => request()?->ip(),
+            ]);
+
+            return $payment;
+        });
+    }
+
+    private function normalizeReference(?string $reference): ?string
+    {
+        if ($reference === null) {
+            return null;
         }
 
-        $expected = hash_hmac($algo, implode('&', $pairs), $secret);
+        $reference = trim($reference);
 
-        if (! hash_equals(strtolower($expected), strtolower($provided))) {
-            Log::warning("Webhook rejected: {$hashField} HMAC mismatch.");
+        return $reference === '' ? null : $reference;
+    }
 
-            return false;
+    private function findByReference(
+        Booking $booking,
+        ?string $reference,
+        string $paymentMethod = 'CASH',
+        ?string $paymentType = null
+    ): ?Payment {
+        if ($reference === null) {
+            return null;
         }
 
-        return isset($payload[$successCodeField]) && (string) $payload[$successCodeField] === $successCode;
+        return Payment::where('tenant_id', $booking->tenant_id)
+            ->where('booking_id', $booking->id)
+            ->where('payment_method', $paymentMethod)
+            ->where('transaction_reference', $reference)
+            ->when($paymentType !== null, fn ($query) => $query->where('payment_type', $paymentType))
+            ->first();
     }
 
     public function getPaymentSummary(string $tenantId, string $period = 'MONTHLY'): array
@@ -435,18 +293,29 @@ class PaymentService
                 break;
         }
 
-        $total = $query->sum('amount');
-        $count = $query->count();
-        $byMethod = $query->selectRaw('payment_method, sum(amount) as total, count(*) as count')
+        $aggregate = (clone $query)
+            ->selectRaw(
+                "SUM(CASE WHEN payment_type = 'REFUND' THEN -amount ELSE amount END) as net_total, ".
+                "SUM(CASE WHEN payment_type = 'REFUND' THEN 0 ELSE amount END) as inflow_total, ".
+                'COUNT(*) as total_count'
+            )
+            ->first();
+
+        $byMethod = (clone $query)
+            ->selectRaw(
+                "payment_method, SUM(CASE WHEN payment_type = 'REFUND' THEN -amount ELSE amount END) as total, COUNT(*) as count"
+            )
             ->groupBy('payment_method')
             ->get()
             ->mapWithKeys(fn ($row) => [$row->payment_method => ['total' => (float) $row->total, 'count' => (int) $row->count]]);
 
         return [
-            'total_amount' => (float) $total,
-            'total_count' => (int) $count,
+            'total_amount' => (float) ($aggregate->net_total ?? 0),
+            'cash_inflow' => (float) ($aggregate->inflow_total ?? 0),
+            'total_count' => (int) ($aggregate->total_count ?? 0),
             'period' => $period,
             'by_method' => $byMethod,
+            'cash_only' => true,
         ];
     }
 }

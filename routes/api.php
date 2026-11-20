@@ -3,7 +3,6 @@
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ServiceBookingController;
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,7 +19,8 @@ use Illuminate\Support\Facades\Route;
 |   * Every endpoint requires an authenticated principal (401 otherwise).
 |   * Tenant staff are scoped to their own tenant; customers are scoped to
 |     their own records. There is no path that returns another tenant's data.
-|   * Gateway webhooks are signature-verified and idempotent.
+|   * Payments are manual cash records. There are no gateway initiation or
+|     webhook callback endpoints.
 |
 */
 
@@ -58,14 +58,10 @@ Route::prefix('v1')->group(function () {
         Route::get('/service-bookings/{id}', [ServiceBookingController::class, 'show'])->whereUuid('id');
         Route::post('/service-bookings/{id}/payments', [ServiceBookingController::class, 'recordPayment'])->whereUuid('id');
 
-        // Payments
+        // Payments — manual cash only, staff-authenticated mutations
         Route::get('/payments', [PaymentController::class, 'list']);
-        Route::post('/payments/initiate', [PaymentController::class, 'initiate']);
+        Route::post('/payments/record', [PaymentController::class, 'record']);
+        Route::post('/payments/refund', [PaymentController::class, 'refund']);
         Route::get('/payments/summary', [PaymentController::class, 'summary']);
     });
-
-    // ── Unauthenticated but signature-verified gateway callbacks ──────
-    Route::post('/webhooks/{gateway}', [PaymentController::class, 'webhook'])
-        ->whereIn('gateway', ['stripe', 'jazzcash', 'easypaisa'])
-        ->withoutMiddleware([ValidateCsrfToken::class]);
 });

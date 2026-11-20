@@ -19,7 +19,15 @@ Riwaj Grand is a multi-tenant wedding & event marketplace and operations platfor
 ## Technology
 
 - PHP 8.2+, Laravel 12, Livewire 4, and Spatie Laravel Permission.
-- Vite 7, Tailwind CSS 4, and Alpine.js.
+- Vite 6, Tailwind CSS 4, and Alpine.js.
+
+> **Payments are cash-only.** Stripe/JazzCash/EasyPaisa/card checkout, gateway
+> initiation, webhooks and automatic verification have been removed. Only
+> authorized staff may mark physically verified cash as received; customers
+> cannot mutate any financial value. See [CASH_ONLY_PAYMENTS.md](CASH_ONLY_PAYMENTS.md)
+> for the authoritative money-handling contract and [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
+> for the current API. Historical audit/roadmap markdown files are snapshots and
+> may describe an older gateway design.
 - MySQL 8 is the only supported database. Redis is recommended for production caches and queues.
 - Currency PKR, timezone `Asia/Karachi`.
 

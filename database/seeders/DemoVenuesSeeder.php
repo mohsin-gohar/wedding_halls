@@ -17,6 +17,10 @@ class DemoVenuesSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->environment('production')) {
+            throw new \RuntimeException('Demo seeding is disabled in the production environment.');
+        }
+
         // 1. Ensure existing VenueCloud tenant is APPROVED and ACTIVE
         $venueCloud = Tenant::where('slug', 'venue-cloud')->first();
         if ($venueCloud) {

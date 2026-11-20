@@ -153,10 +153,8 @@
                     <div>
                         <label for="po-method" class="block text-[10px] font-semibold uppercase tracking-[0.08em] text-stone-600 dark:text-stone-400 mb-1.5">Payout method</label>
                         <select id="po-method" wire:model="payoutMethod" class="input-luxury w-full text-sm">
-                            <option value="BANK_TRANSFER">Bank transfer (IBAN)</option>
-                            <option value="JAZZCASH">JazzCash</option>
-                            <option value="EASYPAISA">Easypaisa</option>
-                            <option value="WALLET">Riwaj Grand wallet</option>
+                            <option value="CASH">Cash handover (verified)</option>
+                            <option value="BANK_TRANSFER">Bank transfer (offline, verified)</option>
                         </select>
                     </div>
 

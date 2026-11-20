@@ -140,7 +140,7 @@ class VendorFinanceBoard extends Component
 
         $this->validate([
             'payoutAmount' => ['required', 'numeric', 'min:1'],
-            'payoutMethod' => ['required', 'in:BANK_TRANSFER,JAZZCASH,EASYPAISA,WALLET'],
+            'payoutMethod' => ['required', 'in:CASH,BANK_TRANSFER'],
             'payoutAccountName' => ['required', 'string', 'max:150'],
             'payoutAccountDetails' => ['nullable', 'string', 'max:255'],
         ]);

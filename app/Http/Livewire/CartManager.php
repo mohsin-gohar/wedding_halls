@@ -118,8 +118,8 @@ class CartManager extends Component
         $this->checkout_status = 'confirmed';
         $this->is_checkout = true;
 
-        // Auto-proceed to payment/distribution after a brief delay
-        // In a real implementation, this would redirect to payment gateway
+        // Cart confirmation is cash-only: the venue team collects and verifies
+        // payment manually. No gateway redirect exists by design.
     }
 
     public function calculateTotals(): void

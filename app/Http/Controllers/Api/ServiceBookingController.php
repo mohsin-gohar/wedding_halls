@@ -58,9 +58,9 @@ class ServiceBookingController extends ApiController
     /**
      * Record a customer payment against a service booking.
      *
-     * Customers may pay for their own booking; tenant staff may collect for
-     * bookings inside their own tenant. Amounts above the outstanding
-     * balance are rejected.
+     * Customers may only SUBMIT an unverified manual payment for their own
+     * booking. Only authorized staff can verify it and change the balance.
+     * Online/gateway method labels are not accepted.
      */
     public function recordPayment(Request $request, string $id)
     {
@@ -77,7 +77,7 @@ class ServiceBookingController extends ApiController
 
         $validated = $request->validate([
             'amount' => ['required', 'numeric', 'min:1'],
-            'method' => ['required', 'in:JAZZCASH,EASYPAISA,BANK_TRANSFER,CARD,CASH,WALLET'],
+            'method' => ['required', 'in:CASH,BANK_TRANSFER'],
             'kind' => ['nullable', 'in:ADVANCE,INSTALLMENT,FULL'],
             'reference' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:1000'],

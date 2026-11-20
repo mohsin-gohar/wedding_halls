@@ -7,11 +7,14 @@ use App\Models\Booking;
 use App\Models\ContactInquiry;
 use App\Models\Hall;
 use App\Models\PageVisit;
+use App\Models\Payment;
 use App\Models\PlatformTask;
+use App\Models\ServiceBooking;
 use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Models\VendorWallet;
 use App\Models\Venue;
 use App\Services\PlatformAnalyticsService;
 use App\Support\PlatformMetrics;
@@ -588,22 +591,38 @@ class AdminDashboard extends Component
         $tenant = Tenant::findOrFail($tenantId);
         $name = $tenant->name;
 
-        // If the vendor has active/confirmed client bookings, prevent accidental destruction
-        if ($tenant->bookings()->whereIn('status', ['CONFIRMED', 'HOLD'])->exists()) {
+        // Financial and audit history is immutable. Never hard-delete a tenant
+        // that has ANY bookings, payments, subscriptions, wallets or audit
+        // trail — suspend it instead so nothing is lost.
+        $hasHistory = $tenant->bookings()->exists()
+            || Payment::where('tenant_id', $tenantId)->exists()
+            || ServiceBooking::where('tenant_id', $tenantId)->exists()
+            || SubscriptionPayment::where('tenant_id', $tenantId)->exists()
+            || VendorWallet::where('tenant_id', $tenantId)->exists()
+            || AuditLog::where('tenant_id', $tenantId)->exists();
+
+        if ($hasHistory) {
             $tenant->update(['is_active' => false, 'verification_status' => 'SUSPENDED']);
-            AuditLog::log('VENDOR_SUSPENDED', "Vendor [{$name}] has confirmed bookings; suspended instead of deleted to protect client data.", null, 'Tenant', $tenantId);
-            $this->feedbackMessage = "Vendor [{$name}] has active confirmed bookings. To protect client contracts and payment history, the vendor was safely deactivated and suspended instead of permanently deleted.";
+            AuditLog::log(
+                'VENDOR_SUSPENDED',
+                "Vendor [{$name}] has booking/payment/audit history; suspended instead of deleted to preserve records.",
+                null,
+                'Tenant',
+                $tenantId
+            );
+            $this->feedbackMessage = "Vendor [{$name}] has financial or audit history. To protect contracts and payment records, the vendor was deactivated and suspended instead of permanently deleted.";
 
             return;
         }
 
-        // Clean delete if no active bookings exist
-        $tenant->halls()->delete();
-        $tenant->users()->delete();
-        $tenant->delete();
+        // No financial history: deactivate associated records and archive the
+        // tenant rather than destroying them. No user data is hard-deleted.
+        $tenant->halls()->update(['is_active' => false]);
+        $tenant->users()->update(['status' => 'INACTIVE']);
+        $tenant->update(['is_active' => false, 'verification_status' => 'SUSPENDED']);
 
-        AuditLog::log('VENDOR_DELETED', "Super Admin deleted vendor [{$name}].", null, 'Tenant', $tenantId);
-        $this->feedbackMessage = "Vendor [{$name}] and associated records deleted.";
+        AuditLog::log('VENDOR_ARCHIVED', "Super Admin archived vendor [{$name}] (no financial history).", null, 'Tenant', $tenantId);
+        $this->feedbackMessage = "Vendor [{$name}] has been archived and deactivated.";
     }
 
     public function approveVendor(string $tenantId)
@@ -899,73 +918,94 @@ class AdminDashboard extends Component
     // ==========================================
     public function approveSubscriptionPayment(string $paymentId)
     {
-        $payment = SubscriptionPayment::with(['tenant', 'plan'])->findOrFail($paymentId);
+        // Subscription activation is manual/offline. It must be atomic and
+        // locked so two concurrent approvals cannot extend the same tenant
+        // twice or apply a payment that was already processed.
+        $result = DB::transaction(function () use ($paymentId): array {
+            $payment = SubscriptionPayment::with(['tenant', 'plan'])
+                ->lockForUpdate()
+                ->findOrFail($paymentId);
 
-        if ($payment->status !== 'PENDING') {
-            $this->errorMessage = 'This subscription payment has already been processed.';
+            if ($payment->status !== 'PENDING') {
+                return ['error' => 'This subscription payment has already been processed.'];
+            }
+
+            $tenant = Tenant::whereKey($payment->tenant_id)->lockForUpdate()->firstOrFail();
+
+            $currentExpiry = ($tenant->subscription_expires_at && $tenant->subscription_expires_at->isFuture())
+                ? $tenant->subscription_expires_at
+                : Carbon::now();
+
+            $newExpiry = match (strtoupper($payment->billing_cycle)) {
+                'WEEKLY' => $currentExpiry->copy()->addDays(7),
+                'YEARLY' => $currentExpiry->copy()->addMonths(12),
+                default => $currentExpiry->copy()->addMonths(1),
+            };
+
+            $tenant->update([
+                'subscription_plan_id' => $payment->subscription_plan_id,
+                'subscription_status' => 'ACTIVE',
+                'subscription_expires_at' => $newExpiry,
+                'is_active' => true,
+            ]);
+
+            $payment->update([
+                'status' => 'APPROVED',
+                'approved_by_user_id' => Auth::id(),
+                'approved_at' => Carbon::now(),
+            ]);
+
+            AuditLog::log(
+                'SUBSCRIPTION_PAYMENT_APPROVED',
+                'Approved subscription payment of PKR '.number_format($payment->amount)." for vendor [{$tenant->name}]. Extended to {$newExpiry->format('d M Y')}.",
+                $tenant->id,
+                'SubscriptionPayment',
+                $payment->id
+            );
+
+            return ['name' => $tenant->name, 'expiry' => $newExpiry];
+        });
+
+        if (isset($result['error'])) {
+            $this->errorMessage = $result['error'];
 
             return;
         }
 
-        $tenant = $payment->tenant;
-
-        $currentExpiry = ($tenant->subscription_expires_at && $tenant->subscription_expires_at->isFuture())
-            ? $tenant->subscription_expires_at
-            : Carbon::now();
-
-        $newExpiry = match (strtoupper($payment->billing_cycle)) {
-            'WEEKLY' => $currentExpiry->copy()->addDays(7),
-            'YEARLY' => $currentExpiry->copy()->addMonths(12),
-            default => $currentExpiry->copy()->addMonths(1),
-        };
-
-        $tenant->update([
-            'subscription_plan_id' => $payment->subscription_plan_id,
-            'subscription_status' => 'ACTIVE',
-            'subscription_expires_at' => $newExpiry,
-            'is_active' => true,
-        ]);
-
-        $payment->update([
-            'status' => 'APPROVED',
-            'approved_by_user_id' => Auth::id(),
-            'approved_at' => Carbon::now(),
-        ]);
-
-        AuditLog::log(
-            'SUBSCRIPTION_PAYMENT_APPROVED',
-            'Approved subscription payment of PKR '.number_format($payment->amount)." for vendor [{$tenant->name}]. Extended to {$newExpiry->format('d M Y')}.",
-            $tenant->id,
-            'SubscriptionPayment',
-            $payment->id
-        );
-
-        $this->feedbackMessage = "Subscription payment approved. [{$tenant->name}] renewed until ".$newExpiry->format('d M Y').'.';
+        $this->feedbackMessage = "Subscription payment approved. [{$result['name']}] renewed until ".$result['expiry']->format('d M Y').'.';
     }
 
     public function rejectSubscriptionPayment(string $paymentId)
     {
-        $payment = SubscriptionPayment::with('tenant')->findOrFail($paymentId);
+        $changed = DB::transaction(function () use ($paymentId): bool {
+            $payment = SubscriptionPayment::with('tenant')->lockForUpdate()->findOrFail($paymentId);
 
-        if ($payment->status !== 'PENDING') {
+            if ($payment->status !== 'PENDING') {
+                return false;
+            }
+
+            $payment->update([
+                'status' => 'REJECTED',
+                'approved_by_user_id' => Auth::id(),
+                'approved_at' => Carbon::now(),
+            ]);
+
+            AuditLog::log(
+                'SUBSCRIPTION_PAYMENT_REJECTED',
+                'Rejected subscription payment of PKR '.number_format($payment->amount)." for vendor [{$payment->tenant->name}].",
+                $payment->tenant_id,
+                'SubscriptionPayment',
+                $payment->id
+            );
+
+            return true;
+        });
+
+        if (! $changed) {
             $this->errorMessage = 'This subscription payment has already been processed.';
 
             return;
         }
-
-        $payment->update([
-            'status' => 'REJECTED',
-            'approved_by_user_id' => Auth::id(),
-            'approved_at' => Carbon::now(),
-        ]);
-
-        AuditLog::log(
-            'SUBSCRIPTION_PAYMENT_REJECTED',
-            'Rejected subscription payment of PKR '.number_format($payment->amount)." for vendor [{$payment->tenant->name}].",
-            $payment->tenant_id,
-            'SubscriptionPayment',
-            $payment->id
-        );
 
         $this->feedbackMessage = 'Subscription payment marked as REJECTED.';
     }

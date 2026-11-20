@@ -1,6 +1,14 @@
-# 🚀 EventHub — Hostinger Production Deployment Guide
+# 🚀 Riwaj Grand — Hostinger Production Deployment Guide
 
 A step-by-step guide to deploying this Laravel + Livewire project on **Hostinger (Shared, Cloud, or VPS Hosting)**.
+
+> **Payments are cash-only.** No Stripe/JazzCash/EasyPaisa keys, gateway URLs or
+> webhook secrets are needed or supported. Do not copy any such variables into
+> `.env`. Cash is physically verified by authorized staff in the ERP.
+>
+> **Demo seeding is disabled in production.** `hostinger:setup` no longer offers
+> a `--seed` option, and the demo seeders refuse to run when `APP_ENV=production`.
+> Create the first Super Admin explicitly with `php artisan` after deployment.
 
 ---
 
