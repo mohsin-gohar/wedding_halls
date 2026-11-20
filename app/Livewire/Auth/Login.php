@@ -66,15 +66,6 @@ class Login extends Component
         $this->addError('email', 'These credentials do not match our registered records.');
     }
 
-    public function quickLogin(string $demoEmail)
-    {
-        $this->email = $demoEmail;
-        $this->password = 'password';
-        $this->remember = true;
-
-        return $this->login();
-    }
-
     public function setLoginRetryAfter(int $seconds)
     {
         $this->loginRetryAfter = max(0, $seconds);
@@ -88,6 +79,6 @@ class Login extends Component
     public function render()
     {
         return view('livewire.auth.login')
-            ->layout('components.layouts.auth', ['title' => 'Sign In â€” Riwaj Grand']);
+            ->layout('components.layouts.auth', ['title' => 'Sign In — Riwaj Grand']);
     }
 }

@@ -20,7 +20,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.app', ['title' => 'Hall Admin Dashboard â€” Riwaj Grand'])]
+#[Layout('components.layouts.app', ['title' => 'Hall Admin Dashboard — Riwaj Grand'])]
 class Dashboard extends Component
 {
     // Filter controls for Hall Owner
@@ -695,7 +695,7 @@ class Dashboard extends Component
         $totalHallWishlists = HallWishlist::where('tenant_id', $tenantId)->count();
         $totalHallBookings = Booking::where('tenant_id', $tenantId)->count();
 
-        // 12b. Traffic Pulse â€” public hall views per day for the last 14 days
+        // 12b. Traffic Pulse — public hall views per day for the last 14 days
         // (rendered as a premium bar graph in the marketing analytics card).
         $trafficPulseStart = $now->copy()->subDays(13)->startOfDay();
         $trafficPulseRows = HallView::where('tenant_id', $tenantId)
@@ -814,7 +814,7 @@ class Dashboard extends Component
             ->get();
 
         // 15. Real-Time ERP Modular Health Matrix
-        // Kitchen/KOT engine is toggleable â€” zero DB work while switched off.
+        // Kitchen/KOT engine is toggleable — zero DB work while switched off.
         if ((bool) config('platform.kitchen_module_enabled', false)) {
             $todayKotsQuery = KitchenKot::where('tenant_id', $tenantId)
                 ->whereHas('booking', fn ($q) => $q->whereDate('event_date', $today));

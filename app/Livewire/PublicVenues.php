@@ -405,13 +405,13 @@ class PublicVenues extends Component
             'evening' => [
                 'name' => 'EVENING',
                 'time' => '4 PM - 8 PM',
-                'icon' => 'ðŸŒ„',
+                'icon' => '🌄',
                 'isBooked' => $selEveningBooked,
             ],
             'night' => [
                 'name' => 'NIGHT',
                 'time' => '9 PM - 1 AM',
-                'icon' => 'ðŸŒ™',
+                'icon' => '🌙',
                 'isBooked' => $selNightBooked,
             ],
         ];

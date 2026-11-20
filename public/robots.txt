@@ -2,7 +2,15 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /dashboard
-Disallow: /vendor
+Disallow: /vendor/dashboard
+Disallow: /vendor/bookings
+Disallow: /vendor/quotes
+Disallow: /vendor/services
+Disallow: /vendor/finance
+Disallow: /vendor/portfolio
+Disallow: /vendor/locations
+Disallow: /vendor/team
+Disallow: /vendor/settings
 Disallow: /customer/dashboard
 Disallow: /documents/
 

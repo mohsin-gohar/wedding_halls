@@ -330,15 +330,27 @@ class InteractiveActionSmokeTest extends TestCase
         // The customer replies.
         $component->set('replyBody', 'Adding a little more detail to my ticket.')->call('reply')->assertHasNoErrors();
 
-        // The vendor replies on the ticket raised against their business.
-        $vendorComponent = Livewire::actingAs($owner)->test(SupportCenter::class);
-        $vendorComponent->call('openTicket', $ticket->id);
-        $vendorComponent->set('replyBody', 'Thank you for reaching out — we are on it.')
+        // A customer-created ticket has no tenant, so an unrelated vendor
+        // must not be able to open it, let alone reply to it.
+        Livewire::actingAs($owner)->test(SupportCenter::class)
+            ->call('openTicket', $ticket->id)
+            ->assertStatus(404);
+
+        $platformSupport = User::factory()->create([
+            'role' => 'ROLE_SUPER_ADMIN',
+            'tenant_id' => null,
+            'status' => 'ACTIVE',
+        ]);
+        $platformSupport->assignRole('ROLE_SUPER_ADMIN');
+
+        $platformComponent = Livewire::actingAs($platformSupport)->test(SupportCenter::class);
+        $platformComponent->call('openTicket', $ticket->id);
+        $platformComponent->set('replyBody', 'Thank you for reaching out — we are on it.')
             ->call('reply')
             ->assertHasNoErrors();
 
         $this->assertSame('IN_PROGRESS', $ticket->fresh()->status);
-        // Initial ticket body + customer reply + vendor reply.
+        // Initial ticket body + customer reply + platform reply.
         $this->assertSame(3, TicketMessage::query()->where('support_ticket_id', $ticket->id)->count());
     }
 

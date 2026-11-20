@@ -6,7 +6,7 @@ use App\Models\Hall;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.public', ['title' => 'Photo Gallery â€” Riwaj Grand Pakistan'])]
+#[Layout('components.layouts.public', ['title' => 'Photo Gallery — Riwaj Grand Pakistan'])]
 class PublicGallery extends Component
 {
     public string $activeCategory = 'ALL'; // ALL, STAGES, LIGHTING, FLORAL, BANQUET, VIDEOS

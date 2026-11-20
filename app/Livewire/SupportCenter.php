@@ -68,11 +68,10 @@ class SupportCenter extends Component
         } elseif ($user->isSuperAdmin() || $user->isPlatformSupport()) {
             // Platform staff see every ticket.
         } elseif ($user->tenant_id) {
-            // Vendor staff only see tickets raised against their business.
-            $query->where(function ($q) use ($user) {
-                $q->where('tenant_id', $user->tenant_id)
-                    ->orWhereNull('tenant_id');
-            });
+            // Vendor staff only see tickets raised against their own business.
+            // Customer tickets with no tenant belong to the platform queue and
+            // are deliberately excluded here.
+            $query->where('tenant_id', $user->tenant_id);
         } else {
             $query->whereRaw('1 = 0');
         }
@@ -290,9 +289,11 @@ class SupportCenter extends Component
         if ($user->isCustomer()) {
             $query->where('user_id', $user->id);
         } elseif (! $user->isSuperAdmin() && ! $user->isPlatformSupport()) {
-            $query->where(function ($q) use ($user) {
-                $q->where('tenant_id', $user->tenant_id)->orWhereNull('tenant_id');
-            });
+            if (! $user->tenant_id) {
+                return null;
+            }
+
+            $query->where('tenant_id', $user->tenant_id);
         }
 
         return $query->first();

@@ -219,6 +219,23 @@ class VendorQuotesBoard extends Component
             abort(403, 'Unauthorized. Quotation awarding is restricted for this vendor.');
         }
 
+        // The bid ID is user-controlled: never award a quote belonging to a
+        // different tenant just because the principal has the award permission.
+        $tenantId = $user->tenant_id;
+
+        if (! $tenantId) {
+            abort(403, 'Unauthorized. No vendor organization is assigned.');
+        }
+
+        $bidExists = RFQBid::query()
+            ->whereHas('rfq', fn ($q) => $q->where('tenant_id', $tenantId))
+            ->where('id', $rfqBidId)
+            ->exists();
+
+        if (! $bidExists) {
+            abort(404, 'Quotation not found.');
+        }
+
         try {
             $booking = app(ServiceBookingService::class)->acceptQuote($rfqBidId);
 

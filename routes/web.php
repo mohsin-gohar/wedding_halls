@@ -63,6 +63,7 @@ use App\Livewire\WhiteLabelSite;
 use App\Models\Hall;
 use App\Models\Package;
 use App\Models\Tenant;
+use App\Models\VendorCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -130,6 +131,21 @@ Route::get('/sitemap.xml', function () {
         ->select(['slug', 'updated_at'])
         ->get();
 
+    // Only approved, marketplace-visible businesses and active top-level
+    // categories belong in the index. Private ERP routes stay disallowed in
+    // robots.txt and are never emitted here.
+    $categories = VendorCategory::query()
+        ->active()
+        ->topLevel()
+        ->get(['slug', 'updated_at']);
+
+    $vendors = Tenant::query()
+        ->where('marketplace_visible', true)
+        ->where('is_active', true)
+        ->where('verification_status', 'APPROVED')
+        ->whereNotNull('slug')
+        ->get(['slug', 'updated_at']);
+
     $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
     $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
 
@@ -141,6 +157,17 @@ Route::get('/sitemap.xml', function () {
         $xml .= '  </url>'."\n";
     }
 
+    foreach ($categories as $category) {
+        $loc = route('public.vendors', ['category' => $category->slug]);
+        $lastmod = optional($category->updated_at)->toAtomString() ?? now()->toAtomString();
+        $xml .= '  <url>'."\n";
+        $xml .= '    <loc>'.htmlspecialchars($loc, ENT_XML1, 'UTF-8').'</loc>'."\n";
+        $xml .= '    <lastmod>'.$lastmod.'</lastmod>'."\n";
+        $xml .= '    <changefreq>weekly</changefreq>'."\n";
+        $xml .= '    <priority>0.7</priority>'."\n";
+        $xml .= '  </url>'."\n";
+    }
+
     foreach ($halls as $hall) {
         $loc = route('hall.showcase', $hall->slug);
         $lastmod = optional($hall->updated_at)->toAtomString() ?? now()->toAtomString();
@@ -149,6 +176,17 @@ Route::get('/sitemap.xml', function () {
         $xml .= '    <lastmod>'.$lastmod.'</lastmod>'."\n";
         $xml .= '    <changefreq>weekly</changefreq>'."\n";
         $xml .= '    <priority>0.9</priority>'."\n";
+        $xml .= '  </url>'."\n";
+    }
+
+    foreach ($vendors as $vendor) {
+        $loc = route('public.vendor-profile', $vendor->slug);
+        $lastmod = optional($vendor->updated_at)->toAtomString() ?? now()->toAtomString();
+        $xml .= '  <url>'."\n";
+        $xml .= '    <loc>'.htmlspecialchars($loc, ENT_XML1, 'UTF-8').'</loc>'."\n";
+        $xml .= '    <lastmod>'.$lastmod.'</lastmod>'."\n";
+        $xml .= '    <changefreq>weekly</changefreq>'."\n";
+        $xml .= '    <priority>0.8</priority>'."\n";
         $xml .= '  </url>'."\n";
     }
 

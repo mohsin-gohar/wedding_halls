@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.auth', ['title' => 'Reset Password â€” Riwaj Grand'])]
+#[Layout('components.layouts.auth', ['title' => 'Reset Password — Riwaj Grand'])]
 class ResetPassword extends Component
 {
     public string $token = '';
@@ -51,8 +51,16 @@ class ResetPassword extends Component
     {
         $this->validate();
 
+        // Livewire update payloads carry component state, not top-level
+        // request fields. Pass validated component state explicitly so the
+        // reset cannot silently fail (or be driven by crafted query params).
         $status = Password::reset(
-            request()->only('email', 'password', 'password_confirmation', 'token'),
+            [
+                'email' => $this->email,
+                'password' => $this->password,
+                'password_confirmation' => $this->password_confirmation,
+                'token' => $this->token,
+            ],
             function (User $user, string $password) {
                 $user->forceFill([
                     'password' => Hash::make($password),

@@ -41,17 +41,29 @@ class ServiceBookingService
      */
     public function acceptQuote(int $rfqBidId, ?int $customerId = null): ServiceBooking
     {
-        return DB::transaction(function () use ($rfqBidId, $customerId) {
-            $bid = RFQBid::query()
-                ->with('rfq')
-                ->lockForUpdate()
-                ->find($rfqBidId);
+        // Discover the RFQ/tenant before locking. The lock order below matches
+        // createDirectBooking() (tenant → booking rows) to avoid deadlocks.
+        $bid = RFQBid::query()->with('rfq')->find($rfqBidId);
 
-            if (! $bid?->rfq) {
+        if (! $bid?->rfq) {
+            throw ServiceBookingException::notFound('The quotation record could not be found.');
+        }
+
+        $rfqId = (string) $bid->rfq_id;
+        $tenantId = (string) $bid->rfq->tenant_id;
+
+        return DB::transaction(function () use ($rfqBidId, $customerId, $rfqId, $tenantId) {
+            // Serialize every award and direct booking for this vendor.
+            $tenant = Tenant::query()->whereKey($tenantId)->lockForUpdate()->first();
+
+            // Locking only the bid is not enough: two different bids on the
+            // same RFQ can both see OPEN. The RFQ row is the award mutex.
+            $rfq = RFQ::query()->whereKey($rfqId)->lockForUpdate()->first();
+            $bid = RFQBid::query()->whereKey($rfqBidId)->lockForUpdate()->first();
+
+            if (! $tenant || ! $rfq || ! $bid) {
                 throw ServiceBookingException::notFound('The quotation record could not be found.');
             }
-
-            $rfq = $bid->rfq;
 
             if ($rfq->status !== 'OPEN') {
                 throw ServiceBookingException::notAwardable('This quotation request has already been awarded or closed.');
@@ -59,6 +71,20 @@ class ServiceBookingService
 
             if ($bid->status !== 'PENDING') {
                 throw ServiceBookingException::notAwardable('This quotation has already been answered.');
+            }
+
+            $preferences = (array) ($rfq->preferences ?? []);
+            $serviceId = $preferences['service_id'] ?? null;
+            $mode = $tenant->vendorCategory?->booking_mode ?? 'DATE_EVENT';
+
+            if (in_array($mode, ['APPOINTMENT', 'HOURLY'], true) && $rfq->event_date) {
+                $eventDate = $rfq->event_date->format('Y-m-d');
+                $startTime = $preferences['start_time'] ?? null;
+                $hours = isset($preferences['hours']) && (float) $preferences['hours'] > 0
+                    ? (float) $preferences['hours']
+                    : null;
+
+                $this->assertSlotFree($tenant, $mode, $eventDate, $startTime ?: null, $hours);
             }
 
             $bid->update(['status' => 'ACCEPTED']);
@@ -74,11 +100,8 @@ class ServiceBookingService
             $financials = $this->calculateFinancials(
                 (float) $bid->bid_amount,
                 0.0,
-                $rfq->tenant
+                $tenant
             );
-
-            $preferences = (array) ($rfq->preferences ?? []);
-            $serviceId = $preferences['service_id'] ?? null;
 
             $booking = ServiceBooking::create([
                 'tenant_id' => $rfq->tenant_id,
@@ -405,36 +428,40 @@ class ServiceBookingService
 
     public function cancelServiceBooking(string $serviceBookingId, ?string $reason, string $tenantId): ServiceBooking
     {
-        $booking = $this->findTenantBooking($serviceBookingId, $tenantId);
+        // A refund touches the booking, a refund row and the wallet ledger. If
+        // the wallet debit fails, none of those writes may survive.
+        return DB::transaction(function () use ($serviceBookingId, $reason, $tenantId): ServiceBooking {
+            $booking = $this->findTenantBooking($serviceBookingId, $tenantId);
 
-        if (! $booking->isCancellable()) {
-            throw ServiceBookingException::invalidState('This service booking can no longer be cancelled.');
-        }
+            if (! $booking->isCancellable()) {
+                throw ServiceBookingException::invalidState('This service booking can no longer be cancelled.');
+            }
 
-        $booking->update([
-            'status' => 'CANCELLED',
-            'cancelled_at' => now(),
-            'cancellation_reason' => $reason,
-        ]);
-
-        if ((float) $booking->paid_amount > 0) {
-            $refund = ServicePayment::create([
-                'tenant_id' => $booking->tenant_id,
-                'service_booking_id' => $booking->id,
-                'customer_id' => $booking->customer_id,
-                'amount' => (float) $booking->paid_amount,
-                'method' => 'REFUND',
-                'status' => 'REFUNDED',
-                'kind' => 'REFUND',
-                'notes' => $reason ?? 'Service booking cancelled before completion.',
+            $booking->update([
+                'status' => 'CANCELLED',
+                'cancelled_at' => now(),
+                'cancellation_reason' => $reason,
             ]);
 
-            $this->reverseBookingPayment($booking, (float) $refund->amount);
+            if ((float) $booking->paid_amount > 0) {
+                $refund = ServicePayment::create([
+                    'tenant_id' => $booking->tenant_id,
+                    'service_booking_id' => $booking->id,
+                    'customer_id' => $booking->customer_id,
+                    'amount' => (float) $booking->paid_amount,
+                    'method' => 'REFUND',
+                    'status' => 'REFUNDED',
+                    'kind' => 'REFUND',
+                    'notes' => $reason ?? 'Service booking cancelled before completion.',
+                ]);
 
-            $booking->update(['paid_amount' => 0.0, 'payment_status' => 'REFUNDED']);
-        }
+                $this->reverseBookingPayment($booking, (float) $refund->amount);
 
-        return $booking->fresh();
+                $booking->update(['paid_amount' => 0.0, 'payment_status' => 'REFUNDED']);
+            }
+
+            return $booking->fresh();
+        });
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -448,22 +475,24 @@ class ServiceBookingService
      */
     public function recordServicePayment(ServiceBooking $booking, float $amount, string $method, string $kind = 'INSTALLMENT'): ServicePayment
     {
-        $payment = ServicePayment::create([
-            'tenant_id' => $booking->tenant_id,
-            'service_booking_id' => $booking->id,
-            'customer_id' => $booking->customer_id,
-            'amount' => $amount,
-            'method' => $method,
-            'status' => 'VERIFIED',
-            'kind' => $kind,
-            'verified_by' => auth()->id(),
-            'verified_at' => now(),
-            'notes' => 'Service payment recorded by operations staff.',
-        ]);
+        return DB::transaction(function () use ($booking, $amount, $method, $kind): ServicePayment {
+            $payment = ServicePayment::create([
+                'tenant_id' => $booking->tenant_id,
+                'service_booking_id' => $booking->id,
+                'customer_id' => $booking->customer_id,
+                'amount' => $amount,
+                'method' => $method,
+                'status' => 'VERIFIED',
+                'kind' => $kind,
+                'verified_by' => auth()->id(),
+                'verified_at' => now(),
+                'notes' => 'Service payment recorded by operations staff.',
+            ]);
 
-        $this->applyVerifiedPayment($booking, $payment);
+            $this->applyVerifiedPayment($booking, $payment);
 
-        return $payment->fresh();
+            return $payment->fresh();
+        });
     }
 
     /**
@@ -475,40 +504,45 @@ class ServiceBookingService
      */
     public function verifyServicePayment(ServicePayment $payment, ?int $verifiedByUserId = null): array
     {
-        $booking = $payment->serviceBooking()->first();
+        // Payment verification, booking balance, wallet credit/debit and payout
+        // creation must commit as one unit. A failed commission debit must not
+        // leave a credited wallet or a PAID booking behind.
+        return DB::transaction(function () use ($payment, $verifiedByUserId): array {
+            $booking = $payment->serviceBooking()->first();
 
-        if (! $booking) {
-            return ['success' => false, 'message' => 'The service booking for this payment no longer exists.'];
-        }
+            if (! $booking) {
+                return ['success' => false, 'message' => 'The service booking for this payment no longer exists.'];
+            }
 
-        if ($payment->status === 'VERIFIED' || $payment->status === 'REFUNDED') {
-            return ['success' => true, 'already_verified' => true, 'booking' => $booking];
-        }
+            if ($payment->status === 'VERIFIED' || $payment->status === 'REFUNDED') {
+                return ['success' => true, 'already_verified' => true, 'booking' => $booking];
+            }
 
-        $payment->update([
-            'status' => $payment->kind === 'REFUND' ? 'REFUNDED' : 'VERIFIED',
-            'verified_by' => $verifiedByUserId,
-            'verified_at' => now(),
-        ]);
+            $payment->update([
+                'status' => $payment->kind === 'REFUND' ? 'REFUNDED' : 'VERIFIED',
+                'verified_by' => $verifiedByUserId,
+                'verified_at' => now(),
+            ]);
 
-        if ($payment->kind === 'REFUND') {
-            $this->reverseBookingPayment($booking, (float) $payment->amount);
+            if ($payment->kind === 'REFUND') {
+                $this->reverseBookingPayment($booking, (float) $payment->amount);
 
-            return ['success' => true, 'refund' => true, 'booking' => $booking->fresh()];
-        }
+                return ['success' => true, 'refund' => true, 'booking' => $booking->fresh()];
+            }
 
-        $booking->update(['paid_amount' => (float) $booking->paid_amount + (float) $payment->amount]);
+            $booking->update(['paid_amount' => (float) $booking->paid_amount + (float) $payment->amount]);
 
-        if ($payment->kind === 'FULL' || $booking->balanceDue() <= 0) {
-            $booking->update(['payment_status' => 'PAID']);
-            $this->settleServiceBookingPayment($booking);
-        } elseif ($payment->kind === 'ADVANCE') {
-            $booking->update(['payment_status' => 'ADVANCE_PAID']);
-        } else {
-            $booking->update(['payment_status' => $booking->balanceDue() > 0 ? 'PARTIAL' : 'PAID']);
-        }
+            if ($payment->kind === 'FULL' || $booking->balanceDue() <= 0) {
+                $booking->update(['payment_status' => 'PAID']);
+                $this->settleServiceBookingPayment($booking);
+            } elseif ($payment->kind === 'ADVANCE') {
+                $booking->update(['payment_status' => 'ADVANCE_PAID']);
+            } else {
+                $booking->update(['payment_status' => $booking->balanceDue() > 0 ? 'PARTIAL' : 'PAID']);
+            }
 
-        return ['success' => true, 'booking' => $booking->fresh()];
+            return ['success' => true, 'booking' => $booking->fresh()];
+        });
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -603,23 +637,44 @@ class ServiceBookingService
 
     public function processVendorPayout(VendorPayout $payout, int $processorUserId): VendorPayout
     {
-        if ($payout->status !== 'REQUESTED') {
-            throw ServiceBookingException::invalidState('Only requested payouts can be processed.');
-        }
+        return DB::transaction(function () use ($payout, $processorUserId) {
+            $locked = VendorPayout::query()
+                ->whereKey($payout->id)
+                ->where('status', 'REQUESTED')
+                ->lockForUpdate()
+                ->first();
 
-        $payout->update(['status' => 'PROCESSING']);
-        $payout->update(['status' => 'PAID', 'processed_by' => $processorUserId, 'processed_at' => now()]);
+            if (! $locked) {
+                throw ServiceBookingException::invalidState('Only requested payouts can be processed.');
+            }
 
-        $wallet = VendorWallet::query()
-            ->where('tenant_id', $payout->tenant_id)
-            ->where('is_primary', true)
-            ->first();
+            $wallet = VendorWallet::query()
+                ->where('tenant_id', $locked->tenant_id)
+                ->where('is_primary', true)
+                ->first();
 
-        if ($wallet) {
-            $this->debitWallet($payout->tenant_id, (int) $wallet->id, (float) $payout->amount, 'PAYOUT', $payout->id, 'Vendor payout processed via wallet settlement.');
-        }
+            if (! $wallet) {
+                throw ServiceBookingException::invalidState('No primary vendor wallet is available for this payout.');
+            }
 
-        return $payout->fresh();
+            // Debit first: a failed debit must never leave a payout marked PAID.
+            $this->debitWallet(
+                $locked->tenant_id,
+                (int) $wallet->id,
+                (float) $locked->amount,
+                'PAYOUT',
+                $locked->id,
+                'Vendor payout processed via wallet settlement.'
+            );
+
+            $locked->update([
+                'status' => 'PAID',
+                'processed_by' => $processorUserId,
+                'processed_at' => now(),
+            ]);
+
+            return $locked->fresh();
+        });
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -671,38 +726,33 @@ class ServiceBookingService
 
     protected function settleServiceBookingPayment(ServiceBooking $booking): void
     {
-        $financials = $this->calculateFinancials(
-            (float) $booking->quoted_amount,
-            (float) $booking->discount_amount,
-            Tenant::find($booking->tenant_id)
-        );
+        // Use the financial snapshot stored when the booking was created. A
+        // later commission-rate change must never alter a settled payout.
+        $gross = round((float) $booking->quoted_amount - (float) $booking->discount_amount, 2);
+        $commission = round((float) $booking->commission_amount, 2);
+        $net = round((float) $booking->net_vendor_amount, 2);
 
-        $wallet = $this->creditWallet(
-            $booking,
-            $financials['net_vendor_amount'],
-            'BOOKING_PAYMENT',
-            $booking->booking_reference
-        );
+        // Credit the full amount, then post a real commission debit so the
+        // wallet balance always equals the latest ledger balance_after.
+        $wallet = $this->creditWallet($booking, $gross, 'BOOKING_PAYMENT', $booking->booking_reference);
 
-        // Platform commission revenue recognition (already netted from payout).
-        if ($wallet) {
-            WalletTransaction::create([
-                'tenant_id' => $booking->tenant_id,
-                'vendor_wallet_id' => $wallet->id,
-                'type' => 'DEBIT',
-                'source' => 'COMMISSION',
-                'amount' => $financials['commission_amount'],
-                'balance_after' => (float) $wallet->balance - $financials['commission_amount'],
-                'service_booking_id' => $booking->id,
-                'vendor_payout_id' => null,
-                'reference' => $booking->booking_reference,
-                'note' => 'Platform commission withheld from service booking settlement.',
-            ]);
+        if (! $wallet) {
+            return;
         }
 
-        if ($wallet) {
-            $this->requestVendorPayout($booking->tenant_id, (int) $wallet->user_id, $financials['net_vendor_amount']);
+        if ($commission > 0) {
+            $this->debitWallet(
+                $booking->tenant_id,
+                (int) $wallet->id,
+                $commission,
+                'COMMISSION',
+                null,
+                'Platform commission withheld from service booking settlement.',
+                (string) $booking->id
+            );
         }
+
+        $this->requestVendorPayout($booking->tenant_id, (int) $wallet->user_id, $net);
     }
 
     protected function applyVerifiedPayment(ServiceBooking $booking, ServicePayment $payment): void
@@ -753,16 +803,35 @@ class ServiceBookingService
         return $wallet;
     }
 
-    protected function debitWallet(string $tenantId, int $walletId, float $amount, string $source, ?int $vendorPayoutId, string $note): ?VendorWallet
-    {
-        $wallet = VendorWallet::query()->find($walletId);
-
-        if (! $wallet) {
-            return null;
+    protected function debitWallet(
+        string $tenantId,
+        int $walletId,
+        float $amount,
+        string $source,
+        ?string $vendorPayoutId,
+        string $note,
+        ?string $serviceBookingId = null
+    ): ?VendorWallet {
+        if ($amount <= 0) {
+            throw ServiceBookingException::invalidState('A debit amount must be greater than zero.');
         }
 
-        $balance = (float) $wallet->balance - $amount;
-        $wallet->update(['balance' => $balance]);
+        // Tenant scope is mandatory: a wallet ID from another business must
+        // never be debited. The balance guard is applied in the same atomic
+        // UPDATE so two concurrent debits cannot overdraw the wallet.
+        $affected = VendorWallet::query()
+            ->whereKey($walletId)
+            ->where('tenant_id', $tenantId)
+            ->where('balance', '>=', $amount)
+            ->decrement('balance', $amount);
+
+        if ($affected !== 1) {
+            throw ServiceBookingException::invalidState(
+                'The vendor wallet could not be debited (wrong tenant or insufficient balance).'
+            );
+        }
+
+        $wallet = VendorWallet::query()->findOrFail($walletId);
 
         WalletTransaction::create([
             'tenant_id' => $tenantId,
@@ -770,8 +839,8 @@ class ServiceBookingService
             'type' => 'DEBIT',
             'source' => $source,
             'amount' => $amount,
-            'balance_after' => $balance,
-            'service_booking_id' => null,
+            'balance_after' => $wallet->balance,
+            'service_booking_id' => $serviceBookingId,
             'vendor_payout_id' => $vendorPayoutId,
             'reference' => null,
             'note' => $note,

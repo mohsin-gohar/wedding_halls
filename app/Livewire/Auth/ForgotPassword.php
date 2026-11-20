@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.auth', ['title' => 'Forgot Password â€” Riwaj Grand'])]
+#[Layout('components.layouts.auth', ['title' => 'Forgot Password — Riwaj Grand'])]
 class ForgotPassword extends Component
 {
     public string $email = '';
@@ -37,9 +37,9 @@ class ForgotPassword extends Component
 
         RateLimiter::hit($throttleKey, 60);
 
-        $status = Password::sendResetLink(
-            request()->only('email')
-        );
+        // Livewire update payloads carry component state, not top-level
+        // request fields. Pass the validated component state explicitly.
+        $status = Password::sendResetLink(['email' => $this->email]);
 
         if ($status === Password::RESET_LINK_SENT) {
             $this->resetLinkSent = true;

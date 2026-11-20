@@ -533,13 +533,13 @@ class PublicHallDetails extends Component
             'evening' => [
                 'name' => 'EVENING',
                 'time' => '4 PM - 8 PM',
-                'icon' => 'ðŸŒ„',
+                'icon' => '🌄',
                 'isBooked' => $selEveningBooked,
             ],
             'night' => [
                 'name' => 'NIGHT',
                 'time' => '9 PM - 1 AM',
-                'icon' => 'ðŸŒ™',
+                'icon' => '🌙',
                 'isBooked' => $selNightBooked,
             ],
         ];
@@ -575,7 +575,7 @@ class PublicHallDetails extends Component
             'selectedYear' => $this->selectedYear,
             'selectedMonthNumber' => $this->selectedMonthNumber,
         ])->layout('components.layouts.public', [
-            'title' => $this->hall->name.' â€” Riwaj Grand Pakistan',
+            'title' => $this->hall->name.' — Riwaj Grand Pakistan',
             'metaDescription' => Str::limit(strip_tags($this->hall->description ?? ''), 155, '...'),
             'ogImage' => $this->activePhoto,
         ]);

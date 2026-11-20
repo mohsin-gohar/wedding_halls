@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.public', ['title' => 'RSVP Your Invitation â€” Riwaj Grand Pakistan'])]
+#[Layout('components.layouts.public', ['title' => 'RSVP Your Invitation — Riwaj Grand Pakistan'])]
 class PublicGuestRsvp extends Component
 {
     public string $phone = '';

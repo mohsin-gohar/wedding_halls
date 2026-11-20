@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Services\PaymentService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 /**
@@ -36,6 +38,7 @@ class PaymentController extends ApiController
             'payment_method' => 'required|in:CASH,BANK_TRANSFER,STRIPE,JAZZCASH,EASYPAISA',
             'phone' => 'nullable|string|max:25',
             'transaction_reference' => 'nullable|string|max:100',
+            'idempotency_key' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -67,6 +70,7 @@ class PaymentController extends ApiController
             [
                 'phone' => $request->input('phone'),
                 'transaction_reference' => $request->input('transaction_reference'),
+                'idempotency_key' => $request->input('idempotency_key'),
             ]
         );
 
@@ -95,6 +99,9 @@ class PaymentController extends ApiController
             'success' => true,
             'payment' => $payment,
             'gateway_data' => isset($result['gateway_url']) ? $result : null,
+            // Clients should echo this on a retry so Stripe can dedupe the
+            // identical request instead of creating a second intent.
+            'idempotency_key' => $result['idempotency_key'] ?? null,
             'message' => $result['message'],
         ]);
     }
@@ -102,57 +109,96 @@ class PaymentController extends ApiController
     public function webhook(Request $request, string $gateway)
     {
         $payload = $request->all();
-        $signature = $request->header('X-Signature', $request->header('X-Hub-Signature-256', ''));
+        $rawBody = $request->getContent();
 
-        $isValid = $this->paymentService->verifyWebhook($payload, $signature, $gateway);
+        $signature = strtolower($gateway) === 'stripe'
+            ? $request->header('Stripe-Signature', '')
+            : $request->header('X-Signature', $request->header('X-Hub-Signature-256', ''));
 
-        if (! $isValid) {
+        if (! $this->paymentService->verifyWebhook($payload, $signature, $gateway, $rawBody)) {
             return response()->json(['message' => 'Invalid webhook signature.'], 401);
         }
 
-        $bookingReference = $payload['booking_reference'] ?? $payload['pp_TxnRef'] ?? $payload['txnRef'] ?? null;
-        $amount = $payload['amount'] ?? $payload['pp_Amount'] ?? 0;
-        $transactionReference = $payload['transaction_reference'] ?? $payload['pp_TxnRef'] ?? $payload['txnRef'] ?? null;
+        // Stripe signs an envelope; the values we care about live in the
+        // verified payment-intent object. Other gateways post flat fields.
+        if (strtolower($gateway) === 'stripe') {
+            $event = json_decode($rawBody, true);
+            $object = is_array($event) ? ($event['data']['object'] ?? []) : [];
+            $bookingReference = $object['metadata']['booking_reference'] ?? null;
+            $amount = $object['amount_received'] ?? $object['amount'] ?? 0;
+            $transactionReference = $object['id'] ?? null;
+        } else {
+            $gatewayReference = (string) ($payload['transaction_reference'] ?? $payload['pp_TxnRef'] ?? $payload['txnRef'] ?? '');
 
-        if (! $bookingReference) {
+            // Local gateways may echo only our transaction reference. It is
+            // generated as "<booking-reference>-<random>", so recover the
+            // booking from the stable prefix instead of treating the whole
+            // installment reference as a booking reference.
+            $bookingReference = $payload['booking_reference'] ?? null;
+            if (! $bookingReference && preg_match('/^((?:BK-\d{6}-[A-Z0-9]{5}|RG-SB-[A-F0-9]{6}))-/', $gatewayReference, $matches) === 1) {
+                $bookingReference = $matches[1];
+            }
+            if (! $bookingReference) {
+                $bookingReference = $gatewayReference ?: null;
+            }
+
+            $amount = $payload['amount'] ?? $payload['pp_Amount'] ?? 0;
+            $transactionReference = $gatewayReference ?: null;
+        }
+
+        if (! $bookingReference || ! $transactionReference) {
             return response()->json(['status' => 'ignored']);
         }
 
-        $booking = Booking::where('booking_reference', $bookingReference)->first();
+        try {
+            return DB::transaction(function () use ($bookingReference, $transactionReference, $amount, $gateway) {
+                // Lock the booking so concurrent webhook retries cannot both
+                // read the same balance and credit it twice.
+                $booking = Booking::where('booking_reference', $bookingReference)
+                    ->lockForUpdate()
+                    ->first();
 
-        if (! $booking) {
-            return response()->json(['status' => 'ignored']);
-        }
+                if (! $booking) {
+                    return response()->json(['status' => 'ignored']);
+                }
 
-        // ── Idempotency ────────────────────────────────────────────────
-        // Gateways retry webhooks. A replayed gateway reference must never
-        // credit the booking twice.
-        if ($transactionReference && Payment::where('transaction_reference', $transactionReference)->exists()) {
+                $paymentMethod = strtoupper($gateway);
+
+                if (Payment::where('payment_method', $paymentMethod)
+                    ->where('transaction_reference', $transactionReference)
+                    ->lockForUpdate()
+                    ->exists()) {
+                    return response()->json(['status' => 'already_processed']);
+                }
+
+                $value = round(((float) $amount) / 100, 2);
+
+                if ($value <= 0 || $value > (float) $booking->balance_due + 0.009) {
+                    return response()->json(['status' => 'ignored', 'reason' => 'amount_out_of_range']);
+                }
+
+                $payment = $this->paymentService->createPayment(
+                    $booking->tenant_id,
+                    $booking->id,
+                    $value,
+                    'ADVANCE',
+                    $paymentMethod,
+                    $transactionReference,
+                    null,
+                    'Webhook payment from '.$gateway
+                );
+
+                $booking->advance_paid = (float) $booking->advance_paid + (float) $payment->amount;
+                $booking->balance_due = max(0, (float) $booking->grand_total - (float) $booking->advance_paid);
+                $booking->save();
+
+                return response()->json(['status' => 'processed']);
+            });
+        } catch (UniqueConstraintViolationException) {
+            // The database is the final idempotency authority when two
+            // gateways deliver the same reference at the same instant.
             return response()->json(['status' => 'already_processed']);
         }
-
-        $value = round(((float) $amount) / 100, 2);
-
-        if ($value <= 0 || $value > (float) $booking->balance_due + 0.009) {
-            return response()->json(['status' => 'ignored', 'reason' => 'amount_out_of_range']);
-        }
-
-        $payment = $this->paymentService->createPayment(
-            $booking->tenant_id,
-            $booking->id,
-            $value,
-            'ADVANCE',
-            strtoupper($gateway),
-            $transactionReference,
-            null,
-            'Webhook payment from '.$gateway
-        );
-
-        $booking->advance_paid = (float) $booking->advance_paid + (float) $payment->amount;
-        $booking->balance_due = max(0, (float) $booking->grand_total - (float) $booking->advance_paid);
-        $booking->save();
-
-        return response()->json(['status' => 'processed']);
     }
 
     public function summary(Request $request)

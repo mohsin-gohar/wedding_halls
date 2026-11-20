@@ -97,4 +97,29 @@ return [
         'return_url' => env('EASYPAISA_RETURN_URL', config('app.url').'/api/v1/payments/webhook/easypaisa'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | SMS Gateway
+    |--------------------------------------------------------------------------
+    |
+    | Supported drivers:
+    |   log  - record the message locally only (never marks it as delivered)
+    |   http - POST to a generic HTTP gateway using HTTP Basic credentials
+    |   null - disable outbound SMS entirely
+    |
+    | `sms_sent_at` is only written after the gateway accepts the request with
+    | a 2xx response. A missing endpoint/credential is fail-closed.
+    |
+    */
+
+    'sms' => [
+        'driver' => env('SMS_DRIVER', 'log'),
+        'endpoint' => env('SMS_GATEWAY_URL'),
+        'username' => env('SMS_GATEWAY_USERNAME'),
+        'password' => env('SMS_GATEWAY_PASSWORD'),
+        'sender' => env('SMS_GATEWAY_SENDER_ID', 'RiwajGrand'),
+        'timeout' => (int) env('SMS_TIMEOUT', 10),
+        'allow_insecure' => (bool) env('SMS_ALLOW_INSECURE', false),
+    ],
+
 ];

@@ -25,10 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Stateless API surface is rate limited (60 req/min per token/IP).
         $middleware->throttleApi();
 
+        // Only machine-to-machine surfaces are CSRF-exempt. Native login
+        // forms include @csrf, and Livewire's update endpoint is protected.
         $middleware->validateCsrfTokens(except: [
             'webhooks/*',
-            'login',
-            'customer/login',
             'api/*',
         ]);
 

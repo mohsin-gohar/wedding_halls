@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Models\Notification;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
+use RuntimeException;
 
 class NotificationService
 {
@@ -83,7 +85,10 @@ class NotificationService
     }
 
     /**
-     * Send email notification (placeholder - integrates with Mailgun/SendGrid).
+     * Send email notification through the configured Laravel mailer.
+     *
+     * Local/test mailers (log, array, null) do not deliver to a real recipient,
+     * so they must never be recorded as a sent email.
      */
     protected function sendEmailNotification(Notification $notification, User $user): void
     {
@@ -104,7 +109,17 @@ class NotificationService
                     ->subject($notification->title);
             });
 
-            $notification->update(['email_sent_at' => now()]);
+            $mailer = (string) config('mail.default');
+
+            if (in_array($mailer, ['log', 'array', 'null'], true)) {
+                Log::info('Email notification rendered but not delivered', [
+                    'user_id' => $user->id,
+                    'notification_id' => $notification->id,
+                    'mailer' => $mailer,
+                ]);
+            } else {
+                $notification->update(['email_sent_at' => now()]);
+            }
         } catch (\Throwable $e) {
             Log::error('Failed to send email notification', [
                 'user_id' => $user->id,
@@ -115,7 +130,10 @@ class NotificationService
     }
 
     /**
-     * Send SMS notification (placeholder - integrates with Twilio or local gateway).
+     * Deliver SMS through the configured gateway.
+     *
+     * Local logging must never be reported as delivery: `sms_sent_at` is only
+     * written after a real gateway accepts the request with a 2xx response.
      */
     protected function sendSmsNotification(Notification $notification, User $user): void
     {
@@ -128,12 +146,70 @@ class NotificationService
 
             RateLimiter::hit($throttleKey, 60);
 
-            // SMS gateway integration point (Twilio, MSG91, local Pakistani gateway, etc.)
-            Log::info('SMS notification queued', [
-                'to' => $user->phone,
-                'message' => $notification->message,
-                'notification_id' => $notification->id,
-            ]);
+            $config = config('services.sms', []);
+            $driver = (string) ($config['driver'] ?? 'log');
+            $endpoint = (string) ($config['endpoint'] ?? '');
+            $username = (string) ($config['username'] ?? '');
+            $password = (string) ($config['password'] ?? '');
+
+            if ($driver === 'null') {
+                return;
+            }
+
+            if ($driver === 'log' || $endpoint === '') {
+                Log::info('SMS notification not delivered', [
+                    'user_id' => $user->id,
+                    'notification_id' => $notification->id,
+                    'reason' => $driver === 'log' ? 'log_driver' : 'gateway_not_configured',
+                ]);
+
+                return;
+            }
+
+            $scheme = strtolower((string) parse_url($endpoint, PHP_URL_SCHEME));
+            $allowInsecure = (bool) ($config['allow_insecure'] ?? false);
+
+            if ($driver !== 'http' || $username === '' || $password === ''
+                || ! filter_var($endpoint, FILTER_VALIDATE_URL)
+                || ($scheme !== 'https' && ! $allowInsecure)) {
+                Log::warning('SMS notification skipped: invalid gateway configuration', [
+                    'user_id' => $user->id,
+                    'notification_id' => $notification->id,
+                    'driver' => $driver,
+                    'scheme' => $scheme,
+                ]);
+
+                return;
+            }
+
+            $response = Http::asForm()
+                ->acceptJson()
+                ->timeout((int) ($config['timeout'] ?? 10))
+                ->withBasicAuth($username, $password)
+                ->post($endpoint, [
+                    'to' => $user->phone,
+                    'message' => $notification->message,
+                    'sender' => (string) ($config['sender'] ?? 'RiwajGrand'),
+                    'reference' => $notification->id,
+                ]);
+
+            if ($response->failed()) {
+                throw new RuntimeException('SMS gateway returned HTTP '.$response->status());
+            }
+
+            // Some providers answer 200 even when the message was rejected.
+            // Honour an explicit rejection in the JSON body before recording
+            // the message as delivered.
+            $gatewayPayload = $response->json();
+            if (is_array($gatewayPayload)) {
+                $gatewayStatus = strtolower((string) ($gatewayPayload['status'] ?? ''));
+                $rejectedStatus = $gatewayStatus !== '' && ! in_array($gatewayStatus, ['accepted', 'success', 'sent', 'ok', 'queued'], true);
+                $explicitFailure = array_key_exists('success', $gatewayPayload) && ! $gatewayPayload['success'];
+
+                if ($rejectedStatus || $explicitFailure) {
+                    throw new RuntimeException('SMS gateway rejected the message.');
+                }
+            }
 
             $notification->update(['sms_sent_at' => now()]);
         } catch (\Throwable $e) {

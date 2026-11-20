@@ -28,7 +28,9 @@ class BookingConcurrencyTest extends TestCase
         $hall = Hall::first();
         $bookingService = app(BookingService::class);
 
-        $testDate = '2026-11-20';
+        // Use a date far from the seeder's dynamic "today"/"tomorrow" bookings;
+        // otherwise the seeded EVENING reservation makes this test flaky.
+        $testDate = now()->addDays(180)->toDateString();
         $testSlot = 'EVENING';
 
         $data = [

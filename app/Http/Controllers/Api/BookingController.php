@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Exceptions\SlotAlreadyBookedException;
 use App\Models\Booking;
 use App\Models\Hall;
+use App\Models\Package;
 use App\Services\BookingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -81,11 +82,6 @@ class BookingController extends ApiController
             'customer_email' => 'nullable|email|max:100',
             'customer_cnic' => 'nullable|string|max:20',
             'package_id' => 'nullable|uuid|exists:packages,id',
-            'per_head_rate' => 'nullable|numeric|min:0',
-            'hall_rent' => 'nullable|numeric|min:0',
-            'addons_total' => 'nullable|numeric|min:0',
-            'discount_amount' => 'nullable|numeric|min:0',
-            'tax_amount' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
         ]);
 
@@ -103,10 +99,43 @@ class BookingController extends ApiController
             $this->assertTenantAccess($hall->tenant_id, $user);
         }
 
-        $data = $request->all();
+        // NEVER pass raw request input into the booking service: financial
+        // fields, lifecycle status, references and payment records must be
+        // derived server-side from authoritative records.
+        $data = $validator->validated();
+
+        $package = null;
+        if (! empty($data['package_id'])) {
+            $package = Package::query()
+                ->whereKey($data['package_id'])
+                ->where('tenant_id', $hall->tenant_id)
+                ->where('is_active', true)
+                ->first();
+
+            if (! $package) {
+                return response()->json([
+                    'errors' => ['package_id' => ['The selected package is not available for this venue.']],
+                ], 422);
+            }
+        }
+
         $data['tenant_id'] = $hall->tenant_id;
         $data['created_by_user_id'] = $user->id;
-        $data['customer_id'] = $user->isCustomer() ? $user->id : $request->input('customer_id');
+        $data['customer_id'] = $user->isCustomer() ? $user->id : null;
+
+        // Prices come from the venue/package; discounts, taxes and advances
+        // require a verified payment flow and are never caller-controlled.
+        $data['per_head_rate'] = $package?->per_head_price ?? 0;
+        $data['hall_rent'] = $hall->base_rent ?? 0;
+        $data['addons_total'] = 0;
+        $data['discount_amount'] = 0;
+        $data['tax_amount'] = 0;
+        $data['advance_paid'] = 0;
+
+        // New API bookings start as inquiries; staff confirm them after the
+        // venue verifies availability and payment.
+        $data['status'] = 'INQUIRY';
+        $data['pipeline_stage'] = 'NEW_INQUIRY';
 
         if ($user->isCustomer()) {
             $data['customer_name'] = $user->name;

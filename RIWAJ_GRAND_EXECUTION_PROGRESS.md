@@ -1,10 +1,10 @@
 # RIWAJ GRAND — Execution Progress
 
 **Execution spec:** `CODEX MASTER EXECUTION — RIWAJ GRAND COMPLETE EVENT INDUSTRY ECOSYSTEM` (user-provided, 2026-11-19)  
-**Current branch:** `feature/enterprise-transformation`
-**Current HEAD (local and origin):** `74035f5` — "fix: CI workflow, gitignore, and test configuration updates" (**not pushed to `origin/main`**)
-**`origin/main` at last verification:** `444ff83` — "Add scopeActive method with ordering"
-**Local uncommitted changes:** deterministic `VendorCategory::scopeActive()` ordering fix and focused regression test
+**Current branch:** `main` (feature branch `feature/enterprise-transformation` merged; see below)
+**Current HEAD (local and origin):** `3a9d126` — merge commit that was pushed successfully to `origin/main` (`444ff83..3a9d126`)
+**New work after `3a9d126`:** local/uncommitted only; no further push or deployment
+**Local uncommitted changes:** notification delivery, payout/settlement integrity, RFQ award race, public SEO/title fixes, auth regressions (all listed in the session evidence section)
 **Execution started:** 2026-11-19; **reconciled:** 2026-11-20
 
 > **Honesty constraint:** I will not claim tests/browser verification/infrastructure readiness without actually running/proving them. Environment blockers (no Redis service, no payment gateway sandbox creds, no production infra/multi-instance/LB, limited full-browser E2E capacity in one pass) will be documented explicitly. Completion is evidence-based.
@@ -132,7 +132,7 @@
 - **Local DB recovery (2026-11-20):** C: free space verified at **5.95 GB**; disposable MariaDB on `127.0.0.1:3307` restarted and readiness confirmed (`TcpTestSucceeded=True`), with datadir `C:\Users\mohsi\AppData\Local\Temp\opencode\mysql_test_data`. The disposable `eventhub_test` DB and `eventhub`@`%` / `rootpassword` account were recreated and migrated. No production DB or user data was touched.
 - **Verified locally with CI-style credentials (2026-11-20):** `DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3307 DB_DATABASE=eventhub_test DB_USERNAME=eventhub DB_PASSWORD=rootpassword php artisan test tests/Feature/VendorCategoryTaxonomyTest.php tests/Feature/AdminCategoryManagerTest.php` → **PASS: 25 passed (432 assertions), 244.84s**. This includes the new deterministic-ordering regression test.
 - **Deterministic ordering fix + regression (uncommitted):** `VendorCategory::scopeActive()` now orders by `sort`, then `name`; `VendorCategoryTaxonomyTest::test_active_scope_orders_by_sort_then_name_and_excludes_inactive_categories` inserts rows out of order, asserts the `sort`/`name` sequence, and asserts inactive rows are excluded. Pint, `php -l`, and `view:cache` all pass after the change.
-- **Not verified here:** actual GitHub Actions green run (requires push + CI; needs explicit authorization). The stale `238 failed · 3 passed` run remains the last recorded CI result.
+- **GitHub Actions status (checked via public API 2026-11-20):** latest recorded run `44602696519` for HEAD `3a9d126` is `completed / failure`; failing job is `test`, failing step is `Run tests`, deploy job remains `skipped` (`if: false`). CI green is **not** verified. The newer local fixes are uncommitted/unpushed, so no CI run has exercised them yet.
 
 ## Remaining tasks (immediate next)
 1. **CI verification / push:** capture green GitHub Actions run for the `phpunit.xml`/workflow fix — requires explicit authorization to push local `74035f5` (and any follow-up fix commits) to `origin/main`. Not yet pushed. Branch divergence must be resolved first: `HEAD` has 3 commits not on `origin/main`; `origin/main` has `444ff83` (equivalent `scopeActive()` ordering commit, but with unresolved conflict markers in the progress doc) not on this branch. No merge/rebase/cherry-pick has been performed.
@@ -146,4 +146,113 @@
 - Continue next feasible high-value, test-backed increments; keep one authoritative progress file; never claim 100%/$1000T completion without proof; no push/deploy without explicit permission.
 
 ---
-*Last updated: 2026-11-20 (CI/DB config fix in local commit `74035f5` — not pushed; taxonomy ordering fix + regression test uncommitted and verified 25 passed / 432 assertions; Phases 0–5 target batches + Phase 9 reveal increment previously evidenced; GitHub CI green still pending push/verification)*
+
+## Session evidence — post-push hardening batch (2026-11-20, uncommitted)
+
+All results below are actual `php artisan test` runs against the disposable MySQL instance `127.0.0.1:3307 / eventhub_test` (no SQLite fallback). All listed files are **uncommitted** on branch `main`, HEAD/origin `3a9d126`.
+
+### Implemented
+- **Notification delivery correctness:** added user email/SMS preference migration, configurable SMS drivers (`log|http|null`) with fail-closed gateway rules, and real delivery-status timestamps. Local log/array/null mailers no longer mark email as sent.
+- **Payout reliability:** added `vendor_payouts.processed_at` migration; fixed UUID/`int` mismatch in `ServiceBookingService::debitWallet()`; payout processing now locks the payout, debits before marking PAID, and runs in one transaction.
+- **RFQ award race:** `acceptQuote()` now locks the RFQ row and tenant row (matching direct-booking lock order), rechecks OPEN/PENDING under lock, and runs `assertSlotFree()` for appointment/hourly modes. `VendorQuotesBoard::awardQuote()` now verifies the bid belongs to the caller's tenant before awarding.
+- **Settlement integrity:** uses the stored commission/net snapshot, credits gross, posts a real commission debit so ledger `balance_after` matches wallet balance, scopes debits by tenant, and prevents overdrafts via an atomic conditional decrement.
+- **Public SEO/titles:** narrowed `robots.txt` so public `/vendor/{slug}` profiles are indexable while vendor ERP paths remain blocked; sitemap now includes approved marketplace-visible vendors and active top-level categories; removed double-encoded em dashes/emoji from public titles and concierge copy.
+- **Auth hardening:** removed the unauthenticated `Login::quickLogin()` credential-free helper; removed `login` and `customer/login` from the CSRF exemption list.
+
+### Automated verification (actual exit codes)
+- `NotificationDeliveryTest`: **6 passed, 11 assertions**, exit 0.
+- `VendorPayoutProcessingTest` + `ServiceSettlementIntegrityTest`: **5 passed, 22 assertions**, exit 0.
+- `RfqAwardConcurrencyTest`: **4 passed, 19 assertions**, exit 0.
+- `PublicMarketplaceSeoTest`: **4 passed, 32 assertions**, exit 0.
+- Pint (`--dirty` plus targeted files): passed, exit 0.
+- `AuthenticationSecurityRegressionTest`: **2 passed**, exit 0 (CSRF/login hardening regression; port-3307 DB service was restarted from the preserved `F:` datadir after the harness restart).
+- `SupportTicketTenancyTest` + `InteractiveActionSmokeTest`: **14 passed, 72 assertions, exit 0**.
+- `ApiBookingFinancialIntegrityTest`: **2 passed, 16 assertions, exit 0**.
+- `TwoFactorChallengeHttpTest`: **3 passed, 12 assertions, exit 0**.
+- A broader regression batch (DirectServiceBooking, CustomerQuotesPortal, VendorQuoteRequest, EnterpriseExpansion, PaymentWebhookSecurity) was interrupted by that same harness restart; it is **not** recorded as passing or failing from that interrupted run. The full serial suite was rerun separately; see its final result below when recorded.
+
+### Not verified in this batch
+- GitHub Actions green status: latest run `44602696519` is `completed / failure` at `Run tests`; deploy job skipped. No new green claim; newer local fixes are not pushed.
+- Browser E2E, production deployment, Redis, gateway sandboxes, load tests, backup restore: unchanged blockers.
+
+### Former high-priority findings — now fixed and regression-tested
+- API booking creation trusting client-supplied rates/discount/`advance_paid`/status → **`Api\BookingController::store()` now uses `$validator->validated()` only**, derives prices from `Hall::base_rent`/`Package::per_head_price`, tenant-scopes the package, and forces `INQUIRY` / `NEW_INQUIRY`. `ApiBookingFinancialIntegrityTest`: **2 passed, 16 assertions, exit 0**.
+- Support tickets with `tenant_id = null` visible/mutable by vendor staff → **`SupportCenter` now tenant-scopes list and `scopedTicket()`**; platform staff keep the global queue. `SupportTicketTenancyTest` + `InteractiveActionSmokeTest`: **14 passed, 72 assertions, exit 0**.
+- Password reset Livewire actions read top-level request fields → **`ForgotPassword`/`ResetPassword` now pass validated component state** to `Password::sendResetLink()` / `Password::reset()`. `PasswordResetFlowTest`: **3 passed** (batched below).
+- Stripe webhook verification received a parsed array → **native raw-body `t`/`v1` HMAC-SHA256 verification** with 5-minute tolerance; no Stripe SDK needed for webhooks. `StripeWebhookSecurityTest`: **4 passed** (batched below).
+- Webhook idempotency check-then-insert → **transaction + `lockForUpdate()` + unique `(payment_method, transaction_reference)` DB constraint**. Replay returns `already_processed` with exactly one payment row.
+- 2FA challenge lockout → **`TwoFactorAuth` middleware now permits only the Livewire update that targets `TwoFactorAuthComponent::verifyTwoFactor`** (plus Livewire bookkeeping calls); every other component/action stays gated. HTTP-level regression `TwoFactorChallengeHttpTest`: **3 passed, 12 assertions, exit 0** — the challenge is solvable over real HTTP, other components stay gated, and secret-rotating methods are blocked.
+
+### Additional automated verification (this batch, all MySQL `127.0.0.1:3307 / eventhub_test`, serial)
+- `BookingConcurrencyTest`: **5 passed, 26 assertions, exit 0** (fixed date collision with seeded "today EVENING" booking by using `now()->addDays(180)`).
+- `StripeWebhookSecurityTest` + `PasswordResetFlowTest` + `PaymentWebhookSecurityTest`: **17 passed, 57 assertions, exit 0**.
+- Pint on all changed files: passed, exit 0 (repeatedly).
+- Full combined regression suite (serial rerun against `eventhub_test`, after the `BookingConcurrencyTest` fix and the first security batch): **392 passed, 1 skipped, 2279 assertions, 1318.91s, exit 0** (`F:\opencode-scratch-archive\full_suite.out` / `.exit`). The earlier serial run was 94 passed / 1 failed; that single failure was the now-fixed date collision. No SQLite fallback was used. **This run predates the post-review fixes below and is not the final suite result.**
+
+### Post-review audit fixes (independent diff review, 2026-11-20)
+A second, independent review of the uncommitted diff found two further HIGH-severity financial risks and several medium issues. Each was verified against source before changing code.
+
+- **HIGH — partial financial mutation on refund/settlement failure:** `debitWallet()` was changed earlier to throw on insufficient balance/wrong tenant, but `cancelServiceBooking()`, `recordServicePayment()` and `verifyServicePayment()` had no surrounding transaction. A failed debit could leave a refunded booking without a ledger row, or a credited wallet + `PAID` booking without the commission debit/payout. → All three methods are now wrapped in `DB::transaction()` so booking, payment row, wallet ledger and payout commit as one unit. New regressions in `ServiceSettlementIntegrityTest` force the debit to fail and assert a full rollback.
+- **HIGH — second installment for the same booking silently rejected:** JazzCash/EasyPaisa used the raw `booking_reference` as `pp_TxnRef`/`txnRef`; the new unique `(payment_method, transaction_reference)` index meant any legitimate later installment looked like a replay. → `PaymentService::generateGatewayReference()` now emits `<booking-reference>-<8 hex>` per attempt; `Api\PaymentController::webhook()` recovers the booking from that stable prefix. `Stripe\PaymentIntent::create()` also now receives an `idempotency_key` so retries cannot create duplicate intents. New regression in `PaymentWebhookSecurityTest` initiates two JazzCash installments and verifies distinct references plus successful webhook credit.
+- **MEDIUM — migration could fail on existing duplicate references:** `renameHistoricDuplicateReferences()` now deterministically renames historical duplicates (keeping `MIN(id)`) before creating the unique index; the stale "webhooks are unauthenticated" comment was corrected.
+- **MEDIUM — SMS endpoint/response validation:** `http://` endpoints are rejected unless `SMS_ALLOW_INSECURE=true` (documented in `.env.example`), malformed URLs fail closed, and an explicit gateway rejection in an HTTP 200 body is no longer recorded as `sms_sent_at`. New regressions in `NotificationDeliveryTest` cover both behaviors.
+
+**Targeted verification of these fixes (MySQL `127.0.0.1:3307 / eventhub_test`, serial):** `ServiceSettlementIntegrityTest` + `PaymentWebhookSecurityTest` + `NotificationDeliveryTest` → **24 passed, 84 assertions, exit 0** (`F:\opencode-scratch-archive\post_review_targeted.out`). Pint `--dirty --test` exit 0; `git diff --check` exit 0.
+
+### Second review pass — further fixes
+A follow-up static review of the new edits found one more HIGH issue and two medium issues, all verified against source:
+
+- **HIGH — Stripe idempotency key collapsed equal-value installments:** the first fix keyed only on `booking id + amount`, so two legitimate installments of the same amount would reuse the original PaymentIntent. → The key is now accepted from the caller (`idempotency_key`, validated in `Api\PaymentController::initiate()`), echoed back in the response for retry-safety, and falls back to a unique per-attempt key when not supplied. Distinct attempts can no longer collapse; clients that echo the key still get retry dedupe. **Execution of `PaymentIntent::create()` remains unverified** because the Stripe SDK is not installed and no sandbox credentials exist — this is a source-level fix only.
+- **MEDIUM — migration failed on empty-string references:** MySQL treats `''` as a normal value in a unique index (only `NULL` is exempt). → `renameHistoricDuplicateReferences()` now normalizes legacy `''` refs to `NULL` before indexing.
+- **LOW — `RG-SB-` branch in the webhook reference regex is currently unreachable** because gateway references are only generated from `Booking` (`BK-...`) references. Harmless; left in place for forward compatibility.
+
+**Migration data-cleanup proof (real MySQL, separate throwaway DB `eventhub_migration_probe`, never `eventhub_test`):** migrated + seeded, rolled back one step, injected 16 duplicate `BANK_TRANSFER` refs plus 2 rows with a 100-char ref and 2 rows with `''`, then reran the migration: **exit 0**. Verified afterwards: unique index present (2 columns), **0 remaining duplicate pairs**, **0 empty strings** (4 NULL refs), max ref length exactly **100**, 15 rows deterministically renamed with `-LEGACY-<uuid>`, and all **22 rows preserved**.
+
+**Final targeted verification after all source edits (MySQL `eventhub_test`, serial):** `ServiceSettlementIntegrityTest` + `PaymentWebhookSecurityTest` + `NotificationDeliveryTest` + `ApiBookingFinancialIntegrityTest` + `StripeWebhookSecurityTest` → **30 passed, 116 assertions, exit 0** (`F:\opencode-scratch-archive\post_review_targeted_final.out`). Pint `--dirty --test` exit 0; `git diff --check` exit 0. A definitive full-suite rerun against this final code is in progress.
+
+### Known medium limitation (not fixed in this batch)
+- **Gateway initiate/webhook can create two `payments` rows for one charge.** `Api\PaymentController::initiate()` inserts a row for every method; the signed webhook inserts another when the gateway confirms. Only the webhook credits `advance_paid`, so the booking balance is correct, but `PaymentService::getPaymentSummary()` sums both rows. This pre-existed for JazzCash/EasyPaisa and became reachable for Stripe when the enum was widened. Fixing it changes the payment API response contract and needs its own regression coverage, so it is documented rather than shipped unverified here.
+
+### Test-environment note
+- C: drive repeatedly reached 0 bytes, causing harness output-file failures and MariaDB `Disk full` errors. Disposable MariaDB data/tmp was moved (preserved, not deleted) to `F:\opencode-scratch-archive\mysql_test_data` and `...\mysql_tmp`; PHP temp was redirected to `F:\opencode-scratch-archive\php_tmp`. No production/user data touched. Test output is redirected to `F:` files.
+
+---
+
+## Manual browser QA sweep (2026-11-20, disposable MySQL)
+
+This was a **manual in-app browser sweep**, not a formal Playwright/browser-E2E suite and not production verification. It was run against a separate disposable QA database so the concurrently running `eventhub_test` regression suite could not be affected.
+
+### Setup / evidence
+- Dev server: `php artisan serve --host=127.0.0.1 --port=9000`, `APP_URL=http://127.0.0.1:9000`.
+- QA DB: `wedding_hall_browser_qa` on `127.0.0.1:3307`, user `eventhub`; created and granted from the local disposable MariaDB root account. Application `.env` was **not** modified; DB credentials were supplied to the server process via environment variables.
+- `php artisan migrate:fresh --seed --force` against the QA DB: **exit 0**. Seeded counts: **7 tenants, 3 halls, 11 users, 97 vendor categories**.
+- Demo credentials used: owner `owner@venuecloud.pk` / `password`; super admin `admin@eventhub.com` / `admin1235`; customer `customer@example.com` / `password`.
+
+### Pages rendered
+- Public sweep: `/`, `/venues`, `/marketplace`, `/vendors`, `/gallery`, `/packages`, `/menus`, `/services`, `/about`, `/contact`, `/faqs`, `/rsvp`, `/check-availability`, `/policies/terms`, `/policies/privacy`, `/policies/cancellation`, `/terms`, `/privacy`, `/refund`, `/cancellation`, `/sitemap.xml`, `/hall/the-royal-ballroom`, `/venues/the-royal-ballroom`, `/vendor/nawab-caterers`, `/vendor/nawab-caterers/book`, `/vendor/nawab-caterers/request-quote`, `/site/venue-cloud`, `/login`, `/customer/login`, `/register`, `/customer/register`, `/password/forgot`, `/password/reset`. Every checked page produced the expected page title/content with **zero console errors and zero failed application requests**.
+- A browser-tool glitch occurred once on `/venues/the-royal-ballroom`; an immediate fresh navigation/snapshot showed the correct `The Royal Ballroom — Riwaj Grand Pakistan` page with no console errors. This was a tool issue, not an application error.
+- Unauthenticated redirects from protected vendor `book` / `request-quote` pages to Sign In were **expected behavior**, not defects.
+
+### Controls exercised
+- Homepage: light/dark theme toggle verified via `localStorage.RiwajGrand_theme` changing `light -> dark`; navigation toggle; carousel slide buttons; chatbot open, suggested reply, typed message and bot response; cookie ACCEPT; `SEARCH HALLS` form. The search form navigated correctly to `/venues?city=Karachi&date=2026-11-21&shift=AFTERNOON&guests=500` and showed the correct empty-result state with no errors.
+- Public pages: `/venues` city card and calendar year/month buttons (including 2027 and Next month); `/vendors` category filters; `/gallery` tabs; `/menus` calculator/reserve buttons; `/check-availability` quick-date and AVAILABLE buttons; `/hall/the-royal-ballroom` wishlist/inquiry/menu/inquire controls (inquiry modal opened). No console errors.
+- Authenticated owner/vendor: login succeeded; 22 pages swept clean — `/dashboard`, `/vendor/dashboard`, `/vendor/bookings`, `/vendor/quotes`, `/vendor/finance`, `/vendor/services`, `/vendor/portfolio`, `/vendor/locations`, `/staff`, `/staff/attendance`, `/staff/payroll`, `/inventory`, `/expenses`, `/calendar`, `/notifications`, `/kitchen-kots`, `/seating-planner`, `/utility-fuel`, `/catering-packages`, `/hall/media`, `/account/support`, `/account/api-tokens`. Dashboard WEEK/MONTH/90 DAYS/ANNUAL ranges, `+ ADD NEW BOOKING`, `+ WALK-IN RESERVATION`, inventory tabs/modals, `MARK ALL AS READ`, and `+ RAISE TICKET` were clicked; modals/tabs behaved correctly with no console errors.
+- Super admin: login succeeded; `/admin`, `/admin/dashboard`, `/admin/categories`, `/dashboard`, `/vendor/dashboard`, `/notifications`, `/account/api-tokens` rendered clean. WEEK/MONTH/YEAR, `+ REGISTER & PROVISION HALL`, bookings view, and `+ NEW CATEGORY` were clicked without app errors.
+- Customer: login succeeded; `/customer/dashboard`, `/customer/bookings`, `/customer/events`, `/account/support`, `/rsvp` rendered clean. Booking tabs, DETAILS, `+ NEW EVENT`, and `FIND INVITE` were clicked without app errors.
+- Forms: contact inquiry submitted successfully with `✓ Inquiry Transmitted Successfully`; the QA DB `contact_inquiries` row was verified (`qa@example.com`, expected phone/message). Support ticket submitted successfully as `RG-T-C5CF33`; the QA DB row was verified (`subject='Browser QA support ticket'`, `tenant_id=NULL`, status `OPEN`) and the message body appeared in the ticket conversation. No console errors or failed application requests were observed for either submission.
+
+### Browser QA limitations / non-findings
+- Browser automation helper glitches (`UnknownVizError`, stale refs, and `browser.network.list failed. Expected JSON value`) were tool/parser issues and were worked around with fresh snapshots and DOM-level clicks; they are not application defects.
+- This sweep did **not** cover every one of the 114 registered routes for every role, a full responsive breakpoint matrix, real payment gateway sandbox flows, file uploads, or production infrastructure. Formal automated browser E2E remains unverified.
+
+---
+
+## Pre-push status recorded at commit time (2026-11-20 ~10:38 PKT)
+
+- The definitive full-suite rerun against the final code is **still running** against disposable MySQL `eventhub_test` on `127.0.0.1:3307`. No exit marker existed at the time of commit. Last observed state: **55 test classes reported `PASS`, 0 reported `FAIL`** (output `F:\opencode-scratch-archive\full_suite_after_review.out`). This is an interim observation, **not** a full-suite pass claim.
+- Last completed definitive evidence remains the targeted final batch: **30 passed, 116 assertions, exit 0** (`...\post_review_targeted_final.out`). The earlier full suite (**392 passed, 1 skipped, 2279 assertions, 1318.91s, exit 0**) predates the post-review source fixes and is explicitly not treated as the final result.
+- CI run `44602696519` (HEAD `3a9d126`): job `test` failed at step `Run tests` after 231s with exit code 2; deploy job was skipped. Full logs are GitHub-login-gated; the only visible annotations are a Node.js 20 deprecation warning and `Process completed with exit code 2.` A fixed-date booking test collision is a plausible contributor (CI started at 2026-11-20 00:51 PKT and that test previously used hardcoded `2026-11-20`), but the true root cause remains **unconfirmed** until a new CI run is available.
+- The user explicitly authorized committing and pushing **before** the full suite finished. No deployment, production DB change, live-server change, force push, or user-data touch was performed.
+
+---
+*Last updated: 2026-11-20 pre-push status snapshot; HEAD/origin before this batch `3a9d126`; full-suite rerun in progress; CI green and production verification still not proven.*

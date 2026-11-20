@@ -7,6 +7,7 @@ use App\Models\Hall;
 use App\Models\Payment;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -293,6 +294,48 @@ class PaymentWebhookSecurityTest extends TestCase
         $booking->refresh();
         $this->assertSame(0.0, (float) $booking->advance_paid);
         $this->assertDatabaseMissing('payments', ['booking_id' => $booking->id]);
+    }
+
+    public function test_local_gateway_installments_get_unique_references_and_webhook_recovers_booking(): void
+    {
+        $secret = 'real-merchant-secret';
+        config([
+            'services.jazzcash.merchant_id' => 'merchant-001',
+            'services.jazzcash.password' => $secret,
+            'services.jazzcash.return_url' => 'https://riwaj.example.test/payments/return',
+        ]);
+
+        [$hall, $tenant] = $this->venueAndHall();
+        $booking = $this->makeBooking($tenant, $hall, Booking::generateReference());
+
+        $service = app(PaymentService::class);
+        $first = $service->processPayment($booking->id, 50000, 'JAZZCASH');
+        $second = $service->processPayment($booking->id, 25000, 'JAZZCASH');
+
+        $this->assertTrue($first['success']);
+        $this->assertTrue($second['success']);
+
+        $firstRef = $first['post_data']['pp_TxnRef'];
+        $secondRef = $second['post_data']['pp_TxnRef'];
+
+        $this->assertNotSame($firstRef, $secondRef);
+        $this->assertStringStartsWith($booking->booking_reference.'-', $firstRef);
+        $this->assertStringStartsWith($booking->booking_reference.'-', $secondRef);
+
+        // The gateway echoes only pp_TxnRef; the controller must recover the
+        // booking from the encoded prefix and still credit the right booking.
+        $payload = $this->jazzcashPayload($booking->booking_reference, ['pp_TxnRef' => $firstRef]);
+        $payload['pp_SecureHash'] = $this->gatewayHash($payload, 'pp_SecureHash', 'sha256', $secret);
+
+        $this->postJson('/api/v1/webhooks/jazzcash', $payload)
+            ->assertOk()
+            ->assertJson(['status' => 'processed']);
+
+        $this->assertDatabaseHas('payments', [
+            'booking_id' => $booking->id,
+            'payment_method' => 'JAZZCASH',
+            'transaction_reference' => $firstRef,
+        ]);
     }
 
     public function test_unknown_gateway_stays_rejected(): void

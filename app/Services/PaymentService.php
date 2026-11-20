@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\RateLimiter;
 use Stripe\Exception\ApiErrorException;
 use Stripe\PaymentIntent;
 use Stripe\Stripe;
-use Stripe\Webhook;
 
 class PaymentService
 {
@@ -109,6 +108,13 @@ class PaymentService
 
         Stripe::setApiKey($stripeSecret);
 
+        $idempotencyKey = $data['idempotency_key'] ?? null;
+        if (! is_string($idempotencyKey) || $idempotencyKey === '' || strlen($idempotencyKey) > 255) {
+            // Unique per attempt. Returned to the caller so a genuine retry can
+            // send the same key and stay safe against duplicate charges.
+            $idempotencyKey = 'booking-intent-'.$booking->id.'-'.(int) ($amount * 100).'-'.bin2hex(random_bytes(6));
+        }
+
         try {
             $paymentIntent = PaymentIntent::create([
                 'amount' => (int) ($amount * 100),
@@ -119,6 +125,12 @@ class PaymentService
                     'tenant_id' => $booking->tenant_id,
                 ],
                 'description' => 'Riwaj Grand Booking: '.$booking->booking_reference,
+            ], [
+                // A caller-supplied key makes a retry of the SAME request
+                // return the same intent. When none is supplied, generate a
+                // unique attempt key: a booking+amount-only key would collapse
+                // two legitimate equal-value installments into one intent.
+                'idempotency_key' => $idempotencyKey,
             ]);
 
             return [
@@ -127,6 +139,7 @@ class PaymentService
                 'client_secret' => $paymentIntent->client_secret,
                 'amount' => $amount,
                 'currency' => 'PKR',
+                'idempotency_key' => $idempotencyKey,
                 'message' => 'Payment intent created. Complete payment via Stripe.',
             ];
         } catch (ApiErrorException $e) {
@@ -152,7 +165,10 @@ class PaymentService
 
         $pp_TxnType = 'MWALLET';
         $pp_TxnDateTime = now()->format('YmdHis');
-        $pp_TxnRef = $booking->booking_reference;
+        // One booking can legitimately have several installments. Reusing the
+        // booking reference as the gateway transaction reference would make
+        // every later installment look like a replay of the first one.
+        $pp_TxnRef = $this->generateGatewayReference($booking->booking_reference);
         $pp_Amount = (int) ($amount * 100);
         $pp_BillToPhone = $data['phone'] ?? $booking->customer_phone;
         $pp_Description = 'Riwaj Grand Booking: '.$booking->booking_reference;
@@ -201,7 +217,9 @@ class PaymentService
             ];
         }
 
-        $txnRef = $booking->booking_reference;
+        // A unique per-attempt reference keeps installments distinguishable
+        // while still encoding the booking reference for webhook lookup.
+        $txnRef = $this->generateGatewayReference($booking->booking_reference);
         $txnDateTime = now()->format('YmdHis');
         $amountInPaisa = (int) ($amount * 100);
         $msisdn = $data['phone'] ?? $booking->customer_phone;
@@ -228,6 +246,18 @@ class PaymentService
             'currency' => 'PKR',
             'message' => 'Redirect to EasyPaisa for payment.',
         ];
+    }
+
+    /**
+     * Build a stable, parseable reference for each payment attempt.
+     *
+     * Format: <booking-reference>-<8 hex chars>. Webhooks that only receive
+     * the gateway reference can recover the booking with the RG-SB-XXXXXX
+     * prefix, while each installment gets its own durable idempotency key.
+     */
+    protected function generateGatewayReference(string $bookingReference): string
+    {
+        return $bookingReference.'-'.strtoupper(bin2hex(random_bytes(4)));
     }
 
     protected function processBankTransfer(Booking $booking, float $amount, array $data): array
@@ -260,26 +290,50 @@ class PaymentService
         ];
     }
 
-    public function verifyWebhook(array $payload, string $signature, string $gateway): bool
+    public function verifyWebhook(array $payload, string $signature, string $gateway, ?string $rawBody = null): bool
     {
         switch ($gateway) {
             case 'stripe':
                 $secret = config('services.stripe.webhook_secret');
-                if (! $secret) {
+                // Stripe signs the exact bytes it sends. A parsed/re-encoded
+                // array can never be verified, so require the raw body.
+                if (! $secret || $rawBody === null || $rawBody === '') {
                     return false;
                 }
-                try {
-                    Stripe::setApiKey(config('services.stripe.secret'));
-                    $event = Webhook::constructEvent(
-                        $payload, $signature, $secret
-                    );
 
-                    return $event->type === 'payment_intent.succeeded';
-                } catch (\Throwable $e) {
-                    Log::error('Stripe webhook verification failed: '.$e->getMessage());
+                $parts = [];
+                foreach (explode(',', $signature) as $part) {
+                    [$key, $value] = array_pad(explode('=', trim($part), 2), 2, '');
+                    $parts[$key][] = $value;
+                }
+
+                $timestamp = (int) ($parts['t'][0] ?? 0);
+                $signatures = $parts['v1'] ?? [];
+
+                // Reject stale, missing or malformed signatures before doing
+                // any cryptographic work.
+                if ($timestamp <= 0 || abs(time() - $timestamp) > 300 || ! $signatures) {
+                    return false;
+                }
+
+                $expected = hash_hmac('sha256', $timestamp.'.'.$rawBody, $secret);
+                $matches = false;
+                foreach ($signatures as $candidate) {
+                    if (hash_equals($expected, $candidate)) {
+                        $matches = true;
+                        break;
+                    }
+                }
+
+                if (! $matches) {
+                    Log::error('Stripe webhook verification failed: invalid signature.');
 
                     return false;
                 }
+
+                $event = json_decode($rawBody, true);
+
+                return is_array($event) && ($event['type'] ?? null) === 'payment_intent.succeeded';
             case 'jazzcash':
                 return $this->verifyGatewayHash(
                     $payload,

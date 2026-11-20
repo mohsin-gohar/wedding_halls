@@ -8,7 +8,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('components.layouts.public', ['title' => 'Venue Marketplace â€” Riwaj Grand Pakistan'])]
+#[Layout('components.layouts.public', ['title' => 'Venue Marketplace — Riwaj Grand Pakistan'])]
 class PublicMarketplace extends Component
 {
     use WithPagination;
