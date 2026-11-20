@@ -112,7 +112,7 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
         $service = app(SubscriptionService::class);
 
         // Test Weekly Renewal
-        $payment = $service->renewSubscription($tenant, $plan, 'WEEKLY', 6000, 'BANK_TRANSFER', 'TX-101', true);
+        $payment = $service->renewSubscription($tenant, $plan, 'WEEKLY', 6000, 'CASH', 'TX-101', true);
         $tenant->refresh();
         $this->assertEquals('ACTIVE', $tenant->subscription_status);
         $this->assertEquals('WEEKLY', $tenant->billing_cycle);
@@ -120,7 +120,7 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
         $this->assertFalse($service->isLocked($tenant));
 
         // Test Yearly Renewal
-        $service->renewSubscription($tenant, $plan, 'YEARLY', 200000, 'BANK_TRANSFER', 'TX-102', true);
+        $service->renewSubscription($tenant, $plan, 'YEARLY', 200000, 'CASH', 'TX-102', true);
         $tenant->refresh();
         $this->assertEquals('ACTIVE', $tenant->subscription_status);
         $this->assertEquals('YEARLY', $tenant->billing_cycle);

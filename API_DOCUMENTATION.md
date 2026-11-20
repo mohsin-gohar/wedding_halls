@@ -120,7 +120,7 @@ POST /api/v1/service-bookings/{id}/payments
 { "success": true, "payment": { "id": "…", "status": "PENDING", "kind": "ADVANCE", "amount": "735000.00" },
   "message": "Payment submitted and awaiting staff verification." }
 ```
-Only `CASH` and `BANK_TRANSFER` (offline, physically verified) are accepted for new records. A customer submission stays **PENDING** and never changes a balance; only authorized staff may verify it. Amounts above the outstanding balance are rejected with **422**.
+Only `CASH` is accepted for new records; `BANK_TRANSFER`, `CHEQUE` and all online method labels are rejected with **422**. A customer submission stays **PENDING** and never changes a balance; only authorized staff may verify it. Amounts above the outstanding balance are also rejected with **422**.
 
 ### 3.4 Payments (hall engine) — cash only
 

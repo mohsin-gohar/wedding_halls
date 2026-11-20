@@ -141,7 +141,7 @@ class ComprehensiveDashboardCrudAuditTest extends TestCase
             'subscription_plan_id' => SubscriptionPlan::first()->id,
             'billing_cycle' => 'MONTHLY',
             'amount' => 45000.00,
-            'payment_method' => 'BANK_TRANSFER',
+            'payment_method' => 'CASH',
             'transaction_reference' => 'TEST-CLEARANCE-101',
             'status' => 'PENDING',
         ]);

@@ -201,7 +201,7 @@ class CashOnlyPaymentTest extends TestCase
         $this->assertEquals(15000.0, (float) $fresh->balance_due);
     }
 
-    public function test_online_method_labels_are_rejected_for_manual_service_payments(): void
+    public function test_all_non_cash_method_labels_are_rejected_for_manual_service_payments(): void
     {
         $hall = $this->hall();
         $customer = $this->customer();
@@ -215,7 +215,7 @@ class CashOnlyPaymentTest extends TestCase
             'status' => 'CONFIRMED',
         ]);
 
-        foreach (['JAZZCASH', 'EASYPAISA', 'CARD', 'STRIPE', 'WALLET'] as $method) {
+        foreach (['BANK_TRANSFER', 'CHEQUE', 'CREDIT_LEDGER', 'JAZZCASH', 'EASYPAISA', 'CARD', 'STRIPE', 'WALLET'] as $method) {
             $this->actingAs($customer)->postJson(
                 "/api/v1/service-bookings/{$serviceBooking->id}/payments",
                 ['amount' => 1000, 'method' => $method]

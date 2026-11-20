@@ -154,7 +154,6 @@
                         <label for="po-method" class="block text-[10px] font-semibold uppercase tracking-[0.08em] text-stone-600 dark:text-stone-400 mb-1.5">Payout method</label>
                         <select id="po-method" wire:model="payoutMethod" class="input-luxury w-full text-sm">
                             <option value="CASH">Cash handover (verified)</option>
-                            <option value="BANK_TRANSFER">Bank transfer (offline, verified)</option>
                         </select>
                     </div>
 

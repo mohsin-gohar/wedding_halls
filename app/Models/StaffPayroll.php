@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\GuardsCashOnlyMethod;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StaffPayroll extends Model
 {
-    use HasFactory, HasUuids;
+    use GuardsCashOnlyMethod, HasFactory, HasUuids;
 
     protected $table = 'staff_payrolls';
 
@@ -62,6 +63,11 @@ class StaffPayroll extends Model
         'paid_at' => 'datetime',
         'approved_at' => 'datetime',
     ];
+
+    protected function cashOnlyMethodField(): string
+    {
+        return 'payment_method';
+    }
 
     public function tenant(): BelongsTo
     {

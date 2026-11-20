@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
+use App\Support\CashOnlyPayments;
 use Carbon\Carbon;
 
 class SubscriptionService
@@ -92,11 +93,13 @@ class SubscriptionService
         SubscriptionPlan $plan,
         string $billingCycle = 'MONTHLY',
         ?float $amount = null,
-        string $paymentMethod = 'BANK_TRANSFER',
+        string $paymentMethod = CashOnlyPayments::CASH,
         ?string $transactionReference = null,
         bool $autoApprove = false,
         ?int $approvedByUserId = null
     ): SubscriptionPayment {
+        CashOnlyPayments::assert($paymentMethod, 'subscription payments');
+
         $billingCycle = strtoupper($billingCycle);
         if (! in_array($billingCycle, ['WEEKLY', 'MONTHLY', 'YEARLY'])) {
             $billingCycle = 'MONTHLY';

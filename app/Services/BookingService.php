@@ -7,6 +7,7 @@ use App\Exceptions\SlotAlreadyBookedException;
 use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\Payment;
+use App\Support\CashOnlyPayments;
 use App\Support\ShiftWindows;
 use Carbon\Carbon;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -244,7 +245,10 @@ class BookingService
                 'booking_id' => $booking->id,
                 'amount' => $amount,
                 'payment_type' => $paymentData['payment_type'] ?? 'SECOND_INSTALLMENT',
-                'payment_method' => $paymentData['payment_method'] ?? 'CASH',
+                'payment_method' => CashOnlyPayments::assert(
+                    $paymentData['payment_method'] ?? CashOnlyPayments::CASH,
+                    'milestone payments'
+                ),
                 'receipt_no' => Payment::generateReceiptNumber(),
                 'transaction_reference' => $paymentData['transaction_reference'] ?? null,
                 'received_by_user_id' => auth()->id(),

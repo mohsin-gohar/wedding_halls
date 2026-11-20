@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\GuardsCashOnlyMethod;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class VendorPayout extends Model
 {
-    use HasUuids;
+    use GuardsCashOnlyMethod, HasUuids;
 
     protected $table = 'vendor_payouts';
 
@@ -26,6 +27,11 @@ class VendorPayout extends Model
     ];
 
     public const STATUSES = ['REQUESTED', 'PROCESSING', 'PAID', 'REJECTED'];
+
+    protected function cashOnlyMethodField(): string
+    {
+        return 'method';
+    }
 
     public function tenant(): BelongsTo
     {

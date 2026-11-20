@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use App\Concerns\GuardsCashOnlyMethod;
+use App\Support\CashOnlyPayments;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ServicePayment extends Model
 {
-    use HasUuids;
+    use GuardsCashOnlyMethod, HasUuids;
 
     protected $table = 'service_payments';
 
@@ -24,8 +26,8 @@ class ServicePayment extends Model
         'paid_at' => 'datetime',
     ];
 
-    /** Methods accepted for NEW manual/offline records. */
-    public const METHODS = ['CASH', 'BANK_TRANSFER'];
+    /** Methods accepted for NEW manual records. Historical labels are preserved separately. */
+    public const METHODS = CashOnlyPayments::METHODS;
 
     /** Legacy labels retained only so historical records remain readable. */
     public const LEGACY_METHODS = ['JAZZCASH', 'EASYPAISA', 'CARD', 'WALLET', 'ONLINE', 'CREDIT_CARD'];
@@ -33,6 +35,11 @@ class ServicePayment extends Model
     public const STATUSES = ['PENDING', 'VERIFIED', 'REJECTED', 'REFUNDED'];
 
     public const KINDS = ['ADVANCE', 'INSTALLMENT', 'FULL', 'REFUND'];
+
+    protected function cashOnlyMethodField(): string
+    {
+        return 'method';
+    }
 
     public function booking(): BelongsTo
     {

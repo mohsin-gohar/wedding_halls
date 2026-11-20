@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\Expense;
 use App\Models\Hall;
+use App\Support\CashOnlyPayments;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -73,7 +74,7 @@ class ExpenseTracker extends Component
         'amount' => 'required|numeric|min:1',
         'expense_date' => 'required|date',
         'payee' => 'nullable|string|max:150',
-        'payment_method' => 'required|in:CASH,BANK_TRANSFER',
+        'payment_method' => 'required|in:CASH',
         'receipt_number' => 'nullable|string|max:80',
         'notes' => 'nullable|string',
     ];
@@ -167,6 +168,12 @@ class ExpenseTracker extends Component
         }
 
         $tenantId = Auth::user()->tenant_id;
+        $expense = Expense::where('tenant_id', $tenantId)->findOrFail($this->editingExpenseId);
+        $originalMethod = (string) ($expense->payment_method ?? '');
+        $allowedMethods = $originalMethod === CashOnlyPayments::CASH
+            ? CashOnlyPayments::METHODS
+            : [$originalMethod, CashOnlyPayments::CASH];
+
         $this->validate([
             'edit_hall_id' => ['nullable', Rule::exists('halls', 'id')->where('tenant_id', $tenantId)],
             'edit_category' => 'required|string',
@@ -174,24 +181,29 @@ class ExpenseTracker extends Component
             'edit_amount' => 'required|numeric|min:1',
             'edit_expense_date' => 'required|date',
             'edit_payee' => 'nullable|string|max:150',
-            'edit_payment_method' => 'required|in:CASH,BANK_TRANSFER',
+            'edit_payment_method' => ['required', Rule::in($allowedMethods)],
             'edit_receipt_number' => 'nullable|string|max:80',
             'edit_notes' => 'nullable|string',
         ]);
 
-        $expense = Expense::where('tenant_id', Auth::user()->tenant_id)->findOrFail($this->editingExpenseId);
-
-        $expense->update([
+        $update = [
             'hall_id' => ! empty($this->edit_hall_id) ? $this->edit_hall_id : null,
             'category' => $this->edit_category,
             'title' => $this->edit_title,
             'amount' => (float) $this->edit_amount,
             'expense_date' => $this->edit_expense_date,
             'payee' => $this->edit_payee,
-            'payment_method' => $this->edit_payment_method,
             'receipt_number' => $this->edit_receipt_number,
             'notes' => $this->edit_notes,
-        ]);
+        ];
+
+        // Preserve historical labels on unrelated edits; only an explicit
+        // conversion to cash may rewrite the method field.
+        if ($this->edit_payment_method === CashOnlyPayments::CASH && $originalMethod) {
+            $update['payment_method'] = CashOnlyPayments::CASH;
+        }
+
+        $expense->update($update);
 
         AuditLog::log(
             'EXPENSE_UPDATED',

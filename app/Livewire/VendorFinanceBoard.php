@@ -7,6 +7,7 @@ use App\Models\VendorPayout;
 use App\Models\VendorWallet;
 use App\Models\WalletTransaction;
 use App\Services\ServiceBookingService;
+use App\Support\CashOnlyPayments;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -30,7 +31,7 @@ class VendorFinanceBoard extends Component
 
     public string $payoutAmount = '';
 
-    public string $payoutMethod = 'BANK_TRANSFER';
+    public string $payoutMethod = CashOnlyPayments::CASH;
 
     public string $payoutAccountName = '';
 
@@ -116,7 +117,7 @@ class VendorFinanceBoard extends Component
     public function openPayoutModal(): void
     {
         $this->reset(['payoutAmount', 'payoutAccountName', 'payoutAccountDetails']);
-        $this->payoutMethod = 'BANK_TRANSFER';
+        $this->payoutMethod = CashOnlyPayments::CASH;
         $this->showPayoutModal = true;
         $this->errorMessage = null;
     }
@@ -140,7 +141,7 @@ class VendorFinanceBoard extends Component
 
         $this->validate([
             'payoutAmount' => ['required', 'numeric', 'min:1'],
-            'payoutMethod' => ['required', 'in:CASH,BANK_TRANSFER'],
+            'payoutMethod' => CashOnlyPayments::validationRule(),
             'payoutAccountName' => ['required', 'string', 'max:150'],
             'payoutAccountDetails' => ['nullable', 'string', 'max:255'],
         ]);

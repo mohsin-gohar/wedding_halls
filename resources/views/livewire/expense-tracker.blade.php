@@ -381,7 +381,6 @@
                         <label class="block text-xs uppercase font-bold text-[#171513] dark:text-[#C6A15B] mb-1">Payment Method</label>
                         <select wire:model="edit_payment_method" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 font-medium outline-none">
                             <option value="CASH">💵 Cash</option>
-                            <option value="BANK_TRANSFER">🏦 Bank Transfer (offline)</option>
                         </select>
                     </div>
 

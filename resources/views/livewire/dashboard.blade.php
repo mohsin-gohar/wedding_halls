@@ -2039,9 +2039,6 @@
                             </label>
                             <select wire:model="expensePaymentMethod" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/20 text-xs w-full">
                                 <option value="CASH">Cash from Drawer</option>
-                                <option value="BANK_TRANSFER">Bank Transfer</option>
-                                <option value="CHEQUE">Bank Cheque</option>
-                                <option value="CREDIT_LEDGER">Vendor Credit / Udhaar</option>
                             </select>
                         </div>
 

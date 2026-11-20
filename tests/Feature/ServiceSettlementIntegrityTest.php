@@ -28,7 +28,7 @@ class ServiceSettlementIntegrityTest extends TestCase
         $tenant->commission_rate = 50;
         $tenant->save();
 
-        app(ServiceBookingService::class)->recordServicePayment($booking, 1000, 'BANK_TRANSFER', 'FULL');
+        app(ServiceBookingService::class)->recordServicePayment($booking, 1000, 'CASH', 'FULL');
 
         $this->assertSame('900.00', (string) $wallet->fresh()->balance);
 
@@ -72,7 +72,7 @@ class ServiceSettlementIntegrityTest extends TestCase
         $payout = VendorPayout::create([
             'tenant_id' => $tenantA->id,
             'amount' => 100,
-            'method' => 'BANK_TRANSFER',
+            'method' => 'CASH',
             'status' => 'REQUESTED',
             'requested_at' => now(),
         ]);
@@ -100,7 +100,7 @@ class ServiceSettlementIntegrityTest extends TestCase
         $payout = VendorPayout::create([
             'tenant_id' => $tenant->id,
             'amount' => 100,
-            'method' => 'BANK_TRANSFER',
+            'method' => 'CASH',
             'status' => 'REQUESTED',
             'requested_at' => now(),
         ]);
@@ -149,7 +149,7 @@ class ServiceSettlementIntegrityTest extends TestCase
         $booking = $this->makeBooking($tenant, $customer, 1000, 2000, -1000);
 
         try {
-            app(ServiceBookingService::class)->recordServicePayment($booking, 1000, 'BANK_TRANSFER', 'FULL');
+            app(ServiceBookingService::class)->recordServicePayment($booking, 1000, 'CASH', 'FULL');
             $this->fail('A settlement whose commission debit fails must not partially commit.');
         } catch (ServiceBookingException $e) {
             $this->assertStringContainsString('insufficient balance', $e->getMessage());

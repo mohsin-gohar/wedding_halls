@@ -258,7 +258,7 @@ class PlatformHardeningTest extends TestCase
             'subscription_plan_id' => SubscriptionPlan::first()->id,
             'billing_cycle' => 'MONTHLY',
             'amount' => 15000,
-            'payment_method' => 'BANK_TRANSFER',
+            'payment_method' => 'CASH',
             'transaction_reference' => 'TEST-DOUBLE-APPROVAL',
             'status' => 'PENDING',
         ]);

@@ -344,7 +344,7 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
         Livewire::test(StaffPayroll::class)
             ->set('payingPayrollId', $payrollRecord->id)
             ->set('payDate', Carbon::today()->format('Y-m-d'))
-            ->set('payMethod', 'BANK_TRANSFER')
+            ->set('payMethod', 'CASH')
             ->call('markAsPaid');
 
         $payrollRecord->refresh();
@@ -358,7 +358,7 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
 
         Livewire::test(StaffPayroll::class)
             ->set('payingPayrollId', $payrollRecord->id)
-            ->set('payMethod', 'BANK_TRANSFER')
+            ->set('payMethod', 'CASH')
             ->set('payDate', Carbon::today()->format('Y-m-d'))
             ->call('markAsPaid');
 

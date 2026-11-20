@@ -189,7 +189,7 @@ class PayrollAttendanceIntegrationTest extends TestCase
             ->test(StaffPayroll::class)
             ->set('payingPayrollId', $payroll->id)
             ->set('payDate', Carbon::today()->format('Y-m-d'))
-            ->set('payMethod', 'BANK_TRANSFER')
+            ->set('payMethod', 'CASH')
             ->call('markAsPaid');
 
         $payroll->refresh();

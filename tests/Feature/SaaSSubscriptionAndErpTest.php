@@ -133,7 +133,7 @@ class SaaSSubscriptionAndErpTest extends TestCase
             'subscription_plan_id' => $plan->id,
             'billing_cycle' => 'YEARLY',
             'amount' => 650000.00,
-            'payment_method' => 'BANK_TRANSFER',
+            'payment_method' => 'CASH',
             'transaction_reference' => 'HBL-FT-SaaS-9901',
             'status' => 'PENDING',
         ]);

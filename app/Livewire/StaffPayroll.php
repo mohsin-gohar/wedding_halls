@@ -9,10 +9,12 @@ use App\Models\StaffAttendance;
 use App\Models\StaffLeave;
 use App\Models\StaffPayroll as PayrollModel;
 use App\Models\User;
+use App\Support\CashOnlyPayments;
 use Carbon\Carbon;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -57,7 +59,7 @@ class StaffPayroll extends Component
 
     public ?string $payingPayrollId = null;
 
-    public string $payMethod = 'BANK_TRANSFER';
+    public string $payMethod = CashOnlyPayments::CASH;
 
     public string $payDate = '';
 
@@ -339,16 +341,22 @@ class StaffPayroll extends Component
     public function updatePayroll()
     {
         $this->authorizePayrollManager();
+        $record = PayrollModel::where('tenant_id', Auth::user()->tenant_id)
+            ->with('user')->findOrFail($this->editingPayrollId);
+        $originalMethod = (string) ($record->payment_method ?? '');
+        $allowedMethods = $originalMethod === CashOnlyPayments::CASH
+            ? CashOnlyPayments::METHODS
+            : [$originalMethod, CashOnlyPayments::CASH];
+
         $this->validate([
             'editBasicSalary' => 'required|numeric|min:0',
             'editOvertimeHours' => 'required|numeric|min:0',
             'editOvertimeRate' => 'required|numeric|min:0',
             'editAllowances' => 'required|numeric|min:0',
             'editDeductions' => 'required|numeric|min:0',
+            'editPaymentMethod' => ['required', Rule::in($allowedMethods)],
         ]);
 
-        $record = PayrollModel::where('tenant_id', Auth::user()->tenant_id)
-            ->with('user')->findOrFail($this->editingPayrollId);
         if ($record->status === 'PAID') {
             $this->showEditModal = false;
             $this->errorMessage = 'A paid payroll cannot be edited. Use a separate adjustment entry.';
@@ -370,16 +378,23 @@ class StaffPayroll extends Component
             $this->editDeductions
         );
 
-        $record->update([
+        $update = [
             'basic_salary' => $this->editBasicSalary,
             'overtime_hours' => $this->editOvertimeHours,
             'overtime_rate' => $this->editOvertimeRate,
             'allowances' => $this->editAllowances,
             'deductions' => $this->editDeductions,
             'net_salary' => $net,
-            'payment_method' => $this->editPaymentMethod,
             'notes' => $this->editNotes,
-        ]);
+        ];
+
+        // Preserve historical labels on unrelated edits; only an explicit
+        // conversion to cash may rewrite the method field.
+        if ($this->editPaymentMethod === CashOnlyPayments::CASH && $originalMethod) {
+            $update['payment_method'] = CashOnlyPayments::CASH;
+        }
+
+        $record->update($update);
 
         if ($this->updateBaseSalaryOnProfile && $record->user) {
             $record->user->update(['base_salary' => $this->editBasicSalary]);
@@ -404,7 +419,7 @@ class StaffPayroll extends Component
             return;
         }
         $this->payingPayrollId = $record->id;
-        $this->payMethod = 'BANK_TRANSFER';
+        $this->payMethod = CashOnlyPayments::CASH;
         $this->payDate = Carbon::today()->format('Y-m-d');
         $this->showPayModal = true;
     }
@@ -415,7 +430,7 @@ class StaffPayroll extends Component
         $record = PayrollModel::where('tenant_id', Auth::user()->tenant_id)->with('user')->findOrFail($this->payingPayrollId);
         $this->validate([
             'payDate' => 'required|date',
-            'payMethod' => 'required|in:CASH,BANK_TRANSFER,CHEQUE',
+            'payMethod' => CashOnlyPayments::validationRule(),
         ]);
         $tenantId = Auth::user()->tenant_id;
         $payDate = $this->payDate;

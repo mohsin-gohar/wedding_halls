@@ -309,7 +309,7 @@ class CrossTenantIsolationRegressionTest extends TestCase
         $this->actingAs($this->ownerFor($tenantB))
             ->postJson('/api/v1/service-bookings/'.$serviceBooking->id.'/payments', [
                 'amount' => 50000,
-                'method' => 'BANK_TRANSFER',
+                'method' => 'CASH',
                 'kind' => 'ADVANCE',
             ])
             ->assertStatus(403);
@@ -412,7 +412,7 @@ class CrossTenantIsolationRegressionTest extends TestCase
             'service_booking_id' => $serviceBooking->id,
             'customer_id' => $serviceBooking->customer_id,
             'amount' => 50000,
-            'method' => 'BANK_TRANSFER',
+            'method' => 'CASH',
             'status' => 'PENDING',
             'kind' => 'ADVANCE',
             'proof_path' => 'service-proofs/isolation-proof.png',

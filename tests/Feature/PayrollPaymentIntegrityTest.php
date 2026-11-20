@@ -87,7 +87,7 @@ class PayrollPaymentIntegrityTest extends TestCase
         $component
             ->set('payingPayrollId', $payroll->id)
             ->set('payDate', Carbon::today()->toDateString())
-            ->set('payMethod', 'BANK_TRANSFER')
+            ->set('payMethod', 'CASH')
             ->call('markAsPaid');
 
         $component

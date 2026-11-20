@@ -15,6 +15,7 @@ use App\Models\VendorPayout;
 use App\Models\VendorService;
 use App\Models\VendorWallet;
 use App\Models\WalletTransaction;
+use App\Support\CashOnlyPayments;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -449,7 +450,7 @@ class ServiceBookingService
                     'service_booking_id' => $booking->id,
                     'customer_id' => $booking->customer_id,
                     'amount' => (float) $booking->paid_amount,
-                    'method' => 'REFUND',
+                    'method' => CashOnlyPayments::CASH,
                     'status' => 'REFUNDED',
                     'kind' => 'REFUND',
                     'notes' => $reason ?? 'Service booking cancelled before completion.',
@@ -475,6 +476,8 @@ class ServiceBookingService
      */
     public function recordServicePayment(ServiceBooking $booking, float $amount, string $method, string $kind = 'INSTALLMENT'): ServicePayment
     {
+        CashOnlyPayments::assert($method, 'service payments');
+
         return DB::transaction(function () use ($booking, $amount, $method, $kind): ServicePayment {
             $payment = ServicePayment::create([
                 'tenant_id' => $booking->tenant_id,
@@ -623,8 +626,10 @@ class ServiceBookingService
     // Payouts
     // ─────────────────────────────────────────────────────────────
 
-    public function requestVendorPayout(string $tenantId, int $vendorUserId, float $amount, string $method = 'WALLET', ?array $accountDetails = null): VendorPayout
+    public function requestVendorPayout(string $tenantId, int $vendorUserId, float $amount, string $method = CashOnlyPayments::CASH, ?array $accountDetails = null): VendorPayout
     {
+        CashOnlyPayments::assert($method, 'payouts');
+
         $payout = VendorPayout::create([
             'tenant_id' => $tenantId,
             'amount' => $amount,

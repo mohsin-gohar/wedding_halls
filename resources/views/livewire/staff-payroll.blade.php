@@ -321,8 +321,6 @@
                             <label class="block text-[10px] font-mono uppercase text-[#C6A15B] mb-1 font-semibold">Payment Mode</label>
                             <select wire:model="editPaymentMethod" class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
                                 <option value="CASH">Cash Disbursement</option>
-                                <option value="BANK_TRANSFER">Bank Direct Deposit</option>
-                                <option value="CHEQUE">Company Cheque</option>
                             </select>
                         </div>
                     </div>
@@ -401,9 +399,7 @@
                     <div>
                         <label class="block text-[10px] font-mono uppercase text-[#C6A15B] mb-1 font-semibold">Payment Method *</label>
                         <select wire:model="payMethod" class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B]">
-                            <option value="BANK_TRANSFER">Bank Direct Deposit / Raast</option>
                             <option value="CASH">Cash Disbursement</option>
-                            <option value="CHEQUE">Bank Cheque</option>
                         </select>
                     </div>
 

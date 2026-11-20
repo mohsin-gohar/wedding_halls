@@ -9,8 +9,10 @@ online-gateway design; they are snapshots and are superseded by this document.
 Online payment (Stripe, JazzCash, EasyPaisa, credit/debit card, POS, wallet
 checkout, gateway initiation, webhooks, callbacks and automatic verification)
 is **removed**. Real money is never accepted, authorized or verified by code
-in this repository. All value is handled as physical cash (or an offline bank
-transfer confirmed by a human), recorded by authorized staff.
+in this repository. Every NEW financial record — hall payments, service
+payments, subscriptions, expenses, payroll disbursements and vendor payouts —
+must use `CASH`. `BANK_TRANSFER`, `CHEQUE`, `CREDIT_LEDGER` and all online
+method labels are rejected at validation, service and model boundaries.
 
 ## What is supported
 
@@ -24,7 +26,8 @@ transfer confirmed by a human), recorded by authorized staff.
 | Income / expense reports | Aggregate verified cash records. Refunds are subtracted, never counted as inflow. |
 | Audit history | Every record/refund writes an append-only audit entry. Historical rows are never deleted. |
 | Service (vendor) payments | Customers may **submit** an unverified manual record; a staff member verifies it before anything changes. |
-| SaaS subscriptions | Manual/offline records. Only a Super Admin activates, renews or suspends a tenant. |
+| SaaS subscriptions | Manual cash records only. Only a Super Admin activates, renews or suspends a tenant. |
+| Expenses, payroll, vendor payouts | Recorded as cash handovers only; non-cash methods are not offered in the UI or accepted by Livewire/services. |
 
 ## Trust boundary (non-negotiable)
 
@@ -59,7 +62,8 @@ transfer confirmed by a human), recorded by authorized staff.
 
 - Historical `payments` / `service_payments` rows and legacy method labels
   (`STRIPE`, `JAZZCASH`, `EASYPAISA`, `CREDIT_CARD`, `ONLINE`, `WALLET`, …).
-  No data migration rewrites or deletes them.
+  No data migration rewrites or deletes them. Reports may still display those
+  labels for old records; they are never accepted for new ones.
 - `webhooks/*` CSRF exemption, WhatsApp webhook, SMS "gateway" and internal
   wallet/ledger code — these are unrelated to online customer payments.
 - Subscription payment records (manual, Super-Admin-verified).

@@ -14,6 +14,7 @@ use App\Models\Payment;
 use App\Models\StaffAttendance;
 use App\Models\User;
 use App\Models\UtilityLog;
+use App\Support\CashOnlyPayments;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -233,7 +234,7 @@ class Dashboard extends Component
             'expenseTitle' => 'required|string|max:160',
             'expenseAmount' => 'required|numeric|min:1',
             'expenseDate' => 'required|date',
-            'expensePaymentMethod' => 'required|in:CASH,BANK_TRANSFER,CHEQUE,CREDIT_LEDGER',
+            'expensePaymentMethod' => CashOnlyPayments::validationRule(),
             'expenseHallId' => ['nullable', Rule::exists('halls', 'id')->where('tenant_id', $tenantId)],
         ]);
 

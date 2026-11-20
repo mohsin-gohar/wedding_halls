@@ -130,7 +130,7 @@ class AnalyticsDataSeeder extends Seeder
                     'received_by_user_id' => $frontDeskUser->id,
                     'receipt_no' => 'RCT-'.date('Ym').'-'.rand(1000, 9999),
                     'amount' => $advancePaid,
-                    'payment_method' => ($idx % 2 === 0) ? 'CASH' : 'BANK_TRANSFER',
+                    'payment_method' => 'CASH',
                     'payment_type' => 'TOKEN_ADVANCE',
                     'transaction_reference' => 'TXN-MB-'.rand(100000, 999999),
                     'notes' => 'Token advance collected at front desk counter.',

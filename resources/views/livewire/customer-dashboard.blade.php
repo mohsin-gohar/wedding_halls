@@ -420,7 +420,7 @@
                 </div>
                 <div class="mt-4 pt-3 border-t border-stone-100 dark:border-white/10 flex items-center justify-between text-xs text-stone-500 dark:text-stone-400 font-sans">
                     <span>Clearance:</span>
-                    <span class="text-stone-700 dark:text-stone-300 font-bold">Bank Transfer / Cash</span>
+                    <span class="text-stone-700 dark:text-stone-300 font-bold">Cash</span>
                 </div>
             </div>
 

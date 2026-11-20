@@ -32,7 +32,7 @@ class VendorPayoutProcessingTest extends TestCase
         $payout = VendorPayout::create([
             'tenant_id' => $tenant->id,
             'amount' => 250,
-            'method' => 'BANK_TRANSFER',
+            'method' => 'CASH',
             'status' => 'REQUESTED',
             'requested_at' => now(),
         ]);
@@ -60,7 +60,7 @@ class VendorPayoutProcessingTest extends TestCase
         $payout = VendorPayout::create([
             'tenant_id' => $tenant->id,
             'amount' => 100,
-            'method' => 'BANK_TRANSFER',
+            'method' => 'CASH',
             'status' => 'PAID',
             'requested_at' => now(),
             'processed_at' => now(),

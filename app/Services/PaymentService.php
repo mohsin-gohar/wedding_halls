@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\User;
+use App\Support\CashOnlyPayments;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\DB;
 class PaymentService
 {
     /** Only physical cash may be recorded as a new booking payment. */
-    public const NEW_PAYMENT_METHODS = ['CASH'];
+    public const NEW_PAYMENT_METHODS = CashOnlyPayments::METHODS;
 
     public const PAYMENT_TYPES = [
         'TOKEN_ADVANCE',
@@ -46,9 +47,7 @@ class PaymentService
     ): Payment {
         $paymentType = $paymentType === 'ADVANCE' ? 'TOKEN_ADVANCE' : $paymentType;
 
-        if (! in_array($paymentMethod, self::NEW_PAYMENT_METHODS, true)) {
-            throw new \InvalidArgumentException('Only manual cash payments may be recorded.');
-        }
+        CashOnlyPayments::assert($paymentMethod, 'booking payments');
 
         if (! in_array($paymentType, self::PAYMENT_TYPES, true)) {
             throw new \InvalidArgumentException('Unsupported payment type.');

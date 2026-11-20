@@ -691,11 +691,11 @@
                         {{ $pendingSubscriptionPaymentsCount }} Payments
                     </div>
                     <p class="text-xs text-stone-500 dark:text-stone-400 font-sans">
-                        Manual bank transfer receipts submitted by hall owners for tier activation.
+                        Manual cash receipts submitted by hall owners for tier activation.
                     </p>
                     @if($pendingSubscriptionPaymentsCount > 0)
                         <button wire:click="setTab('payments')" class="text-xs text-[#8F7239] dark:text-[#C6A15B] font-mono font-bold hover:underline block pt-1">
-                            Verify Bank Transfers →
+                            Verify Cash Receipts →
                         </button>
                     @endif
                 </div>
@@ -1252,12 +1252,12 @@
                     <div class="inline-flex items-center gap-2 text-[10px] font-sans font-bold uppercase tracking-widest text-[#8F7239] dark:text-[#C6A15B]">
                         <span>Financial Liquidity</span>
                         <span>•</span>
-                        <span>Direct Bank Settlements</span>
+                        <span>Direct Cash Settlements</span>
                     </div>
                     <h3 class="font-serif-luxury text-2xl sm:text-3xl text-[#171513] dark:text-white font-normal mt-1">
-                        Offline Bank Transfer Approvals
+                        Cash Receipt Approvals
                     </h3>
-                    <p class="text-xs text-stone-500 dark:text-stone-400 mt-1">Verify vendor direct deposits and extend SaaS subscription periods.</p>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 mt-1">Verify vendor cash handovers and extend SaaS subscription periods.</p>
                 </div>
             </div>
 
@@ -1269,7 +1269,7 @@
                             <th>Vendor Tenant</th>
                             <th>Plan &amp; Cycle</th>
                             <th>Amount (PKR)</th>
-                            <th>Bank Reference</th>
+                            <th>Cash Receipt Reference</th>
                             <th>Status</th>
                             <th class="text-right">Verification</th>
                         </tr>
@@ -1299,7 +1299,7 @@
                                 </td>
                                 <td>
                                     <span class="text-stone-600 dark:text-stone-300 font-mono text-xs select-all bg-stone-100 dark:bg-white/5 px-2 py-1 rounded border border-stone-200 dark:border-white/10">
-                                        {{ $sp->transaction_reference ?: 'Manual Deposit' }}
+                                        {{ $sp->transaction_reference ?: 'Cash Counter' }}
                                     </span>
                                 </td>
                                 <td>

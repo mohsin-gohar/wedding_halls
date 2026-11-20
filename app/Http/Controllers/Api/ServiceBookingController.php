@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\ServiceBooking;
 use App\Models\ServicePayment;
+use App\Support\CashOnlyPayments;
 use Illuminate\Http\Request;
 
 /**
@@ -77,7 +78,7 @@ class ServiceBookingController extends ApiController
 
         $validated = $request->validate([
             'amount' => ['required', 'numeric', 'min:1'],
-            'method' => ['required', 'in:CASH,BANK_TRANSFER'],
+            'method' => CashOnlyPayments::validationRule(),
             'kind' => ['nullable', 'in:ADVANCE,INSTALLMENT,FULL'],
             'reference' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:1000'],

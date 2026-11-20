@@ -7,6 +7,7 @@ use App\Models\Expense;
 use App\Models\InventoryItem;
 use App\Models\InventoryLog;
 use App\Models\PurchaseOrder;
+use App\Support\CashOnlyPayments;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -315,7 +316,7 @@ class InventoryTracker extends Component
             'amount' => $po->total_amount,
             'expense_date' => Carbon::today()->format('Y-m-d'),
             'payee' => $po->supplier_name,
-            'payment_method' => 'BANK_TRANSFER',
+            'payment_method' => CashOnlyPayments::CASH,
             'receipt_number' => $po->po_number,
             'notes' => $po->notes ?: 'Inventory procurement purchase order cleared.',
             'created_by_user_id' => Auth::id(),
