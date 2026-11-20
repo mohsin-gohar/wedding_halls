@@ -5,10 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    @php
+        $currentRoute = request()->route();
+        $canonicalUrl = url()->current();
+
+        // Use the named route with only its route parameters so query-string
+        // filters never produce duplicate canonical/OG URLs.
+        if ($currentRoute && $currentRoute->getName() && ! str_starts_with($currentRoute->getName(), 'livewire.')) {
+            try {
+                $canonicalUrl = route($currentRoute->getName(), $currentRoute->parameters());
+            } catch (\Throwable $e) {
+                $canonicalUrl = url()->current();
+            }
+        }
+    @endphp
+
     <title>{{ $title ?? 'Riwaj Grand — Riwayat bhi, Jiddat bhi | Luxury Wedding Banquets & Marquees' }}</title>
     <meta name="description" content="{{ $metaDescription ?? 'Discover and reserve Pakistan\'s premier luxury wedding ballrooms, royal marquees, and banquet complexes. Concurrency-safe shift reservations, authentic Mughlai catering, and transparent pricing in PKR.' }}">
     <meta name="theme-color" content="#171513">
-    <link rel="canonical" href="{{ url()->current() }}">
+    <link rel="canonical" href="{{ $canonicalUrl }}">
     <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
 
     <!-- OpenGraph & Social Sharing Meta -->
@@ -16,7 +31,7 @@
     <meta property="og:site_name" content="Riwaj Grand">
     <meta property="og:title" content="{{ $title ?? 'Riwaj Grand — Riwayat bhi, Jiddat bhi' }}">
     <meta property="og:description" content="{{ $metaDescription ?? 'Discover and reserve Pakistan\'s premier luxury wedding ballrooms, royal marquees, and banquet complexes with guaranteed single-host shift exclusivity.' }}">
-    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:url" content="{{ $canonicalUrl }}">
     <meta property="og:image" content="{{ $ogImage ?? asset('images/riwaj-grand-logo.png') }}">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ $title ?? 'Riwaj Grand — Riwayat bhi, Jiddat bhi' }}">

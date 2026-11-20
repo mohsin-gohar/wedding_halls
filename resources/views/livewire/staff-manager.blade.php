@@ -260,7 +260,7 @@
 
                     <div>
                         <label class="block text-xs uppercase font-bold text-[#171513] dark:text-[#C6A15B] mb-1">Login Password *</label>
-                        <input type="password" wire:model="password" placeholder="At least 6 characters" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 outline-none font-sans">
+                        <input type="password" wire:model="password" minlength="8" placeholder="At least 8 characters" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 outline-none font-sans">
                         @error('password') <span class="text-[#171513] dark:text-[#F8F5EF] text-[11px] mt-0.5 block">{{ $message }}</span> @enderror
                     </div>
 
@@ -329,7 +329,7 @@
 
                     <div>
                         <label class="block text-xs uppercase font-bold text-[#171513] dark:text-[#C6A15B] mb-1">Reset Password (Leave blank to keep unchanged)</label>
-                        <input type="password" wire:model="editPassword" placeholder="Enter new password (optional)" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 outline-none font-sans">
+                        <input type="password" wire:model="editPassword" minlength="8" placeholder="Enter new password (minimum 8 characters)" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 outline-none font-sans">
                         @error('editPassword') <span class="text-[#171513] dark:text-[#F8F5EF] text-[11px] mt-0.5 block">{{ $message }}</span> @enderror
                     </div>
 

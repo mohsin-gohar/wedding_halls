@@ -139,12 +139,12 @@ class PermissionMatrix
         'ROLE_MANAGER' => [
             'dashboard.view', 'business.view',
             'bookings.view', 'bookings.update', 'bookings.cancel', 'bookings.manage',
-            'service-bookings.view', 'service-bookings.update',
+            'service-bookings.view', 'service-bookings.update', 'service-bookings.confirm', 'service-bookings.complete', 'service-bookings.cancel',
             'rfq.view', 'rfq.bid', 'rfq.award',
             'quotations.view', 'quotations.create', 'quotations.revise',
             'staff.view', 'staff.attendance',
             'kitchen.view', 'inventory.view', 'packages.view', 'services.view',
-            'availability.view', 'documents.view', 'locations.view',
+            'availability.view', 'documents.view', 'locations.view', 'locations.manage',
             'events.view', 'events-planning.view',
             'leads.view', 'messages.view', 'messages.send',
             'reviews.view', 'reports.view', 'customers.view',
@@ -205,12 +205,12 @@ class PermissionMatrix
         'ROLE_VENDOR_MANAGER' => [
             'dashboard.view', 'business.view',
             'bookings.view', 'bookings.update', 'bookings.cancel', 'bookings.manage',
-            'service-bookings.view', 'service-bookings.update',
+            'service-bookings.view', 'service-bookings.update', 'service-bookings.confirm', 'service-bookings.complete', 'service-bookings.cancel',
             'rfq.view', 'rfq.bid', 'rfq.award',
             'quotations.view', 'quotations.create', 'quotations.revise',
             'staff.view', 'staff.attendance',
             'kitchen.view', 'inventory.view', 'packages.view', 'services.view',
-            'availability.view', 'documents.view', 'locations.view',
+            'availability.view', 'documents.view', 'locations.view', 'locations.manage',
             'events.view', 'events-planning.view',
             'leads.view', 'messages.view', 'messages.send',
             'reviews.view', 'reports.view', 'customers.view',
@@ -230,6 +230,7 @@ class PermissionMatrix
             'dashboard.view',
             'bookings.view', 'bookings.create', 'bookings.update', 'bookings.cancel', 'bookings.manage',
             'service-bookings.view', 'service-bookings.create', 'service-bookings.update',
+            'service-bookings.confirm', 'service-bookings.complete', 'service-bookings.cancel',
             'rfq.view', 'rfq.create', 'rfq.bid',
             'quotations.view', 'quotations.create', 'quotations.revise',
             'customers.view', 'contracts.view', 'events.view',
@@ -334,6 +335,32 @@ class PermissionMatrix
     public static function allRoles(): array
     {
         return array_keys(self::ROLE_GROUPS);
+    }
+
+    /**
+     * Single server-side permission gate shared by routes, navigation and
+     * Livewire actions. The role matrix is checked first so legacy string-role
+     * accounts stay covered even before Spatie roles/permissions are seeded.
+     */
+    public static function userCan(mixed $user, string $permission): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        $role = self::canonicalRole($user->role ?? null);
+
+        if ($role !== null && in_array($permission, self::permissionsForRole($role), true)) {
+            return true;
+        }
+
+        try {
+            return (bool) $user->hasPermissionTo($permission);
+        } catch (\Throwable) {
+            // Permissions may not be seeded yet in a fresh environment; the
+            // matrix decision above remains authoritative in that case.
+            return false;
+        }
     }
 
     /**

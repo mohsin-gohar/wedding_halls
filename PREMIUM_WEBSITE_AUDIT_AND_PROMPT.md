@@ -1,3 +1,6 @@
+﻿> [!WARNING]
+> **Historical / superseded document.** This file predates the current cash-only audit and verification pass. Do not rely on its claims about payment methods, test counts, browser proof, or production readiness. See `DOCS_STATUS.md` and the authoritative final reports.
+
 # EventHub — Premium $20,000 Website: Full Audit, Bug Report & Master Build Prompt
 
 > **Project:** Wedding_hall (EventHub) — Laravel 11 + Livewire 3 + Tailwind v4 + Alpine.js

@@ -60,7 +60,10 @@ class PublicMarketplaceSeoTest extends TestCase
 
     public function test_robots_allows_public_vendor_profiles_but_blocks_vendor_erp(): void
     {
-        $robots = (string) file_get_contents(public_path('robots.txt'));
+        // robots.txt is a dynamic route so the sitemap URL follows APP_URL.
+        $robots = $this->get(route('robots'))
+            ->assertOk()
+            ->getContent();
 
         $this->assertStringNotContainsString('Disallow: /vendor '.PHP_EOL, $robots);
         $this->assertStringNotContainsString("Disallow: /vendor\n", $robots);

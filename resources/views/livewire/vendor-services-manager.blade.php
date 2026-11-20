@@ -14,9 +14,11 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-            <button wire:click="openCreateModal" class="btn-gold !h-10 !px-5 text-xs font-bold uppercase font-mono shadow-md">
-                + Add Service
-            </button>
+            @if($this->hasPortalPermission('services.manage'))
+                <button wire:click="openCreateModal" class="btn-gold !h-10 !px-5 text-xs font-bold uppercase font-mono shadow-md">
+                    + Add Service
+                </button>
+            @endif
         </div>
     </div>
 
@@ -108,12 +110,14 @@
                             @if($service['vendorCategory']) · {{ $service['vendorCategory']['name'] }} @endif
                         </p>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <button wire:click="toggleService({{ $service['id'] }})" class="btn-outline-gold !h-9 !px-4 text-[10px] font-mono uppercase">
-                            {{ $service['is_active'] ? 'Deactivate' : 'Activate' }}
-                        </button>
-                        <button wire:click="openEditModal({{ $service['id'] }})" class="btn-outline-gold !h-9 !px-4 text-[10px] font-mono uppercase">Edit</button>
-                    </div>
+                    @if($this->hasPortalPermission('services.manage'))
+                        <div class="flex items-center gap-2">
+                            <button wire:click="toggleService({{ $service['id'] }})" class="btn-outline-gold !h-9 !px-4 text-[10px] font-mono uppercase">
+                                {{ $service['is_active'] ? 'Deactivate' : 'Activate' }}
+                            </button>
+                            <button wire:click="openEditModal({{ $service['id'] }})" class="btn-outline-gold !h-9 !px-4 text-[10px] font-mono uppercase">Edit</button>
+                        </div>
+                    @endif
                 </div>
             @empty
                 <div class="px-5 py-10 text-center">

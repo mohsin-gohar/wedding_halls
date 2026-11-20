@@ -60,6 +60,8 @@ class FreeLaunchAndInstantLiveApprovalTest extends TestCase
             'subscription_status' => 'TRIAL',
             'verification_status' => 'PENDING',
             'is_active' => true,
+            // Public discovery is opt-in; this vendor opted in at registration.
+            'marketplace_visible' => true,
         ]);
 
         $venue = Venue::create([

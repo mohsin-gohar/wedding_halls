@@ -11,6 +11,34 @@ class KitchenKot extends Model
 {
     use HasFactory, HasUuids;
 
+    public const STATUS_PENDING = 'PENDING';
+
+    public const STATUS_PREPARING = 'PREPARING';
+
+    public const STATUS_READY = 'READY';
+
+    public const STATUS_SERVED = 'SERVED';
+
+    public const STATUS_CANCELLED = 'CANCELLED';
+
+    /** Server-side source of truth for the preparation pipeline. */
+    public const STATUSES = [
+        self::STATUS_PENDING,
+        self::STATUS_PREPARING,
+        self::STATUS_READY,
+        self::STATUS_SERVED,
+        self::STATUS_CANCELLED,
+    ];
+
+    /** Only forward transitions are allowed; terminal states are immutable. */
+    public const ALLOWED_TRANSITIONS = [
+        self::STATUS_PENDING => [self::STATUS_PREPARING, self::STATUS_CANCELLED],
+        self::STATUS_PREPARING => [self::STATUS_READY, self::STATUS_CANCELLED],
+        self::STATUS_READY => [self::STATUS_SERVED],
+        self::STATUS_SERVED => [],
+        self::STATUS_CANCELLED => [],
+    ];
+
     protected $fillable = [
         'tenant_id',
         'booking_id',
@@ -51,5 +79,15 @@ class KitchenKot extends Model
         $count = self::whereDate('created_at', today())->count() + 1;
 
         return sprintf('%s-%03d', $prefix, $count);
+    }
+
+    public function isTerminalStatus(): bool
+    {
+        return in_array($this->preparation_status, [self::STATUS_SERVED, self::STATUS_CANCELLED], true);
+    }
+
+    public function canTransitionTo(string $status): bool
+    {
+        return in_array($status, self::ALLOWED_TRANSITIONS[$this->preparation_status] ?? [], true);
     }
 }

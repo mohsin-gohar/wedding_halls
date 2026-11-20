@@ -13,6 +13,8 @@ class Hall extends Model
 {
     use HasFactory, HasUuids;
 
+    public const LISTING_STATUS_LISTED = 'LISTED';
+
     /**
      * Override route key name so that the Hall is resolved by its slug
      * (e.g. /venues/executive-crystal-lawn) instead of the raw UUID.
@@ -20,6 +22,25 @@ class Hall extends Model
     public function getRouteKeyName(): string
     {
         return 'slug';
+    }
+
+    /**
+     * Every public surface must use this scope: active hall, actively listed,
+     * active venue, and an active approved tenant. This is the single source
+     * of truth for "may a guest see/book this hall?".
+     */
+    public function scopePublicVisible($query)
+    {
+        return $query
+            ->where('halls.is_active', true)
+            ->where('halls.listing_status', self::LISTING_STATUS_LISTED)
+            ->whereHas('venue', function ($venue): void {
+                $venue->where('venues.is_active', true)
+                    ->whereColumn('venues.tenant_id', 'halls.tenant_id');
+            })
+            ->whereHas('tenant', function ($tenant): void {
+                $tenant->publicVisible();
+            });
     }
 
     protected static function booted(): void

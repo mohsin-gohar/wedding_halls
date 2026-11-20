@@ -1,3 +1,6 @@
+﻿> [!WARNING]
+> **Historical / superseded document.** This file predates the current cash-only audit and verification pass. Do not rely on its claims about payment methods, test counts, browser proof, or production readiness. See `DOCS_STATUS.md` and the authoritative final reports.
+
 > ⚠️ **SUPERSEDED — see `FINAL_IMPLEMENTATION_SUMMARY.md` for the current state.**
 > This document records the earlier phase. The current verified state is
 > **173 tests passed · 1 skipped · 1101 assertions**, 110 RBAC permissions across

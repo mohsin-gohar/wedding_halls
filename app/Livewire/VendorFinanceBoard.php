@@ -2,12 +2,15 @@
 
 namespace App\Livewire;
 
+use App\Exceptions\ServiceBookingException;
 use App\Models\ServiceBooking;
+use App\Models\ServicePayment;
 use App\Models\VendorPayout;
 use App\Models\VendorWallet;
 use App\Models\WalletTransaction;
 use App\Services\ServiceBookingService;
 use App\Support\CashOnlyPayments;
+use App\Support\PermissionMatrix;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -41,9 +44,19 @@ class VendorFinanceBoard extends Component
     {
         $user = Auth::user();
 
-        if (! $user || ! $user->tenant_id || ! $user->hasPermissionTo('wallet.view')) {
+        if (! $user || ! $user->tenant_id || ! PermissionMatrix::userCan($user, 'wallet.view')) {
             abort(403, 'Unauthorized. Finance is restricted to vendor staff.');
         }
+    }
+
+    public function getCanVerifyPaymentsProperty(): bool
+    {
+        return PermissionMatrix::userCan(Auth::user(), 'payments.verify');
+    }
+
+    public function getCanRequestPayoutProperty(): bool
+    {
+        return PermissionMatrix::userCan(Auth::user(), 'payouts.request');
     }
 
     public function getWalletProperty(): ?VendorWallet
@@ -114,6 +127,67 @@ class VendorFinanceBoard extends Component
             ->get();
     }
 
+    /**
+     * Customer-submitted cash payments awaiting staff confirmation. Nothing
+     * here touches the booking balance or wallet until verifyPayment() runs.
+     */
+    public function getPendingPaymentsProperty()
+    {
+        return ServicePayment::query()
+            ->where('tenant_id', Auth::user()->tenant_id)
+            ->where('status', 'PENDING')
+            ->where('method', CashOnlyPayments::CASH)
+            ->with(['serviceBooking:id,booking_reference,event_name', 'customer:id,name'])
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get();
+    }
+
+    /**
+     * Verify one pending cash payment. Scoped to the signed-in vendor tenant
+     * and gated by payments.verify; the service settles booking + wallet
+     * atomically, and every settlement is written to the audit log.
+     */
+    public function verifyPayment(string $paymentId): void
+    {
+        $user = Auth::user();
+
+        if (! $user || ! $user->tenant_id) {
+            abort(403);
+        }
+
+        if (! PermissionMatrix::userCan($user, 'payments.verify')) {
+            abort(403, 'Unauthorized. You may not verify service payments.');
+        }
+
+        $payment = ServicePayment::query()
+            ->where('tenant_id', $user->tenant_id)
+            ->where('method', CashOnlyPayments::CASH)
+            ->where('status', 'PENDING')
+            ->findOrFail($paymentId);
+
+        try {
+            $result = app(ServiceBookingService::class)->verifyServicePayment($payment, (int) $user->id);
+
+            if (($result['success'] ?? false) !== true) {
+                $this->errorMessage = $result['message'] ?? 'The payment could not be verified.';
+
+                return;
+            }
+
+            if (! empty($result['already_verified'])) {
+                $this->feedbackMessage = 'This cash payment was already verified. No duplicate ledger entry was created.';
+
+                return;
+            }
+
+            $this->feedbackMessage = 'Cash payment verified. Booking balance and wallet ledger updated.';
+            $this->errorMessage = null;
+        } catch (ServiceBookingException $e) {
+            $this->errorMessage = $e->getMessage();
+        }
+    }
+
     public function openPayoutModal(): void
     {
         $this->reset(['payoutAmount', 'payoutAccountName', 'payoutAccountDetails']);
@@ -135,7 +209,7 @@ class VendorFinanceBoard extends Component
             abort(403);
         }
 
-        if (! $user->hasPermissionTo('payouts.request')) {
+        if (! PermissionMatrix::userCan($user, 'payouts.request')) {
             abort(403, 'Unauthorized. You may not request payouts.');
         }
 

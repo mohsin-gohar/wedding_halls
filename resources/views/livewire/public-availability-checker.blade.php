@@ -44,7 +44,7 @@
         </div>
 
         <!-- Halls Shift Availability Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
             @foreach($halls as $hall)
                 @php
                     $bAfternoon = $bookings->get($hall->id . '_AFTERNOON');
@@ -67,10 +67,10 @@
                         <!-- 3 Shift Rows -->
                         <div class="space-y-3 pt-2">
                             <!-- Afternoon -->
-                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Afternoon Lunch</span>
-                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">12:00 PM – 4:00 PM</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">{{ \App\Support\ShiftWindows::labelForSlot($hall->tenant?->shift_windows, 'AFTERNOON') }}</span>
                                 </div>
                                 @if($bAfternoon)
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-stone-100 dark:bg-white/5 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-white/10 font-mono rounded-md">
@@ -88,10 +88,10 @@
                             </div>
 
                             <!-- Evening -->
-                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Evening Dinner</span>
-                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">6:30 PM – 10:30 PM</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">{{ \App\Support\ShiftWindows::labelForSlot($hall->tenant?->shift_windows, 'EVENING') }}</span>
                                 </div>
                                 @if($bEvening)
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-stone-100 dark:bg-white/5 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-white/10 font-mono rounded-md">
@@ -109,10 +109,10 @@
                             </div>
 
                             <!-- Night -->
-                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex items-center justify-between">
+                            <div class="p-3 border border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-white/5 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <span class="text-xs font-bold text-[#171513] dark:text-white block font-sans">Late Night Mehndi</span>
-                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">11:00 PM – 3:00 AM</span>
+                                    <span class="text-[10px] text-stone-500 dark:text-stone-400 font-mono">{{ \App\Support\ShiftWindows::labelForSlot($hall->tenant?->shift_windows, 'NIGHT') }}</span>
                                 </div>
                                 @if($bNight)
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-stone-100 dark:bg-white/5 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-white/10 font-mono rounded-md">

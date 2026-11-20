@@ -121,7 +121,8 @@
                     <!-- Status Segmented Controls & Print Button (Zero-Pill) -->
                     <div class="pt-3 border-t border-[#E7E5E4] dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
                         <div class="flex items-center gap-1 text-xs p-1 bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 font-mono">
-                            @foreach(['PENDING', 'PREPARING', 'READY', 'SERVED'] as $st)
+                            <span class="px-2 text-[10px] uppercase tracking-wider font-bold text-stone-500 dark:text-stone-400">Status: {{ $kot->preparation_status }}</span>
+                            @foreach(['PREPARING', 'READY', 'SERVED'] as $st)
                                 <button wire:click="updateStatus('{{ $kot->id }}', '{{ $st }}')"
                                         class="px-2.5 py-1 text-[10px] uppercase tracking-wider transition font-bold
                                         {{ $kot->preparation_status === $st 

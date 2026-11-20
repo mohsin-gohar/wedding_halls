@@ -2,11 +2,12 @@
 
 namespace App\Livewire;
 
-use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\PageVisit;
 use App\Models\Venue;
+use App\Services\HallAvailabilityService;
 use App\Support\CalendarWindow;
+use App\Support\ShiftWindows;
 use Carbon\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -258,26 +259,17 @@ class PublicVenues extends Component
 
     public function render()
     {
-        // 1. Strict SaaS Visibility: Only show active halls belonging to active, verified/approved tenants
-        $publicHalls = Hall::with(['venue', 'tenant'])
-            ->where('is_active', true)
-            ->where('listing_status', '!=', 'WITHDRAWN')
-            ->whereHas('venue', fn ($venueQuery) => $venueQuery->where('is_active', true))
-            ->whereHas('tenant', function ($t) {
-                $t->where('is_active', true)
-                    ->where('verification_status', 'APPROVED');
-            });
+        // 1. Strict SaaS Visibility: centralized Hall::publicVisible() scope,
+        // plus the marketplace opt-in for marketplace-wide discovery pages.
+        $publicHalls = Hall::publicVisible()
+            ->whereHas('tenant', fn ($tenant) => $tenant->marketplaceVisible())
+            ->with(['venue', 'tenant']);
 
         $hasPublicHalls = (clone $publicHalls)->exists();
         $cities = Venue::query()
             ->where('is_active', true)
-            ->whereHas('halls', function ($hallQuery) {
-                $hallQuery->where('is_active', true)
-                    ->whereHas('tenant', function ($tenantQuery) {
-                        $tenantQuery->where('is_active', true)
-                            ->where('verification_status', 'APPROVED');
-                    });
-            })
+            ->whereHas('halls', fn ($hallQuery) => $hallQuery->publicVisible())
+            ->whereHas('tenant', fn ($tenant) => $tenant->marketplaceVisible())
             ->whereNotNull('city')
             ->where('city', '!=', '')
             ->orderBy('city')
@@ -319,11 +311,9 @@ class PublicVenues extends Component
         $startOfMonth = $monthCarbon->copy()->startOfMonth()->toDateString();
         $endOfMonth = $monthCarbon->copy()->endOfMonth()->toDateString();
 
-        $calendarHallsQuery = Hall::with(['venue', 'tenant'])
-            ->where('is_active', true)
-            ->where('listing_status', '!=', 'WITHDRAWN')
-            ->whereHas('venue', fn ($venueQuery) => $venueQuery->where('is_active', true))
-            ->whereHas('tenant', fn ($t) => $t->where('is_active', true)->where('verification_status', 'APPROVED'));
+        $calendarHallsQuery = Hall::publicVisible()
+            ->whereHas('tenant', fn ($tenant) => $tenant->marketplaceVisible())
+            ->with(['venue', 'tenant']);
 
         $this->applyDiscoveryFilters($calendarHallsQuery);
 
@@ -336,81 +326,71 @@ class PublicVenues extends Component
             $this->calendarHallId = $calendarHallsList->first()->id;
         }
 
-        $monthBookingsQuery = Booking::whereIn('status', ['HOLD', 'CONFIRMED'])
-            ->whereBetween('event_date', [$startOfMonth, $endOfMonth]);
+        $availability = app(HallAvailabilityService::class);
+        $gridHallIds = ! empty($this->calendarHallId)
+            ? [$this->calendarHallId]
+            : $calendarHallsList->pluck('id')->all();
+        $effectiveCapacity = ! empty($this->calendarHallId) ? 1 : $totalScopeHalls;
 
-        if (! empty($this->calendarHallId)) {
-            $monthBookingsQuery->where('hall_id', $this->calendarHallId);
-            $effectiveCapacity = 1;
-        } else {
-            $monthBookingsQuery->whereIn('hall_id', $calendarHallsList->pluck('id'));
-            $effectiveCapacity = $totalScopeHalls;
-        }
-
-        $monthBookings = $monthBookingsQuery
-            ->groupBy('event_date', 'slot_type')
-            ->selectRaw('event_date, slot_type, COUNT(DISTINCT hall_id) as booked_count')
-            ->get();
-
+        $blockedByDate = $availability->blockedSlotsForHallsInRange($gridHallIds, $startOfMonth, $endOfMonth);
         $monthGrid = [];
         for ($d = 1; $d <= $daysInMonth; $d++) {
             $dayCarbon = $monthCarbon->copy()->day($d);
             $dateStr = $dayCarbon->format('Y-m-d');
+            $blockedByHall = $blockedByDate[$dateStr]['halls'] ?? [];
 
-            $dayBookings = $monthBookings->filter(fn ($b) => $b->event_date->format('Y-m-d') === $dateStr);
-            $fullDayCount = (int) ($dayBookings->firstWhere('slot_type', 'FULL_DAY')?->booked_count ?? 0);
+            $slotAvailability = [];
+            foreach (ShiftWindows::BOOKABLE_KEYS as $slot) {
+                $blockedCount = count(array_filter($blockedByHall, fn (array $blocked) => isset($blocked[$slot])));
+                $slotAvailability[strtolower($slot).'_available'] = $blockedCount < $effectiveCapacity;
+            }
 
-            $aBooked = ((int) ($dayBookings->firstWhere('slot_type', 'AFTERNOON')?->booked_count ?? 0)) + $fullDayCount;
-            $eBooked = ((int) ($dayBookings->firstWhere('slot_type', 'EVENING')?->booked_count ?? 0)) + $fullDayCount;
-            $nBooked = ((int) ($dayBookings->firstWhere('slot_type', 'NIGHT')?->booked_count ?? 0)) + $fullDayCount;
-
-            $aAvailable = $aBooked < $effectiveCapacity;
-            $eAvailable = $eBooked < $effectiveCapacity;
-            $nAvailable = $nBooked < $effectiveCapacity;
-
-            $monthGrid[$d] = [
+            $monthGrid[$d] = array_merge([
                 'day' => $d,
                 'date' => $dateStr,
                 'dayOfWeek' => $dayCarbon->dayOfWeek,
                 'dayName' => $dayCarbon->format('D'),
                 'isPast' => $dayCarbon->isPast() && ! $dayCarbon->isToday(),
                 'isToday' => $dayCarbon->isToday(),
-                'afternoon_available' => $aAvailable,
-                'evening_available' => $eAvailable,
-                'night_available' => $nAvailable,
-                'all_booked' => (! $aAvailable && ! $eAvailable && ! $nAvailable),
-                'total_booked' => $aBooked + $eBooked + $nBooked,
-            ];
+                'all_booked' => ! in_array(true, $slotAvailability, true),
+                'total_booked' => count(array_filter($slotAvailability, fn (bool $available) => ! $available)),
+            ], $slotAvailability);
         }
 
-        // Details for currently selected date
+        // Details for currently selected date use the same authoritative rules.
         $selCarbon = Carbon::parse($this->selectedCalendarDate);
         $selDateStr = $selCarbon->format('Y-m-d');
-        $selDayBookings = $monthBookings->filter(fn ($b) => $b->event_date->format('Y-m-d') === $selDateStr);
-        $selFullDay = (int) ($selDayBookings->firstWhere('slot_type', 'FULL_DAY')?->booked_count ?? 0);
+        $selBlocked = $blockedByDate[$selDateStr]['halls']
+            ?? $availability->blockedSlotsForHalls($gridHallIds, $selDateStr)['halls'];
+        $selBookedCount = [];
+        foreach (ShiftWindows::BOOKABLE_KEYS as $slot) {
+            $selBookedCount[$slot] = count(array_filter($selBlocked, fn (array $blocked) => isset($blocked[$slot]))) >= $effectiveCapacity;
+        }
+        $selAfternoonBooked = $selBookedCount['AFTERNOON'];
+        $selEveningBooked = $selBookedCount['EVENING'];
+        $selNightBooked = $selBookedCount['NIGHT'];
 
-        $selAfternoonBooked = (((int) ($selDayBookings->firstWhere('slot_type', 'AFTERNOON')?->booked_count ?? 0)) + $selFullDay) >= $effectiveCapacity;
-        $selEveningBooked = (((int) ($selDayBookings->firstWhere('slot_type', 'EVENING')?->booked_count ?? 0)) + $selFullDay) >= $effectiveCapacity;
-        $selNightBooked = (((int) ($selDayBookings->firstWhere('slot_type', 'NIGHT')?->booked_count ?? 0)) + $selFullDay) >= $effectiveCapacity;
+        $policyHall = $calendarHallsList->firstWhere('id', $this->calendarHallId) ?? $calendarHallsList->first();
+        $policyWindows = $policyHall?->tenant?->shift_windows;
 
         $selectedDayDetails = [
             'date' => $selDateStr,
             'formattedDate' => $selCarbon->format('l, M jS'),
             'afternoon' => [
                 'name' => 'AFTERNOON',
-                'time' => '11 AM - 3 PM',
-                'icon' => 'â˜€ï¸',
+                'time' => ShiftWindows::labelForSlot($policyWindows, 'AFTERNOON'),
+                'icon' => '☀️',
                 'isBooked' => $selAfternoonBooked,
             ],
             'evening' => [
                 'name' => 'EVENING',
-                'time' => '4 PM - 8 PM',
+                'time' => ShiftWindows::labelForSlot($policyWindows, 'EVENING'),
                 'icon' => '🌄',
                 'isBooked' => $selEveningBooked,
             ],
             'night' => [
                 'name' => 'NIGHT',
-                'time' => '9 PM - 1 AM',
+                'time' => ShiftWindows::labelForSlot($policyWindows, 'NIGHT'),
                 'icon' => '🌙',
                 'isBooked' => $selNightBooked,
             ],
@@ -462,14 +442,16 @@ class PublicVenues extends Component
         $eventDate = $this->normalizedEventDate();
         $shift = $this->normalizedShift();
         if ($eventDate && $shift) {
-            $query->whereDoesntHave('bookings', function ($booking) use ($eventDate, $shift) {
-                $booking->whereIn('status', ['HOLD', 'CONFIRMED'])
-                    ->whereDate('event_date', $eventDate->toDateString())
-                    ->where(function ($slot) use ($shift) {
-                        $slot->where('slot_type', $shift)
-                            ->orWhere('slot_type', 'FULL_DAY');
-                    });
-            });
+            // Use the same conflict engine as booking writes (including tenant
+            // shift windows and turnover buffer), not a naive slot_type match.
+            $visibleIds = Hall::publicVisible()->pluck('halls.id')->all();
+            $blocked = app(HallAvailabilityService::class)
+                ->blockedSlotsForHalls($visibleIds, $eventDate->toDateString())['halls'];
+            $blockedIds = array_keys(array_filter($blocked, fn (array $slots) => isset($slots[$shift])));
+
+            if ($blockedIds !== []) {
+                $query->whereNotIn('halls.id', $blockedIds);
+            }
         }
     }
 }

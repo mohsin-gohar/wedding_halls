@@ -15,12 +15,7 @@ class PublicMenus extends Component
 
     public function mount()
     {
-        $first = Package::where('is_active', true)
-            ->where(function ($query) {
-                $query->whereNull('tenant_id')
-                    ->orWhereHas('tenant', fn ($q) => $q->where('is_active', true)->where('verification_status', 'APPROVED'));
-            })
-            ->first();
+        $first = $this->visiblePackages()->first();
         if ($first) {
             $this->selectedPackageId = $first->id;
         }
@@ -28,13 +23,10 @@ class PublicMenus extends Component
 
     public function render()
     {
-        $packages = Package::where('is_active', true)
-            ->where(function ($query) {
-                $query->whereNull('tenant_id')
-                    ->orWhereHas('tenant', fn ($q) => $q->where('is_active', true)->where('verification_status', 'APPROVED'));
-            })
-            ->get();
-        $selectedPackage = Package::find($this->selectedPackageId) ?? $packages->first();
+        $packages = $this->visiblePackages()->get();
+
+        // Never honour a stale/tampered package id from outside the visible set.
+        $selectedPackage = $packages->firstWhere('id', $this->selectedPackageId) ?? $packages->first();
 
         // Calculate live estimates based on Bawarchi formulas
         $estimatedFoodTotal = $selectedPackage ? ((float) $selectedPackage->per_head_price * $this->calculatorGuests) : 0;
@@ -50,5 +42,14 @@ class PublicMenus extends Component
             'riceKg' => $riceKg,
             'oilLiters' => $oilLiters,
         ]);
+    }
+
+    private function visiblePackages()
+    {
+        return Package::where('is_active', true)
+            ->where(function ($query) {
+                $query->whereNull('tenant_id')
+                    ->orWhereHas('tenant', fn ($q) => $q->marketplaceVisible());
+            });
     }
 }

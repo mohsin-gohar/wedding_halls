@@ -1,3 +1,6 @@
+﻿> [!WARNING]
+> **Historical / superseded document.** This file predates the current cash-only audit and verification pass. Do not rely on its claims about payment methods, test counts, browser proof, or production readiness. See `DOCS_STATUS.md` and the authoritative final reports.
+
 # Missing features (honest)
 
 Calendar week/day/agenda, configurable slot windows, buffer, and scheduled hold expiry are now in the app and covered by `CalendarViewsAndHoldExpiryTest`. They are no longer the next gap.

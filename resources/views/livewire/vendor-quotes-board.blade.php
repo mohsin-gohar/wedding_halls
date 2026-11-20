@@ -72,14 +72,21 @@
                             @endif
 
                             <div class="flex flex-wrap items-center gap-2 pt-2">
-                                <button wire:click="markRfqViewed({{ $rfq->id }})" class="btn-outline-gold !h-9 !px-4 text-[10px] font-mono uppercase">
-                                    Mark viewed
-                                </button>
-                                <button wire:click="openBidModal({{ $rfq->id }})" class="btn-gold !h-9 !px-4 text-[10px] font-mono uppercase">
-                                    Submit quotation
-                                </button>
-                                <button wire:click="declineRfq({{ $rfq->id }})" class="btn-outline-gold !h-9 !px-4 text-[10px] font-mono uppercase"
-                            </button>
+                                @if($this->hasPortalPermission('rfq.view'))
+                                    <button wire:click="markRfqViewed({{ $rfq->id }})" class="btn-outline-gold !h-9 !px-4 text-[10px] font-mono uppercase">
+                                        Mark viewed
+                                    </button>
+                                @endif
+                                @if($this->hasPortalPermission('rfq.bid'))
+                                    <button wire:click="openBidModal({{ $rfq->id }})" class="btn-gold !h-9 !px-4 text-[10px] font-mono uppercase">
+                                        Submit quotation
+                                    </button>
+                                @endif
+                                @if($this->hasPortalPermission('rfq.close'))
+                                    <button wire:click="declineRfq({{ $rfq->id }})" class="btn-outline-gold !h-9 !px-4 text-[10px] font-mono uppercase">
+                                        Decline
+                                    </button>
+                                @endif
                             </div>
                         </div>
 
@@ -94,9 +101,7 @@
                                         <p class="text-sm font-serif-luxury text-[#8F7239] dark:text-[#C6A15B] font-bold">{{ number_format((float) $bid->bid_amount) }} PKR</p>
                                         <p class="text-[11px] text-stone-500 dark:text-stone-400 font-sans">Bid status: <span class="font-bold uppercase">{{ $bid->status }}</span></p>
                                         @if($bid->status === 'PENDING')
-                                            <button type="button" wire:click="awardQuote({{ $bid->id }})" class="btn-gold !h-8 !px-3 text-[10px] font-mono uppercase mt-2">
-                                                Award booking → creates service booking
-                                            </button>
+                                            <p class="text-[10px] text-stone-400 font-mono mt-1">Awaiting the customer's decision.</p>
                                         @endif
                                     </div>
                                 @endforeach
@@ -139,7 +144,7 @@
 
                     <div class="flex justify-end gap-3 pt-2">
                         <button type="button" wire:click="closeBidModal" class="btn-outline-gold !h-10 !px-5 text-[11px] font-mono uppercase">Close</button>
-                        <button type="button" wire:click="submitBid({ id: selectedRfqId }, bidAmount, bidProposal)" class="btn-gold !h-10 !px-6 text-[11px] font-mono uppercase">Submit Quotation</button>
+                        <button type="button" wire:click="submitBid(selectedRfqId, bidAmount, bidProposal)" class="btn-gold !h-10 !px-6 text-[11px] font-mono uppercase">Submit Quotation</button>
                     </div>
                 </div>
             </div>

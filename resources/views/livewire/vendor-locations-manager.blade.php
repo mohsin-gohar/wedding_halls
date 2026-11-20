@@ -18,9 +18,11 @@
                 <p class="text-[10px] uppercase tracking-widest font-mono text-[#8F7239] dark:text-[#C6A15B]">Active branches</p>
                 <p class="font-serif-luxury text-2xl text-[#171513] dark:text-white">{{ $this->locationCount }}</p>
             </div>
-            <button wire:click="openCreateModal" class="btn-gold !h-10 !px-5 text-xs font-bold uppercase font-mono shadow-md">
-                + Add Location
-            </button>
+            @if($this->hasPortalPermission('locations.manage'))
+                <button wire:click="openCreateModal" class="btn-gold !h-10 !px-5 text-xs font-bold uppercase font-mono shadow-md">
+                    + Add Location
+                </button>
+            @endif
         </div>
     </div>
 
@@ -43,9 +45,11 @@
             <p class="text-sm text-stone-600 dark:text-stone-300 max-w-lg mx-auto">
                 Add your first branch so customers can see where you operate and plan events at the right place.
             </p>
-            <button wire:click="openCreateModal" class="btn-gold mt-6 !h-10 !px-5 text-xs font-bold uppercase font-mono">
-                + Add Location
-            </button>
+            @if($this->hasPortalPermission('locations.manage'))
+                <button wire:click="openCreateModal" class="btn-gold mt-6 !h-10 !px-5 text-xs font-bold uppercase font-mono">
+                    + Add Location
+                </button>
+            @endif
         </div>
     @else
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -86,14 +90,16 @@
                         </div>
                     </dl>
 
-                    <div class="flex flex-wrap items-center gap-2 pt-2 mt-auto">
-                        <button wire:click="openEditModal('{{ $location->id }}')" class="btn-outline-gold !h-9 !px-4 text-[10px] font-mono uppercase">
-                            Edit
-                        </button>
-                        <button wire:click="toggleActive('{{ $location->id }}')" class="btn-outline-gold !h-9 !px-4 text-[10px] font-mono uppercase">
-                            {{ $location->is_active ? 'Deactivate' : 'Activate' }}
-                        </button>
-                    </div>
+                    @if($this->hasPortalPermission('locations.manage'))
+                        <div class="flex flex-wrap items-center gap-2 pt-2 mt-auto">
+                            <button wire:click="openEditModal('{{ $location->id }}')" class="btn-outline-gold !h-9 !px-4 text-[10px] font-mono uppercase">
+                                Edit
+                            </button>
+                            <button wire:click="toggleActive('{{ $location->id }}')" class="btn-outline-gold !h-9 !px-4 text-[10px] font-mono uppercase">
+                                {{ $location->is_active ? 'Deactivate' : 'Activate' }}
+                            </button>
+                        </div>
+                    @endif
                 </article>
             @endforeach
         </div>

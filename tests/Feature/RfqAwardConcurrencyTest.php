@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Exceptions\ServiceBookingException;
+use App\Livewire\CustomerDashboard;
 use App\Livewire\VendorQuotesBoard;
 use App\Models\RFQ;
 use App\Models\RFQBid;
@@ -95,26 +96,20 @@ class RfqAwardConcurrencyTest extends TestCase
         $this->assertSame(1, ServiceBooking::query()->where('tenant_id', $tenant->id)->count());
     }
 
-    public function test_vendor_cannot_award_a_bid_from_another_tenants_rfq(): void
+    public function test_customer_cannot_award_a_bid_from_another_customers_rfq(): void
     {
-        [$tenantA, $customerA] = $this->makeVendorAndCustomer('beauty-bridal');
+        [, $customerA] = $this->makeVendorAndCustomer('beauty-bridal');
         [$tenantB, $customerB] = $this->makeVendorAndCustomer('beauty-bridal');
-
-        $ownerA = User::factory()->create([
-            'tenant_id' => $tenantA->id,
-            'role' => 'ROLE_TENANT_OWNER',
-            'status' => 'ACTIVE',
-        ]);
-        $ownerA->assignRole('ROLE_TENANT_OWNER');
 
         $rfqB = $this->makeRfq($tenantB, $customerB, ['start_time' => '10:00']);
         $bidB = $this->makeBid($rfqB, 25000);
 
-        Livewire::actingAs($ownerA->fresh())
-            ->test(VendorQuotesBoard::class)
-            ->call('awardQuote', $bidB->id)
+        Livewire::actingAs($customerA->fresh())
+            ->test(CustomerDashboard::class)
+            ->call('acceptQuote', $bidB->id)
             ->assertStatus(404);
 
+        $this->assertFalse(method_exists(VendorQuotesBoard::class, 'awardQuote'));
         $this->assertSame('OPEN', $rfqB->fresh()->status);
         $this->assertSame('PENDING', $bidB->fresh()->status);
         $this->assertSame(0, ServiceBooking::query()->count());

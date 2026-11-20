@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ApiToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 /**
  * API token management for the signed-in account.
@@ -32,19 +33,29 @@ class ApiTokenController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'expires_in_days' => ['nullable', 'integer', 'min:1', 'max:365'],
+            'abilities' => ['nullable', 'array'],
+            'abilities.*' => ['string', Rule::in([ApiToken::ABILITY_ALL, ...ApiToken::ABILITIES])],
         ]);
 
         $expiresAt = isset($validated['expires_in_days'])
             ? now()->addDays((int) $validated['expires_in_days'])
             : null;
 
-        [$token, $plain] = ApiToken::issue($user, $validated['name'], null, $expiresAt);
+        // Omitting `abilities` preserves the legacy unrestricted token used by
+        // first-party clients; supplying it creates a least-privilege token.
+        [$token, $plain] = ApiToken::issue(
+            $user,
+            $validated['name'],
+            $validated['abilities'] ?? null,
+            $expiresAt,
+        );
 
         return response()->json([
             'message' => 'API token created. Copy it now — it will not be shown again.',
             'token' => $plain,
             'id' => $token->id,
             'prefix' => $token->prefix,
+            'abilities' => $token->abilities,
             'expires_at' => $token->expires_at?->toIso8601String(),
         ], 201);
     }

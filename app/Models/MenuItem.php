@@ -20,6 +20,7 @@ class MenuItem extends Model
         'raw_meat_ratio_kg',
         'raw_rice_ratio_kg',
         'raw_oil_ratio_liters',
+        'min_guest_count',
         'is_active',
     ];
 
@@ -28,16 +29,21 @@ class MenuItem extends Model
         'raw_meat_ratio_kg' => 'decimal:4',
         'raw_rice_ratio_kg' => 'decimal:4',
         'raw_oil_ratio_liters' => 'decimal:4',
+        'min_guest_count' => 'integer',
         'is_active' => 'boolean',
     ];
 
+    /** Matches the menu_items.category enum created in 2026_10_09_000002. */
     public function categoryOptions(): array
     {
         return [
-            'STARTER',
-            'MAIN',
-            'DESSERT',
-            'BEVERAGE',
+            'STARTERS',
+            'MAINS',
+            'RICE',
+            'BREADS',
+            'DESSERTS',
+            'BEVERAGES',
+            'SALADS',
         ];
     }
 
@@ -56,22 +62,22 @@ class MenuItem extends Model
 
     public function isStarter(): bool
     {
-        return $this->category === 'STARTER';
+        return in_array($this->category, ['STARTERS', 'STARTER'], true);
     }
 
     public function isMain(): bool
     {
-        return $this->category === 'MAIN';
+        return in_array($this->category, ['MAINS', 'MAIN'], true);
     }
 
     public function isDessert(): bool
     {
-        return $this->category === 'DESSERT';
+        return in_array($this->category, ['DESSERTS', 'DESSERT'], true);
     }
 
     public function isBeverage(): bool
     {
-        return $this->category === 'BEVERAGE';
+        return in_array($this->category, ['BEVERAGES', 'BEVERAGE'], true);
     }
 
     public function tenant(): BelongsTo
@@ -86,6 +92,16 @@ class MenuItem extends Model
 
     public function meetsMinGuestCount(int $guestCount): bool
     {
-        return $guestCount >= $this->min_guest_count;
+        // Legacy rows have no minimum; treat them as available for any count
+        // instead of dereferencing a missing attribute.
+        $minimum = $this->min_guest_count === null ? 0 : (int) $this->min_guest_count;
+
+        return $guestCount >= $minimum;
+    }
+
+    /** Backwards-compatible alias used by older catering menu callers. */
+    public function servesGuests(int $guestCount): bool
+    {
+        return $this->meetsMinGuestCount($guestCount);
     }
 }

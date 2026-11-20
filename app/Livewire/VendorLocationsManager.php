@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\VendorLocation;
+use App\Support\PermissionMatrix;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -54,9 +55,19 @@ class VendorLocationsManager extends Component
     {
         $user = Auth::user();
 
-        if (! $user || ! $user->tenant_id || ! $user->hasPermissionTo('locations.view')) {
+        if (! $user || ! $user->tenant_id || ! PermissionMatrix::userCan($user, 'locations.view')) {
             abort(403, 'Unauthorized. Location management is restricted to vendor staff.');
         }
+    }
+
+    public function hasPortalPermission(string $permission): bool
+    {
+        return PermissionMatrix::userCan(Auth::user(), $permission);
+    }
+
+    private function assertCan(string $permission): void
+    {
+        abort_unless($this->hasPortalPermission($permission), 403, 'Unauthorized. Missing permission: '.$permission);
     }
 
     public function getLocationsProperty()
@@ -78,6 +89,8 @@ class VendorLocationsManager extends Component
 
     public function openCreateModal(): void
     {
+        $this->assertCan('locations.manage');
+
         $this->reset(['locationName', 'branchType', 'address', 'area', 'city', 'province', 'phone', 'email', 'isPrimary', 'notes']);
         $this->branchType = 'BRANCH';
         $this->isActive = true;
@@ -89,6 +102,8 @@ class VendorLocationsManager extends Component
 
     public function openEditModal(string $locationId): void
     {
+        $this->assertCan('locations.manage');
+
         $location = $this->findLocation($locationId);
 
         if (! $location) {
@@ -130,9 +145,7 @@ class VendorLocationsManager extends Component
             abort(403);
         }
 
-        if (! $user->hasPermissionTo('locations.manage')) {
-            abort(403, 'Unauthorized. You may not manage business locations.');
-        }
+        $this->assertCan('locations.manage');
 
         $this->validate([
             'locationName' => ['required', 'string', 'max:150'],
@@ -201,9 +214,7 @@ class VendorLocationsManager extends Component
             abort(403);
         }
 
-        if (! $user->hasPermissionTo('locations.manage')) {
-            abort(403, 'Unauthorized. You may not manage business locations.');
-        }
+        $this->assertCan('locations.manage');
 
         $location = $this->findLocation($locationId);
 

@@ -16,6 +16,8 @@ class Tenant extends Model
 {
     use HasFactory, HasUuids;
 
+    public const VERIFICATION_STATUS_APPROVED = 'APPROVED';
+
     protected $table = 'tenants';
 
     protected $fillable = [
@@ -78,6 +80,7 @@ class Tenant extends Model
         'max_halls',
         'max_staff',
         'max_bookings_per_day',
+        'commission_rate',
         'free_access_days',
         'kitchen_module_enabled',
 
@@ -105,6 +108,7 @@ class Tenant extends Model
         'max_halls' => 'integer',
         'max_staff' => 'integer',
         'max_bookings_per_day' => 'integer',
+        'commission_rate' => 'decimal:2',
         'rating_avg' => 'decimal:2',
         'rating_count' => 'integer',
         'min_budget' => 'decimal:2',
@@ -365,6 +369,22 @@ class Tenant extends Model
     public function commissionRate(): float
     {
         return (float) ($this->commission_rate ?? 0);
+    }
+
+    // ─── PUBLIC VISIBILITY SCOPES ───────────────────────────────
+
+    /** Active, approved tenants are eligible for hall-level public visibility. */
+    public function scopePublicVisible($query)
+    {
+        return $query
+            ->where('tenants.is_active', true)
+            ->where('tenants.verification_status', self::VERIFICATION_STATUS_APPROVED);
+    }
+
+    /** Vendor-facing marketplace visibility additionally requires the opt-in flag. */
+    public function scopeMarketplaceVisible($query)
+    {
+        return $query->publicVisible()->where('tenants.marketplace_visible', true);
     }
 
     // ─── STATE CHECKS ────────────────────────────────────────────

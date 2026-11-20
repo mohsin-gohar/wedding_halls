@@ -60,8 +60,24 @@ class ConciergeChatbotTest extends TestCase
             ->call('toggleChat')
             ->assertSet('isOpen', true);
 
-        // 2. Asking automated rent question
+        // 2. Human-only mode is the default: the question is queued for the
+        // hall manager, and no canned bot answer is fabricated.
         $widget->call('askQuickQuestion', 'What is the hall rent and capacity?')
+            ->assertHasNoErrors();
+
+        $this->assertNull(HallChatMessage::where('hall_id', $hall->id)
+            ->where('sender_type', 'bot')
+            ->latest('id')
+            ->first());
+
+        $this->assertNotNull(HallChatMessage::where('hall_id', $hall->id)
+            ->where('sender_type', 'customer')
+            ->where('message', 'What is the hall rent and capacity?')
+            ->first());
+
+        // 2b. Explicitly enabled automation still produces the canned answer.
+        $widget->set('humanOnlyMode', false)
+            ->call('askQuickQuestion', 'What is the hall rent and capacity?')
             ->assertHasNoErrors();
 
         $botReply = HallChatMessage::where('hall_id', $hall->id)

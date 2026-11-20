@@ -4,6 +4,9 @@ namespace App\Support;
 
 class ShiftWindows
 {
+    /** Shifts a guest may reserve individually. FULL_DAY is an exclusive combination. */
+    public const BOOKABLE_KEYS = ['AFTERNOON', 'EVENING', 'NIGHT'];
+
     public const KEYS = ['AFTERNOON', 'EVENING', 'NIGHT', 'FULL_DAY'];
 
     /**
@@ -36,6 +39,66 @@ class ShiftWindows
         }
 
         return $windows;
+    }
+
+    /**
+     * Shared presenter for every guest-facing shift label/time. Never format
+     * stored windows directly: always normalize first so bad data cannot leak.
+     *
+     * @param  array<string, array{start: string, end: string}>  $window
+     */
+    public static function formatWindow(array $window): string
+    {
+        return self::formatTime($window['start'] ?? '00:00').' - '.self::formatTime($window['end'] ?? '00:00');
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $stored
+     */
+    public static function labelForSlot(?array $stored, string $slot): string
+    {
+        $slot = strtoupper($slot);
+        $windows = self::normalize($stored);
+
+        if (! isset($windows[$slot])) {
+            return self::formatWindow($windows['EVENING']);
+        }
+
+        return self::formatWindow($windows[$slot]);
+    }
+
+    /**
+     * One canonical sentence for FAQs, chat bots and seeders.
+     *
+     * @param  array<string, mixed>|null  $stored
+     * @param  array<int, string>  $keys
+     */
+    public static function summary(?array $stored, array $keys = self::BOOKABLE_KEYS): string
+    {
+        $windows = self::normalize($stored);
+        $parts = [];
+
+        foreach ($keys as $key) {
+            $key = strtoupper($key);
+            if (isset($windows[$key])) {
+                $parts[] = ucfirst(strtolower($key)).' ('.self::formatWindow($windows[$key]).')';
+            }
+        }
+
+        return implode(' | ', $parts);
+    }
+
+    private static function formatTime(string $time): string
+    {
+        if (! self::validTime($time)) {
+            return $time;
+        }
+
+        [$hour, $minute] = array_map('intval', explode(':', $time));
+        $suffix = $hour >= 12 ? 'PM' : 'AM';
+        $displayHour = $hour % 12;
+
+        return sprintf('%d:%02d %s', $displayHour === 0 ? 12 : $displayHour, $minute, $suffix);
     }
 
     public static function validTime(mixed $time): bool

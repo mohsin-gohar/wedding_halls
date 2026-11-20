@@ -2,7 +2,11 @@
     <!-- Hero -->
     <section class="relative bg-[#171513] text-white py-16 sm:py-24 overflow-hidden border-b border-[#C6A15B]/30">
         @php
-            $cover = $vendor->cover_image ?: ($this->portfolio->first()?->path ?: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2000&auto=format&fit=crop');
+            $cover = \App\Support\Media::publicUrl(
+                $vendor->cover_image
+                    ?: ($this->portfolio->first()?->path
+                        ?: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2000&auto=format&fit=crop')
+            );
         @endphp
         <div class="parallax-bg opacity-60" data-parallax="0.25" style="background-image: url('{{ $cover }}');"></div>
         <div class="absolute inset-0 bg-gradient-to-t from-[#171513] via-[#171513]/55 to-[#171513]/75"></div>
@@ -122,7 +126,7 @@
                         @foreach($vendor->vendorPackages as $package)
                             <article class="bg-white dark:bg-[#1C1917] rounded-2xl border border-[#C6A15B]/25 overflow-hidden hover:border-[#C6A15B]/60 transition-all duration-300 flex flex-col">
                                 @if($package->image)
-                                    <img src="{{ $package->image }}" alt="{{ $package->name }}" loading="lazy" class="h-36 w-full object-cover">
+                                    <img src="{{ \App\Support\Media::publicUrl($package->image) }}" alt="{{ $package->name }}" loading="lazy" class="h-36 w-full object-cover">
                                 @endif
                                 <div class="p-5 flex-1 flex flex-col">
                                     <h3 class="font-serif-luxury text-lg mb-1">{{ $package->name }}</h3>
@@ -165,7 +169,7 @@
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 @foreach($this->portfolio as $media)
                     <figure class="group relative rounded-xl overflow-hidden border border-[#C6A15B]/25 aspect-[4/3]">
-                        <img src="{{ $media->url() }}" alt="{{ $media->caption ?? 'Portfolio' }}" loading="lazy" decoding="async"
+                        <img src="{{ \App\Support\Media::publicUrl($media->path) }}" alt="{{ $media->caption ?? 'Portfolio' }}" loading="lazy" decoding="async"
                              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
                         @if($media->caption)
                             <figcaption class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 text-[10px] text-white font-sans opacity-0 group-hover:opacity-100 transition-opacity">
@@ -220,7 +224,7 @@
                     <a href="{{ route('public.vendor-profile', ['slug' => $similar->slug]) }}"
                        class="group bg-white dark:bg-[#1C1917] rounded-2xl border border-[#C6A15B]/25 overflow-hidden hover:border-[#C6A15B]/60 hover:-translate-y-1 transition-all duration-300">
                         @if($similar->cover_image)
-                            <img src="{{ $similar->cover_image }}" alt="{{ $similar->name }}" loading="lazy"
+                            <img src="{{ \App\Support\Media::publicUrl($similar->cover_image) }}" alt="{{ $similar->name }}" loading="lazy"
                                  class="h-36 w-full object-cover group-hover:scale-[1.04] transition-transform duration-500">
                         @else
                             <div class="h-36 w-full bg-gradient-to-br from-[#C6A15B]/25 to-[#171513] flex items-center justify-center">

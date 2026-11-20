@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\Tenant;
 use App\Models\Venue;
+use App\Services\HallAvailabilityService;
 use App\Support\ShiftWindows;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -369,19 +370,27 @@ class CalendarShiftGrid extends Component
                 }
             }
 
+            $availability = app(HallAvailabilityService::class);
+
             foreach ($grouped as $key => $items) {
                 $bookings[$key] = $items[0];
+
+                // Use the same window/buffer overlap rules as booking writes so
+                // an overbooked shift is never hidden by a naive slot match.
                 $blocking = array_values(array_filter(
                     $items,
-                    fn ($b) => in_array(strtoupper($b->status), ['CONFIRMED', 'HOLD'], true)
+                    fn ($b) => in_array(strtoupper($b->status), HallAvailabilityService::BLOCKING_STATUSES, true)
                 ));
-                if (count($blocking) > 1) {
+                $slot = substr($key, strpos($key, '_') + 1);
+                $conflicts = $availability->conflictingBookings($selectedHall, $blocking, $slot);
+
+                if (count($conflicts) > 1) {
                     $this->slotConflicts[$key] = array_map(fn ($b) => [
                         'id' => $b->id,
                         'customer_name' => $b->customer_name,
                         'event_type' => $b->event_type,
                         'status' => strtoupper($b->status),
-                    ], $blocking);
+                    ], $conflicts);
                 }
             }
         }

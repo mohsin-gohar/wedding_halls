@@ -36,17 +36,9 @@ class PublicMarketplace extends Component
 
     public function render()
     {
-        $query = Hall::query()
-            ->with(['venue', 'tenant'])
-            ->where('halls.is_active', true)
-            ->whereHas('venue', function ($venue) {
-                $venue->where('is_active', true)
-                    ->whereColumn('venues.tenant_id', 'halls.tenant_id');
-            })
-            ->whereHas('tenant', function ($tenant) {
-                $tenant->where('is_active', true)
-                    ->where('verification_status', 'APPROVED');
-            });
+        $query = Hall::publicVisible()
+            ->whereHas('tenant', fn ($tenant) => $tenant->marketplaceVisible())
+            ->with(['venue', 'tenant']);
 
         if ($this->city !== 'All') {
             $query->whereHas('venue', function ($q) {
@@ -72,10 +64,8 @@ class PublicMarketplace extends Component
         $halls = $query->latest('halls.created_at')->latest('halls.id')->paginate(9);
         $cities = Venue::query()
             ->where('is_active', true)
-            ->whereHas('tenant', function ($tenant) {
-                $tenant->where('is_active', true)
-                    ->where('verification_status', 'APPROVED');
-            })
+            ->whereHas('halls', fn ($hall) => $hall->publicVisible())
+            ->whereHas('tenant', fn ($tenant) => $tenant->marketplaceVisible())
             ->whereNotNull('city')
             ->where('city', '!=', '')
             ->distinct()

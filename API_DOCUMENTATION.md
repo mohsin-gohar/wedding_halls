@@ -15,7 +15,8 @@ From a signed-in web session:
 POST /account/api-tokens
 Cookie: riwayaj_session=…
 
-{ "name": "Android phone", "expires_in_days": 90 }
+{ "name": "Android phone", "expires_in_days": 90,
+  "abilities": ["bookings.read", "payments.read"] }
 ```
 
 ```json
@@ -24,11 +25,12 @@ Cookie: riwayaj_session=…
   "token": "9f2c…64-char secret",
   "id": 42,
   "prefix": "9f2c1a77",
+  "abilities": ["bookings.read", "payments.read"],
   "expires_at": "2026-02-11T12:00:00+05:00"
 }
 ```
 
-The plain token is returned **exactly once**. Only its SHA-256 hash is stored (`api_tokens.token_hash`, unique). The secret is shown in clear in the response only.
+The plain token is returned **exactly once**. Only its SHA-256 hash is stored (`api_tokens.token_hash`, unique). The secret is shown in clear in the response only. Omitting `abilities` creates a legacy unrestricted token for first-party clients; supplying an array creates a least-privilege token. Valid abilities are `bookings.read`, `bookings.create`, `bookings.update`, `bookings.delete`, `service-bookings.read`, `payments.read`, `payments.record`, `payments.refund`, and the wildcard `*`.
 
 ### 1.2 Using a token
 ```http
@@ -36,7 +38,7 @@ GET /api/v1/me
 Authorization: Bearer 9f2c1a77…
 ```
 
-The `api` guard resolves the token, rejects it when it is **revoked, expired, or belongs to a non-active account**, and records `last_used_at` / `last_used_ip`.
+The `api` guard resolves the token, rejects it when it is **revoked, expired, belongs to a non-active account, or belongs to a locked tenant**, and records `last_used_at` / `last_used_ip`. Browser sessions keep their full role permissions; bearer tokens are additionally restricted to the abilities granted at issue time.
 
 ### 1.3 Revoking
 ```http
@@ -49,6 +51,8 @@ The token immediately returns **401**.
 |---|---|
 | Missing / malformed / revoked / expired token **and** no session | `401 {"message":"Unauthenticated. A valid bearer token is required."}` |
 | Token belongs to a suspended/inactive/blocked account | `403 {"message":"This account is not active."}` |
+| Token belongs to a suspended or expired tenant | `403 {"message":"This venue account is locked. Contact the platform administrator."}` |
+| Bearer token lacks the endpoint ability | `403 {"message":"This API token is missing the required ability: …"}` |
 | Authenticated but lacking the required permission | `403 {"message":"Missing required permission: …"}` |
 | Authenticated but belonging to a different tenant | `403 {"message":"Cross-tenant access denied."}` |
 | Rate limit exceeded | `429` with `Retry-After` |
@@ -63,8 +67,24 @@ The token immediately returns **401**.
 | Platform Finance / Content Moderator | Everything read-only on their domain |
 | Tenant staff | `tenant_id = user.tenant_id` — **always** |
 | Customer | `customer_id = user.id` — **always** |
+| Bearer token | Intersection of the owner's role scope and the token's granted abilities |
 
-There is no endpoint that returns an unscoped result set.
+There is no endpoint that returns an unscoped result set. Money is never writable through booking updates; cash receipts must use the payment endpoints below.
+
+### 2.1 Bearer-token abilities by endpoint
+
+| Endpoint group | Required ability |
+|---|---|
+| `GET /me` | authenticated, no specific ability |
+| `GET /bookings`, `GET /bookings/{id}`, `GET /bookings/availability` | `bookings.read` |
+| `POST /bookings` | `bookings.create` |
+| `PATCH /bookings/{id}` | `bookings.update` |
+| `DELETE /bookings/{id}` | `bookings.delete` |
+| `GET /service-bookings`, `GET /service-bookings/{id}` | `service-bookings.read` |
+| `POST /service-bookings/{id}/payments` | `payments.record` |
+| `GET /payments`, `GET /payments/summary` | `payments.read` |
+| `POST /payments/record` | `payments.record` |
+| `POST /payments/refund` | `payments.refund` |
 
 ---
 
@@ -89,7 +109,7 @@ Identity of the caller.
 | GET | `/api/v1/bookings` | authenticated | Filters: `status`, `hall_id`, `date_from`, `date_to`. Paginated (20/page). |
 | POST | `/api/v1/bookings` | `bookings.create` | Uses the atomic `BookingService::createReservation()`. `409` on slot conflict. |
 | GET | `/api/v1/bookings/{id}` | scoped | Returns booking + payments + RSVPs + KOT + floor plan. |
-| PATCH | `/api/v1/bookings/{id}` | `bookings.update` | `status`, `notes`, `advance_paid`. **Customers may only send `notes`.** |
+| PATCH | `/api/v1/bookings/{id}` | `bookings.update` | `status`, `notes`. `advance_paid` is rejected (`422`) — record cash through `/payments/record`. **Customers may only send `notes`.** |
 | DELETE | `/api/v1/bookings/{id}` | Super Admin only | |
 | GET | `/api/v1/bookings/availability` | authenticated | `hall_id`, `date`, optional `slot_type`. |
 

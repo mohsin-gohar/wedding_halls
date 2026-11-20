@@ -61,6 +61,7 @@ class PlatformHardeningTest extends TestCase
             'subscription_status' => 'ACTIVE',
             'subscription_plan_id' => $plan->id,
             'is_active' => true,
+            'marketplace_visible' => true,
         ]);
 
         $venue = Venue::create([
@@ -253,6 +254,10 @@ class PlatformHardeningTest extends TestCase
 
     public function test_subscription_payment_cannot_be_approved_twice(): void
     {
+        // Approval is a billable action; enable the flag so this test exercises
+        // the idempotency guard instead of the free-launch billing block.
+        config(['platform.billing_enabled' => true]);
+
         $payment = SubscriptionPayment::create([
             'tenant_id' => $this->tenant->id,
             'subscription_plan_id' => SubscriptionPlan::first()->id,

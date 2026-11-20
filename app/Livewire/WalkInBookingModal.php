@@ -8,6 +8,7 @@ use App\Models\Hall;
 use App\Models\MenuItem;
 use App\Models\Package;
 use App\Services\BookingService;
+use App\Support\ShiftWindows;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -111,20 +112,19 @@ class WalkInBookingModal extends Component
     protected function determineStaffMode(): void
     {
         $user = Auth::user();
-        $this->isStaff = $user && ($user->isTenantOwner() || $user->isManager() || $user->isFrontDesk() || $user->isSuperAdmin());
+
+        // Single source of truth for venue-side users (includes floor staff).
+        $this->isStaff = $user?->isVenueOperationsStaff() ?? false;
     }
 
     protected function initDefaultHall(): void
     {
         $user = Auth::user();
 
-        if (! $user) {
-            // Public guest browsing the marketplace: show all approved halls and
-            // pre-select the first as a sensible default; the guest confirms the choice.
-            $firstHall = Hall::where('is_active', true)
-                ->whereHas('tenant', fn ($t) => $t->where('is_active', true)->where('verification_status', 'APPROVED'))
-                ->first();
-        } elseif ($this->isStaff && $user->tenant_id) {
+        if (! $user || ! $this->isStaff) {
+            // Public guest browsing the marketplace: only centrally visible halls.
+            $firstHall = Hall::publicVisible()->with('tenant')->first();
+        } elseif ($user->tenant_id) {
             // Tenant staff (Owner / Manager / Front Desk, or a Super Admin assigned to a
             // business): strictly scope the walk-in terminal to the operator's own tenant.
             // Never silently preselect another business's hall.
@@ -151,7 +151,8 @@ class WalkInBookingModal extends Component
         $this->isOpen = true;
 
         if (! empty($payload['hall_id'])) {
-            $hall = Hall::find($payload['hall_id']);
+            $hallQuery = $this->isStaff ? Hall::query() : Hall::publicVisible();
+            $hall = $hallQuery->with('tenant')->find($payload['hall_id']);
             if ($hall) {
                 // If staff mode, ensure hall belongs to tenant
                 $user = Auth::user();
@@ -174,10 +175,18 @@ class WalkInBookingModal extends Component
             $this->slot_type = strtoupper($payload['slot_type']);
         }
         if (! empty($payload['package_id'])) {
-            $this->package_id = $payload['package_id'];
-            $pkg = Package::find($this->package_id);
+            $selectedHall = $this->hall_id ? Hall::query()->find($this->hall_id) : null;
+            $pkg = $this->scopedPackage(
+                (string) $payload['package_id'],
+                (string) ($selectedHall?->tenant_id ?? '')
+            );
+
             if ($pkg) {
+                $this->package_id = $pkg->id;
                 $this->per_head_rate = (float) $pkg->per_head_price;
+            } else {
+                $this->package_id = null;
+                $this->errorMessage = 'Selected package is not available for this venue.';
             }
         }
 
@@ -187,7 +196,8 @@ class WalkInBookingModal extends Component
 
     public function updatedHallId($value)
     {
-        $hall = Hall::find($value);
+        $hallQuery = $this->isStaff ? Hall::query() : Hall::publicVisible();
+        $hall = $hallQuery->with('tenant')->find($value);
         if ($hall) {
             $user = Auth::user();
             if ($this->isStaff && ! $user->isSuperAdmin() && $hall->tenant_id !== $user->tenant_id) {
@@ -418,20 +428,13 @@ class WalkInBookingModal extends Component
             'transaction_reference' => 'nullable|string|max:100',
         ]);
 
-        $hall = Hall::with('tenant')->findOrFail($this->hall_id);
+        $hallQuery = $this->isStaff ? Hall::with('tenant') : Hall::publicVisible()->with('tenant');
+        $hall = $hallQuery->findOrFail($this->hall_id);
         $user = Auth::user();
 
         // Server-Side Authorization & Tenant Isolation Checks
         if ($this->isStaff && ! $user->isSuperAdmin() && $hall->tenant_id !== $user->tenant_id) {
             abort(403, 'Unauthorized venue space for the current tenant context.');
-        }
-
-        if (! $this->isStaff) {
-            if (! $hall->is_active || ! $hall->tenant || ! $hall->tenant->is_active || $hall->tenant->verification_status !== 'APPROVED') {
-                $this->errorMessage = 'This venue space is currently not accepting online reservations.';
-
-                return;
-            }
         }
 
         if ($hall->max_capacity && $this->guest_count > $hall->max_capacity) {
@@ -544,59 +547,74 @@ class WalkInBookingModal extends Component
         $user = Auth::user();
         $this->determineStaffMode();
 
-        if ($this->isStaff && ! $user->isSuperAdmin() && $user->tenant_id) {
-            $halls = Hall::where('tenant_id', $user->tenant_id)->where('is_active', true)->get();
-            $packages = Package::where('is_active', true)
-                ->where(function ($q) use ($user) {
-                    $q->whereNull('tenant_id')->orWhere('tenant_id', $user->tenant_id);
-                })->get();
-            $menuItems = MenuItem::where('is_active', true)
-                ->where(function ($q) use ($user) {
-                    $q->whereNull('tenant_id')->orWhere('tenant_id', $user->tenant_id);
-                })->get();
-        } elseif ($this->hall_id) {
-            $selectedHall = Hall::find($this->hall_id);
-            $tenantId = $selectedHall ? $selectedHall->tenant_id : null;
-            $halls = Hall::where('is_active', true)
-                ->whereHas('tenant', fn ($t) => $t->where('is_active', true)->where('verification_status', 'APPROVED'))
-                ->get();
-            $packages = Package::where('is_active', true)
-                ->where(function ($q) use ($tenantId) {
-                    $q->whereNull('tenant_id');
-                    if ($tenantId) {
-                        $q->orWhere('tenant_id', $tenantId);
-                    }
-                })->get();
-            $menuItems = MenuItem::where('is_active', true)
-                ->where(function ($q) use ($tenantId) {
-                    $q->whereNull('tenant_id');
-                    if ($tenantId) {
-                        $q->orWhere('tenant_id', $tenantId);
-                    }
-                })->get();
-        } else {
-            $halls = Hall::where('is_active', true)
-                ->whereHas('tenant', fn ($t) => $t->where('is_active', true)->where('verification_status', 'APPROVED'))
-                ->get();
-            $packages = Package::where('is_active', true)->whereNull('tenant_id')->get();
-            $menuItems = MenuItem::where('is_active', true)->whereNull('tenant_id')->get();
+        $selectedHall = null;
+        if ($this->hall_id) {
+            $selectedHallQuery = $this->isStaff ? Hall::with('tenant') : Hall::publicVisible()->with('tenant');
+            $selectedHall = $selectedHallQuery->find($this->hall_id);
         }
+
+        if ($this->isStaff && ! $user?->isSuperAdmin() && $user?->tenant_id) {
+            // Staff terminal may use all active halls in its own tenant.
+            $halls = Hall::with('tenant')
+                ->where('tenant_id', $user->tenant_id)
+                ->where('is_active', true)
+                ->get();
+            $tenantScopeId = (string) $user->tenant_id;
+        } else {
+            // Every guest-facing hall list uses the central visibility scope.
+            $halls = Hall::publicVisible()->with('tenant')->get();
+            $tenantScopeId = $selectedHall?->tenant_id ? (string) $selectedHall->tenant_id : null;
+        }
+
+        $packages = Package::where('is_active', true)
+            ->where(function ($q) use ($tenantScopeId): void {
+                $q->whereNull('tenant_id');
+                if ($tenantScopeId) {
+                    $q->orWhere('tenant_id', $tenantScopeId);
+                }
+            })->get();
+
+        $menuItems = MenuItem::where('is_active', true)
+            ->where(function ($q) use ($tenantScopeId): void {
+                $q->whereNull('tenant_id');
+                if ($tenantScopeId) {
+                    $q->orWhere('tenant_id', $tenantScopeId);
+                }
+            })->get();
+
+        $shiftWindows = $selectedHall?->tenant?->shift_windows;
 
         return view('livewire.walk-in-booking-modal', [
             'halls' => $halls,
             'packages' => $packages,
             'menuItems' => $menuItems,
+            'shiftLabels' => [
+                'AFTERNOON' => ShiftWindows::labelForSlot($shiftWindows, 'AFTERNOON'),
+                'EVENING' => ShiftWindows::labelForSlot($shiftWindows, 'EVENING'),
+                'NIGHT' => ShiftWindows::labelForSlot($shiftWindows, 'NIGHT'),
+                'FULL_DAY' => ShiftWindows::labelForSlot($shiftWindows, 'FULL_DAY'),
+            ],
         ]);
     }
 
-    /** A package is usable only when global or owned by the selected hall's tenant. */
+    /**
+     * A package is usable only when global or owned by the selected hall's
+     * tenant. Public inquiries additionally require that tenant to pass the
+     * central public-visibility scope; marketplace opt-in governs marketplace
+     * listings, not an already-visible venue's own booking form.
+     */
     private function scopedPackage(string $packageId, string $tenantId): ?Package
     {
         return Package::query()
             ->whereKey($packageId)
             ->where('is_active', true)
             ->where(function ($query) use ($tenantId): void {
-                $query->whereNull('tenant_id')->orWhere('tenant_id', $tenantId);
+                $query->whereNull('tenant_id')->orWhere(function ($tenantQuery) use ($tenantId): void {
+                    $tenantQuery->where('tenant_id', $tenantId);
+                    if (! $this->isStaff) {
+                        $tenantQuery->whereHas('tenant', fn ($tenant) => $tenant->publicVisible());
+                    }
+                });
             })
             ->first();
     }

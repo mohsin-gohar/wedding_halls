@@ -1,3 +1,6 @@
+﻿> [!WARNING]
+> **Historical / superseded document.** This file predates the current cash-only audit and verification pass. Do not rely on its claims about payment methods, test counts, browser proof, or production readiness. See `DOCS_STATUS.md` and the authoritative final reports.
+
 > ⚠️ **SUPERSEDED — see `TESTING_AND_QA_REPORT.md` for the current figures.**
 > This document records the earlier phase (138 passed / 973 assertions).
 > The current verified state is **164 passed · 1 skipped · 1077 assertions**,

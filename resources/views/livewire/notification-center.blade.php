@@ -9,6 +9,27 @@
         </div>
     </div>
 
+    <!-- Existing component filters, now exposed in the UI -->
+    <div class="bg-white dark:bg-[#171513] rounded-xl border border-[#E7E5E4] dark:border-white/10 p-4 mb-6 flex flex-col sm:flex-row sm:items-end gap-3">
+        <div class="flex-1">
+            <label for="notification-search" class="block text-[10px] font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-1">Search</label>
+            <input id="notification-search" type="search" wire:model.live="search" placeholder="Title or message…" class="w-full rounded-lg border border-stone-200 dark:border-white/10 bg-white dark:bg-[#1f1c18] px-3 py-2 text-sm text-[#171513] dark:text-white">
+        </div>
+        <div class="sm:w-56">
+            <label for="notification-type" class="block text-[10px] font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-1">Type</label>
+            <select id="notification-type" wire:model.live="typeFilter" class="w-full rounded-lg border border-stone-200 dark:border-white/10 bg-white dark:bg-[#1f1c18] px-3 py-2 text-sm text-[#171513] dark:text-white">
+                <option value="ALL">All types</option>
+                @foreach($types as $type)
+                    <option value="{{ $type }}">{{ str_replace('_', ' ', $type) }}</option>
+                @endforeach
+            </select>
+        </div>
+        <label class="inline-flex items-center gap-2 text-xs text-stone-600 dark:text-stone-300 pb-2">
+            <input type="checkbox" wire:model.live="unreadOnly" class="rounded border-stone-300 text-[#C6A15B]">
+            Unread only
+        </label>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse ($notifications as $notification)
             <div class="bg-white dark:bg-[#171513] rounded-xl border border-[#E7E5E4] dark:border-white/10 p-5 transition-all hover:shadow-lg {{ $notification->isRead() ? '' : 'border-[#C6A15B]/40 bg-[#C6A15B]/5' }}">

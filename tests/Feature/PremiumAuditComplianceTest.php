@@ -24,6 +24,7 @@ class PremiumAuditComplianceTest extends TestCase
             'subdomain' => 'royal-pearl-banquets',
             'is_active' => true,
             'verification_status' => 'APPROVED',
+            'marketplace_visible' => true,
         ]);
 
         $approvedVenue = Venue::create([

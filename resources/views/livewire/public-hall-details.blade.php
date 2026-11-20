@@ -1220,25 +1220,6 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         @livewire('hall-reviews', ['hallId' => $hall->id])
     </div>
-    <script type="application/ld+json">
-        {!! json_encode([
-            '@context' => 'https://schema.org',
-            '@type' => 'EventVenue',
-            'name' => $hall->name,
-            'description' => $hall->description ?? $hall->tagline,
-            'url' => url()->current(),
-            'telephone' => optional($hall->tenant)->phone,
-            'address' => [
-                '@type' => 'PostalAddress',
-                'streetAddress' => optional($hall->venue)->address,
-                'addressLocality' => optional($hall->venue)->city,
-                'addressCountry' => 'PK',
-            ],
-            'maximumAttendeeCapacity' => $hall->max_capacity,
-            'priceRange' => 'PKR ' . number_format($hall->base_rent),
-        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
-    </script>
-
     <!-- Venue Interactive AI Concierge Chatbot Widget (Only on Venue Page) -->
     <livewire:venue-chat-widget :hall="$hall" :key="'venue-chat-'.$hall->id" />
 

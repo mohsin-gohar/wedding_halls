@@ -81,18 +81,43 @@
 
                             @if(in_array($booking->status, ['ACCEPTED', 'CONFIRMED', 'IN_PROGRESS'], true))
                                 <div class="flex flex-wrap gap-2 pt-2">
-                                    @if($booking->status === 'ACCEPTED')
+                                    @if($booking->status === 'ACCEPTED' && $this->hasPortalPermission('service-bookings.confirm'))
                                         <button wire:click="confirmBooking({{ $booking->id }})" class="btn-gold !h-9 !px-4 text-[10px] font-mono uppercase">Confirm booking</button>
                                     @endif
-                                    @if(in_array($booking->status, ['CONFIRMED', 'ACCEPTED'], true))
+                                    @if(in_array($booking->status, ['CONFIRMED', 'ACCEPTED'], true) && $this->hasPortalPermission('service-bookings.update'))
                                         <button wire:click="startBooking({{ $booking->id }})" class="btn-outline-gold !h-9 !px-4 text-[10px] font-mono uppercase">Start event</button>
                                     @endif
-                                    @if($booking->status === 'IN_PROGRESS')
+                                    @if($booking->status === 'IN_PROGRESS' && $this->hasPortalPermission('service-bookings.complete'))
                                         <button wire:click="completeBooking({{ $booking->id }})" class="btn-outline-gold !h-9 !px-4 text-[10px] font-mono uppercase">Mark completed</button>
                                     @endif
-                                    @if($booking->isCancellable())
+                                    @if($booking->isCancellable() && $this->hasPortalPermission('service-bookings.cancel'))
                                         <button wire:click="cancelBooking({{ $booking->id }}, 'Vendor-initiated cancellation.')" class="btn-outline-gold !h-9 !px-4 text-[10px] font-mono uppercase">Cancel</button>
                                     @endif
+                                </div>
+                            @endif
+
+                            @if($this->canVerifyPayments && $this->pendingPaymentsFor($booking->id)->isNotEmpty())
+                                <div class="mt-3 border-t border-[#E7E5E4] dark:border-white/10 pt-3">
+                                    <p class="text-[10px] uppercase tracking-wider font-semibold text-stone-400 font-mono mb-2">Cash payments awaiting verification</p>
+                                    <div class="space-y-2">
+                                        @foreach($this->pendingPaymentsFor($booking->id) as $pending)
+                                            <div class="flex flex-wrap items-center justify-between gap-3 bg-[#F8F5EF] dark:bg-[#1C1917] p-2.5 text-xs font-sans">
+                                                <span class="text-stone-600 dark:text-stone-300">
+                                                    {{ number_format((float) $pending->amount, 2) }} PKR
+                                                    <span class="block text-[10px] text-stone-400 font-mono">{{ $pending->reference ?? 'Cash submission' }}</span>
+                                                </span>
+                                                @if($this->canVerifyPayments)
+                                                    <button type="button" wire:click="verifyPayment('{{ $pending->id }}')"
+                                                            class="btn-gold !h-8 !px-3 text-[10px] font-mono uppercase"
+                                                            onclick="return confirm('Verify that cash was physically received and settle this payment?');">
+                                                        Verify cash
+                                                    </button>
+                                                @else
+                                                    <span class="text-[10px] text-stone-400">Verification restricted</span>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 </div>
                             @endif
                         </div>

@@ -79,6 +79,11 @@
                         <th class="px-1 py-2 text-center border-b border-[#E7E5E4] dark:border-white/10 min-w-[38px] {{ $day->isToday() ? 'text-[#C6A15B]' : '' }}">
                             <div class="font-bold">{{ $day->format('j') }}</div>
                             <div class="text-[9px] text-stone-400 uppercase">{{ $day->format('D') }}</div>
+                            <button type="button"
+                                    wire:click="openHolidayModal('{{ $day->format('Y-m-d') }}')"
+                                    title="Add holiday on {{ $day->format('d M Y') }}"
+                                    aria-label="Add holiday on {{ $day->format('d M Y') }}"
+                                    class="mt-0.5 text-[9px] leading-none text-[#8F7239] dark:text-[#C6A15B] hover:underline cursor-pointer">+ Holiday</button>
                         </th>
                     @endforeach
                 </tr>

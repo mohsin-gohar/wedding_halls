@@ -10,7 +10,9 @@ use App\Models\PurchaseOrder;
 use App\Support\CashOnlyPayments;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -64,6 +66,9 @@ class InventoryTracker extends Component
 
     public string $movementNote = '';
 
+    /** Server-issued token: one successful submission per movement request. */
+    public ?string $movementRequestToken = null;
+
     // Create Purchase Order Modal
     public bool $showPoModal = false;
 
@@ -78,12 +83,32 @@ class InventoryTracker extends Component
     public function mount()
     {
         $user = Auth::user();
-        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isChef() && ! $user->isAccountant() && ! $user->isSuperAdmin())) {
+        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isChef() && ! $user->isAccountant() && ! $user->isInventoryManager() && ! $user->isSuperAdmin())) {
             abort(403, 'Unauthorized. Access to Inventory ERP is restricted to Owners, Chefs, and Managers.');
         }
 
         $this->poDate = Carbon::today()->format('Y-m-d');
-        $this->seedInitialItemsIfEmpty();
+    }
+
+    /** Authorization is checked on every mutation, not only on mount. */
+    private function authorizeInventoryAction(string $action): void
+    {
+        $user = Auth::user();
+        if (! $user) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $isPrivileged = $user->isSuperAdmin() || $user->isTenantOwner() || $user->isManager();
+
+        if (in_array($action, ['item.create', 'item.update', 'item.delete', 'stock.movement'], true)
+            && ! ($isPrivileged || $user->isChef() || $user->isInventoryManager())) {
+            abort(403, 'Unauthorized to modify inventory stock.');
+        }
+
+        if (in_array($action, ['po.create', 'po.paid'], true)
+            && ! ($isPrivileged || $user->isAccountant())) {
+            abort(403, 'Unauthorized to modify procurement records.');
+        }
     }
 
     public function setTab(string $tab)
@@ -91,27 +116,6 @@ class InventoryTracker extends Component
         $this->activeTab = $tab;
         $this->feedbackMessage = null;
         $this->errorMessage = null;
-    }
-
-    protected function seedInitialItemsIfEmpty()
-    {
-        $tenantId = Auth::user()->tenant_id;
-        if ($tenantId && InventoryItem::where('tenant_id', $tenantId)->count() === 0) {
-            $defaultItems = [
-                ['name' => 'Mutton Goat (Fresh Karahi Cut)', 'category' => 'RAW_FOOD', 'unit' => 'KG', 'current_stock' => 120, 'min_threshold' => 30, 'unit_cost' => 2200, 'supplier_name' => 'Punjab Meat Mart'],
-                ['name' => 'Broiler Chicken (Curry Cut)', 'category' => 'RAW_FOOD', 'unit' => 'KG', 'current_stock' => 250, 'min_threshold' => 50, 'unit_cost' => 650, 'supplier_name' => 'Al-Noor Poultry'],
-                ['name' => 'Super Kernel Basmati Rice (Aged)', 'category' => 'RAW_FOOD', 'unit' => 'BAGS', 'current_stock' => 25, 'min_threshold' => 8, 'unit_cost' => 11500, 'supplier_name' => 'Guard Rice Mills'],
-                ['name' => 'Cooking Banaspati Ghee', 'category' => 'RAW_FOOD', 'unit' => 'KG', 'current_stock' => 180, 'min_threshold' => 40, 'unit_cost' => 540, 'supplier_name' => 'Kashmir Banaspati'],
-                ['name' => 'Generator Diesel Fuel (Standby)', 'category' => 'FUEL', 'unit' => 'LITRE', 'current_stock' => 650, 'min_threshold' => 200, 'unit_cost' => 285, 'supplier_name' => 'PSO Liberty Station'],
-                ['name' => 'Heavy Commercial Gas Cylinders (45.4kg)', 'category' => 'FUEL', 'unit' => 'CYLINDERS', 'current_stock' => 12, 'min_threshold' => 4, 'unit_cost' => 13500, 'supplier_name' => 'Apex Gas Supply'],
-                ['name' => 'Luxury Ivory Linen Tablecloths', 'category' => 'LINEN', 'unit' => 'PIECES', 'current_stock' => 150, 'min_threshold' => 50, 'unit_cost' => 1800, 'supplier_name' => 'ChenOne Corporate'],
-                ['name' => 'Fine Bone China Dinner Plates', 'category' => 'CROCKERY', 'unit' => 'PIECES', 'current_stock' => 800, 'min_threshold' => 200, 'unit_cost' => 750, 'supplier_name' => 'Tariq Glass & Crockery'],
-            ];
-
-            foreach ($defaultItems as $item) {
-                InventoryItem::create(array_merge($item, ['tenant_id' => $tenantId]));
-            }
-        }
     }
 
     // ==========================================
@@ -150,6 +154,8 @@ class InventoryTracker extends Component
 
     public function saveItem()
     {
+        $this->authorizeInventoryAction($this->isEditingItem ? 'item.update' : 'item.create');
+
         $this->validate([
             'itemName' => 'required|string|min:2|max:120',
             'itemCategory' => 'required|string|max:60',
@@ -195,9 +201,36 @@ class InventoryTracker extends Component
 
     public function deleteItem(string $itemId)
     {
-        $item = InventoryItem::where('tenant_id', Auth::user()->tenant_id)->findOrFail($itemId);
+        $this->authorizeInventoryAction('item.delete');
+
+        $tenantId = Auth::user()->tenant_id;
+        $item = InventoryItem::where('tenant_id', $tenantId)->findOrFail($itemId);
         $name = $item->name;
+
+        // Never erase an item that still has stock-ledger history: archive it
+        // instead so past valuations and movement references stay intact.
+        if ($item->logs()->exists()) {
+            $item->update(['is_active' => false]);
+            AuditLog::log(
+                'INVENTORY_ITEM_ARCHIVED',
+                "Inventory item [{$name}] was archived because stock movements reference it.",
+                $tenantId,
+                'InventoryItem',
+                $item->id
+            );
+            $this->feedbackMessage = "Inventory item [{$name}] has movement history and was archived (not deleted).";
+
+            return;
+        }
+
         $item->delete();
+        AuditLog::log(
+            'INVENTORY_ITEM_DELETED',
+            "Inventory item [{$name}] was deleted (no movement history).",
+            $tenantId,
+            'InventoryItem',
+            $itemId
+        );
         $this->feedbackMessage = "Inventory item [{$name}] deleted.";
     }
 
@@ -206,6 +239,12 @@ class InventoryTracker extends Component
     // ==========================================
     public function openMovementModal(string $itemId, string $defaultType = 'STOCK_IN')
     {
+        $this->authorizeInventoryAction('stock.movement');
+
+        validator(['movementType' => $defaultType], [
+            'movementType' => ['required', Rule::in(InventoryLog::TYPES)],
+        ])->validate();
+
         $item = InventoryItem::where('tenant_id', Auth::user()->tenant_id)->findOrFail($itemId);
         $this->movementItemId = $item->id;
         $this->movementItemName = $item->name;
@@ -213,57 +252,156 @@ class InventoryTracker extends Component
         $this->movementQuantity = 10.0;
         $this->movementUnitPrice = (float) $item->unit_cost;
         $this->movementNote = '';
+        $this->movementRequestToken = (string) Str::ulid();
         $this->showMovementModal = true;
     }
 
     public function recordStockMovement()
     {
-        $this->validate([
-            'movementQuantity' => 'required|numeric|min:0.1',
-        ]);
+        $this->authorizeInventoryAction('stock.movement');
 
-        $item = InventoryItem::where('tenant_id', Auth::user()->tenant_id)->findOrFail($this->movementItemId);
-        $tenantId = Auth::user()->tenant_id;
+        // Match the decimal(10,2) ledger precision before validating so a
+        // sub-cent submission is rejected rather than silently truncated by
+        // the database driver. Integers remain valid two-decimal amounts.
+        $rawQuantity = $this->movementQuantity;
+        $rawUnitPrice = $this->movementUnitPrice;
 
-        $qty = (float) $this->movementQuantity;
-        $totalCost = round($qty * $this->movementUnitPrice, 2);
-
-        if ($this->movementType === 'STOCK_IN') {
-            $item->current_stock += $qty;
-        } elseif ($this->movementType === 'STOCK_OUT' || $this->movementType === 'WASTAGE') {
-            if ($item->current_stock < $qty) {
-                $this->errorMessage = "Cannot deduct {$qty} {$item->unit}; available stock is only {$item->current_stock} {$item->unit}.";
-
-                return;
-            }
-            $item->current_stock -= $qty;
-        } elseif ($this->movementType === 'ADJUSTMENT') {
-            $item->current_stock = $qty;
+        if (is_numeric($this->movementQuantity)) {
+            $this->movementQuantity = round((float) $this->movementQuantity, 2);
+        }
+        if (is_numeric($this->movementUnitPrice)) {
+            $this->movementUnitPrice = round((float) $this->movementUnitPrice, 2);
         }
 
-        $item->save();
-
-        InventoryLog::create([
-            'tenant_id' => $tenantId,
-            'inventory_item_id' => $item->id,
-            'type' => $this->movementType,
-            'quantity' => $qty,
-            'unit_price' => $this->movementUnitPrice,
-            'total_cost' => $totalCost,
-            'reference_note' => $this->movementNote,
-            'logged_by' => Auth::id(),
+        $this->validate([
+            'movementItemId' => 'required|string|exists:inventory_items,id',
+            'movementType' => ['required', Rule::in(InventoryLog::TYPES)],
+            'movementQuantity' => [
+                'required', 'numeric', 'min:0.1', 'max:99999999.99',
+                $this->twoDecimalRule($rawQuantity),
+            ],
+            'movementUnitPrice' => [
+                'required', 'numeric', 'min:0', 'max:9999999999.99',
+                $this->twoDecimalRule($rawUnitPrice),
+            ],
+            'movementNote' => 'nullable|string|max:255',
         ]);
 
-        AuditLog::log(
-            'INVENTORY_MOVEMENT',
-            "Recorded [{$this->movementType}] of {$qty} {$item->unit} for [{$item->name}].",
-            $tenantId,
-            'InventoryItem',
-            $item->id
-        );
+        $token = $this->movementRequestToken;
+        if (! is_string($token) || ! preg_match('/^[A-Za-z0-9]{8,64}$/', $token)) {
+            $token = (string) Str::ulid();
+            $this->movementRequestToken = $token;
+        }
+        $token = Str::upper($token);
+
+        // The marker lives inside the existing note column (no schema change)
+        // and is checked under the stock row lock, so a retried submission can
+        // never apply the same movement twice.
+        $marker = '[movement-token:'.$token.']';
+        $note = trim((string) $this->movementNote);
+        $referenceNote = $note === ''
+            ? $marker
+            : $marker.' '.Str::limit($note, max(1, 255 - strlen($marker) - 1), '');
+
+        $tenantId = Auth::user()->tenant_id;
+        $itemId = $this->movementItemId;
+        $movementType = $this->movementType;
+        $qty = (float) $this->movementQuantity;
+        $unitPrice = (float) $this->movementUnitPrice;
+        $totalCost = round($qty * $unitPrice, 2);
+
+        $result = DB::transaction(function () use ($tenantId, $itemId, $movementType, $qty, $unitPrice, $totalCost, $marker, $referenceNote) {
+            // Lock the stock row so concurrent movements cannot oversell or
+            // overwrite each other's resulting quantity.
+            $item = InventoryItem::where('tenant_id', $tenantId)
+                ->whereKey($itemId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $currentStock = (float) $item->current_stock;
+
+            $alreadyLogged = InventoryLog::where('tenant_id', $tenantId)
+                ->where('reference_note', 'like', $marker.'%')
+                ->lockForUpdate()
+                ->first();
+
+            if ($alreadyLogged) {
+                return ['duplicate' => true, 'item' => $item->fresh(), 'stock' => $currentStock];
+            }
+
+            if ($movementType === 'STOCK_IN') {
+                $newStock = $currentStock + $qty;
+            } elseif ($movementType === 'STOCK_OUT' || $movementType === 'WASTAGE') {
+                if ($currentStock < $qty) {
+                    return ['error' => "Cannot deduct {$qty} {$item->unit}; available stock is only {$currentStock} {$item->unit}."];
+                }
+                $newStock = $currentStock - $qty;
+            } else {
+                // ADJUSTMENT is an absolute physical count.
+                $newStock = $qty;
+            }
+
+            $item->update(['current_stock' => round($newStock, 2)]);
+
+            InventoryLog::create([
+                'tenant_id' => $tenantId,
+                'inventory_item_id' => $item->id,
+                'type' => $movementType,
+                'quantity' => $qty,
+                'unit_price' => $unitPrice,
+                'total_cost' => $totalCost,
+                'reference_note' => $referenceNote,
+                'logged_by' => Auth::id(),
+            ]);
+
+            AuditLog::log(
+                'INVENTORY_MOVEMENT',
+                "Recorded [{$movementType}] of {$qty} {$item->unit} for [{$item->name}].",
+                $tenantId,
+                'InventoryItem',
+                $item->id
+            );
+
+            return ['item' => $item->fresh(), 'stock' => $newStock];
+        });
+
+        if (isset($result['duplicate'])) {
+            $this->showMovementModal = false;
+            $this->errorMessage = null;
+            $this->feedbackMessage = "Stock movement was already recorded for this request. Current stock of [{$result['item']->name}] is still ".number_format((float) $result['stock'], 2)." {$result['item']->unit}.";
+
+            return;
+        }
+
+        if (isset($result['error'])) {
+            $this->errorMessage = $result['error'];
+
+            return;
+        }
 
         $this->showMovementModal = false;
-        $this->feedbackMessage = "Stock movement logged. Current stock of [{$item->name}] is now {$item->current_stock} {$item->unit}.";
+        $this->errorMessage = null;
+        $this->feedbackMessage = "Stock movement logged. Current stock of [{$result['item']->name}] is now ".number_format((float) $result['stock'], 2)." {$result['item']->unit}.";
+    }
+
+    /**
+     * Validate ledger precision without Laravel's `decimal:2`, which rejects
+     * whole numbers such as 10 even though they fit decimal(10,2).
+     */
+    private function twoDecimalRule(mixed $original): callable
+    {
+        return static function (string $attribute, mixed $value, callable $fail) use ($original): void {
+            if (! is_numeric($original)) {
+                return;
+            }
+
+            if (abs((float) $original - round((float) $original, 2)) > 0.000001) {
+                $fail(__('validation.decimal', [
+                    'attribute' => str_replace('_', ' ', $attribute),
+                    'decimal' => 2,
+                ]));
+            }
+        };
     }
 
     // ==========================================
@@ -280,6 +418,8 @@ class InventoryTracker extends Component
 
     public function createPurchaseOrder()
     {
+        $this->authorizeInventoryAction('po.create');
+
         $this->validate([
             'poSupplierName' => 'required|string|min:3|max:120',
             'poTotalAmount' => 'required|numeric|min:100',
@@ -305,32 +445,76 @@ class InventoryTracker extends Component
 
     public function markPoPaid(string $poId)
     {
-        $po = PurchaseOrder::where('tenant_id', Auth::user()->tenant_id)->findOrFail($poId);
-        $po->update(['status' => 'PAID']);
+        $this->authorizeInventoryAction('po.paid');
 
-        // Auto-post expense to ERP ledger under CATERING_SUPPLIES or RAW_FOOD_MEAT
-        Expense::create([
-            'tenant_id' => Auth::user()->tenant_id,
-            'category' => 'RAW_FOOD_MEAT',
-            'title' => "Supplier Procurement - {$po->supplier_name} ({$po->po_number})",
-            'amount' => $po->total_amount,
-            'expense_date' => Carbon::today()->format('Y-m-d'),
-            'payee' => $po->supplier_name,
-            'payment_method' => CashOnlyPayments::CASH,
-            'receipt_number' => $po->po_number,
-            'notes' => $po->notes ?: 'Inventory procurement purchase order cleared.',
-            'created_by_user_id' => Auth::id(),
-        ]);
+        $tenantId = Auth::user()->tenant_id;
+        $paymentMethod = CashOnlyPayments::assert(CashOnlyPayments::CASH, 'purchase order settlement');
 
-        AuditLog::log(
-            'PO_PAID',
-            "Purchase order [{$po->po_number}] of PKR ".number_format($po->total_amount).' marked as PAID and auto-logged to Expenses.',
-            Auth::user()->tenant_id,
-            'PurchaseOrder',
-            $po->id
-        );
+        // The PO row lock serialises concurrent clicks. The expense receipt
+        // number (the PO number) is the idempotency key: a second call can
+        // never post a duplicate ledger entry.
+        $outcome = DB::transaction(function () use ($poId, $tenantId, $paymentMethod) {
+            $po = PurchaseOrder::where('tenant_id', $tenantId)
+                ->whereKey($poId)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $this->feedbackMessage = "Purchase order [{$po->po_number}] marked as PAID and posted to ERP Expense Ledger.";
+            if ($po->status === 'PAID') {
+                return ['result' => 'already', 'po' => $po];
+            }
+
+            if (! in_array($po->status, ['ORDERED', 'RECEIVED'], true)) {
+                return ['result' => 'invalid', 'po' => $po];
+            }
+
+            $alreadyPosted = Expense::where('tenant_id', $tenantId)
+                ->where('receipt_number', $po->po_number)
+                ->exists();
+
+            if (! $alreadyPosted) {
+                // Auto-post expense to ERP ledger under RAW_FOOD_MEAT.
+                Expense::create([
+                    'tenant_id' => $tenantId,
+                    'category' => 'RAW_FOOD_MEAT',
+                    'title' => "Supplier Procurement - {$po->supplier_name} ({$po->po_number})",
+                    'amount' => $po->total_amount,
+                    'expense_date' => Carbon::today()->format('Y-m-d'),
+                    'payee' => $po->supplier_name,
+                    'payment_method' => $paymentMethod,
+                    'receipt_number' => $po->po_number,
+                    'notes' => $po->notes ?: 'Inventory procurement purchase order cleared.',
+                    'created_by_user_id' => Auth::id(),
+                ]);
+            }
+
+            $po->update(['status' => 'PAID']);
+
+            AuditLog::log(
+                'PO_PAID',
+                "Purchase order [{$po->po_number}] of PKR ".number_format($po->total_amount).' marked as PAID and auto-logged to Expenses.',
+                $tenantId,
+                'PurchaseOrder',
+                $po->id
+            );
+
+            return ['result' => $alreadyPosted ? 'recovered' : 'paid', 'po' => $po];
+        });
+
+        if ($outcome['result'] === 'invalid') {
+            $this->errorMessage = "Purchase order [{$outcome['po']->po_number}] is {$outcome['po']->status} and cannot be paid.";
+
+            return;
+        }
+
+        if ($outcome['result'] === 'already') {
+            $this->errorMessage = "Purchase order [{$outcome['po']->po_number}] has already been paid. No second expense was posted.";
+
+            return;
+        }
+
+        $this->feedbackMessage = $outcome['result'] === 'recovered'
+            ? "Purchase order [{$outcome['po']->po_number}] was already posted to the ledger and is now correctly marked as PAID."
+            : "Purchase order [{$outcome['po']->po_number}] marked as PAID and posted to ERP Expense Ledger.";
     }
 
     public function render()

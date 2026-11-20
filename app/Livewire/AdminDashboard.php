@@ -16,7 +16,9 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Models\VendorWallet;
 use App\Models\Venue;
+use App\Services\NotificationService;
 use App\Services\PlatformAnalyticsService;
+use App\Services\SubscriptionService;
 use App\Support\PlatformMetrics;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -272,6 +274,21 @@ class AdminDashboard extends Component
         return (bool) config('platform.billing_enabled', false);
     }
 
+    /**
+     * Server-side gate for direct Livewire calls: hiding a Blade button is not
+     * an access control. Returns true when the caller must stop.
+     */
+    private function billingBlocked(): bool
+    {
+        if ($this->billingEnabled()) {
+            return false;
+        }
+
+        $this->errorMessage = 'SaaS billing is disabled during the free launch period — every hall ships at no charge.';
+
+        return true;
+    }
+
     #[On('set-admin-tab')]
     public function setTab(string $tab)
     {
@@ -369,7 +386,7 @@ class AdminDashboard extends Component
     public function openProvisionModal()
     {
         $this->resetProvisionForm();
-        $firstPlan = SubscriptionPlan::where('is_active', true)->first();
+        $firstPlan = $this->billingEnabled() ? SubscriptionPlan::where('is_active', true)->first() : null;
         $this->newPlanId = $firstPlan ? $firstPlan->id : null;
         $this->showProvisionModal = true;
     }
@@ -410,7 +427,9 @@ class AdminDashboard extends Component
             'newOwnerPhone' => 'required|string|min:8|max:30',
         ]);
 
-        $plan = $this->newPlanId ? SubscriptionPlan::find($this->newPlanId) : SubscriptionPlan::first();
+        $plan = $this->billingEnabled()
+            ? ($this->newPlanId ? SubscriptionPlan::find($this->newPlanId) : SubscriptionPlan::first())
+            : null;
 
         // 1. Create Tenant with unique slug and subdomain
         $baseSlug = Str::slug($this->newBusinessName);
@@ -513,15 +532,15 @@ class AdminDashboard extends Component
             $hall->id
         );
 
-        $plainPassword = $this->newOwnerPassword;
-        // Flash the password for one-time display (do not store)
-        session()->flash('provisioned_password', $plainPassword);
+        // Show the plain password exactly once, in the handover card below.
+        // It is never flashed to the session or persisted in plain text.
         $this->provisionedCredentials = [
             'business_name' => $this->newBusinessName,
             'city' => $this->newCity,
             'owner_name' => $this->newOwnerName,
             'email' => $this->newOwnerEmail,
             'phone' => $this->newOwnerPhone,
+            'password' => $this->newOwnerPassword,
             'login_url' => url('/login'),
             'hall_id' => $hall->id,
             'hall_url' => route('hall.showcase', $hall->slug),
@@ -570,13 +589,14 @@ class AdminDashboard extends Component
         ]);
 
         $tenant = Tenant::findOrFail($this->editingVendorId);
+        $planId = $this->billingEnabled() ? $this->editVendorPlanId : $tenant->subscription_plan_id;
         $tenant->update([
             'name' => $this->editVendorName,
             'city' => $this->editVendorCity,
             'address' => $this->editVendorAddress,
             'phone' => $this->editVendorPhone,
             'email' => $this->editVendorEmail,
-            'subscription_plan_id' => $this->editVendorPlanId,
+            'subscription_plan_id' => $planId,
             'subscription_expires_at' => $this->editVendorExpiresAt ? Carbon::parse($this->editVendorExpiresAt) : $tenant->subscription_expires_at,
         ]);
 
@@ -603,6 +623,8 @@ class AdminDashboard extends Component
 
         if ($hasHistory) {
             $tenant->update(['is_active' => false, 'verification_status' => 'SUSPENDED']);
+            // Keep the subscription lock predicate in sync with the suspension.
+            $tenant->forceFill(['subscription_status' => 'SUSPENDED'])->save();
             AuditLog::log(
                 'VENDOR_SUSPENDED',
                 "Vendor [{$name}] has booking/payment/audit history; suspended instead of deleted to preserve records.",
@@ -620,6 +642,7 @@ class AdminDashboard extends Component
         $tenant->halls()->update(['is_active' => false]);
         $tenant->users()->update(['status' => 'INACTIVE']);
         $tenant->update(['is_active' => false, 'verification_status' => 'SUSPENDED']);
+        $tenant->forceFill(['subscription_status' => 'SUSPENDED'])->save();
 
         AuditLog::log('VENDOR_ARCHIVED', "Super Admin archived vendor [{$name}] (no financial history).", null, 'Tenant', $tenantId);
         $this->feedbackMessage = "Vendor [{$name}] has been archived and deactivated.";
@@ -628,10 +651,18 @@ class AdminDashboard extends Component
     public function approveVendor(string $tenantId)
     {
         $tenant = Tenant::findOrFail($tenantId);
+        $wasSuspended = $tenant->subscription_status === 'SUSPENDED';
         $tenant->update([
             'verification_status' => 'APPROVED',
             'is_active' => true,
         ]);
+
+        if ($wasSuspended) {
+            // Only lift an admin-imposed suspension; never rewrite an actual
+            // EXPIRED or CANCELLED subscription.
+            $tenant->forceFill(['subscription_status' => 'ACTIVE'])->save();
+        }
+
         $tenant->venues()->update(['is_active' => true]);
         $tenant->halls()->update(['is_active' => true]);
 
@@ -651,6 +682,9 @@ class AdminDashboard extends Component
             'verification_status' => 'SUSPENDED',
             'is_active' => false,
         ]);
+        // SubscriptionService::isLocked() recognises SUSPENDED, so make the
+        // lock state explicit instead of relying only on is_active.
+        $tenant->forceFill(['subscription_status' => 'SUSPENDED'])->save();
 
         AuditLog::log('VENDOR_SUSPENDED', "Super Admin suspended vendor [{$tenant->name}].", $tenant->id, 'Tenant', $tenant->id);
         $this->feedbackMessage = "Vendor [{$tenant->name}] has been suspended.";
@@ -674,6 +708,10 @@ class AdminDashboard extends Component
 
     public function assignPlanToTenant(string $tenantId, int $planId)
     {
+        if ($this->billingBlocked()) {
+            return;
+        }
+
         $tenant = Tenant::findOrFail($tenantId);
         $plan = SubscriptionPlan::findOrFail($planId);
 
@@ -718,6 +756,10 @@ class AdminDashboard extends Component
 
     public function openEditPlanModal(int $planId)
     {
+        if ($this->billingBlocked()) {
+            return;
+        }
+
         $plan = SubscriptionPlan::findOrFail($planId);
         $this->isEditingPlan = true;
         $this->editingPlanId = $plan->id;
@@ -744,6 +786,10 @@ class AdminDashboard extends Component
 
     public function savePlan()
     {
+        if ($this->billingBlocked()) {
+            return;
+        }
+
         $this->validate([
             'planName' => 'required|string|min:3|max:100',
             'planPriceWeekly' => 'required|numeric|min:0',
@@ -809,6 +855,10 @@ class AdminDashboard extends Component
 
     public function deletePlan(int $planId)
     {
+        if ($this->billingBlocked()) {
+            return;
+        }
+
         $plan = SubscriptionPlan::withCount('tenants')->findOrFail($planId);
         if ($plan->tenants_count > 0) {
             $this->errorMessage = "Cannot delete plan [{$plan->name}] because {$plan->tenants_count} vendors are subscribed to it.";
@@ -918,6 +968,10 @@ class AdminDashboard extends Component
     // ==========================================
     public function approveSubscriptionPayment(string $paymentId)
     {
+        if ($this->billingBlocked()) {
+            return;
+        }
+
         // Subscription activation is manual/offline. It must be atomic and
         // locked so two concurrent approvals cannot extend the same tenant
         // twice or apply a payment that was already processed.
@@ -963,7 +1017,7 @@ class AdminDashboard extends Component
                 $payment->id
             );
 
-            return ['name' => $tenant->name, 'expiry' => $newExpiry];
+            return ['tenant_id' => (string) $tenant->id, 'name' => $tenant->name, 'expiry' => $newExpiry];
         });
 
         if (isset($result['error'])) {
@@ -972,11 +1026,23 @@ class AdminDashboard extends Component
             return;
         }
 
+        app(NotificationService::class)->sendToTenantStaff(
+            $result['tenant_id'],
+            'SUBSCRIPTION_APPROVED',
+            'Subscription payment approved',
+            'Your subscription is active until '.$result['expiry']->format('d M Y').'.',
+            ['payment_id' => $paymentId]
+        );
+
         $this->feedbackMessage = "Subscription payment approved. [{$result['name']}] renewed until ".$result['expiry']->format('d M Y').'.';
     }
 
     public function rejectSubscriptionPayment(string $paymentId)
     {
+        if ($this->billingBlocked()) {
+            return;
+        }
+
         $changed = DB::transaction(function () use ($paymentId): bool {
             $payment = SubscriptionPayment::with('tenant')->lockForUpdate()->findOrFail($paymentId);
 
@@ -1095,7 +1161,16 @@ class AdminDashboard extends Component
 
     public function render()
     {
+        $billingEnabled = $this->billingEnabled();
         $metrics = PlatformMetrics::snapshot();
+
+        if (! $billingEnabled) {
+            // Billing data is withheld while the launch promotion is active.
+            $metrics['totalPlans'] = 0;
+            $metrics['totalSubscriptionPayments'] = 0;
+            $metrics['pendingSubscriptionPaymentsCount'] = 0;
+            $metrics['totalSubscription'] = 0;
+        }
 
         // User Directory query with filters
         $usersQuery = User::with('tenant');
@@ -1133,7 +1208,6 @@ class AdminDashboard extends Component
             ->get();
 
         $tenants = Tenant::with(['subscriptionPlan'])->withCount(['halls', 'bookings', 'users'])->latest()->take(200)->get();
-        $billingEnabled = $this->billingEnabled();
         $plans = $billingEnabled ? SubscriptionPlan::withCount('tenants')->get() : collect();
         $subscriptionPayments = $billingEnabled
             ? SubscriptionPayment::with(['tenant', 'plan'])->latest()->take(200)->get()

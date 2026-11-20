@@ -18,13 +18,7 @@ class PublicGallery extends Component
 
     public function render()
     {
-        $halls = Hall::with('venue')
-            ->where('is_active', true)
-            ->whereHas('tenant', function ($q) {
-                $q->where('is_active', true)
-                    ->where('verification_status', 'APPROVED');
-            })
-            ->get();
+        $halls = Hall::publicVisible()->with('venue')->get();
 
         return view('livewire.public-gallery', [
             'halls' => $halls,

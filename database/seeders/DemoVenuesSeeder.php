@@ -8,6 +8,7 @@ use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Venue;
+use App\Support\ShiftWindows;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -273,6 +274,7 @@ class DemoVenuesSeeder extends Seeder
                     'verification_status' => 'APPROVED',
                     'currency' => 'PKR',
                     'is_active' => true,
+                    'marketplace_visible' => true,
                 ]
             );
 
@@ -321,7 +323,7 @@ class DemoVenuesSeeder extends Seeder
                             'max_capacity' => $hallItem['max_capacity'],
                             'base_rent' => $hallItem['base_rent'],
                             'description' => $hallItem['description'],
-                            'operating_hours' => 'Morning: 11:30 AM - 3:30 PM | Evening: 7:00 PM - 12:00 AM | Night: 12:30 AM - 4:00 AM',
+                            'operating_hours' => ShiftWindows::summary(null),
                             'policies' => "1. 50% advance token deposit required to secure wedding booking.\n2. City banquet regulations apply for music and curfew timings.\n3. Outside catering permitted with prior kitchen clearance.",
                             'cover_image' => $hallItem['cover_image'],
                             'images' => $hallItem['images'],

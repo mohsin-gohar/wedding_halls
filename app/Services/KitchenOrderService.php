@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Booking;
 use App\Models\KitchenKot;
+use Illuminate\Support\Facades\DB;
 
 class KitchenOrderService
 {
@@ -83,26 +84,62 @@ class KitchenOrderService
             ],
         ];
 
-        // Find or create the KOT
-        $kot = KitchenKot::updateOrCreate(
-            [
-                'booking_id' => $booking->id,
-            ],
-            [
+        // Recalculate the quantities but never rewind an in-flight or finished
+        // ticket. Preparation state is owned by the kitchen board, not by the
+        // booking writer that regenerates this KOT.
+        return DB::transaction(function () use ($booking, $guestCount, $rawMeatKg, $rawRiceKg, $rawOilLiters, $ingredientDetails, $dishesSummary, $customNotes) {
+            $kot = KitchenKot::where('booking_id', $booking->id)->lockForUpdate()->first();
+            $isNew = $kot === null;
+
+            if ($isNew) {
+                $kot = new KitchenKot([
+                    'tenant_id' => $booking->tenant_id,
+                    'booking_id' => $booking->id,
+                    'kot_number' => KitchenKot::generateKotNumber(),
+                    'preparation_status' => KitchenKot::STATUS_PENDING,
+                    'custom_instructions' => $customNotes['instructions'] ?? 'Serve piping hot buffet presentation with timely replenishments.',
+                    'chef_notes' => $customNotes['chef_notes'] ?? null,
+                ]);
+            }
+
+            $kot->fill([
                 'tenant_id' => $booking->tenant_id,
-                'kot_number' => KitchenKot::generateKotNumber(),
                 'guest_count' => $guestCount,
                 'raw_meat_kg' => $rawMeatKg,
                 'raw_rice_kg' => $rawRiceKg,
                 'raw_oil_liters' => $rawOilLiters,
                 'ingredient_details' => $ingredientDetails,
                 'dishes_summary' => $dishesSummary,
-                'preparation_status' => 'PENDING',
-                'custom_instructions' => $customNotes['instructions'] ?? 'Serve piping hot buffet presentation with timely replenishments.',
-                'chef_notes' => $customNotes['chef_notes'] ?? null,
-            ]
-        );
+            ]);
+            $kot->save();
 
-        return $kot;
+            return $kot;
+        });
+    }
+
+    /**
+     * Safe entry point for booking writers: HOLD/INQUIRY/CANCELLED bookings
+     * never produce a kitchen ticket. Returns null when no KOT is warranted.
+     *
+     * BookingService owns its own gating; this method simply gives it a
+     * guarded service call to use if needed.
+     */
+    public function generateKotForConfirmedBooking(Booking $booking, array $customNotes = []): ?KitchenKot
+    {
+        if ($booking->status !== 'CONFIRMED') {
+            return null;
+        }
+
+        if (! config('platform.kitchen_module_enabled')) {
+            return null;
+        }
+
+        return $this->generateKotForBooking($booking, $customNotes);
+    }
+
+    /** Idempotent check for callers that only need to know whether a KOT exists. */
+    public function hasKotForBooking(Booking $booking): bool
+    {
+        return KitchenKot::where('booking_id', $booking->id)->exists();
     }
 }

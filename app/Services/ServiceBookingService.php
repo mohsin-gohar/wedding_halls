@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Events\ServiceBookingCreatedEvent;
 use App\Exceptions\ServiceBookingException;
+use App\Models\AuditLog;
 use App\Models\PlatformSetting;
 use App\Models\RFQ;
 use App\Models\RFQBid;
@@ -138,26 +139,29 @@ class ServiceBookingService
     }
 
     /**
-     * Vendor declines a quotation request — closes the RFQ for that vendor.
+     * Vendor declines a quotation request — closes the RFQ and rejects every
+     * still-pending offer so no stale bid can be awarded afterwards.
      */
     public function declineQuote(int $rfqId, ?int $vendorUserId = null): void
     {
-        $rfq = RFQ::query()->find($rfqId);
+        DB::transaction(function () use ($rfqId): void {
+            $rfq = RFQ::query()->whereKey($rfqId)->lockForUpdate()->first();
 
-        if (! $rfq) {
-            throw ServiceBookingException::notFound('The quotation request could not be found.');
-        }
+            if (! $rfq) {
+                throw ServiceBookingException::notFound('The quotation request could not be found.');
+            }
 
-        if ($rfq->status !== 'OPEN') {
-            return;
-        }
+            if ($rfq->status !== 'OPEN') {
+                throw ServiceBookingException::invalidState('This quotation request is no longer open.');
+            }
 
-        $rfq->update(['status' => 'CLOSED']);
+            $rfq->update(['status' => 'CLOSED']);
 
-        RFQBid::query()
-            ->where('rfq_id', $rfq->id)
-            ->where('status', 'PENDING')
-            ->update(['status' => 'REJECTED']);
+            RFQBid::query()
+                ->where('rfq_id', $rfq->id)
+                ->where('status', 'PENDING')
+                ->update(['status' => 'REJECTED']);
+        });
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -479,6 +483,8 @@ class ServiceBookingService
         CashOnlyPayments::assert($method, 'service payments');
 
         return DB::transaction(function () use ($booking, $amount, $method, $kind): ServicePayment {
+            $booking = ServiceBooking::query()->whereKey($booking->id)->lockForUpdate()->firstOrFail();
+
             $payment = ServicePayment::create([
                 'tenant_id' => $booking->tenant_id,
                 'service_booking_id' => $booking->id,
@@ -513,14 +519,42 @@ class ServiceBookingService
         // creation must commit as one unit. A failed commission debit must not
         // leave a credited wallet or a PAID booking behind.
         return DB::transaction(function () use ($payment, $verifiedByUserId): array {
-            $booking = $payment->serviceBooking()->first();
+            // Re-read under lock: two staff members must never settle the same
+            // pending payment at the same time.
+            $payment = ServicePayment::query()->whereKey($payment->id)->lockForUpdate()->first();
+
+            if (! $payment) {
+                return ['success' => false, 'message' => 'The payment record could not be found.'];
+            }
+
+            // Lock the booking too. Two different PENDING payments on one
+            // booking must not both read the same paid_amount and both trigger
+            // wallet settlement.
+            $booking = ServiceBooking::query()
+                ->whereKey($payment->service_booking_id)
+                ->lockForUpdate()
+                ->first();
 
             if (! $booking) {
                 return ['success' => false, 'message' => 'The service booking for this payment no longer exists.'];
             }
 
+            // Verification is idempotent for already-final records, but a
+            // rejected/legacy record must never be silently turned into money.
             if ($payment->status === 'VERIFIED' || $payment->status === 'REFUNDED') {
                 return ['success' => true, 'already_verified' => true, 'booking' => $booking];
+            }
+
+            if ($payment->status !== 'PENDING') {
+                throw ServiceBookingException::invalidState('Only pending payments can be verified.');
+            }
+
+            // Historical non-cash labels are preserved for reporting, but they
+            // can never be settled through the staff verification path.
+            try {
+                CashOnlyPayments::assert($payment->method, 'service payments');
+            } catch (\InvalidArgumentException $exception) {
+                throw ServiceBookingException::invalidState($exception->getMessage());
             }
 
             $payment->update([
@@ -528,6 +562,14 @@ class ServiceBookingService
                 'verified_by' => $verifiedByUserId,
                 'verified_at' => now(),
             ]);
+
+            AuditLog::log(
+                'SERVICE_PAYMENT_VERIFIED',
+                'Service payment '.$payment->id.' verified; booking balance and wallet settlement evaluated.',
+                (string) $payment->tenant_id,
+                ServicePayment::class,
+                (string) $payment->id
+            );
 
             if ($payment->kind === 'REFUND') {
                 $this->reverseBookingPayment($booking, (float) $payment->amount);
@@ -630,18 +672,50 @@ class ServiceBookingService
     {
         CashOnlyPayments::assert($method, 'payouts');
 
-        $payout = VendorPayout::create([
-            'tenant_id' => $tenantId,
-            'amount' => $amount,
-            'method' => $method,
-            'account_details' => $accountDetails ?? ['account_name' => 'Vendor Wallet Settlement'],
-            'status' => 'REQUESTED',
-            'reference' => 'PO-'.strtoupper(substr(bin2hex(random_bytes(3)), 0, 6)),
-            'note' => 'Auto-requested after full service payment settlement.',
-            'requested_at' => now(),
-        ]);
+        $amount = round($amount, 2);
 
-        return $payout;
+        if ($amount <= 0) {
+            throw ServiceBookingException::invalidState('A payout amount must be greater than zero.');
+        }
+
+        return DB::transaction(function () use ($tenantId, $amount, $method, $accountDetails): VendorPayout {
+            // Lock the wallet while checking available funds: two simultaneous
+            // requests must never both pass the balance guard. Outstanding
+            // REQUESTED payouts are treated as reserved funds even though the
+            // actual debit happens only when a platform finance user processes
+            // the payout.
+            $wallet = VendorWallet::query()
+                ->where('tenant_id', $tenantId)
+                ->where('is_primary', true)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $wallet) {
+                throw ServiceBookingException::invalidState('No primary vendor wallet is available for this payout.');
+            }
+
+            $reserved = (float) VendorPayout::query()
+                ->where('tenant_id', $tenantId)
+                ->where('status', 'REQUESTED')
+                ->sum('amount');
+
+            if ((float) $wallet->balance - $reserved + 0.009 < $amount) {
+                throw ServiceBookingException::invalidState(
+                    'The vendor wallet has insufficient available balance for this payout request.'
+                );
+            }
+
+            return VendorPayout::create([
+                'tenant_id' => $tenantId,
+                'amount' => $amount,
+                'method' => $method,
+                'account_details' => $accountDetails ?? ['account_name' => 'Vendor Wallet Settlement'],
+                'status' => 'REQUESTED',
+                'reference' => 'PO-'.strtoupper(substr(bin2hex(random_bytes(3)), 0, 6)),
+                'note' => 'Auto-requested after full service payment settlement.',
+                'requested_at' => now(),
+            ]);
+        });
     }
 
     public function processVendorPayout(VendorPayout $payout, int $processorUserId): VendorPayout
@@ -657,20 +731,33 @@ class ServiceBookingService
                 throw ServiceBookingException::invalidState('Only requested payouts can be processed.');
             }
 
+            $amount = round((float) $locked->amount, 2);
+
+            if ($amount <= 0) {
+                throw ServiceBookingException::invalidState('A payout amount must be greater than zero.');
+            }
+
             $wallet = VendorWallet::query()
                 ->where('tenant_id', $locked->tenant_id)
                 ->where('is_primary', true)
+                ->lockForUpdate()
                 ->first();
 
             if (! $wallet) {
                 throw ServiceBookingException::invalidState('No primary vendor wallet is available for this payout.');
             }
 
+            if ((float) $wallet->balance + 0.009 < $amount) {
+                throw ServiceBookingException::invalidState(
+                    'The vendor wallet has insufficient balance for this payout.'
+                );
+            }
+
             // Debit first: a failed debit must never leave a payout marked PAID.
             $this->debitWallet(
                 $locked->tenant_id,
                 (int) $wallet->id,
-                (float) $locked->amount,
+                $amount,
                 'PAYOUT',
                 $locked->id,
                 'Vendor payout processed via wallet settlement.'
@@ -735,6 +822,18 @@ class ServiceBookingService
 
     protected function settleServiceBookingPayment(ServiceBooking $booking): void
     {
+        // The booking ledger is the idempotency authority. Re-running a
+        // settlement after a retry or a second fully-paid cash payment must
+        // never credit the vendor wallet or create another payout.
+        $alreadySettled = WalletTransaction::query()
+            ->where('service_booking_id', $booking->id)
+            ->where('source', 'BOOKING_PAYMENT')
+            ->exists();
+
+        if ($alreadySettled) {
+            return;
+        }
+
         // Use the financial snapshot stored when the booking was created. A
         // later commission-rate change must never alter a settled payout.
         $gross = round((float) $booking->quoted_amount - (float) $booking->discount_amount, 2);

@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\GuestRsvp;
+use App\Models\ProcessedWebhookMessage;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -29,82 +32,213 @@ class WhatsAppWebhookController extends Controller
 
     /**
      * Process incoming WhatsApp messages and update RSVP headcount.
+     *
+     * Security rules:
+     *   - A valid HMAC signature is mandatory.
+     *   - Every message is claimed exactly once by provider + message id.
+     *   - Invitations are matched by the complete normalized phone number,
+     *     never by a 7-digit suffix. Ambiguous matches are never mutated.
+     *   - Optional tenant/booking metadata narrows the match further.
      */
     public function handle(Request $request)
     {
+        $rawBody = $request->getContent();
         $appSecret = config('services.whatsapp.app_secret');
         $signature = (string) $request->header('X-Hub-Signature-256');
         $expectedSignature = $appSecret
-            ? 'sha256='.hash_hmac('sha256', $request->getContent(), $appSecret)
+            ? 'sha256='.hash_hmac('sha256', $rawBody, $appSecret)
             : '';
 
         if (! $expectedSignature || ! hash_equals($expectedSignature, $signature)) {
             return response()->json(['status' => 'unauthorized'], 403);
         }
 
-        $payload = $request->all();
+        $payload = json_decode($rawBody, true);
+        if (! is_array($payload)) {
+            $payload = $request->all();
+        }
+
         Log::info('WhatsApp Webhook received');
 
-        $entry = $payload['entry'][0]['changes'][0]['value'] ?? null;
-        if (! $entry || empty($entry['messages'])) {
+        $entries = $payload['entry'] ?? [];
+        $results = [];
+
+        foreach ($entries as $entry) {
+            $changes = $entry['changes'] ?? [];
+            $value = $changes[0]['value'] ?? null;
+
+            if (! $value || empty($value['messages'])) {
+                continue;
+            }
+
+            foreach ($value['messages'] as $messageObj) {
+                $results[] = $this->processMessage($messageObj, $value, $rawBody);
+            }
+        }
+
+        if ($results === []) {
             return response()->json(['status' => 'ignored'], 200);
         }
 
-        $messageObj = $entry['messages'][0];
-        $fromPhone = $messageObj['from'] ?? null;
-        $messageBody = trim($messageObj['text']['body'] ?? '');
-
-        if (! $fromPhone || empty($messageBody)) {
-            return response()->json(['status' => 'empty'], 200);
-        }
-
-        // Clean phone digits for search
-        $cleanedPhone = preg_replace('/[^0-9]/', '', $fromPhone);
-        $last7Digits = substr($cleanedPhone, -7);
-
-        // Find matching guest RSVP record
-        $rsvp = GuestRsvp::where('phone', 'like', "%{$last7Digits}%")
-            ->latest()
-            ->first();
-
-        $replyText = 'Thank you for contacting Wedding_Hall.';
-
-        if ($rsvp) {
-            $status = 'ATTENDING';
-            $count = 1;
-
-            if (preg_match('/(decline|no|nahi|cannot|cancel)/i', $messageBody)) {
-                $status = 'DECLINED';
-                $count = 0;
-                $replyText = "Thank you {$rsvp->guest_name}. We have noted your decline for the wedding event.";
-            } elseif (preg_match('/(?:attending|yes|aunga|haan|persons?|people|guests?|head)[\s:]*(\d+)/i', $messageBody, $matches)) {
-                $status = 'ATTENDING';
-                $count = (int) $matches[1];
-                $replyText = "Thank you {$rsvp->guest_name}! Your attendance with {$count} guest(s) has been confirmed on the hall guest list.";
-            } elseif (preg_match('/^(\d+)$/', $messageBody, $matches)) {
-                $status = 'ATTENDING';
-                $count = (int) $matches[1];
-                $replyText = "Thank you {$rsvp->guest_name}! Confirmed {$count} guest(s). We look forward to welcoming you.";
-            } else {
-                $status = 'ATTENDING';
-                $replyText = "Thank you {$rsvp->guest_name}! Your RSVP has been confirmed. We look forward to seeing you!";
-            }
-
-            $rsvp->update([
-                'rsvp_status' => $status,
-                'attending_count' => $count,
-                'last_reply_message' => $messageBody,
-            ]);
-        }
-
-        // Send WhatsApp reply back via Meta Cloud API or log
-        $this->sendWhatsAppMessage($fromPhone, $replyText);
+        $first = $results[0];
 
         return response()->json([
-            'status' => 'success',
-            'rsvp_id' => $rsvp ? $rsvp->id : null,
-            'reply' => $replyText,
+            'status' => $first['status'],
+            'rsvp_id' => $first['rsvp_id'],
+            'reply' => $first['reply'],
+            'results' => $results,
         ], 200);
+    }
+
+    /**
+     * Claim one webhook message, resolve its invitation and apply the RSVP.
+     *
+     * @param  array<string, mixed>  $message
+     * @param  array<string, mixed>  $value
+     * @return array<string, mixed>
+     */
+    private function processMessage(array $message, array $value, string $rawBody): array
+    {
+        $messageId = trim((string) ($message['id'] ?? ''));
+        $dedupeKey = $messageId !== ''
+            ? $messageId
+            : 'hash:'.hash('sha256', $rawBody);
+        $payloadHash = hash('sha256', $rawBody);
+
+        try {
+            ProcessedWebhookMessage::create([
+                'provider' => 'whatsapp',
+                'message_id' => $dedupeKey,
+                'payload_hash' => $payloadHash,
+                'processed_at' => now(),
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            return [
+                'status' => 'duplicate',
+                'rsvp_id' => null,
+                'reply' => 'Duplicate message ignored.',
+            ];
+        }
+
+        $fromPhone = $message['from'] ?? null;
+        $messageBody = trim((string) ($message['text']['body'] ?? ''));
+
+        if (! $fromPhone || $messageBody === '') {
+            return [
+                'status' => 'empty',
+                'rsvp_id' => null,
+                'reply' => 'Thank you for contacting Riwaj Grand.',
+            ];
+        }
+
+        $rsvp = $this->resolveInvitation($fromPhone, $value);
+        $replyText = 'Thank you for contacting Riwaj Grand.';
+
+        if (! $rsvp) {
+            $this->sendWhatsAppMessage($fromPhone, $replyText);
+
+            return [
+                'status' => 'unmatched',
+                'rsvp_id' => null,
+                'reply' => $replyText,
+            ];
+        }
+
+        $status = 'ATTENDING';
+        $count = 1;
+
+        if (preg_match('/(decline|nahi|cannot|cancel|\bno\b)/i', $messageBody)) {
+            $status = 'DECLINED';
+            $count = 0;
+            $replyText = "Thank you {$rsvp->guest_name}. We have noted your decline for the wedding event.";
+        } elseif (preg_match('/(?:attending|yes|aunga|haan|persons?|people|guests?|head)[\s:]*(\d+)/i', $messageBody, $matches)) {
+            $count = max(0, min(20, (int) $matches[1]));
+            $replyText = "Thank you {$rsvp->guest_name}! Your attendance with {$count} guest(s) has been confirmed on the hall guest list.";
+        } elseif (preg_match('/^(\d+)$/', $messageBody, $matches)) {
+            $count = max(0, min(20, (int) $matches[1]));
+            $replyText = "Thank you {$rsvp->guest_name}! Confirmed {$count} guest(s). We look forward to welcoming you.";
+        } else {
+            $replyText = "Thank you {$rsvp->guest_name}! Your RSVP has been confirmed. We look forward to seeing you!";
+        }
+
+        $rsvp->update([
+            'rsvp_status' => $status,
+            'attending_count' => $count,
+            'last_reply_message' => $messageBody,
+        ]);
+
+        AuditLog::log(
+            'WHATSAPP_RSVP_UPDATED',
+            "WhatsApp message [{$dedupeKey}] set RSVP [{$rsvp->id}] to {$status}/{$count}.",
+            $rsvp->tenant_id,
+            'GuestRsvp',
+            $rsvp->id,
+        );
+
+        $this->sendWhatsAppMessage($fromPhone, $replyText);
+
+        return [
+            'status' => 'success',
+            'rsvp_id' => $rsvp->id,
+            'reply' => $replyText,
+        ];
+    }
+
+    /**
+     * Resolve an invitation by exact normalized full phone number.
+     *
+     * Optional tenant_id / booking_id in the webhook value narrow the search
+     * for integrations that carry event context. If more than one invitation
+     * still matches, none is updated: guessing a number suffix must never
+     * change another event's headcount.
+     */
+    private function resolveInvitation(?string $fromPhone, array $value): ?GuestRsvp
+    {
+        $canonical = $this->normalizePhone($fromPhone);
+
+        if (strlen($canonical) < 10) {
+            return null;
+        }
+
+        // Narrow by the commonly contiguous final seven digits; stored numbers
+        // may contain spaces/dashes in their country code. Exact full-number
+        // matching below is the authority, so a short candidate needle cannot
+        // create a false positive.
+        $needle = substr($canonical, -7);
+        $query = GuestRsvp::with('booking')
+            ->where('phone', 'like', "%{$needle}");
+
+        $metadata = is_array($value['metadata'] ?? null) ? $value['metadata'] : [];
+        $tenantId = $value['tenant_id'] ?? $metadata['tenant_id'] ?? null;
+        $bookingId = $value['booking_id'] ?? $metadata['booking_id'] ?? null;
+
+        if ($tenantId) {
+            $query->where('tenant_id', $tenantId);
+        }
+        if ($bookingId) {
+            $query->where('booking_id', $bookingId);
+        }
+
+        $matches = $query->limit(50)->get()
+            ->filter(fn (GuestRsvp $rsvp): bool => $this->normalizePhone($rsvp->phone) === $canonical)
+            ->values();
+
+        return $matches->count() === 1 ? $matches->first() : null;
+    }
+
+    /** Normalize local (03XX) and international (+923XX) numbers to one form. */
+    private function normalizePhone(?string $phone): string
+    {
+        $digits = preg_replace('/\D/', '', (string) $phone) ?? '';
+
+        if (strlen($digits) === 11 && str_starts_with($digits, '0')) {
+            return substr($digits, 1);
+        }
+        if (strlen($digits) === 12 && str_starts_with($digits, '92')) {
+            return substr($digits, 2);
+        }
+
+        return $digits;
     }
 
     /**

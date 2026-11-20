@@ -95,15 +95,36 @@ class WhatsAppRsvpManager extends Component
 
     public function simulateWhatsAppReply()
     {
-        $cleanedPhone = preg_replace('/[^0-9]/', '', $this->simPhone);
-        $last7 = substr($cleanedPhone, -7);
-
         $user = Auth::user();
-        $query = GuestRsvp::where('phone', 'like', "%{$last7}%")->latest();
-        if ($user && $user->tenant_id) {
+        $canonical = $this->normalizePhone($this->simPhone);
+
+        if (strlen($canonical) < 10) {
+            $this->simBotReply = '❌ Enter a complete mobile number to locate the invitation.';
+
+            return;
+        }
+
+        // Candidate narrowing only; exact full-number filtering below is the
+        // authority even when stored numbers contain spaces or dashes.
+        $query = GuestRsvp::where('phone', 'like', '%'.substr($canonical, -7));
+        if ($user && $user->tenant_id && ! $user->isSuperAdmin()) {
             $query->where('tenant_id', $user->tenant_id);
         }
-        $rsvp = $query->first();
+        if ($this->selectedBookingId) {
+            $query->where('booking_id', $this->selectedBookingId);
+        }
+
+        $matches = $query->limit(50)->get()
+            ->filter(fn (GuestRsvp $rsvp): bool => $this->normalizePhone($rsvp->phone) === $canonical)
+            ->values();
+
+        if ($matches->count() !== 1) {
+            $this->simBotReply = "❌ Number [{$this->simPhone}] did not match exactly one invitation in this event.";
+
+            return;
+        }
+
+        $rsvp = $matches->first();
 
         if (! $rsvp) {
             $this->simBotReply = "❌ Number [{$this->simPhone}] not found in guest invitation registry.";
@@ -139,6 +160,21 @@ class WhatsAppRsvpManager extends Component
         ]);
 
         $this->simBotReply = "🤖 Bot Response to {$rsvp->guest_name}: \"{$reply}\" (DB Attendance Updated: {$count})";
+    }
+
+    /** Normalize local (03XX) and international (+923XX) numbers to one form. */
+    private function normalizePhone(?string $phone): string
+    {
+        $digits = preg_replace('/\D/', '', (string) $phone) ?? '';
+
+        if (strlen($digits) === 11 && str_starts_with($digits, '0')) {
+            return substr($digits, 1);
+        }
+        if (strlen($digits) === 12 && str_starts_with($digits, '92')) {
+            return substr($digits, 2);
+        }
+
+        return $digits;
     }
 
     public function render()

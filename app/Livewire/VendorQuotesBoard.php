@@ -5,8 +5,8 @@ namespace App\Livewire;
 use App\Exceptions\ServiceBookingException;
 use App\Models\RFQ;
 use App\Models\RFQBid;
-use App\Models\Tenant;
 use App\Services\ServiceBookingService;
+use App\Support\PermissionMatrix;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -39,9 +39,31 @@ class VendorQuotesBoard extends Component
     {
         $user = Auth::user();
 
-        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->hasPermissionTo('rfq.view'))) {
-            abort(403, 'Unauthorized. Quotation management is restricted to vendor business owners.');
+        if (! $user || ! PermissionMatrix::userCan($user, 'rfq.view')) {
+            abort(403, 'Unauthorized. Quotation management is restricted to vendor staff.');
         }
+    }
+
+    public function hasPortalPermission(string $permission): bool
+    {
+        return PermissionMatrix::userCan(Auth::user(), $permission);
+    }
+
+    private function assertCan(string $permission): void
+    {
+        abort_unless($this->hasPortalPermission($permission), 403, 'Unauthorized. Missing permission: '.$permission);
+    }
+
+    /**
+     * RFQs are visible to a vendor when explicitly targeted via rfq_targets or,
+     * for legacy untargeted records, when the RFQ itself belongs to the tenant.
+     */
+    private function visibleRfqs(?string $tenantId)
+    {
+        return RFQ::query()->where(function ($query) use ($tenantId) {
+            $query->where('tenant_id', $tenantId)
+                ->orWhereHas('targets', fn ($targets) => $targets->where('tenant_id', $tenantId));
+        });
     }
 
     private function findRfqForUser(int $rfqId): ?RFQ
@@ -52,9 +74,26 @@ class VendorQuotesBoard extends Component
             return null;
         }
 
+        return $this->visibleRfqs($tenantId)
+            ->whereKey($rfqId)
+            ->first();
+    }
+
+    /**
+     * Closing an RFQ is an owner-level action on the vendor's OWN request;
+     * being merely targeted by another tenant's RFQ must not grant that right.
+     */
+    private function findOwnedRfqForUser(int $rfqId): ?RFQ
+    {
+        $tenantId = Auth::user()->tenant_id;
+
+        if (! $tenantId) {
+            return null;
+        }
+
         return RFQ::query()
+            ->whereKey($rfqId)
             ->where('tenant_id', $tenantId)
-            ->where('id', $rfqId)
             ->first();
     }
 
@@ -66,8 +105,7 @@ class VendorQuotesBoard extends Component
             abort(403, 'Forbidden. You do not have an active vendor organization assigned.');
         }
 
-        return RFQ::query()
-            ->where('tenant_id', $tenantId)
+        return $this->visibleRfqs($tenantId)
             ->with(['bids' => fn ($q) => $q->with('vendor:id,name,email')])
             ->where('status', 'OPEN')
             ->orderByDesc('created_at')
@@ -82,8 +120,7 @@ class VendorQuotesBoard extends Component
             abort(403, 'Forbidden. You do not have an active vendor organization assigned.');
         }
 
-        return RFQ::query()
-            ->where('tenant_id', $tenantId)
+        return $this->visibleRfqs($tenantId)
             ->where('status', 'OPEN')
             ->count();
     }
@@ -125,9 +162,7 @@ class VendorQuotesBoard extends Component
             abort(403, 'Unauthorized.');
         }
 
-        if (! $user->hasPermissionTo('rfq.bid')) {
-            abort(403, 'Unauthorized. Quotation bidding is restricted for this vendor.');
-        }
+        $this->assertCan('rfq.bid');
 
         $rfq = $this->findRfqForUser($rfqId);
 
@@ -166,15 +201,15 @@ class VendorQuotesBoard extends Component
 
     public function markRfqViewed(int $rfqId): void
     {
+        $this->assertCan('rfq.view');
+
         $tenantId = Auth::user()->tenant_id;
 
         if (! $tenantId) {
             abort(403);
-
-            return;
         }
 
-        $rfq = RFQ::query()->where('tenant_id', $tenantId)->where('id', $rfqId)->first();
+        $rfq = $this->findRfqForUser($rfqId);
 
         if (! $rfq) {
             abort(404);
@@ -188,63 +223,32 @@ class VendorQuotesBoard extends Component
         $this->feedbackMessage = 'Quotation marked as viewed.';
     }
 
+    /**
+     * Decline goes through the transactional service so every still-pending
+     * offer is rejected under lock and cannot be awarded afterwards.
+     */
     public function declineRfq(int $rfqId): void
     {
-        $tenantId = Auth::user()->tenant_id;
+        $this->assertCan('rfq.close');
 
-        if (! $tenantId) {
-            abort(403);
-        }
-
-        $rfq = RFQ::query()->where('tenant_id', $tenantId)->where('id', $rfqId)->first();
+        $rfq = $this->findOwnedRfqForUser($rfqId);
 
         if (! $rfq) {
             abort(404);
         }
 
-        $rfq->update(['status' => 'CLOSED']);
-
-        $this->feedbackMessage = 'Quotation declined. The customer will be notified.';
-    }
-
-    public function awardQuote(int $rfqBidId): void
-    {
-        $user = Auth::user();
-
-        if (! $user) {
-            abort(403, 'Unauthorized.');
-        }
-
-        if (! $user->hasPermissionTo('rfq.award')) {
-            abort(403, 'Unauthorized. Quotation awarding is restricted for this vendor.');
-        }
-
-        // The bid ID is user-controlled: never award a quote belonging to a
-        // different tenant just because the principal has the award permission.
-        $tenantId = $user->tenant_id;
-
-        if (! $tenantId) {
-            abort(403, 'Unauthorized. No vendor organization is assigned.');
-        }
-
-        $bidExists = RFQBid::query()
-            ->whereHas('rfq', fn ($q) => $q->where('tenant_id', $tenantId))
-            ->where('id', $rfqBidId)
-            ->exists();
-
-        if (! $bidExists) {
-            abort(404, 'Quotation not found.');
-        }
-
         try {
-            $booking = app(ServiceBookingService::class)->acceptQuote($rfqBidId);
+            app(ServiceBookingService::class)->declineQuote($rfq->id);
 
-            $this->feedbackMessage = 'Quotation awarded. Service booking created for the customer.';
+            $this->feedbackMessage = 'Quotation declined. All pending offers were rejected.';
             $this->errorMessage = null;
         } catch (ServiceBookingException $e) {
             $this->errorMessage = $e->getMessage();
         }
     }
+
+    // Awarding is intentionally NOT available to vendors. Only the customer
+    // who owns the RFQ may accept a bid (CustomerDashboard::acceptQuote).
 
     public function render()
     {

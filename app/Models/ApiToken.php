@@ -15,6 +15,21 @@ use Illuminate\Support\Str;
  */
 class ApiToken extends Model
 {
+    /** Wildcard ability for tokens that may call every API capability. */
+    public const ABILITY_ALL = '*';
+
+    /** Capabilities that may be granted to a scoped bearer token. */
+    public const ABILITIES = [
+        'bookings.read',
+        'bookings.create',
+        'bookings.update',
+        'bookings.delete',
+        'service-bookings.read',
+        'payments.read',
+        'payments.record',
+        'payments.refund',
+    ];
+
     protected $table = 'api_tokens';
 
     protected $fillable = [
@@ -43,12 +58,20 @@ class ApiToken extends Model
             $exists = static::query()->where('token_hash', $hash)->exists();
         } while ($exists);
 
+        $grantedAbilities = $abilities === null
+            ? null
+            : array_values(array_unique(array_intersect($abilities, [...self::ABILITIES, self::ABILITY_ALL])));
+
+        if ($grantedAbilities !== null && in_array(self::ABILITY_ALL, $grantedAbilities, true)) {
+            $grantedAbilities = [self::ABILITY_ALL];
+        }
+
         $token = static::create([
             'user_id' => $user->id,
             'name' => $name,
             'token_hash' => $hash,
             'prefix' => substr($plain, 0, 8),
-            'abilities' => $abilities,
+            'abilities' => $grantedAbilities,
             'expires_at' => $expiresAt,
         ]);
 
@@ -59,6 +82,15 @@ class ApiToken extends Model
      * Resolve a plain-text bearer token to its owning user.
      */
     public static function resolve(?string $plain): ?User
+    {
+        return static::resolveWithToken($plain)?->user;
+    }
+
+    /**
+     * Resolve a bearer token and keep the token model available so middleware
+     * can enforce the abilities granted at issue time.
+     */
+    public static function resolveWithToken(?string $plain): ?self
     {
         if (! $plain || strlen($plain) < 32) {
             return null;
@@ -89,7 +121,20 @@ class ApiToken extends Model
             'last_used_ip' => request()->ip(),
         ])->saveQuietly();
 
-        return $user;
+        return $token;
+    }
+
+    /**
+     * Tokens issued before abilities were enforced are unrestricted. A scoped
+     * token must explicitly contain every required ability (or the wildcard).
+     */
+    public function hasAbility(string $ability): bool
+    {
+        if ($this->abilities === null || in_array(self::ABILITY_ALL, $this->abilities, true)) {
+            return true;
+        }
+
+        return in_array($ability, $this->abilities, true);
     }
 
     public function user(): BelongsTo

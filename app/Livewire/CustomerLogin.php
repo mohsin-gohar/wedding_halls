@@ -12,6 +12,9 @@ use Livewire\Component;
 #[Layout('components.layouts.auth', ['title' => 'Sign In — Riwaj Grand'])]
 class CustomerLogin extends Component
 {
+    /** Account states that must never be allowed to start a session. */
+    private const BLOCKED_STATUSES = ['SUSPENDED', 'INACTIVE', 'BLOCKED'];
+
     public string $email = '';
 
     public string $password = '';
@@ -47,9 +50,9 @@ class CustomerLogin extends Component
             session()->regenerate();
             $user = Auth::user();
 
-            if ($user->status === 'SUSPENDED') {
+            if (in_array(strtoupper((string) $user->status), self::BLOCKED_STATUSES, true)) {
                 Auth::logout();
-                $this->addError('email', 'Your account has been suspended by the platform administrator.');
+                $this->addError('email', 'Your account is not active. Please contact the platform administrator.');
 
                 return;
             }

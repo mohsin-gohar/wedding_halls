@@ -27,6 +27,7 @@
     @endif
 
     <!-- Upload form -->
+    @if($this->hasPortalPermission('portfolio.manage'))
     <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl">
         <form wire:submit.prevent="addMedia" class="flex flex-col sm:flex-row items-end gap-4">
             <div class="flex-1">
@@ -46,6 +47,7 @@
             </button>
         </form>
     </div>
+    @endif
 
     <!-- Media grid -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -59,9 +61,11 @@
                 @else
                     <img src="{{ $url }}" alt="{{ $item['caption'] ?? 'Portfolio image' }}" loading="lazy" class="w-full h-full object-cover">
                 @endif
-                <button type="button" wire:click="removeMedia('{{ $item['id'] }}')" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-[#171513]/85 text-[#C6A15B] text-xs font-bold opacity-0 group-hover:opacity-100 transition">
-                    ×
-                </button>
+                @if($this->hasPortalPermission('portfolio.manage'))
+                    <button type="button" wire:click="removeMedia('{{ $item['id'] }}')" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-[#171513]/85 text-[#C6A15B] text-xs font-bold opacity-0 group-hover:opacity-100 transition">
+                        ×
+                    </button>
+                @endif
                 <figcaption class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-3 py-2 text-[10px] text-white font-sans">
                     {{ $item['caption'] ?? 'Portfolio media' }}@if(! empty($item['category'])) · {{ $item['category'] }}@endif
                 </figcaption>

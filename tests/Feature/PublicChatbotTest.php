@@ -54,10 +54,11 @@ class PublicChatbotTest extends TestCase
             ->assertSee('Wa Alaikum Assalam');
 
         // Test shift timings
+        // Shift labels are generated from the shared ShiftWindows authority.
         $component->set('newMessage', 'Shift timings kya hain?')
             ->call('sendMessage')
-            ->assertSee('Afternoon Shift')
-            ->assertSee('Evening Shift');
+            ->assertSee('Afternoon / Evening / Night')
+            ->assertSee('Full Day');
 
         // Test booking process
         $component->set('newMessage', 'Booking process aur advance kitna hai?')

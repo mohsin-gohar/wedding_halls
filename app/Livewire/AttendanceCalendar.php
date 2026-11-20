@@ -51,8 +51,25 @@ class AttendanceCalendar extends Component
         $days = array_values(array_unique(array_map('intval', $this->weeklyOffDays)));
         $days = array_values(array_filter($days, fn (int $day) => $day >= 0 && $day <= 6));
 
+        $previous = $tenant->weeklyOffDays();
+        if ($previous === $days) {
+            $this->weeklyOffDays = $days;
+            $this->feedbackMessage = 'Weekly off is unchanged.';
+
+            return;
+        }
+
         $tenant->update(['weekly_off_days' => $days]);
         $this->weeklyOffDays = $days;
+
+        AuditLog::log(
+            'WEEKLY_OFF_UPDATED',
+            'Weekly off changed from ['.implode(',', $previous).'] to ['.implode(',', $days).'].',
+            $tenant->id,
+            'Tenant',
+            $tenant->id
+        );
+
         $this->feedbackMessage = $days === []
             ? 'Weekly off cleared. No weekday is treated as off.'
             : 'Weekly off saved for this venue.';

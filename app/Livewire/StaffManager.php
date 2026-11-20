@@ -2,8 +2,10 @@
 
 namespace App\Livewire;
 
+use App\Models\AttendanceCorrection;
 use App\Models\AuditLog;
 use App\Models\StaffAttendance;
+use App\Models\StaffLeave;
 use App\Models\StaffPayroll;
 use App\Models\User;
 use Carbon\Carbon;
@@ -70,8 +72,10 @@ class StaffManager extends Component
         'name' => 'required|string|max:100',
         'email' => 'required|email|unique:users,email',
         'phone' => 'nullable|string|max:30',
+        // Kept in sync with allowedRoles(); mutations revalidate against the
+        // exact tenant-assignable set at the point of write.
         'role' => 'required|in:ROLE_MANAGER,ROLE_VENDOR_MANAGER,ROLE_ACCOUNTANT,ROLE_VENDOR_ACCOUNTANT,ROLE_FRONT_DESK,ROLE_BOOKING_MANAGER,ROLE_CHEF,ROLE_CATERING_STAFF,ROLE_FLOOR_STAFF,ROLE_SERVICE_STAFF,ROLE_STAFF_MEMBER,ROLE_PHOTOGRAPHER,ROLE_INVENTORY_MANAGER,ROLE_HR_MANAGER',
-        'password' => 'required|string|min:6',
+        'password' => 'required|string|min:8',
     ];
 
     public function mount()
@@ -223,7 +227,7 @@ class StaffManager extends Component
             'editEmail' => ['required', 'email', Rule::unique('users', 'email')->ignore($this->editingStaffId)],
             'editPhone' => 'nullable|string|max:30',
             'editRole' => $staff->isTenantOwner() ? 'nullable' : ['required', Rule::in($this->allowedRoles())],
-            'editPassword' => 'nullable|string|min:6',
+            'editPassword' => 'nullable|string|min:8',
             'editBaseSalary' => 'nullable|numeric|min:0|max:100000000',
         ]);
 
@@ -309,6 +313,15 @@ class StaffManager extends Component
 
         $staff->restore();
         $staff->update(['status' => 'ACTIVE']);
+
+        AuditLog::log(
+            'STAFF_RESTORED',
+            'Former staff user ['.$staff->name.'] restored by ['.Auth::user()->name.'].',
+            Auth::user()->tenant_id,
+            'User',
+            (string) $staff->id
+        );
+
         $this->feedbackMessage = "Former staff member [{$staff->name}] restored.";
     }
 
@@ -420,9 +433,23 @@ class StaffManager extends Component
 
         $staffName = $staff->name;
 
-        // Clean up linked attendance, payroll, and leaves strictly scoped to current tenant
-        StaffAttendance::where('tenant_id', $currentUser->tenant_id)->where('user_id', $userId)->delete();
-        StaffPayroll::where('tenant_id', $currentUser->tenant_id)->where('user_id', $userId)->delete();
+        // Clean up linked HR history strictly scoped to the current tenant.
+        // Corrections and leave applications would otherwise point at a user
+        // that no longer exists after a permanent purge.
+        $tenantId = $currentUser->tenant_id;
+        $attendanceIds = StaffAttendance::where('tenant_id', $tenantId)
+            ->where('user_id', $userId)
+            ->pluck('id');
+
+        AttendanceCorrection::where('tenant_id', $tenantId)
+            ->where(function ($query) use ($userId, $attendanceIds) {
+                $query->where('user_id', $userId)
+                    ->orWhereIn('attendance_id', $attendanceIds);
+            })
+            ->delete();
+        StaffAttendance::where('tenant_id', $tenantId)->where('user_id', $userId)->delete();
+        StaffPayroll::where('tenant_id', $tenantId)->where('user_id', $userId)->delete();
+        StaffLeave::where('tenant_id', $tenantId)->where('user_id', $userId)->delete();
 
         $staff->forceDelete();
 

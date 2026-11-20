@@ -3,14 +3,15 @@
 namespace App\Livewire;
 
 use App\Models\AuditLog;
-use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\HallView;
 use App\Models\HallWishlist;
 use App\Models\ListingInquiry;
 use App\Models\Package;
 use App\Models\PageVisit;
+use App\Services\HallAvailabilityService;
 use App\Support\CalendarWindow;
+use App\Support\ShiftWindows;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -60,22 +61,15 @@ class PublicHallDetails extends Component
 
         // 1. Strict Visibility: Support resolving by slug (preferred) or UUID fallback
         $isUuid = Str::isUuid($identifier);
-        $this->hall = Hall::with(['venue', 'tenant'])
+        $this->hall = Hall::publicVisible()
+            ->with(['venue', 'tenant'])
             ->where(function ($q) use ($identifier, $isUuid) {
-                $q->where('slug', $identifier);
+                $q->where('halls.slug', $identifier);
                 if ($isUuid) {
-                    $q->orWhere('id', $identifier);
+                    $q->orWhere('halls.id', $identifier);
                 }
             })
             ->firstOrFail();
-
-        if (! $this->hall->is_active || $this->hall->listing_status === 'WITHDRAWN') {
-            abort(404, 'This venue space is currently inactive.');
-        }
-
-        if (! $this->hall->tenant || ! $this->hall->tenant->is_active || $this->hall->tenant->verification_status !== 'APPROVED') {
-            abort(404, 'Venue is pending verification or currently unavailable.');
-        }
 
         $this->activePhoto = ! empty($this->hall->cover_image)
             ? $this->hall->cover_image
@@ -368,17 +362,13 @@ class PublicHallDetails extends Component
             : $targetMonth->copy()->startOfMonth();
         $endDate = $targetMonth->copy()->endOfMonth();
 
-        $bookedSlotsByDate = Booking::where('hall_id', $this->hall->id)
-            ->whereBetween('event_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-            ->whereIn('status', ['CONFIRMED', 'HOLD'])
-            ->get(['event_date', 'slot_type'])
-            ->groupBy(fn (Booking $booking) => $booking->event_date->format('Y-m-d'));
+        $availability = app(HallAvailabilityService::class);
+        $blockedByDate = $availability->monthBlockedSlots($this->hall, $startDate, $endDate);
 
         for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
-            $slots = $bookedSlotsByDate->get($date->format('Y-m-d'), collect())->pluck('slot_type');
+            $blocked = $blockedByDate[$date->toDateString()] ?? [];
 
-            if (! $slots->contains('FULL_DAY')
-                && $slots->intersect(['AFTERNOON', 'EVENING', 'NIGHT'])->count() < 3) {
+            if (count($blocked) < count(ShiftWindows::BOOKABLE_KEYS)) {
                 $this->selectedDate = $date->format('Y-m-d');
 
                 return;
@@ -390,13 +380,8 @@ class PublicHallDetails extends Component
 
     private function dateHasAvailableShift(Carbon $date): bool
     {
-        $bookedSlots = Booking::where('hall_id', $this->hall->id)
-            ->whereDate('event_date', $date)
-            ->whereIn('status', ['CONFIRMED', 'HOLD'])
-            ->pluck('slot_type');
-
-        return ! $bookedSlots->contains('FULL_DAY')
-            && $bookedSlots->intersect(['AFTERNOON', 'EVENING', 'NIGHT'])->count() < 3;
+        return count(app(HallAvailabilityService::class)->blockedSlotsForHall($this->hall, $date))
+            < count(ShiftWindows::BOOKABLE_KEYS);
     }
 
     public function toggleWishlist()
@@ -465,82 +450,53 @@ class PublicHallDetails extends Component
         $startDate = $startOfMonth->format('Y-m-d');
         $endDate = $endOfMonth->format('Y-m-d');
 
-        $bookingRows = Booking::where('hall_id', $this->hall->id)
-            ->whereBetween('event_date', [$startDate, $endDate])
-            ->whereIn('status', ['CONFIRMED', 'HOLD'])
-            ->select(['id', 'hall_id', 'event_date', 'slot_type', 'status', 'event_type'])
-            ->get();
+        $availability = app(HallAvailabilityService::class);
+        $storedWindows = $this->hall->tenant?->shift_windows;
 
-        $bookings = collect();
-        foreach ($bookingRows as $booking) {
-            $date = $booking->event_date->format('Y-m-d');
-            $slots = $booking->slot_type === 'FULL_DAY'
-                ? ['AFTERNOON', 'EVENING', 'NIGHT']
-                : [$booking->slot_type];
-
-            foreach ($slots as $slot) {
-                $bookings->put($date.'_'.$slot, $booking);
-            }
-        }
-
-        // Build monthGrid for Image 2 design
+        // Build monthGrid from the same conflict engine used by BookingService.
+        // One booking query covers the whole month; the grid is folded in memory.
+        $blockedByDate = $availability->monthBlockedSlots($this->hall, $startOfMonth, $endOfMonth);
         $monthGrid = [];
         for ($d = 1; $d <= $daysInMonth; $d++) {
             $dayCarbon = $startOfMonth->copy()->day($d);
             $dateStr = $dayCarbon->format('Y-m-d');
+            $dayAvailability = $availability->dayAvailability($this->hall, $dateStr, $blockedByDate[$dateStr] ?? []);
 
-            $dayBookings = $bookingRows->filter(fn ($b) => $b->event_date->format('Y-m-d') === $dateStr);
-            $hasFullDay = $dayBookings->contains(fn ($b) => $b->slot_type === 'FULL_DAY');
-
-            $aBooked = $hasFullDay || $dayBookings->contains(fn ($b) => $b->slot_type === 'AFTERNOON');
-            $eBooked = $hasFullDay || $dayBookings->contains(fn ($b) => $b->slot_type === 'EVENING');
-            $nBooked = $hasFullDay || $dayBookings->contains(fn ($b) => $b->slot_type === 'NIGHT');
-
-            $monthGrid[$d] = [
+            $monthGrid[$d] = array_merge([
                 'day' => $d,
                 'date' => $dateStr,
                 'dayOfWeek' => $dayCarbon->dayOfWeek,
                 'dayName' => $dayCarbon->format('D'),
                 'isPast' => $dayCarbon->isPast() && ! $dayCarbon->isToday(),
                 'isToday' => $dayCarbon->isToday(),
-                'afternoon_available' => ! $aBooked,
-                'evening_available' => ! $eBooked,
-                'night_available' => ! $nBooked,
-                'all_booked' => ($aBooked && $eBooked && $nBooked),
-                'total_booked' => ($aBooked ? 1 : 0) + ($eBooked ? 1 : 0) + ($nBooked ? 1 : 0),
-            ];
+            ], $dayAvailability);
         }
 
         // Details for currently selected date
         $selDateStr = $this->selectedDate ?: $startOfMonth->format('Y-m-d');
         $selCarbon = Carbon::parse($selDateStr);
-        $selDayBookings = $bookingRows->filter(fn ($b) => $b->event_date->format('Y-m-d') === $selDateStr);
-        $selHasFullDay = $selDayBookings->contains(fn ($b) => $b->slot_type === 'FULL_DAY');
-
-        $selAfternoonBooked = $selHasFullDay || $selDayBookings->contains(fn ($b) => $b->slot_type === 'AFTERNOON');
-        $selEveningBooked = $selHasFullDay || $selDayBookings->contains(fn ($b) => $b->slot_type === 'EVENING');
-        $selNightBooked = $selHasFullDay || $selDayBookings->contains(fn ($b) => $b->slot_type === 'NIGHT');
+        $selBlocked = $blockedByDate[$selDateStr] ?? $availability->blockedSlotsForHall($this->hall, $selDateStr);
 
         $selectedDayDetails = [
             'date' => $selDateStr,
             'formattedDate' => $selCarbon->format('l, M jS'),
             'afternoon' => [
                 'name' => 'AFTERNOON',
-                'time' => '11 AM - 3 PM',
-                'icon' => 'â˜€ï¸',
-                'isBooked' => $selAfternoonBooked,
+                'time' => ShiftWindows::labelForSlot($storedWindows, 'AFTERNOON'),
+                'icon' => '☀️',
+                'isBooked' => isset($selBlocked['AFTERNOON']),
             ],
             'evening' => [
                 'name' => 'EVENING',
-                'time' => '4 PM - 8 PM',
+                'time' => ShiftWindows::labelForSlot($storedWindows, 'EVENING'),
                 'icon' => '🌄',
-                'isBooked' => $selEveningBooked,
+                'isBooked' => isset($selBlocked['EVENING']),
             ],
             'night' => [
                 'name' => 'NIGHT',
-                'time' => '9 PM - 1 AM',
+                'time' => ShiftWindows::labelForSlot($storedWindows, 'NIGHT'),
                 'icon' => '🌙',
-                'isBooked' => $selNightBooked,
+                'isBooked' => isset($selBlocked['NIGHT']),
             ],
         ];
 
@@ -562,7 +518,6 @@ class PublicHallDetails extends Component
             'calendarDays' => $calendarDays,
             'startDayOfWeek' => $startDayOfWeek,
             'days' => $calendarDays, // alias for backwards compatibility
-            'bookings' => $bookings,
             'packages' => $packages,
             'images' => $this->displayImages(),
             'videos' => is_array($this->hall->videos) ? $this->hall->videos : [],

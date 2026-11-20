@@ -13,9 +13,11 @@
             </p>
         </div>
 
-        <button wire:click="openPayoutModal" class="btn-gold !h-10 !px-5 text-xs font-bold uppercase font-mono shadow-md">
-            Request Payout
-        </button>
+        @if($this->canRequestPayout)
+            <button wire:click="openPayoutModal" class="btn-gold !h-10 !px-5 text-xs font-bold uppercase font-mono shadow-md">
+                Request Payout
+            </button>
+        @endif
     </div>
 
     @if($feedbackMessage)
@@ -27,6 +29,57 @@
     @if($errorMessage)
         <div class="p-4 bg-[#171513]/90 border border-[#C6A15B]/60 text-[#F8F5EF] text-xs font-semibold shadow-md">
             ⚠️ {{ $errorMessage }}
+        </div>
+    @endif
+
+    @if($this->canVerifyPayments)
+        <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-6 shadow-sm dark:shadow-xl">
+            <h2 class="font-serif-luxury text-xl text-[#171513] dark:text-white mb-1">Payments awaiting verification</h2>
+            <p class="text-[11px] text-stone-500 dark:text-stone-400 font-sans mb-4">
+                Customers may only submit cash payment proof. Confirm physical receipt here before any balance or wallet movement occurs.
+            </p>
+
+            @if($this->pendingPayments->isEmpty())
+                <p class="text-sm text-stone-500 dark:text-stone-400 font-sans">No pending cash payments.</p>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs font-sans">
+                        <thead class="text-[10px] uppercase tracking-wider text-stone-400 font-mono">
+                            <tr>
+                                <th class="py-2 pr-4">Booking</th>
+                                <th class="py-2 pr-4">Customer</th>
+                                <th class="py-2 pr-4">Reference</th>
+                                <th class="py-2 pr-4 text-right">Amount</th>
+                                <th class="py-2 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#E7E5E4] dark:divide-white/10">
+                            @foreach($this->pendingPayments as $payment)
+                                <tr>
+                                    <td class="py-3 pr-4 text-[#171513] dark:text-white">
+                                        {{ $payment->serviceBooking?->booking_reference ?? '—' }}
+                                        <span class="block text-[10px] text-stone-400">{{ $payment->serviceBooking?->event_name }}</span>
+                                    </td>
+                                    <td class="py-3 pr-4 text-stone-600 dark:text-stone-300">{{ $payment->customer?->name ?? '—' }}</td>
+                                    <td class="py-3 pr-4 font-mono text-[10px] text-stone-400">{{ $payment->reference ?? 'Cash submission' }}</td>
+                                    <td class="py-3 pr-4 text-right font-semibold">{{ number_format((float) $payment->amount, 2) }} PKR</td>
+                                    <td class="py-3 text-right">
+                                        @if($this->canVerifyPayments)
+                                            <button type="button" wire:click="verifyPayment('{{ $payment->id }}')"
+                                                    class="btn-gold !h-9 !px-4 text-[10px] font-mono uppercase"
+                                                    onclick="return confirm('Verify that cash was physically received and settle this payment?');">
+                                                Verify cash
+                                            </button>
+                                        @else
+                                            <span class="text-[10px] text-stone-400">Verification restricted</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         </div>
     @endif
 

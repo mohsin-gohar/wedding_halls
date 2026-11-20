@@ -8,6 +8,7 @@ use App\Models\CustomerEventVendor;
 use App\Models\ServiceBooking;
 use App\Models\Tenant;
 use App\Models\VendorCategory;
+use App\Services\SubscriptionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -94,12 +95,14 @@ class CustomerEventWorkspace extends Component
 
     public function getEventBookingsProperty()
     {
-        if (! $this->selectedEventId) {
+        $event = $this->ownedSelectedEvent();
+
+        if (! $event) {
             return collect();
         }
 
         return ServiceBooking::query()
-            ->where('customer_event_id', $this->selectedEventId)
+            ->where('customer_event_id', $event->id)
             ->where('customer_id', Auth::id())
             ->with(['tenant:id,name,slug', 'vendorCategory:id,name'])
             ->orderByDesc('created_at')
@@ -108,12 +111,14 @@ class CustomerEventWorkspace extends Component
 
     public function getEventTasksProperty()
     {
-        if (! $this->selectedEventId) {
+        $event = $this->ownedSelectedEvent();
+
+        if (! $event) {
             return collect();
         }
 
         return CustomerEventTask::query()
-            ->where('customer_event_id', $this->selectedEventId)
+            ->where('customer_event_id', $event->id)
             ->orderBy('sort')
             ->orderBy('due_date')
             ->get();
@@ -121,12 +126,14 @@ class CustomerEventWorkspace extends Component
 
     public function getEventVendorsProperty()
     {
-        if (! $this->selectedEventId) {
+        $event = $this->ownedSelectedEvent();
+
+        if (! $event) {
             return collect();
         }
 
         return CustomerEventVendor::query()
-            ->where('customer_event_id', $this->selectedEventId)
+            ->where('customer_event_id', $event->id)
             ->with(['tenant:id,name,slug,vendor_category_id', 'booking:id,booking_reference,quoted_amount,status'])
             ->get();
     }
@@ -161,11 +168,14 @@ class CustomerEventWorkspace extends Component
 
     public function getMarketplaceVendorsProperty()
     {
-        // Approved vendors the customer can shortlist, excluding those already
-        // attached to this event.
-        $attached = $this->selectedEventId
-            ? CustomerEventVendor::query()->where('customer_event_id', $this->selectedEventId)->pluck('tenant_id')->all()
+        // Approved, visible and unlocked vendors the customer can shortlist,
+        // excluding those already attached to this (owned) event.
+        $event = $this->ownedSelectedEvent();
+        $attached = $event
+            ? CustomerEventVendor::query()->where('customer_event_id', $event->id)->pluck('tenant_id')->all()
             : [];
+
+        $subscriptions = app(SubscriptionService::class);
 
         return Tenant::query()
             ->where('verification_status', 'APPROVED')
@@ -175,7 +185,9 @@ class CustomerEventWorkspace extends Component
             ->with('vendorCategory:id,name,slug')
             ->orderBy('name')
             ->limit(40)
-            ->get();
+            ->get()
+            ->reject(fn (Tenant $tenant) => $subscriptions->isLocked($tenant))
+            ->values();
     }
 
     public function getCategoriesProperty()
@@ -371,9 +383,10 @@ class CustomerEventWorkspace extends Component
             ->where('id', $tenantId)
             ->where('verification_status', 'APPROVED')
             ->where('is_active', true)
+            ->where('marketplace_visible', true)
             ->first();
 
-        if (! $tenant) {
+        if (! $tenant || app(SubscriptionService::class)->isLocked($tenant)) {
             $this->errorMessage = 'That vendor is not available for shortlisting.';
 
             return;
@@ -520,6 +533,16 @@ class CustomerEventWorkspace extends Component
             ->where('id', $eventId)
             ->where('user_id', Auth::id())
             ->first();
+    }
+
+    /** Ownership resolver for computed properties: no data leaks on a tampered id. */
+    private function ownedSelectedEvent(): ?CustomerEvent
+    {
+        if (! $this->selectedEventId) {
+            return null;
+        }
+
+        return $this->ownedEvent($this->selectedEventId);
     }
 
     public function render()

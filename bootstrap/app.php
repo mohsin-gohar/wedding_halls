@@ -3,6 +3,7 @@
 use App\Http\Middleware\AuthenticateApiToken;
 use App\Http\Middleware\EnsureActiveAccount;
 use App\Http\Middleware\EnsurePortalRole;
+use App\Http\Middleware\EnsureSubscriptionActive;
 use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\EnsureTenantStaff;
 use App\Http\Middleware\ForceHttps;
@@ -41,6 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             SecurityHeaders::class,
             EnsureActiveAccount::class,
+            EnsureSubscriptionActive::class,
             TwoFactorAuth::class,
             ResolveTenantBrand::class,
         ]);

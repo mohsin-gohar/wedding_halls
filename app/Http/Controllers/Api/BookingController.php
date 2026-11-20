@@ -191,7 +191,10 @@ class BookingController extends ApiController
             // valid column value and would fail on MySQL strict enums.
             'status' => 'sometimes|in:INQUIRY,HOLD,CONFIRMED,COMPLETED,CANCELLED',
             'notes' => 'sometimes|string|max:1000',
-            'advance_paid' => 'sometimes|numeric|min:0',
+            // Money is never writable through this endpoint. Cash receipts must
+            // go through PaymentService, which enforces cash-only methods,
+            // ownership, idempotency and a tamper-evident audit trail.
+            'advance_paid' => 'prohibited',
         ]);
 
         if ($validator->fails()) {
@@ -204,11 +207,7 @@ class BookingController extends ApiController
             abort_unless($request->hasOnly(['notes']), 403, 'Customers may only update booking notes.');
         }
 
-        $booking->update($request->only(['status', 'notes', 'advance_paid']));
-
-        if ($request->has('advance_paid')) {
-            $booking->updatePaymentBalance();
-        }
+        $booking->update($request->only(['status', 'notes']));
 
         return response()->json([
             'success' => true,

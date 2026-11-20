@@ -35,9 +35,10 @@
                 </h3>
                 <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed font-normal" style="text-wrap: pretty;">
                     Our platform supports three primary operating shifts:
-                    <br>&bull; <strong>Afternoon Lunch:</strong> 12:00 PM to 4:00 PM (Ideal for Nikkah and lunch receptions).
-                    <br>&bull; <strong>Evening Dinner:</strong> 6:30 PM to 10:30 PM (Compliant with provincial Punjab/Sindh 10:00 PM banqueting curfew guidelines).
-                    <br>&bull; <strong>Late Night:</strong> 11:00 PM to 3:00 AM (Reserved for private indoor Mehndi, Sangeet, and Qawwali functions).
+                    <br>&bull; <strong>Afternoon Lunch:</strong> {{ \App\Support\ShiftWindows::labelForSlot(null, 'AFTERNOON') }} (Ideal for Nikkah and lunch receptions).
+                    <br>&bull; <strong>Evening Dinner:</strong> {{ \App\Support\ShiftWindows::labelForSlot(null, 'EVENING') }} (Barat and Walima receptions).
+                    <br>&bull; <strong>Late Night:</strong> {{ \App\Support\ShiftWindows::labelForSlot(null, 'NIGHT') }} (Reserved for private indoor Mehndi, Sangeet, and Qawwali functions).
+                    <br>&bull; <strong>Full-day exclusive takeover:</strong> {{ \App\Support\ShiftWindows::labelForSlot(null, 'FULL_DAY') }}.
                 </p>
             </div>
 

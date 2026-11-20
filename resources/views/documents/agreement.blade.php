@@ -199,7 +199,7 @@
             <table class="info-table">
                 <tr><td class="label">Banquet Hall:</td><td><strong>{{ $booking->hall->name }}</strong></td></tr>
                 <tr><td class="label">Event Date:</td><td><strong>{{ \Carbon\Carbon::parse($booking->event_date)->format('l, d F Y') }}</strong></td></tr>
-                <tr><td class="label">Operational Shift:</td><td><strong style="color: #C6A15B;">{{ $booking->slot_type }} ({{ $booking->slot_type === 'AFTERNOON' ? '12:00 PM - 04:00 PM' : ($booking->slot_type === 'EVENING' ? '07:00 PM - 11:00 PM' : '11:30 PM - 03:30 AM') }})</strong></td></tr>
+                <tr><td class="label">Operational Shift:</td><td><strong style="color: #C6A15B;">{{ $booking->slot_type }} ({{ \App\Support\ShiftWindows::labelForSlot($booking->hall?->tenant?->shift_windows, $booking->slot_type) }})</strong></td></tr>
                 <tr><td class="label">Event Function:</td><td>{{ $booking->event_type }} ({{ $booking->guest_count }} Guests)</td></tr>
             </table>
         </div>

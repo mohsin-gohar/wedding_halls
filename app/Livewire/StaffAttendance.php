@@ -19,6 +19,9 @@ use Livewire\Component;
 #[Layout('components.layouts.app', ['title' => 'Staff Attendance & Leave Management — VenueCloud ERP'])]
 class StaffAttendance extends Component
 {
+    /** Single source of truth for manual overtime entry, shared with the Blade UI. */
+    public const MAX_OVERTIME_HOURS = 12;
+
     public string $activeTab = 'daily'; // daily, leaves, monthly
 
     public string $selectedDate = '';
@@ -322,7 +325,7 @@ class StaffAttendance extends Component
                             }
                         },
                     ],
-                    "{$field}.overtime_hours" => 'nullable|numeric|min:0|max:24',
+                    "{$field}.overtime_hours" => 'nullable|numeric|min:0|max:'.self::MAX_OVERTIME_HOURS,
                     "{$field}.notes" => 'nullable|string|max:1000',
                 ]);
 
@@ -435,7 +438,7 @@ class StaffAttendance extends Component
                     }
                 },
             ],
-            'editingOvertime' => 'nullable|numeric|min:0|max:24',
+            'editingOvertime' => 'nullable|numeric|min:0|max:'.self::MAX_OVERTIME_HOURS,
             'editingNotes' => 'nullable|string|max:1000',
             'editingCorrectionReason' => 'nullable|string|min:8|max:500',
         ]);
@@ -635,6 +638,17 @@ class StaffAttendance extends Component
         if ((int) $leave->user_id === (int) Auth::id()) {
             abort(403, 'You cannot reject your own leave request.');
         }
+        if ($leave->status !== 'PENDING') {
+            $this->errorMessage = 'Only pending leave applications can be rejected.';
+
+            return;
+        }
+        if ($this->periodLocked($leave->start_date) || $this->periodLocked($leave->end_date)) {
+            $this->errorMessage = 'Leave cannot modify a locked attendance period. Reopen the payroll first.';
+
+            return;
+        }
+
         $leave->update([
             'status' => 'REJECTED',
             'action_by' => Auth::id(),
@@ -700,6 +714,7 @@ class StaffAttendance extends Component
             'staffOptions' => $staffOptions,
             'leaves' => $leaves,
             'summary' => $summary,
+            'maxOvertimeHours' => self::MAX_OVERTIME_HOURS,
         ]);
     }
 }

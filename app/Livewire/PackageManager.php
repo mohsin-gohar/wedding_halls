@@ -4,7 +4,9 @@ namespace App\Livewire;
 
 use App\Models\AuditLog;
 use App\Models\Package;
+use App\Models\Tenant;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -17,6 +19,20 @@ class PackageManager extends Component
 
     // Filter
     public string $filterStatus = 'ALL'; // ALL, ACTIVE, INACTIVE
+
+    /** Platform admins must explicitly choose which tenant's catalogue to manage. */
+    public ?string $selectedTenantId = null;
+
+    /** Server-side allow-list for the one-click dish presets in the Blade view. */
+    public const PRESET_DISHES = [
+        'Mutton Kunna Gosht',
+        'Chicken Degi Biryani',
+        'Beef Seekh Kabab',
+        'Tandoori Roghni Naan',
+        'Zafrani Kheer',
+        'Shahi Zarda',
+        'Kashmiri Chai & Almonds',
+    ];
 
     // Create / Edit Modal State
     public bool $showPackageModal = false;
@@ -43,74 +59,66 @@ class PackageManager extends Component
 
     public function mount()
     {
+        $this->authorizePackageAction('package.view');
+    }
+
+    private function authorizePackageAction(string $action): void
+    {
         $user = Auth::user();
-        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isChef() && ! $user->isSuperAdmin())) {
+        if (! $user || (! $user->isSuperAdmin() && ! $user->isTenantOwner() && ! $user->isManager() && ! $user->isChef())) {
             abort(403, 'Unauthorized. Access to Catering Packages is restricted to Venue Owners, Chefs, and Managers.');
         }
 
-        $this->seedInitialPackagesIfEmpty();
+        if (in_array($action, ['package.status', 'package.delete'], true)
+            && ! ($user->isSuperAdmin() || $user->isTenantOwner() || $user->isManager())) {
+            abort(403, 'Unauthorized to change package availability.');
+        }
     }
 
-    protected function seedInitialPackagesIfEmpty()
+    /** The tenant context for reads: null means "nothing visible" for a platform admin. */
+    private function resolvedTenantId(): ?string
     {
-        $tenantId = Auth::user()->tenant_id;
-        if ($tenantId && Package::where('tenant_id', $tenantId)->count() === 0) {
-            $defaultPackages = [
-                [
-                    'name' => 'Royal Mughal Barat Feast',
-                    'description' => 'Opulent royal feast featuring slow-cooked mutton roghan josh, long-grain chicken biryani, and artisanal tandoori breads.',
-                    'per_head_price' => 2450.00,
-                    'min_guests' => 250,
-                    'menu_items_json' => [
-                        'Mutton Roghan Josh with Bone Marrow',
-                        'Special Degi Chicken Biryani (Basmati Aged)',
-                        'Charcoal Grilled Chicken Reshmi Kabab',
-                        'Hot Tandoori Roghni Naan & Taftan',
-                        'Zafrani Kheer & Gulab Jamun',
-                        'Fresh Mint Raita & Organic Salad',
-                        'Chilled Soft Drinks & Mineral Water',
-                    ],
-                    'is_active' => true,
-                ],
-                [
-                    'name' => 'Emerald Walima Reception Buffet',
-                    'description' => 'Sophisticated wedding banquet with boneless mutton handi, live chicken sajji, and dessert bar.',
-                    'per_head_price' => 2850.00,
-                    'min_guests' => 300,
-                    'menu_items_json' => [
-                        'Mutton Kunna Gosht (Claypot Gravy)',
-                        'Chicken White Qorma (Almond Paste)',
-                        'Mutton Pulao with Fried Onions',
-                        'Crispy Fried Fish with Tartar Sauce',
-                        'Live Tawa Naan & Kalonji Kulcha',
-                        'Shahi Tukray & Pistachio Kulfi',
-                        'Russian Salad & Fresh Garden Greens',
-                        'Gourmet Kashmiri Chai with Crushed Almonds',
-                    ],
-                    'is_active' => true,
-                ],
-                [
-                    'name' => 'Classic Festive Silver Menu',
-                    'description' => 'Traditional high-quality wedding banquet ideal for elegant family dinners and mehendi nights.',
-                    'per_head_price' => 1950.00,
-                    'min_guests' => 150,
-                    'menu_items_json' => [
-                        'Traditional Chicken Qorma Degi',
-                        'Chicken Sindhi Biryani',
-                        'Crispy Vegetable Spring Rolls',
-                        'Roghni Tandoori Naan',
-                        'Mutanjan Zarda with Sweet Khoya',
-                        'Zeera Raita & Kachumber Salad',
-                        'Chilled Soft Drinks',
-                    ],
-                    'is_active' => true,
-                ],
-            ];
-
-            foreach ($defaultPackages as $pkg) {
-                Package::create(array_merge($pkg, ['tenant_id' => $tenantId]));
-            }
+        $user = Auth::user();
+        if (! $user) {
+            return null;
         }
+
+        if ($user->isSuperAdmin() && ! $user->tenant_id) {
+            if (! $this->selectedTenantId) {
+                return null;
+            }
+
+            return Tenant::whereKey($this->selectedTenantId)->exists() ? $this->selectedTenantId : null;
+        }
+
+        return $user->tenant_id;
+    }
+
+    /** Mutations must have an explicit tenant context. */
+    private function targetTenantId(): string
+    {
+        $tenantId = $this->resolvedTenantId();
+        if (! $tenantId) {
+            abort(403, 'Select a tenant before managing its catering packages.');
+        }
+
+        return $tenantId;
+    }
+
+    public function selectTenant(string $tenantId): void
+    {
+        $user = Auth::user();
+        if (! $user || ! $user->isSuperAdmin()) {
+            abort(403, 'Only platform admins may select a tenant catalogue.');
+        }
+
+        validator(['tenantId' => $tenantId], [
+            'tenantId' => ['required', Rule::exists('tenants', 'id')],
+        ])->validate();
+
+        $this->selectedTenantId = $tenantId;
+        $this->feedbackMessage = null;
+        $this->errorMessage = null;
     }
 
     // ==========================================
@@ -118,6 +126,9 @@ class PackageManager extends Component
     // ==========================================
     public function openCreateModal()
     {
+        $this->authorizePackageAction('package.create');
+        $this->targetTenantId();
+
         $this->isEditing = false;
         $this->editingPackageId = null;
         $this->packageName = '';
@@ -140,8 +151,8 @@ class PackageManager extends Component
 
     public function openEditModal(string $packageId)
     {
-        $user = Auth::user();
-        $package = Package::where('tenant_id', $user->tenant_id)->findOrFail($packageId);
+        $this->authorizePackageAction('package.update');
+        $package = Package::where('tenant_id', $this->targetTenantId())->findOrFail($packageId);
 
         $this->isEditing = true;
         $this->editingPackageId = $package->id;
@@ -168,10 +179,16 @@ class PackageManager extends Component
     // ==========================================
     public function addMenuItem()
     {
+        $this->authorizePackageAction('package.create');
+
         $item = trim($this->newMenuItemName);
         if ($item === '') {
             return;
         }
+
+        validator(['item' => $item], [
+            'item' => 'required|string|max:120',
+        ])->validate();
 
         if (! in_array($item, $this->menuItems, true)) {
             $this->menuItems[] = $item;
@@ -189,6 +206,14 @@ class PackageManager extends Component
 
     public function addPresetDish(string $dish)
     {
+        $this->authorizePackageAction('package.create');
+
+        // The argument comes from Livewire's request payload, not from the
+        // rendered button, so it must be checked against a server allow-list.
+        validator(['dish' => $dish], [
+            'dish' => ['required', Rule::in(self::PRESET_DISHES)],
+        ])->validate();
+
         if (! in_array($dish, $this->menuItems, true)) {
             $this->menuItems[] = $dish;
         }
@@ -199,21 +224,24 @@ class PackageManager extends Component
     // ==========================================
     public function savePackage()
     {
+        $this->authorizePackageAction($this->isEditing ? 'package.update' : 'package.create');
+        $tenantId = $this->targetTenantId();
+
         $this->validate([
             'packageName' => 'required|string|min:3|max:120',
             'perHeadPrice' => 'required|numeric|min:500',
             'minGuests' => 'required|integer|min:20',
             'packageDescription' => 'nullable|string|max:1000',
+            'menuItems' => 'required|array|min:1|max:100',
+            'menuItems.*' => 'required|string|max:120',
         ]);
 
+        $this->menuItems = array_values(array_map('trim', $this->menuItems));
         if (empty($this->menuItems)) {
             $this->errorMessage = 'Please add at least one dish / menu item to this package.';
 
             return;
         }
-
-        $user = Auth::user();
-        $tenantId = $user->tenant_id;
 
         if ($this->isEditing && $this->editingPackageId) {
             $package = Package::where('tenant_id', $tenantId)->findOrFail($this->editingPackageId);
@@ -265,20 +293,32 @@ class PackageManager extends Component
     // ==========================================
     public function togglePackageStatus(string $packageId)
     {
-        $user = Auth::user();
-        $package = Package::where('tenant_id', $user->tenant_id)->findOrFail($packageId);
-        $package->update([
-            'is_active' => ! $package->is_active,
-        ]);
+        $this->authorizePackageAction('package.status');
+        $tenantId = $this->targetTenantId();
 
-        $statusStr = $package->is_active ? 'Activated' : 'Archived';
+        $package = Package::where('tenant_id', $tenantId)->findOrFail($packageId);
+        $newStatus = ! $package->is_active;
+        $package->update(['is_active' => $newStatus]);
+
+        AuditLog::log(
+            'PACKAGE_STATUS_CHANGED',
+            "Catering Package [{$package->name}] ".($newStatus ? 'activated' : 'archived').'.',
+            $tenantId,
+            'Package',
+            $package->id
+        );
+
+        $statusStr = $newStatus ? 'Activated' : 'Archived';
         $this->feedbackMessage = "Package [{$package->name}] has been {$statusStr}.";
     }
 
     public function deletePackage(string $packageId)
     {
+        $this->authorizePackageAction('package.delete');
+        $tenantId = $this->targetTenantId();
+
         $user = Auth::user();
-        $package = Package::where('tenant_id', $user->tenant_id)->findOrFail($packageId);
+        $package = Package::where('tenant_id', $tenantId)->findOrFail($packageId);
 
         $activeBookingsCount = $package->bookings()->whereIn('status', ['HOLD', 'CONFIRMED'])->count();
         if ($activeBookingsCount > 0) {
@@ -303,8 +343,12 @@ class PackageManager extends Component
 
     public function render()
     {
+        $this->authorizePackageAction('package.view');
         $user = Auth::user();
-        $query = Package::where('tenant_id', $user->tenant_id);
+        $tenantId = $this->resolvedTenantId();
+
+        // A platform admin with no explicit tenant selection sees nothing.
+        $query = Package::where('tenant_id', $tenantId ?? '00000000-0000-0000-0000-000000000000');
 
         if ($this->filterStatus === 'ACTIVE') {
             $query->where('is_active', true);
@@ -314,15 +358,21 @@ class PackageManager extends Component
 
         $packages = $query->latest()->get();
 
-        $totalPackages = Package::where('tenant_id', $user->tenant_id)->count();
-        $activePackages = Package::where('tenant_id', $user->tenant_id)->where('is_active', true)->count();
-        $avgPrice = Package::where('tenant_id', $user->tenant_id)->where('is_active', true)->avg('per_head_price') ?? 0;
+        $totalPackages = $tenantId ? Package::where('tenant_id', $tenantId)->count() : 0;
+        $activePackages = $tenantId ? Package::where('tenant_id', $tenantId)->where('is_active', true)->count() : 0;
+        $avgPrice = $tenantId ? (Package::where('tenant_id', $tenantId)->where('is_active', true)->avg('per_head_price') ?? 0) : 0;
+
+        $tenantOptions = $user->isSuperAdmin()
+            ? Tenant::query()->orderBy('name')->limit(200)->get(['id', 'name'])
+            : collect([]);
 
         return view('livewire.package-manager', [
             'packages' => $packages,
             'totalPackages' => $totalPackages,
             'activePackages' => $activePackages,
             'avgPrice' => $avgPrice,
+            'tenantOptions' => $tenantOptions,
+            'selectedTenantId' => $this->selectedTenantId,
         ]);
     }
 }

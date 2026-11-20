@@ -4,8 +4,10 @@ namespace App\Livewire;
 
 use App\Models\SupportTicket;
 use App\Models\TicketMessage;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -94,12 +96,16 @@ class SupportCenter extends Component
 
     public function getMessagesProperty()
     {
-        if (! $this->selectedTicketId) {
+        // A tampered selectedTicketId must never expose another customer's
+        // (or another vendor's) conversation.
+        $ticket = $this->selectedTicket();
+
+        if (! $ticket) {
             return collect();
         }
 
         return TicketMessage::query()
-            ->where('support_ticket_id', $this->selectedTicketId)
+            ->where('support_ticket_id', $ticket->id)
             ->with('author:id,name,role')
             ->orderBy('created_at')
             ->get();
@@ -164,6 +170,7 @@ class SupportCenter extends Component
                 'user_id' => $user->id,
                 'message' => trim($this->body),
                 'is_staff_reply' => false,
+                'read_at' => now(), // The author has obviously read their own message.
             ]);
 
             return $ticket;
@@ -177,14 +184,18 @@ class SupportCenter extends Component
 
     public function openTicket(string $ticketId): void
     {
-        if (! $this->scopedTicket($ticketId)) {
+        $ticket = $this->scopedTicket($ticketId);
+
+        if (! $ticket) {
             abort(404, 'Ticket not found.');
         }
 
-        $this->selectedTicketId = $ticketId;
+        $this->selectedTicketId = $ticket->id;
         $this->showThread = true;
         $this->replyBody = '';
         $this->errorMessage = null;
+
+        $this->markCounterpartMessagesRead($ticket);
     }
 
     public function closeThread(): void
@@ -202,17 +213,53 @@ class SupportCenter extends Component
             'replyBody' => ['required', 'string', 'min:2', 'max:5000'],
         ]);
 
+        // Re-check ownership after validation in case state was tampered with
+        // between hydration and the write.
+        $ticket = $this->currentTicket();
+
+        if ($ticket->status === 'CLOSED') {
+            $this->errorMessage = 'This ticket is closed and no longer accepts replies.';
+
+            return;
+        }
+
         $isStaff = ! $user->isCustomer();
 
-        TicketMessage::create([
+        $this->markCounterpartMessagesRead($ticket);
+
+        $message = TicketMessage::create([
             'support_ticket_id' => $ticket->id,
             'user_id' => $user->id,
             'message' => trim($this->replyBody),
             'is_staff_reply' => $isStaff,
+            'read_at' => null, // Unread for the recipient until they open the thread.
         ]);
 
         if ($ticket->status === 'OPEN' && $isStaff) {
             $ticket->update(['status' => 'IN_PROGRESS']);
+        }
+
+        // Notify the other side of the conversation. In-app notifications are
+        // authoritative; e-mail/SMS are best-effort and honour user preferences.
+        $notifications = app(NotificationService::class);
+
+        if ($isStaff) {
+            $notifications->send(
+                (string) $ticket->user_id,
+                'SUPPORT_REPLY',
+                'New reply on ticket '.$ticket->ticket_no,
+                Str::limit(trim($this->replyBody), 160),
+                $ticket->tenant_id ? (string) $ticket->tenant_id : null,
+                ['ticket_id' => $ticket->id, 'message_id' => $message->id]
+            );
+        } elseif ($ticket->tenant_id) {
+            $notifications->sendToTenantStaff(
+                (string) $ticket->tenant_id,
+                'SUPPORT_REPLY',
+                'Customer reply on ticket '.$ticket->ticket_no,
+                Str::limit(trim($this->replyBody), 160),
+                ['ticket_id' => $ticket->id, 'message_id' => $message->id]
+            );
         }
 
         $this->replyBody = '';
@@ -229,11 +276,17 @@ class SupportCenter extends Component
             return;
         }
 
-        // Only platform staff may drive the lifecycle; a customer may close
-        // their own ticket once resolved.
+        // Only platform/vendor staff may drive the lifecycle. The one customer
+        // transition allowed is closing their OWN ticket once it is RESOLVED,
+        // matching the UI ("Close ticket" button) and the intent documented
+        // above. Any other customer write is rejected.
         $user = Auth::user();
+        $isStaff = $user->isSuperAdmin() || $user->isPlatformSupport() || $user->isTenantOwner();
+        $customerMayClose = $user->isCustomer()
+            && $status === 'CLOSED'
+            && $ticket->status === 'RESOLVED';
 
-        if (! $user->isSuperAdmin() && ! $user->isPlatformSupport() && ! $user->isTenantOwner()) {
+        if (! $isStaff && ! $customerMayClose) {
             $this->errorMessage = 'You may not change the ticket status.';
 
             return;
@@ -264,6 +317,26 @@ class SupportCenter extends Component
     }
 
     // ── Internals ────────────────────────────────────────────────
+
+    /** Ownership-safe resolver for computed properties (never aborts). */
+    private function selectedTicket(): ?SupportTicket
+    {
+        if (! $this->selectedTicketId) {
+            return null;
+        }
+
+        return $this->scopedTicket($this->selectedTicketId);
+    }
+
+    /** Mark messages from the conversation partner as read for this viewer. */
+    private function markCounterpartMessagesRead(SupportTicket $ticket): void
+    {
+        TicketMessage::query()
+            ->where('support_ticket_id', $ticket->id)
+            ->where('user_id', '!=', Auth::id())
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+    }
 
     private function currentTicket(): SupportTicket
     {

@@ -2,11 +2,10 @@
 
 namespace App\Livewire;
 
-use App\Models\Booking;
 use App\Models\Hall;
+use App\Services\HallAvailabilityService;
 use App\Support\CalendarWindow;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -65,39 +64,19 @@ class PublicAvailabilityChecker extends Component
 
     public function render()
     {
-        $halls = Hall::with(['venue', 'tenant'])
-            ->where('is_active', true)
-            ->whereHas('tenant', function ($q) {
-                $q->where('is_active', true)
-                    ->where('verification_status', 'APPROVED');
-            })
+        $halls = Hall::publicVisible()
+            ->with(['venue', 'tenant'])
             ->orderBy('name')
             ->paginate(12);
         $date = $this->normalizeSelectedDate();
 
-        // Fetch bookings for the selected date. The result is cached for one
-        // minute and keyed by the latest booking mutation so newly confirmed
-        // reservations are reflected immediately.
+        // One authoritative conflict engine for public display and booking writes.
         $dateString = $date->format('Y-m-d');
-        $bookingStamp = md5((string) Booking::max('updated_at').'|'.Booking::count());
-        $bookingRows = Cache::remember(
-            "public:availability:{$dateString}:{$bookingStamp}",
-            now()->addMinute(),
-            fn () => Booking::whereDate('event_date', $dateString)
-                ->whereIn('status', ['CONFIRMED', 'HOLD'])
-                ->get(['id', 'hall_id', 'event_date', 'slot_type', 'status'])
+        $availability = app(HallAvailabilityService::class)->blockedSlotsForHalls(
+            $halls->pluck('id')->all(),
+            $dateString
         );
-
-        $bookings = collect();
-        foreach ($bookingRows as $booking) {
-            $slots = $booking->slot_type === 'FULL_DAY'
-                ? ['AFTERNOON', 'EVENING', 'NIGHT']
-                : [$booking->slot_type];
-
-            foreach ($slots as $slot) {
-                $bookings->put($booking->hall_id.'_'.$slot, $booking);
-            }
-        }
+        $bookings = collect($availability['bookings']);
 
         // Quick date shortcuts (This Friday, This Saturday, This Sunday, Next Saturday)
         $now = Carbon::now();

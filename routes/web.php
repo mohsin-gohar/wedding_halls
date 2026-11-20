@@ -3,6 +3,7 @@
 use App\Http\Controllers\ApiTokenController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\WhatsAppWebhookController;
+use App\Http\Middleware\RequirePortalPermission;
 use App\Livewire\AdminCategoryManager;
 use App\Livewire\AdminDashboard;
 use App\Livewire\AttendanceCalendar;
@@ -60,10 +61,16 @@ use App\Livewire\VendorServicesManager;
 use App\Livewire\WeddingPlannerDashboard;
 use App\Livewire\WhatsAppRsvpManager;
 use App\Livewire\WhiteLabelSite;
+use App\Models\AuditLog;
 use App\Models\Hall;
 use App\Models\Package;
+use App\Models\ServicePayment;
 use App\Models\Tenant;
 use App\Models\VendorCategory;
+use App\Models\VendorPayout;
+use App\Services\ServiceBookingService;
+use App\Support\CashOnlyPayments;
+use App\Support\PermissionMatrix;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -78,13 +85,10 @@ use Illuminate\Support\Str;
 */
 // Cinematic Homepage (Cached with automatic fallback)
 Route::get('/', function () {
-    [$halls, $packages] = Cache::remember('home.featured.v2', 120, function () {
+    [$halls, $packages] = Cache::remember('home.featured.v3', 120, function () {
         $featuredHalls = Hall::with(['venue', 'tenant'])
-            ->where('is_active', true)
-            ->whereHas('tenant', function ($q) {
-                $q->where('is_active', true)
-                    ->where('verification_status', 'APPROVED');
-            })
+            ->publicVisible()
+            ->whereHas('tenant', fn ($q) => $q->where('tenants.marketplace_visible', true))
             ->take(6)
             ->get();
 
@@ -92,8 +96,7 @@ Route::get('/', function () {
             ->where(function ($query) {
                 $query->whereNull('tenant_id')
                     ->orWhereHas('tenant', function ($q) {
-                        $q->where('is_active', true)
-                            ->where('verification_status', 'APPROVED');
+                        $q->marketplaceVisible();
                     });
             })
             ->take(4)
@@ -104,6 +107,35 @@ Route::get('/', function () {
 
     return view('welcome', compact('halls', 'packages'));
 })->middleware('throttle:public-pages')->name('home');
+
+// Dynamic robots.txt so the sitemap URL follows APP_URL/config instead of a
+// hardcoded production hostname.
+Route::get('/robots.txt', function () {
+    $lines = [
+        'User-agent: *',
+        'Allow: /',
+        'Disallow: /admin',
+        'Disallow: /dashboard',
+        'Disallow: /vendor/dashboard',
+        'Disallow: /vendor/bookings',
+        'Disallow: /vendor/quotes',
+        'Disallow: /vendor/services',
+        'Disallow: /vendor/finance',
+        'Disallow: /vendor/portfolio',
+        'Disallow: /vendor/locations',
+        'Disallow: /vendor/team',
+        'Disallow: /vendor/settings',
+        'Disallow: /customer/dashboard',
+        'Disallow: /documents/',
+        '',
+        'Sitemap: '.url('/sitemap.xml'),
+    ];
+
+    return response(implode("\n", $lines), 200, [
+        'Content-Type' => 'text/plain; charset=UTF-8',
+        'Cache-Control' => 'public, max-age=3600',
+    ]);
+})->middleware('throttle:public-pages')->name('robots');
 
 // Dynamic XML Sitemap for Search Engines
 Route::get('/sitemap.xml', function () {
@@ -122,12 +154,9 @@ Route::get('/sitemap.xml', function () {
         route('public.availability'),
     ];
 
-    $halls = Hall::where('is_active', true)
+    $halls = Hall::publicVisible()
+        ->whereHas('tenant', fn ($q) => $q->where('tenants.marketplace_visible', true))
         ->whereNotNull('slug')
-        ->whereHas('tenant', function ($q) {
-            $q->where('is_active', true)
-                ->where('verification_status', 'APPROVED');
-        })
         ->select(['slug', 'updated_at'])
         ->get();
 
@@ -140,9 +169,7 @@ Route::get('/sitemap.xml', function () {
         ->get(['slug', 'updated_at']);
 
     $vendors = Tenant::query()
-        ->where('marketplace_visible', true)
-        ->where('is_active', true)
-        ->where('verification_status', 'APPROVED')
+        ->marketplaceVisible()
         ->whereNotNull('slug')
         ->get(['slug', 'updated_at']);
 
@@ -215,18 +242,56 @@ Route::get('/concierge', HallChat::class)->middleware('throttle:public-pages')->
 | Multi-Vendor Marketplace ERP — Authenticated Vendor Staff Routes
 |--------------------------------------------------------------------------
 */
+// Permission gates mirror PermissionMatrix (including enterprise role aliases)
+// so route access, sidebar navigation and Livewire actions agree. The matrix
+// fallback also covers legacy accounts whose string role predates Spatie.
+// Middleware is referenced as an FQCN string with a permission parameter so
+// Laravel can resolve it without a bootstrap alias registration.
 Route::middleware(['auth', 'tenant.staff'])->group(function () {
-    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_SERVICE_STAFF')->group(function () {
-        Route::get('/vendor/quotes', VendorQuotesBoard::class)->name('vendor.quotes');
-    });
+    Route::get('/vendor/quotes', VendorQuotesBoard::class)
+        ->middleware(RequirePortalPermission::class.':rfq.view')
+        ->name('vendor.quotes');
+    Route::get('/vendor/bookings', VendorBookingsBoard::class)
+        ->middleware(RequirePortalPermission::class.':service-bookings.view')
+        ->name('vendor.bookings');
+    Route::get('/vendor/services', VendorServicesManager::class)
+        ->middleware(RequirePortalPermission::class.':services.view')
+        ->name('vendor.services');
+    Route::get('/vendor/portfolio', VendorPortfolioManager::class)
+        ->middleware(RequirePortalPermission::class.':portfolio.view')
+        ->name('vendor.portfolio');
+    Route::get('/vendor/locations', VendorLocationsManager::class)
+        ->middleware(RequirePortalPermission::class.':locations.view')
+        ->name('vendor.locations');
+    Route::get('/vendor/finance', VendorFinanceBoard::class)
+        ->middleware(RequirePortalPermission::class.':wallet.view')
+        ->name('vendor.finance');
 
-    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER')->group(function () {
-        Route::get('/vendor/bookings', VendorBookingsBoard::class)->name('vendor.bookings');
-        Route::get('/vendor/services', VendorServicesManager::class)->name('vendor.services');
-        Route::get('/vendor/portfolio', VendorPortfolioManager::class)->name('vendor.portfolio');
-        Route::get('/vendor/locations', VendorLocationsManager::class)->name('vendor.locations');
-        Route::get('/vendor/finance', VendorFinanceBoard::class)->name('vendor.finance');
-    });
+    // Staff-only settlement of customer-submitted cash payments. Customer API
+    // submissions remain PENDING; only this authenticated, tenant-scoped action
+    // may verify a payment and settle the vendor wallet.
+    Route::post('/vendor/payments/{payment}/verify', function (string $payment) {
+        $user = auth()->user();
+
+        abort_unless($user && $user->tenant_id, 403, 'Unauthorized. Vendor staff access is required.');
+        abort_unless(PermissionMatrix::userCan($user, 'payments.verify'), 403, 'Unauthorized. You may not verify service payments.');
+
+        $record = ServicePayment::query()->whereKey($payment)->firstOrFail();
+
+        abort_unless((string) $record->tenant_id === (string) $user->tenant_id, 404, 'Payment not found.');
+        abort_unless($record->method === CashOnlyPayments::CASH, 422, 'Only cash payments can be verified here.');
+        abort_unless($record->status === 'PENDING', 422, 'Only pending payments can be verified.');
+
+        $result = app(ServiceBookingService::class)->verifyServicePayment($record, (int) $user->id);
+
+        abort_unless(($result['success'] ?? false) === true, 422, $result['message'] ?? 'Payment could not be verified.');
+
+        $message = ! empty($result['already_verified'])
+            ? 'This cash payment was already verified. No duplicate ledger entry was created.'
+            : 'Cash payment verified. Booking balance and wallet ledger updated.';
+
+        return back()->with('message', $message);
+    })->name('vendor.payments.verify');
 });
 
 // Multi-vendor Services Marketplace (categories are DB-driven via vendor_categories)
@@ -312,13 +377,13 @@ $authenticatePortalRequest = function (Request $request) {
 
         $user = Auth::user();
 
-        if ($user->status === 'SUSPENDED') {
+        if (! in_array($user->status, ['ACTIVE'], true)) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
             return back()->withErrors([
-                'email' => 'Your account has been suspended by the platform administrator.',
+                'email' => 'Your account is not active. Contact the platform administrator.',
             ])->withInput($request->only('email'));
         }
 
@@ -448,6 +513,44 @@ Route::middleware(['auth', 'super.admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', AdminDashboard::class);
     // Marketplace taxonomy management (hierarchical categories/subcategories).
     Route::get('/categories', AdminCategoryManager::class)->name('admin.categories');
+
+    // Payout approvals are platform money movement: super admin only. Vendors
+    // may request payouts but can never process them.
+    Route::get('/vendor-payouts', function () {
+        return view('livewire.vendor-payout-review', [
+            'payouts' => VendorPayout::query()
+                ->with(['tenant:id,name', 'processor:id,name'])
+                ->orderByDesc('requested_at')
+                ->limit(50)
+                ->get(),
+        ])->layout('components.layouts.app', ['title' => 'Vendor Payout Approvals — Platform Admin']);
+    })->name('admin.vendor-payouts');
+
+    Route::post('/vendor-payouts/{payout}/process', function (string $payout) {
+        $user = auth()->user();
+
+        abort_unless($user && $user->isSuperAdmin(), 403, 'Only the platform super admin may process vendor payouts.');
+
+        $record = VendorPayout::query()->whereKey($payout)->firstOrFail();
+
+        $processed = app(ServiceBookingService::class)->processVendorPayout($record, (int) $user->id);
+
+        AuditLog::log(
+            'VENDOR_PAYOUT_PROCESSED',
+            sprintf(
+                'Vendor payout %s (%s PKR) processed for tenant %s by super admin %s.',
+                $processed->reference ?? $processed->id,
+                number_format((float) $processed->amount, 2),
+                $processed->tenant_id,
+                $user->email ?? (string) $user->id
+            ),
+            (string) $processed->tenant_id,
+            VendorPayout::class,
+            (string) $processed->id
+        );
+
+        return back()->with('message', 'Payout marked as paid and wallet debited.');
+    })->name('admin.vendor-payouts.process');
 });
 
 /*

@@ -136,9 +136,9 @@
                     <label for="shift" class="block text-[11px] font-semibold uppercase tracking-[0.06em] text-stone-700 dark:text-stone-300 mb-1.5 font-sans">Shift</label>
                     <select name="shift" id="shift" class="input-luxury dark:bg-[#171513] dark:text-white dark:border-white/15 text-sm focus:border-[#C6A15B] focus:ring-2 focus:ring-[#C6A15B]/25 rounded-lg">
                         <option value="ALL">Any Shift</option>
-                        <option value="EVENING" selected>Evening Dinner (7–11 PM)</option>
-                        <option value="AFTERNOON">Afternoon Lunch (12–4 PM)</option>
-                        <option value="NIGHT">Late Night Mehndi (11:30 PM+)</option>
+                        <option value="EVENING" selected>Evening Dinner ({{ \App\Support\ShiftWindows::labelForSlot(null, 'EVENING') }})</option>
+                        <option value="AFTERNOON">Afternoon Lunch ({{ \App\Support\ShiftWindows::labelForSlot(null, 'AFTERNOON') }})</option>
+                        <option value="NIGHT">Late Night Mehndi ({{ \App\Support\ShiftWindows::labelForSlot(null, 'NIGHT') }})</option>
                     </select>
                 </div>
 

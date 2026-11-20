@@ -1,3 +1,6 @@
+﻿> [!WARNING]
+> **Historical / superseded document.** This file predates the current cash-only audit and verification pass. Do not rely on its claims about payment methods, test counts, browser proof, or production readiness. See `DOCS_STATUS.md` and the authoritative final reports.
+
 # BROWSER PERSONA QA REPORT — Riwaj Grand
 
 **Date:** 2026-11-16 · **Repair-cycle QA added: 17 Nov 2026** · Tool: OpenCode in-app Chromium · App: `php artisan serve --host=127.0.0.1 --port=9200`

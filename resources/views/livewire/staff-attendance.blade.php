@@ -212,7 +212,7 @@
                                     @endif
                                 </td>
                                 <td class="p-3">
-                                    <input type="number" step="0.5" min="0" max="12" wire:model="attendanceData.{{ $m->id }}.overtime_hours" 
+                                    <input type="number" step="0.5" min="0" max="{{ $maxOvertimeHours }}" wire:model="attendanceData.{{ $m->id }}.overtime_hours"
                                            class="w-20 bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono px-2 py-1 text-center outline-none focus:border-[#C6A15B]">
                                 </td>
                                 <td class="p-3">
@@ -515,7 +515,7 @@
 
                     <div>
                         <label class="block text-[10px] font-mono uppercase text-[#C6A15B] mb-1 font-semibold">Overtime Hours (Hours)</label>
-                        <input type="number" step="0.5" min="0" max="24" wire:model="editingOvertime" class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B] font-mono">
+                        <input type="number" step="0.5" min="0" max="{{ $maxOvertimeHours }}" wire:model="editingOvertime" class="w-full bg-[#171513] border border-white/20 text-white text-xs px-3 py-2 outline-none focus:border-[#C6A15B] font-mono">
                         @error('editingOvertime') <span class="text-rose-400 text-[10px] font-mono mt-1 block">{{ $message }}</span> @enderror
                     </div>
 

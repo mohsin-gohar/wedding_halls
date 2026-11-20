@@ -118,6 +118,10 @@ class SaaSSubscriptionAndErpTest extends TestCase
 
     public function test_super_admin_can_manage_subscription_plans_and_approve_payments(): void
     {
+        // Payment approval is intentionally gated by the free-launch flag;
+        // enable it here so the approval workflow itself remains covered.
+        config(['platform.billing_enabled' => true]);
+
         $superAdmin = User::where('role', 'ROLE_SUPER_ADMIN')->first();
         $this->assertNotNull($superAdmin);
 

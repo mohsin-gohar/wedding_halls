@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\VendorCategory;
 use App\Models\VendorService;
+use App\Support\PermissionMatrix;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -53,8 +54,8 @@ class VendorServicesManager extends Component
     {
         $user = Auth::user();
 
-        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->hasPermissionTo('services.manage'))) {
-            abort(403, 'Unauthorized. Service catalog management is restricted to vendor business owners.');
+        if (! $user || ! PermissionMatrix::userCan($user, 'services.view')) {
+            abort(403, 'Unauthorized. Service catalog access is restricted to vendor staff.');
         }
 
         $this->categories = VendorCategory::query()->where('is_active', true)->orderBy('sort')->get(['id', 'name'])->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])->all();
@@ -89,8 +90,20 @@ class VendorServicesManager extends Component
         $this->serviceCount = VendorService::query()->where('tenant_id', $tenantId)->count();
     }
 
+    public function hasPortalPermission(string $permission): bool
+    {
+        return PermissionMatrix::userCan(Auth::user(), $permission);
+    }
+
+    private function assertCan(string $permission): void
+    {
+        abort_unless($this->hasPortalPermission($permission), 403, 'Unauthorized. Missing permission: '.$permission);
+    }
+
     public function openCreateModal(): void
     {
+        $this->assertCan('services.manage');
+
         $this->isEditing = false;
         $this->editingServiceId = null;
         $this->serviceName = '';
@@ -106,6 +119,8 @@ class VendorServicesManager extends Component
 
     public function openEditModal(string $serviceId): void
     {
+        $this->assertCan('services.manage');
+
         $tenantId = Auth::user()->tenant_id;
 
         if (! $tenantId) {
@@ -146,6 +161,8 @@ class VendorServicesManager extends Component
 
     public function saveService(): void
     {
+        $this->assertCan('services.manage');
+
         $user = Auth::user();
 
         if (! $user) {
@@ -211,6 +228,8 @@ class VendorServicesManager extends Component
 
     public function toggleService(string $serviceId): void
     {
+        $this->assertCan('services.manage');
+
         $tenantId = Auth::user()->tenant_id;
 
         if (! $tenantId) {

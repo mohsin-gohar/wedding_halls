@@ -25,6 +25,9 @@ class BookingConcurrencyTest extends TestCase
 
     public function test_booking_service_creates_atomic_reservation_and_kot()
     {
+        // KOT creation is an opt-in kitchen module capability.
+        config(['platform.kitchen_module_enabled' => true]);
+
         $hall = Hall::first();
         $bookingService = app(BookingService::class);
 

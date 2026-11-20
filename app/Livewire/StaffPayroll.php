@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Livewire\StaffAttendance as AttendanceComponent;
 use App\Models\AuditLog;
 use App\Models\Expense;
 use App\Models\PayrollPolicy;
@@ -312,6 +313,11 @@ class StaffPayroll extends Component
 
             return;
         }
+        if ($record->status === 'APPROVED') {
+            $this->errorMessage = 'This payroll is finalised. Reopen it to DRAFT before editing.';
+
+            return;
+        }
         $this->editingPayrollId = $record->id;
         $this->editingEmployeeName = $record->user->name ?? 'Staff';
         $this->editBasicSalary = (float) $record->basic_salary;
@@ -329,6 +335,9 @@ class StaffPayroll extends Component
     public function recalculateEditNet()
     {
         $this->authorizePayrollManager();
+        $this->validate([
+            'editOvertimeHours' => 'required|numeric|min:0|max:'.AttendanceComponent::MAX_OVERTIME_HOURS,
+        ]);
         $this->editNetSalary = PayrollModel::calculateNet(
             $this->editBasicSalary,
             $this->editOvertimeHours,
@@ -350,7 +359,7 @@ class StaffPayroll extends Component
 
         $this->validate([
             'editBasicSalary' => 'required|numeric|min:0',
-            'editOvertimeHours' => 'required|numeric|min:0',
+            'editOvertimeHours' => 'required|numeric|min:0|max:'.AttendanceComponent::MAX_OVERTIME_HOURS,
             'editOvertimeRate' => 'required|numeric|min:0',
             'editAllowances' => 'required|numeric|min:0',
             'editDeductions' => 'required|numeric|min:0',

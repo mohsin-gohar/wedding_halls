@@ -131,7 +131,9 @@ class SaaSTenantIsolationAndWorkflowTest extends TestCase
             ->set('selectedHallId', $hallB->id)
             ->set('planName', 'Malicious Injected Layout')
             ->call('saveFloorPlan')
-            ->assertStatus(403);
+            // Cross-tenant hall IDs are rejected by the tenant-scoped
+            // validation rule, so no foreign hall layout can be written.
+            ->assertHasErrors('selectedHallId');
 
         $this->assertDatabaseMissing('floor_plans', [
             'hall_id' => $hallB->id,

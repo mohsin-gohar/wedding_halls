@@ -94,6 +94,9 @@
                                 @if($event->venue_text) · {{ $event->venue_text }} @endif
                                 @if($event->guest_count) · {{ $event->guest_count }} guests @endif
                             </p>
+                            <span class="inline-block mt-2 px-2 py-0.5 bg-[#C6A15B]/15 text-[#8F7239] dark:text-[#C6A15B] text-[10px] font-mono uppercase tracking-widest font-bold">
+                                Status: {{ str_replace('_', ' ', $event->status) }}
+                            </span>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <button wire:click="openEditEventModal('{{ $event->id }}')" class="btn-outline-gold !h-9 !px-4 text-[10px] font-mono uppercase">Edit</button>
@@ -305,6 +308,15 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="evt-status" class="block text-[10px] font-semibold uppercase tracking-[0.08em] text-stone-600 dark:text-stone-400 mb-1.5">Status</label>
+                            <select id="evt-status" wire:model="eventStatus" class="input-luxury w-full text-sm">
+                                @foreach(\App\Models\CustomerEvent::STATUSES as $status)
+                                    <option value="{{ $status }}">{{ ucfirst(strtolower(str_replace('_', ' ', $status))) }}</option>
+                                @endforeach
+                            </select>
+                            @error('eventStatus') <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p> @enderror
+                        </div>
                         <div>
                             <label for="evt-city" class="block text-[10px] font-semibold uppercase tracking-[0.08em] text-stone-600 dark:text-stone-400 mb-1.5">City</label>
                             <input id="evt-city" type="text" wire:model="eventCity" maxlength="80" placeholder="Karachi">

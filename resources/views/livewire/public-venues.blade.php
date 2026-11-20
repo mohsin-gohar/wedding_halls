@@ -432,9 +432,9 @@
                 </p>
 
                 @if($calendarHallsList->count() > 1)
-                    <div class="pt-3 flex items-center justify-center gap-2">
+                    <div class="pt-3 flex flex-col items-center justify-center gap-2 sm:flex-row">
                         <label for="hall-selector" class="text-[11px] font-sans text-[#C6A15B] uppercase tracking-wider font-semibold">Hall Filter:</label>
-                        <select id="hall-selector" wire:model.live="calendarHallId" class="bg-[#18140f] text-stone-200 text-xs border border-[#C6A15B]/40 rounded-lg px-3 py-1.5 focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B] font-sans">
+                        <select id="hall-selector" wire:model.live="calendarHallId" class="w-full max-w-full sm:w-auto bg-[#18140f] text-stone-200 text-xs border border-[#C6A15B]/40 rounded-lg px-3 py-1.5 focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B] font-sans">
                             <option value="">All Certified Halls ({{ $city === 'All' ? 'Nationwide' : $city }})</option>
                             @foreach($calendarHallsList as $h)
                                 <option value="{{ $h->id }}">{{ $h->name }} ({{ $h->venue->name ?? 'Venue' }})</option>

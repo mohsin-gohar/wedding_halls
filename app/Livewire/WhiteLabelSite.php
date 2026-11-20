@@ -7,6 +7,7 @@ use App\Models\Tenant;
 use App\Models\VendorLocation;
 use App\Models\VendorPortfolioMedia;
 use App\Models\VendorService;
+use App\Services\SubscriptionService;
 use App\Support\TenantBrand;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -34,10 +35,21 @@ class WhiteLabelSite extends Component
 
     public function getTenantProperty(): ?Tenant
     {
-        return Tenant::query()
+        if (! (bool) config('platform.white_label_enabled', true)) {
+            return null;
+        }
+
+        $tenant = Tenant::query()
             ->where('slug', $this->slug)
             ->where('is_active', true)
+            ->where('verification_status', 'APPROVED')
             ->first();
+
+        if (! $tenant || app(SubscriptionService::class)->isLocked($tenant)) {
+            return null;
+        }
+
+        return $tenant;
     }
 
     public function getBrandProperty(): ?TenantBrand

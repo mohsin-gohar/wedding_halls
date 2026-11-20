@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\Auth\TwoFactorAuthComponent;
+use App\Livewire\CustomerDashboard;
 use App\Livewire\CustomerEventWorkspace;
 use App\Livewire\SupportCenter;
 use App\Livewire\VendorBookingsBoard;
@@ -110,8 +111,12 @@ class InteractiveActionSmokeTest extends TestCase
         $component->call('markRfqViewed', $rfq->id)->assertHasNoErrors();
         $this->assertNotNull(RfqTarget::query()->where('rfq_id', $rfq->id)->first()?->viewed_at);
 
-        // Award the quotation → a service booking must be created.
-        $component->call('awardQuote', $bid->id)->assertHasNoErrors();
+        // Only the customer who owns the RFQ may award the quotation.
+        Livewire::actingAs($client)
+            ->test(CustomerDashboard::class)
+            ->call('acceptQuote', $bid->id)
+            ->assertHasNoErrors();
+
         $booking = ServiceBooking::query()->where('rfq_bid_id', $bid->id)->firstOrFail();
 
         $this->assertSame('ACCEPTED', $booking->status);
@@ -124,7 +129,8 @@ class InteractiveActionSmokeTest extends TestCase
     {
         $vendor = $this->cateringVendor();
         $owner = $this->vendorOwner($vendor);
-        $rfq = $this->openRfq($vendor, $this->customer());
+        $client = $this->customer();
+        $rfq = $this->openRfq($vendor, $client);
 
         $bid = RfqBid::create([
             'rfq_id' => $rfq->id,
@@ -136,9 +142,9 @@ class InteractiveActionSmokeTest extends TestCase
 
         $rfq->update(['status' => 'CLOSED']);
 
-        Livewire::actingAs($owner)
-            ->test(VendorQuotesBoard::class)
-            ->call('awardQuote', $bid->id)
+        Livewire::actingAs($client)
+            ->test(CustomerDashboard::class)
+            ->call('acceptQuote', $bid->id)
             ->assertSet('errorMessage', 'This quotation request has already been awarded or closed.');
 
         $this->assertSame(0, ServiceBooking::query()->where('rfq_bid_id', $bid->id)->count());

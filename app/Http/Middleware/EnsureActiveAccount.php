@@ -13,13 +13,15 @@ class EnsureActiveAccount
     {
         $user = $request->user();
 
-        if ($user && $user->status === 'SUSPENDED') {
+        if ($user && in_array($user->status, ['SUSPENDED', 'INACTIVE', 'BLOCKED'], true)) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
             return redirect()->route('login')->withErrors([
-                'email' => 'This account is currently suspended. Contact your venue administrator.',
+                'email' => $user->status === 'SUSPENDED'
+                    ? 'This account is currently suspended. Contact your venue administrator.'
+                    : 'This account is not active. Contact your venue administrator.',
             ]);
         }
 

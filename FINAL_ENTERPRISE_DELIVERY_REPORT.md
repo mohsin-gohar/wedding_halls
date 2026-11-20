@@ -1,3 +1,6 @@
+﻿> [!WARNING]
+> **Historical / superseded document.** This file predates the current cash-only audit and verification pass. Do not rely on its claims about payment methods, test counts, browser proof, or production readiness. See `DOCS_STATUS.md` and the authoritative final reports.
+
 # FINAL ENTERPRISE DELIVERY REPORT — Riwaj Grand
 
 **Date:** 2026-11-16 · **Repair cycle: 17 Nov 2026** (see §0) · **Branch:** `enterprise-hardening` at `0cb426a`; repair-cycle edits uncommitted, no push performed.

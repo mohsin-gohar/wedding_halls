@@ -34,17 +34,79 @@
         </div>
     @endif
 
+    @if($errorMessage)
+        <div class="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-300 text-rose-700 dark:text-rose-200 text-xs font-semibold shadow-md flex justify-between items-center">
+            <span>⚠ {{ $errorMessage }}</span>
+            <button wire:click="$set('errorMessage', null)" class="font-bold text-sm leading-none">&times;</button>
+        </div>
+    @endif
+
+    @error('elements')
+        <div class="p-4 bg-rose-50 border border-rose-300 text-rose-700 text-xs">{{ $message }}</div>
+    @enderror
+
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <!-- Control Palette Sidebar (Dual Mode Surface) -->
         <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-6 shadow-sm dark:shadow-xl transition-colors">
+            @if($tenantOptions->isNotEmpty())
+                <div>
+                    <label class="block text-[11px] uppercase font-mono tracking-wider text-[#C6A15B] mb-1.5 font-bold">Tenant (platform admin)</label>
+                    <select wire:change="selectTenant($event.target.value)" class="w-full bg-[#171513] border border-[#C6A15B]/50 text-white text-xs py-2.5 px-3 font-mono outline-none">
+                        <option value="">— Select a venue —</option>
+                        @foreach($tenantOptions as $option)
+                            <option value="{{ $option->id }}" @selected($selectedTenantId === $option->id)>{{ $option->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
+
             <div>
                 <label class="block text-[11px] uppercase font-mono tracking-wider text-[#171513] dark:text-[#C6A15B] mb-1.5 font-bold">Banquet Hall Space</label>
                 <select wire:model.live="selectedHallId" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 text-[#171513] dark:text-white text-xs py-2.5 px-3 font-mono focus:border-[#C6A15B] outline-none">
+                    @if($halls->isEmpty())
+                        <option value="">No hall available</option>
+                    @endif
                     @foreach($halls as $hall)
                         <option value="{{ $hall->id }}">{{ $hall->name }} (Max: {{ $hall->max_capacity }})</option>
                     @endforeach
                 </select>
             </div>
+
+            <div>
+                <label class="block text-[11px] uppercase font-mono tracking-wider text-[#171513] dark:text-[#C6A15B] mb-1.5 font-bold">Plan Name</label>
+                <input type="text" wire:model="planName" maxlength="120" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 text-[#171513] dark:text-white text-xs py-2.5 px-3 font-mono focus:border-[#C6A15B] outline-none">
+                @error('planName') <span class="text-rose-500 text-[10px] block mt-1">{{ $message }}</span> @enderror
+            </div>
+
+            <div>
+                <label class="block text-[11px] uppercase font-mono tracking-wider text-[#171513] dark:text-[#C6A15B] mb-1.5 font-bold">Bind to Booking (optional)</label>
+                <select wire:model="selectedBookingId" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 text-[#171513] dark:text-white text-xs py-2.5 px-3 font-mono focus:border-[#C6A15B] outline-none">
+                    <option value="">— Reusable layout (no booking) —</option>
+                    @foreach($bookings as $booking)
+                        <option value="{{ $booking->id }}">{{ $booking->customer_name }} · {{ $booking->event_date->format('d M Y') }}</option>
+                    @endforeach
+                </select>
+                @error('selectedBookingId') <span class="text-rose-500 text-[10px] block mt-1">{{ $message }}</span> @enderror
+            </div>
+
+            <label class="flex items-center gap-2 text-[11px] font-mono text-stone-600 dark:text-stone-300">
+                <input type="checkbox" wire:model="isTemplate" class="accent-[#C6A15B]">
+                Reusable template plan
+            </label>
+
+            @if($savedPlans->isNotEmpty())
+                <div class="border-t border-[#E7E5E4] dark:border-white/10 pt-3">
+                    <p class="text-[10px] uppercase font-mono tracking-wider text-stone-500 mb-2 font-bold">Saved Plans</p>
+                    <div class="space-y-1 max-h-48 overflow-y-auto">
+                        @foreach($savedPlans as $savedPlan)
+                            <button type="button" wire:click="loadFloorPlan('{{ $savedPlan->id }}')" class="w-full text-left px-2 py-1.5 border border-[#E7E5E4] dark:border-white/10 hover:border-[#C6A15B] text-[10px] font-mono text-stone-700 dark:text-stone-200">
+                                <span class="font-bold">{{ $savedPlan->name }}</span>
+                                <span class="block text-stone-400">{{ $savedPlan->total_seats }} seats · {{ $savedPlan->is_template ? 'Template' : 'Booking layout' }}</span>
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             <!-- Seat Tally KPI Card (Dual-Mode Gold Foil) -->
             <div class="p-5 bg-white dark:bg-[#171513] border border-[#C6A15B]/50 gold-foil-border text-center shadow-md">

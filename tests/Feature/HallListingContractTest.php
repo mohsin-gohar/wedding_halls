@@ -42,6 +42,7 @@ class HallListingContractTest extends TestCase
             'city' => 'Lahore',
             'verification_status' => 'APPROVED',
             'is_active' => true,
+            'marketplace_visible' => true,
         ]);
         $venue = Venue::create([
             'tenant_id' => $tenant->id,

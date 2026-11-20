@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Tenant;
+use App\Services\SubscriptionService;
 
 /**
  * White-label brand resolution for vendor microsites.
@@ -77,12 +78,21 @@ class TenantBrand
             return null;
         }
 
+        if (! (bool) config('platform.white_label_enabled', true)) {
+            return null;
+        }
+
         $tenant = Tenant::query()
             ->where('subdomain', $subdomain)
             ->where('is_active', true)
+            ->where('verification_status', 'APPROVED')
             ->first();
 
-        return $tenant ? self::for($tenant) : null;
+        if (! $tenant || app(SubscriptionService::class)->isLocked($tenant)) {
+            return null;
+        }
+
+        return self::for($tenant);
     }
 
     /**
@@ -90,13 +100,17 @@ class TenantBrand
      */
     public function siteUrl(): string
     {
-        $rootDomain = (string) config('platform.root_domain', 'riwajgrand.pk');
+        // The microsite is served by the existing /site/{slug} route. Keep the
+        // vendor's subdomain as a host when available, but always use the real
+        // route path so the URL cannot point at a non-existent /site endpoint.
+        $path = route('public.vendor-site', ['slug' => $this->tenant->slug], false);
         $subdomain = $this->tenant->subdomain;
+        $rootDomain = (string) config('platform.root_domain', 'riwajgrand.pk');
 
-        if (! $subdomain) {
-            return route('public.vendor-profile', ['slug' => $this->tenant->slug]);
+        if ($subdomain) {
+            return 'https://'.$subdomain.'.'.$rootDomain.$path;
         }
 
-        return 'https://'.$subdomain.'.'.$rootDomain.'/site';
+        return route('public.vendor-site', ['slug' => $this->tenant->slug]);
     }
 }

@@ -11,6 +11,9 @@ class InventoryLog extends Model
 {
     use HasFactory, HasUuids;
 
+    /** Explicit, exhaustive set of stock movement types. */
+    public const TYPES = ['STOCK_IN', 'STOCK_OUT', 'ADJUSTMENT', 'WASTAGE'];
+
     protected $table = 'inventory_logs';
 
     protected $fillable = [

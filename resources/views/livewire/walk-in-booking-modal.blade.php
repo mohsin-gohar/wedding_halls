@@ -83,19 +83,19 @@
                         <label class="cursor-pointer border p-3.5 text-center rounded-xl transition-all {{ $slot_type === 'AFTERNOON' ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#171513] dark:text-[#C6A15B] font-bold shadow-sm ring-1 ring-[#C6A15B]' : 'border-[#E7E5E4] dark:border-white/15 bg-[#F8F5EF] dark:bg-[#171513] hover:border-[#C6A15B] text-stone-700 dark:text-stone-300' }}">
                             <input type="radio" wire:model.live="slot_type" value="AFTERNOON" class="sr-only">
                             <span class="text-xs uppercase font-semibold block font-sans">Afternoon</span>
-                            <span class="text-[11px] text-stone-500 dark:text-stone-400 block font-sans mt-1">12:00 – 16:00</span>
+                            <span class="text-[11px] text-stone-500 dark:text-stone-400 block font-sans mt-1">{{ $shiftLabels['AFTERNOON'] }}</span>
                         </label>
 
                         <label class="cursor-pointer border p-3.5 text-center rounded-xl transition-all {{ $slot_type === 'EVENING' ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#171513] dark:text-[#C6A15B] font-bold shadow-sm ring-1 ring-[#C6A15B]' : 'border-[#E7E5E4] dark:border-white/15 bg-[#F8F5EF] dark:bg-[#171513] hover:border-[#C6A15B] text-stone-700 dark:text-stone-300' }}">
                             <input type="radio" wire:model.live="slot_type" value="EVENING" class="sr-only">
                             <span class="text-xs uppercase font-semibold block font-sans">Evening</span>
-                            <span class="text-[11px] text-stone-500 dark:text-stone-400 block font-sans mt-1">19:00 – 23:00</span>
+                            <span class="text-[11px] text-stone-500 dark:text-stone-400 block font-sans mt-1">{{ $shiftLabels['EVENING'] }}</span>
                         </label>
 
                         <label class="cursor-pointer border p-3.5 text-center rounded-xl transition-all {{ $slot_type === 'NIGHT' ? 'border-[#C6A15B] bg-[#C6A15B]/15 text-[#171513] dark:text-[#C6A15B] font-bold shadow-sm ring-1 ring-[#C6A15B]' : 'border-[#E7E5E4] dark:border-white/15 bg-[#F8F5EF] dark:bg-[#171513] hover:border-[#C6A15B] text-stone-700 dark:text-stone-300' }}">
                             <input type="radio" wire:model.live="slot_type" value="NIGHT" class="sr-only">
                             <span class="text-xs uppercase font-semibold block font-sans">Late Night</span>
-                            <span class="text-[11px] text-stone-500 dark:text-stone-400 block font-sans mt-1">23:30 – 03:30</span>
+                            <span class="text-[11px] text-stone-500 dark:text-stone-400 block font-sans mt-1">{{ $shiftLabels['NIGHT'] }}</span>
                         </label>
                     </div>
                 </div>
@@ -353,37 +353,42 @@
                             Reservation Confirmed
                         </h3>
                         <p class="text-xs text-stone-600 dark:text-stone-300 font-sans mt-1 max-w-md mx-auto" style="text-wrap: pretty;">
-                            Booking #{{ substr($createdBooking->id, 0, 8) }} recorded with automated kitchen KOT ingredient calculations.
+                            Your booking is confirmed with automated kitchen KOT ingredient calculations.
                         </p>
                     @else
                         <span class="text-[10px] uppercase tracking-[0.25em] text-[#8F7239] dark:text-[#D4AF67] font-semibold block font-sans">
                             Booking Request Received
                         </span>
                         <h3 class="font-serif-luxury text-3xl sm:text-4xl text-[#171513] dark:text-white mt-2 font-normal" style="text-wrap: balance;">
-                            Inquiry Submitted
+                            Inquiry Received
                         </h3>
                         <p class="text-xs text-stone-600 dark:text-stone-300 font-sans mt-1 max-w-md mx-auto" style="text-wrap: pretty;">
-                            Inquiry #{{ substr($createdBooking->id, 0, 8) }} has been forwarded to the venue banquet management team. You will be contacted shortly with official quotation.
+                            Your inquiry has been received by the venue banquet management team. You will be contacted shortly with an official quotation.
                         </p>
                     @endif
+                    <p class="mt-3 text-[11px] font-mono uppercase tracking-wider text-[#8F7239] dark:text-[#D4AF67]">
+                        Reference: <strong>{{ $createdBooking->booking_reference }}</strong>
+                    </p>
                 </div>
 
-                <!-- Action Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto pt-2 font-sans">
-                    <a href="{{ route('documents.agreement', $createdBooking->id) }}" target="_blank" class="border border-[#E7E5E4] dark:border-white/20 bg-[#F8F5EF] dark:bg-white/10 hover:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition block text-center">
-                        View Contract &rarr;
-                    </a>
-                    @if($createdBooking->payments->isNotEmpty())
-                        <a href="{{ route('documents.receipt', $createdBooking->payments->first()->id) }}" target="_blank" class="btn-gold !h-auto py-2.5 px-3 rounded-xl text-xs font-semibold uppercase tracking-wider block text-center">
-                            Print Receipt &rarr;
+                @if($isStaff)
+                    <!-- Operational documents are for staff terminals only; guests cannot open them. -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto pt-2 font-sans">
+                        <a href="{{ route('documents.agreement', $createdBooking->id) }}" target="_blank" class="border border-[#E7E5E4] dark:border-white/20 bg-[#F8F5EF] dark:bg-white/10 hover:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition block text-center">
+                            View Contract &rarr;
                         </a>
-                    @endif
-                    @if(config('platform.kitchen_module_enabled') && $createdBooking->kitchenKot && $isStaff)
-                        <a href="{{ route('documents.kot', $createdBooking->kitchenKot->id) }}" target="_blank" class="border border-[#C6A15B]/50 bg-[#C6A15B]/15 dark:bg-[#171513]/85 text-[#8F7239] dark:text-[#D4AF67] hover:bg-[#C6A15B]/20 py-2.5 px-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition block text-center">
-                            Chef KOT Slip &rarr;
-                        </a>
-                    @endif
-                </div>
+                        @if($createdBooking->payments->isNotEmpty())
+                            <a href="{{ route('documents.receipt', $createdBooking->payments->first()->id) }}" target="_blank" class="btn-gold !h-auto py-2.5 px-3 rounded-xl text-xs font-semibold uppercase tracking-wider block text-center">
+                                Print Receipt &rarr;
+                            </a>
+                        @endif
+                        @if(config('platform.kitchen_module_enabled') && $createdBooking->kitchenKot)
+                            <a href="{{ route('documents.kot', $createdBooking->kitchenKot->id) }}" target="_blank" class="border border-[#C6A15B]/50 bg-[#C6A15B]/15 dark:bg-[#171513]/85 text-[#8F7239] dark:text-[#D4AF67] hover:bg-[#C6A15B]/20 py-2.5 px-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition block text-center">
+                                Chef KOT Slip &rarr;
+                            </a>
+                        @endif
+                    </div>
+                @endif
 
                 <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10">
                     <button wire:click="closeModal" class="btn-obsidian dark:bg-white/10 dark:text-white dark:border-white/20 px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider font-sans transition">

@@ -2,11 +2,11 @@
 
 namespace App\Livewire;
 
-use App\Models\Tenant;
 use App\Models\VendorPortfolioMedia;
 use App\Support\Media;
+use App\Support\PermissionMatrix;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -15,9 +15,9 @@ use Livewire\WithFileUploads;
  * Vendor ERP — Portfolio media manager (Phase 2).
  *
  * Vendors upload images/videos for public profile galleries. Files are
- * stored under storage/app/private/vendor-portfolio (public path derived on
- * read). Storage is tenant-owned; customer-facing display only exposes the
- * derived public URL.
+ * stored on the `public` disk under vendor-portfolio (URL derived on read via
+ * Media::publicUrl). Deletes target that same disk so no orphaned files remain.
+ * Storage is tenant-owned; customer-facing display only exposes the URL.
  */
 #[Layout('components.layouts.app', ['title' => 'Portfolio — Vendor ERP'])]
 class VendorPortfolioManager extends Component
@@ -48,8 +48,8 @@ class VendorPortfolioManager extends Component
     {
         $user = Auth::user();
 
-        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->hasPermissionTo('portfolio.manage'))) {
-            abort(403, 'Unauthorized. Portfolio management is restricted to vendor business owners.');
+        if (! $user || ! PermissionMatrix::userCan($user, 'portfolio.view')) {
+            abort(403, 'Unauthorized. Portfolio access is restricted to vendor staff.');
         }
 
         $tenantId = $user->tenant_id;
@@ -58,8 +58,32 @@ class VendorPortfolioManager extends Component
             abort(403, 'Forbidden. You do not have an active vendor organization assigned.');
         }
 
+        $this->reloadMedia();
+    }
+
+    public function refreshMediaUrls(): void
+    {
+        $this->mediaUrls = [];
+
+        foreach ($this->media as $item) {
+            $this->mediaUrls[(string) $item['id']] = Media::publicUrl($item['path']);
+        }
+    }
+
+    public function hasPortalPermission(string $permission): bool
+    {
+        return PermissionMatrix::userCan(Auth::user(), $permission);
+    }
+
+    private function assertCan(string $permission): void
+    {
+        abort_unless($this->hasPortalPermission($permission), 403, 'Unauthorized. Missing permission: '.$permission);
+    }
+
+    private function reloadMedia(): void
+    {
         $this->media = VendorPortfolioMedia::query()
-            ->where('tenant_id', $tenantId)
+            ->where('tenant_id', Auth::user()->tenant_id)
             ->orderBy('sort')
             ->get()
             ->map(fn ($m) => [
@@ -74,17 +98,10 @@ class VendorPortfolioManager extends Component
         $this->refreshMediaUrls();
     }
 
-    public function refreshMediaUrls(): void
-    {
-        $this->mediaUrls = [];
-
-        foreach ($this->media as $item) {
-            $this->mediaUrls[(string) $item['id']] = Media::publicUrl($item['path']);
-        }
-    }
-
     public function addMedia(): void
     {
+        $this->assertCan('portfolio.manage');
+
         $this->resetValidation();
 
         $file = $this->validate([
@@ -124,11 +141,15 @@ class VendorPortfolioManager extends Component
 
         $this->mediaCaption = '';
         $this->mediaCategory = '';
+        $this->file = null;
+        $this->reloadMedia();
         $this->feedbackMessage = 'Portfolio media uploaded successfully.';
     }
 
     public function removeMedia(string $mediaId): void
     {
+        $this->assertCan('portfolio.manage');
+
         $tenantId = Auth::user()->tenant_id;
 
         if (! $tenantId) {
@@ -143,11 +164,13 @@ class VendorPortfolioManager extends Component
             abort(404);
         }
 
-        File::delete($media->path);
+        // Uploads use the `public` disk; deleting from any other disk would
+        // leave orphaned files behind.
+        Storage::disk('public')->delete($media->path);
 
         $media->delete();
 
-        $this->refreshMediaUrls();
+        $this->reloadMedia();
         $this->feedbackMessage = 'Portfolio media removed.';
     }
 

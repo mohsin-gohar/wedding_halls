@@ -35,6 +35,35 @@
     </div>
     @endif
 
+    @if($canModerate)
+        <div class="bg-white dark:bg-[#1a1714] border border-[#C6A15B]/40 rounded-2xl p-6 space-y-4">
+            <div>
+                <span class="text-[11px] uppercase font-semibold tracking-[0.16em] text-[#8F7239] dark:text-[#C6A15B] block">Moderation queue</span>
+                <h3 class="font-serif-luxury text-xl text-[#171513] dark:text-white mt-1">Pending reviews</h3>
+            </div>
+
+            @forelse($this->pendingReviews as $pending)
+                <div class="border-t border-[#E7E5E4] dark:border-white/10 pt-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-[#171513] dark:text-white">
+                            {{ $pending->user->name ?? 'Guest' }}
+                            <span class="text-[#C6A15B] ml-2">@for($i = 1; $i <= 5; $i++){{ $i <= $pending->rating ? '★' : '☆' }}@endfor</span>
+                        </p>
+                        @if($pending->title)<p class="text-sm font-medium text-[#171513] dark:text-white mt-1">{{ $pending->title }}</p>@endif
+                        <p class="text-sm text-stone-600 dark:text-stone-300 whitespace-pre-line">{{ $pending->body }}</p>
+                        <p class="text-[11px] text-stone-400 mt-1">{{ $pending->created_at->format('M d, Y H:i') }}</p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button type="button" wire:click="approveReview('{{ $pending->id }}')" class="px-4 py-2 rounded-lg bg-[#C6A15B] text-[#171513] text-xs font-semibold hover:bg-[#8F7239] hover:text-white transition">Approve</button>
+                        <button type="button" wire:click="rejectReview('{{ $pending->id }}')" class="px-4 py-2 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 transition">Reject</button>
+                    </div>
+                </div>
+            @empty
+                <p class="text-sm text-stone-500 dark:text-stone-400">No reviews are waiting for moderation.</p>
+            @endforelse
+        </div>
+    @endif
+
     <div class="space-y-4">
         @forelse($reviews as $review)
             <div class="bg-white dark:bg-[#1a1714] border border-[#E7E5E4] dark:border-[#C6A15B]/20 rounded-xl p-5">

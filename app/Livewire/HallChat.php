@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Hall;
 use App\Models\HallChatMessage;
 use App\Models\Package;
+use App\Support\ShiftWindows;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -37,38 +38,25 @@ class HallChat extends Component
     {
         $identifier = $slug ?? $id;
 
-        if (! $identifier) {
-            $this->hall = Hall::with(['venue', 'tenant'])
-                ->where('is_active', true)
-                ->whereHas('tenant', fn ($t) => $t->where('is_active', true)->where('verification_status', 'APPROVED'))
-                ->first();
+        // Concierge chat is a public surface: only centrally visible halls may
+        // be resolved, with no fallback to an arbitrary active hall.
+        $hallQuery = Hall::publicVisible()->with(['venue', 'tenant']);
 
-            if (! $this->hall) {
-                $this->hall = Hall::with(['venue', 'tenant'])->where('is_active', true)->first();
-            }
+        if (! $identifier) {
+            $this->hall = $hallQuery->first();
 
             if (! $this->hall) {
                 abort(404, 'No active venues available for concierge chat.');
             }
         } else {
-            $this->hall = Hall::with(['venue', 'tenant'])
+            $this->hall = $hallQuery
                 ->where(function ($q) use ($identifier) {
-                    $q->where('slug', $identifier);
+                    $q->where('halls.slug', $identifier);
                     if (str_contains($identifier, '-')) {
-                        $q->orWhere('id', $identifier);
+                        $q->orWhere('halls.id', $identifier);
                     }
                 })
                 ->firstOrFail();
-
-            if (! $this->hall->is_active) {
-                abort(404, 'This venue space is currently inactive.');
-            }
-
-            $user = Auth::user();
-            $isStaffForHall = $user && ($user->isSuperAdmin() || $user->tenant_id === $this->hall->tenant_id);
-            if (! $isStaffForHall && (! $this->hall->tenant || ! $this->hall->tenant->is_active || $this->hall->tenant->verification_status !== 'APPROVED')) {
-                abort(404, 'Venue is pending verification or currently unavailable.');
-            }
         }
 
         $this->visitorIp = request()->ip() ?? '127.0.0.1';
@@ -102,12 +90,23 @@ class HallChat extends Component
         $isHallOwner = $user && ($user->isSuperAdmin() || $user->tenant_id === $this->hall->tenant_id);
         $userText = trim($this->newMessage);
 
-        // 1. Persist customer message
+        // A staff reply must be addressed to an explicitly selected guest
+        // thread. Never fall back to the staff member's own visitor identity.
+        if ($isHallOwner && (! $this->selectedCustomerIp || ! $this->selectedCustomerSession)) {
+            $this->addError('newMessage', 'Select a guest conversation before replying.');
+
+            return;
+        }
+
+        $targetIp = $isHallOwner ? $this->selectedCustomerIp : $this->visitorIp;
+        $targetSession = $isHallOwner ? $this->selectedCustomerSession : $this->visitorSession;
+
+        // 1. Persist the message into the selected conversation.
         HallChatMessage::create([
             'hall_id' => $this->hall->id,
             'user_id' => $user?->id,
-            'ip_address' => $this->visitorIp,
-            'session_id' => $this->visitorSession,
+            'ip_address' => $targetIp,
+            'session_id' => $targetSession,
             'sender_type' => $isHallOwner ? 'hall_owner' : 'customer',
             'message_type' => 'text',
             'message' => $userText,
@@ -117,7 +116,7 @@ class HallChat extends Component
 
         $this->newMessage = '';
 
-        // 2. If sent by customer/guest, generate an instant AI Concierge Bot response
+        // 2. Guests get an instant bot reply; staff replies stay in the guest thread.
         if (! $isHallOwner) {
             $botReply = $this->generateBotReply($userText);
 
@@ -139,13 +138,12 @@ class HallChat extends Component
                 $this->visitorSession
             );
         } else {
-            if ($this->selectedCustomerIp && $this->selectedCustomerSession) {
-                $this->messages = HallChatMessage::getConversation(
-                    $this->hall->id,
-                    $this->selectedCustomerIp,
-                    $this->selectedCustomerSession
-                );
-            }
+            $this->messages = HallChatMessage::getConversation(
+                $this->hall->id,
+                $targetIp,
+                $targetSession
+            );
+            $this->chatParticipants = HallChatMessage::getChatParticipants($this->hall->id);
         }
 
         $this->dispatch('messageSent');
@@ -160,13 +158,22 @@ class HallChat extends Component
         $user = Auth::user();
         $isHallOwner = $user && ($user->isSuperAdmin() || $user->tenant_id === $this->hall->tenant_id);
 
+        if ($isHallOwner && (! $this->selectedCustomerIp || ! $this->selectedCustomerSession)) {
+            $this->addError('voiceRecording', 'Select a guest conversation before sending a voice reply.');
+
+            return;
+        }
+
+        $targetIp = $isHallOwner ? $this->selectedCustomerIp : $this->visitorIp;
+        $targetSession = $isHallOwner ? $this->selectedCustomerSession : $this->visitorSession;
+
         $path = $this->voiceRecording->store('hall-voice-messages/'.$this->hall->id, 'public');
 
         HallChatMessage::create([
             'hall_id' => $this->hall->id,
             'user_id' => $user?->id,
-            'ip_address' => $this->visitorIp,
-            'session_id' => $this->visitorSession,
+            'ip_address' => $targetIp,
+            'session_id' => $targetSession,
             'sender_type' => $isHallOwner ? 'hall_owner' : 'customer',
             'message_type' => 'voice',
             'message' => 'Voice message',
@@ -196,13 +203,12 @@ class HallChat extends Component
                 $this->visitorSession
             );
         } else {
-            if ($this->selectedCustomerIp && $this->selectedCustomerSession) {
-                $this->messages = HallChatMessage::getConversation(
-                    $this->hall->id,
-                    $this->selectedCustomerIp,
-                    $this->selectedCustomerSession
-                );
-            }
+            $this->messages = HallChatMessage::getConversation(
+                $this->hall->id,
+                $targetIp,
+                $targetSession
+            );
+            $this->chatParticipants = HallChatMessage::getChatParticipants($this->hall->id);
         }
 
         $this->dispatch('messageSent');
@@ -251,11 +257,14 @@ class HallChat extends Component
 
         // 3. Shift Timings, Dates & Booking
         if (preg_match('/(date|available|avail|book|reserve|slot|shift|calendar|december|january|february|march|april|november|october|tarikh|din)/i', $lower)) {
+            $storedWindows = $hall->tenant?->shift_windows;
+            $shiftSummary = ShiftWindows::summary($storedWindows);
+            $fullDay = ShiftWindows::labelForSlot($storedWindows, 'FULL_DAY');
+
             return "📅 **Shift Hours & Reservation Process:**\n\n"
-                ."• **Afternoon Shift:** 12:00 PM – 04:00 PM (Ideal for Mehndi / Nikkah / Luncheons)\n"
-                ."• **Evening Shift:** 07:00 PM – 11:30 PM (Barat / Walima Reception)\n"
-                ."• **Full Day:** 11:00 AM – 11:30 PM (Exclusive Takeover)\n\n"
-                ."To reserve an available slot instantly, you can click **'Reserve Event Shift'** on the showcase page and pay token advance deposit at front desk rates!";
+                ."• **Operational Shifts:** {$shiftSummary}\n"
+                ."• **Full Day (exclusive takeover):** {$fullDay}\n\n"
+                ."To request an available shift, click **'Reserve Event Shift'** on the showcase page and our banquet team will confirm availability with you!";
         }
 
         // 4. Amenities: Generator, AC, Bridal Suite, Stage Decor

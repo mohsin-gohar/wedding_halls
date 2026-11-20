@@ -131,6 +131,25 @@ class User extends Authenticatable
         return $this->isRoleFamily('ROLE_FRONT_DESK');
     }
 
+    public function isFloorStaff(): bool
+    {
+        return $this->role === 'ROLE_FLOOR_STAFF' || $this->hasRole('ROLE_FLOOR_STAFF');
+    }
+
+    /**
+     * Users who create bookings on behalf of a venue rather than as guests.
+     * Floor staff are included so /calendar bookings are not downgraded to
+     * public INQUIRY records.
+     */
+    public function isVenueOperationsStaff(): bool
+    {
+        return $this->isSuperAdmin()
+            || $this->isTenantOwner()
+            || $this->isManager()
+            || $this->isFrontDesk()
+            || $this->isFloorStaff();
+    }
+
     public function isChef(): bool
     {
         return $this->isRoleFamily('ROLE_CHEF');
@@ -243,10 +262,11 @@ class User extends Authenticatable
             return 'customer.dashboard';
         }
 
-        // Platform operations staff land on the admin console unless they own
-        // a tenant business.
+        // Platform support/finance/moderator accounts do not pass the
+        // super-admin gate on /admin. Route them to the shared account surface
+        // they can actually open instead of bouncing to a guaranteed 403.
         if ($this->isPlatformStaff() && ! $this->tenant_id) {
-            return 'admin.dashboard';
+            return 'support.center';
         }
 
         if ($this->isAccountant()) {

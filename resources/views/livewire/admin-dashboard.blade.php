@@ -57,12 +57,10 @@
                 Share these login credentials with the hall owner. They will use them to sign in to their private Rent Admin portal and manage their hall's photos, videos, and services catalog.
             </p>
 
-            @if(session('provisioned_password'))
-                <div class="mb-4 p-4 rounded-xl bg-[#171513]/90 border border-[#C6A15B]/60 text-[#C6A15B] text-xs font-semibold shadow-md flex justify-between items-center">
-                    <span>✓ For security, here is the one-time password for the Rent Admin:</span>
-                    <button wire:click="$set('provisioned_password', null)" class="text-[#C6A15B] font-bold text-sm">&times;</button>
-                </div>
-            @endif
+            <div class="mb-4 p-4 rounded-xl bg-[#C6A15B]/10 border border-[#C6A15B]/60 text-[#C6A15B] text-xs font-semibold shadow-md">
+                <span class="block mb-1">✓ One-time password — copy it now. It is not shown again after you dismiss this card.</span>
+                <code class="select-all font-mono text-sm text-white break-all">{{ $provisionedCredentials['password'] ?? '' }}</code>
+            </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-[#1E1A16] rounded-xl p-4 border border-white/10 font-sans text-xs">
                 <div>

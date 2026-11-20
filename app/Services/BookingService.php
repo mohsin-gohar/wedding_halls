@@ -8,7 +8,6 @@ use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\Payment;
 use App\Support\CashOnlyPayments;
-use App\Support\ShiftWindows;
 use Carbon\Carbon;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -19,9 +18,12 @@ class BookingService
 {
     protected KitchenOrderService $kitchenOrderService;
 
-    public function __construct(KitchenOrderService $kitchenOrderService)
+    protected HallAvailabilityService $availabilityService;
+
+    public function __construct(KitchenOrderService $kitchenOrderService, HallAvailabilityService $availabilityService)
     {
         $this->kitchenOrderService = $kitchenOrderService;
+        $this->availabilityService = $availabilityService;
     }
 
     /**
@@ -29,7 +31,7 @@ class BookingService
      */
     public function checkSlotAvailability(string $hallId, string $eventDate, string $slotType): bool
     {
-        return ! $this->slotConflictQuery($hallId, $eventDate, $slotType)->exists();
+        return $this->availabilityService->isSlotAvailable($hallId, $eventDate, $slotType);
     }
 
     /**
@@ -148,11 +150,16 @@ class BookingService
                     ]);
                 }
 
-                // Automatically formulate and attach Kitchen Order Ticket (KOT)
-                $this->kitchenOrderService->generateKotForBooking($booking);
+                // KOT authority is single-sourced in KitchenOrderService: it
+                // only creates tickets for CONFIRMED bookings and never rewinds
+                // an existing ticket's preparation state.
+                $this->kitchenOrderService->generateKotForConfirmedBooking($booking);
 
-                // Dispatch BookingCreatedEvent
-                event(new BookingCreatedEvent($booking));
+                // HOLD/CONFIRMED reservations still notify listeners; a public
+                // INQUIRY is only a request and must not fire booking events.
+                if (strtoupper((string) $booking->status) !== 'INQUIRY') {
+                    event(new BookingCreatedEvent($booking));
+                }
 
                 return $booking;
             });
@@ -180,37 +187,10 @@ class BookingService
      */
     private function slotConflictQuery(string $hallId, string $eventDate, string $slotType)
     {
-        $normalizedSlot = strtoupper($slotType);
-        $conflictingSlots = $normalizedSlot === 'FULL_DAY'
-            ? ['AFTERNOON', 'EVENING', 'NIGHT', 'FULL_DAY']
-            : [$normalizedSlot, 'FULL_DAY'];
-
-        $named = Booking::where('hall_id', $hallId)
-            ->whereDate('event_date', $eventDate)
-            ->whereIn('slot_type', $conflictingSlots)
-            ->whereIn('status', ['HOLD', 'CONFIRMED']);
-
-        if ($named->exists()) {
-            return $named;
-        }
-
-        $hall = Hall::with('tenant')->find($hallId);
-        $tenant = $hall?->tenant;
-        $buffer = (int) ($tenant->shift_buffer_minutes ?? 0);
-        $storedWindows = $tenant?->shift_windows;
-        if ($buffer <= 0 && $storedWindows === null) {
-            return $named;
-        }
-
-        $windows = ShiftWindows::normalize($storedWindows);
-        $blockingIds = Booking::where('hall_id', $hallId)
-            ->whereDate('event_date', $eventDate)
-            ->whereIn('status', ['HOLD', 'CONFIRMED'])
-            ->get()
-            ->filter(fn (Booking $booking) => ShiftWindows::conflicts($windows, $normalizedSlot, (string) $booking->slot_type, $buffer))
-            ->pluck('id');
-
-        return Booking::whereIn('id', $blockingIds->all());
+        // Delegated to the read-only authority so public availability displays
+        // and the transactional write check use identical conflict rules.
+        // The caller still applies lockForUpdate() inside the reservation txn.
+        return $this->availabilityService->conflictQuery($hallId, $eventDate, $slotType);
     }
 
     /**

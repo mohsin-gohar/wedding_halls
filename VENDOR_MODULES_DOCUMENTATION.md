@@ -1,3 +1,6 @@
+﻿> [!WARNING]
+> **Historical / superseded document.** This file predates the current cash-only audit and verification pass. Do not rely on its claims about payment methods, test counts, browser proof, or production readiness. See `DOCS_STATUS.md` and the authoritative final reports.
+
 # RIWAJ GRAND — VENDOR MODULES DOCUMENTATION
 
 > How each business vertical operates on the platform: its dashboard, its catalogue model, its booking flow, its money flow and its RBAC gate.

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\ApiToken;
+use App\Support\TenantAccess;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,13 +22,10 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class AuthenticateApiToken
 {
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, string ...$abilities): Response
     {
-        $user = ApiToken::resolve($request->bearerToken());
-
-        if (! $user) {
-            $user = $request->user();
-        }
+        $token = ApiToken::resolveWithToken($request->bearerToken());
+        $user = $token?->user ?? $request->user();
 
         if (! $user) {
             return response()->json([
@@ -41,6 +39,23 @@ class AuthenticateApiToken
             ], 403);
         }
 
+        if (! $user->isSuperAdmin() && TenantAccess::isLocked($user->tenant)) {
+            return response()->json([
+                'message' => TenantAccess::lockMessage(),
+            ], 403);
+        }
+
+        // A browser session keeps its full role permissions. Only stateless
+        // bearer tokens are restricted by the abilities granted at issue time.
+        foreach ($abilities as $ability) {
+            if ($token && ! $token->hasAbility($ability)) {
+                return response()->json([
+                    'message' => 'This API token is missing the required ability: '.$ability,
+                ], 403);
+            }
+        }
+
+        $request->attributes->set('api_token', $token);
         $request->setUserResolver(fn () => $user);
 
         return $next($request);

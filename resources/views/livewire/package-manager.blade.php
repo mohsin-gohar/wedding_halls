@@ -39,6 +39,18 @@
         </div>
     @endif
 
+    @if($tenantOptions->isNotEmpty())
+        <div class="bg-[#171513]/90 border border-[#C6A15B]/50 p-4 text-xs font-mono text-[#C6A15B] flex flex-wrap items-center gap-3">
+            <span class="uppercase tracking-widest font-bold">Platform admin — explicit tenant context required</span>
+            <select wire:change="selectTenant($event.target.value)" class="bg-[#171513] border border-[#C6A15B]/40 px-3 py-2 text-white text-xs">
+                <option value="">— Select a venue —</option>
+                @foreach($tenantOptions as $option)
+                    <option value="{{ $option->id }}" @selected($selectedTenantId === $option->id)>{{ $option->name }}</option>
+                @endforeach
+            </select>
+        </div>
+    @endif
+
     <!-- Metric Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-5 shadow-sm dark:shadow-xl space-y-1 relative overflow-hidden group hover:border-[#C6A15B] transition">

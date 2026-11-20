@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Hall;
+use App\Support\ShiftWindows;
 use Illuminate\Support\Str;
 use Livewire\Component;
 
@@ -21,7 +22,7 @@ class PublicChatWidget extends Component
 
     public function initWelcomeMessage(): void
     {
-        $totalHalls = Hall::where('is_active', true)->count();
+        $totalHalls = Hall::publicVisible()->count();
         $this->messages = [
             [
                 'sender' => 'bot',
@@ -106,7 +107,10 @@ class PublicChatWidget extends Component
 
         // Shifts & Timings
         if (preg_match('/\b(timing|timings|shift|shifts|hours|afternoon|evening|waqt|baje|slot)\b/i', $lower)) {
-            return "Riwaj Grand ke tamaam partner venues 2 standard operational shifts mein book hotay hain:\n\n1. ☀️ **Afternoon Shift:** 1:00 PM se 4:30 PM tak (Mehndi, Dholki & Daytime Luncheon).\n2. 🌄 **Evening Shift:** 7:30 PM se 11:30 PM tak (Barat, Walima & Gala Receptions).\n\n⚡ **Single-Host Exclusivity:** Har shift mein poora hall sirf aik hi family ke liye exclusive hota hai, taake concurrency safe aur pur-waqar function ho.";
+            $shiftSummary = ShiftWindows::summary(null);
+            $fullDay = ShiftWindows::labelForSlot(null, 'FULL_DAY');
+
+            return "Riwaj Grand ke tamaam partner venues standard operational shifts mein book hotay hain:\n\n1. ☀️ **Afternoon / Evening / Night:** {$shiftSummary}.\n2. 🏰 **Full Day (exclusive takeover):** {$fullDay}.\n\n⚡ **Single-Host Exclusivity:** Har shift mein poora hall sirf aik hi family ke liye exclusive hota hai, taake concurrency safe aur pur-waqar function ho.";
         }
 
         // Booking & Advance Payment

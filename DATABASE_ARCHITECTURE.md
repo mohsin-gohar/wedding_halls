@@ -1,3 +1,6 @@
+﻿> [!WARNING]
+> **Historical / superseded document.** This file predates the current cash-only audit and verification pass. Do not rely on its claims about payment methods, test counts, browser proof, or production readiness. See `DOCS_STATUS.md` and the authoritative final reports.
+
 # RIWAJ GRAND — DATABASE ARCHITECTURE
 
 > Live schema verified with `php artisan db:table` / `tinker`. 49 migrations, 75 tables.

@@ -17,6 +17,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UtilityLog;
 use App\Models\Venue;
+use App\Support\ShiftWindows;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -141,6 +142,7 @@ class DatabaseSeeder extends Seeder
             'currency' => 'PKR',
             'verification_status' => 'APPROVED',
             'is_active' => true,
+            'marketplace_visible' => true,
         ]);
 
         // 3. Staff Users
@@ -266,7 +268,7 @@ class DatabaseSeeder extends Seeder
             'max_capacity' => 850,
             'base_rent' => 150000.00,
             'description' => 'Spectacular Austrian crystal chandeliers, imported wool carpeting, high-ceiling acoustics, and royal dining ergonomics.',
-            'operating_hours' => 'Afternoon (11:30 AM - 3:30 PM) | Evening (7:00 PM - 12:00 AM)',
+            'operating_hours' => ShiftWindows::summary(null),
             'policies' => "1. 50% Advance booking deposit required to lock event shift atomically.\n2. Music & external DJ permissible up to 10:00 PM per city banqueting guidelines.\n3. Outside catering subject to executive kitchen utility NOC.",
             'cover_image' => 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1200&auto=format&fit=crop',
             'images' => [
@@ -297,7 +299,7 @@ class DatabaseSeeder extends Seeder
             'max_capacity' => 1400,
             'base_rent' => 220000.00,
             'description' => 'Open-air manicured botanical lawn with fountain installations, fairytale tree illumination, and expansive dance floor.',
-            'operating_hours' => 'Evening (6:30 PM - 11:30 PM) | Night (11:30 PM - 3:30 AM)',
+            'operating_hours' => ShiftWindows::summary(null),
             'policies' => "1. Lawn setup setup begins 4 hours prior to function start time.\n2. In event of unexpected rain, banquet marquee switchover is subject to availability.",
             'cover_image' => 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?q=80&w=1200&auto=format&fit=crop',
             'images' => [
@@ -327,7 +329,7 @@ class DatabaseSeeder extends Seeder
             'max_capacity' => 450,
             'base_rent' => 110000.00,
             'description' => 'Intimate banquet space designed specifically for celebratory Mehndi gatherings, soulful Qawwali evenings, and family engagements.',
-            'operating_hours' => 'Afternoon (12:00 PM - 4:00 PM) | Night (8:00 PM - 2:00 AM)',
+            'operating_hours' => ShiftWindows::summary(null),
             'policies' => "1. Traditional dholak and acoustic setups permissible inside hall.\n2. Cold-fire sparkle fireworks allowed with safety protocol.",
             'cover_image' => 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200&auto=format&fit=crop',
             'images' => [

@@ -177,19 +177,30 @@ class SubscriptionService
      */
     public function isLocked(Tenant $tenant): bool
     {
-        if ($tenant->subscription_status === 'SUSPENDED') {
+        $status = strtoupper((string) $tenant->subscription_status);
+
+        // A platform/vendor suspension is a lock regardless of dates, and an
+        // expired or cancelled subscription is never entitled to access.
+        if (in_array($status, ['SUSPENDED', 'EXPIRED', 'CANCELLED'], true)) {
             return true;
         }
 
-        if ($tenant->subscription_status === 'EXPIRED') {
-            return true;
+        $expiresAt = $tenant->subscription_expires_at;
+
+        if ($expiresAt && $expiresAt->isPast()) {
+            $graceEnds = $expiresAt->copy()->addDays(self::GRACE_PERIOD_DAYS);
+
+            return Carbon::now()->greaterThan($graceEnds);
         }
 
-        if ($tenant->subscription_expires_at && $tenant->subscription_expires_at->isPast()) {
-            $graceEnds = $tenant->subscription_expires_at->copy()->addDays(self::GRACE_PERIOD_DAYS);
-            if (Carbon::now()->greaterThan($graceEnds)) {
-                return true;
-            }
+        // Trial tenants have no subscription_expires_at. Their free-access
+        // window is recorded in trial_ends_at (added by the additive migration).
+        if (! $expiresAt && $status === 'TRIAL' && $tenant->trial_ends_at) {
+            $trialEnds = $tenant->trial_ends_at instanceof Carbon
+                ? $tenant->trial_ends_at
+                : Carbon::parse($tenant->trial_ends_at);
+
+            return Carbon::now()->greaterThan($trialEnds);
         }
 
         return false;

@@ -124,6 +124,10 @@
                                 @endforeach
                                 <button wire:click="assignToMe" class="btn-gold !h-8 !px-3 text-[10px] font-mono uppercase">Assign to me</button>
                             </div>
+                        @elseif($ticket->status === 'RESOLVED')
+                            <div class="mt-4 pt-4 border-t border-[#E7E5E4] dark:border-white/10">
+                                <button wire:click="updateStatus('CLOSED')" class="btn-outline-gold !h-8 !px-3 text-[10px] font-mono uppercase">Close ticket</button>
+                            </div>
                         @endif
                     </div>
 
@@ -142,14 +146,20 @@
                     </div>
 
                     <!-- Reply -->
-                    <form wire:submit="reply" class="p-6 border-t border-[#E7E5E4] dark:border-white/10 space-y-3">
-                        <label for="reply-body" class="block text-[10px] font-semibold uppercase tracking-[0.08em] text-stone-600 dark:text-stone-400">Reply</label>
-                        <textarea id="reply-body" wire:model="replyBody" rows="3" class="input-luxury w-full text-sm resize-y" placeholder="Write your reply…"></textarea>
-                        @error('replyBody') <p class="text-[11px] text-red-600">{{ $message }}</p> @enderror
-                        <div class="flex justify-end">
-                            <button type="submit" class="btn-gold !h-10 !px-6 text-[11px] font-mono uppercase">Send Reply →</button>
+                    @if($ticket->status === 'CLOSED')
+                        <div class="p-6 border-t border-[#E7E5E4] dark:border-white/10 text-xs text-stone-500 dark:text-stone-400 font-sans">
+                            This ticket is closed. Replies are disabled to keep the record immutable.
                         </div>
-                    </form>
+                    @else
+                        <form wire:submit="reply" class="p-6 border-t border-[#E7E5E4] dark:border-white/10 space-y-3">
+                            <label for="reply-body" class="block text-[10px] font-semibold uppercase tracking-[0.08em] text-stone-600 dark:text-stone-400">Reply</label>
+                            <textarea id="reply-body" wire:model="replyBody" rows="3" class="input-luxury w-full text-sm resize-y" placeholder="Write your reply…"></textarea>
+                            @error('replyBody') <p class="text-[11px] text-red-600">{{ $message }}</p> @enderror
+                            <div class="flex justify-end">
+                                <button type="submit" class="btn-gold !h-10 !px-6 text-[11px] font-mono uppercase">Send Reply →</button>
+                            </div>
+                        </form>
+                    @endif
                 </div>
             @endif
         </div>

@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Hall;
 use App\Models\HallChatMessage;
 use App\Models\Package;
+use App\Support\ShiftWindows;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -119,20 +120,23 @@ class VenueChatWidget extends Component
 
         $this->newMessage = '';
 
-        // 2. Generate warm, delightful, smart hospitality response
-        $botReply = $this->generateBotReply($userText);
+        // 2. Generate an automated reply only when bots are enabled. In
+        // human-only mode the guest message stays queued for staff review.
+        if (! $this->humanOnlyMode) {
+            $botReply = $this->generateBotReply($userText);
 
-        HallChatMessage::create([
-            'hall_id' => $this->hall->id,
-            'user_id' => null,
-            'ip_address' => $this->visitorIp,
-            'session_id' => $this->visitorSession,
-            'sender_type' => 'bot',
-            'message_type' => 'text',
-            'message' => $botReply,
-            'voice_file' => null,
-            'is_read' => true,
-        ]);
+            HallChatMessage::create([
+                'hall_id' => $this->hall->id,
+                'user_id' => null,
+                'ip_address' => $this->visitorIp,
+                'session_id' => $this->visitorSession,
+                'sender_type' => 'bot',
+                'message_type' => 'text',
+                'message' => $botReply,
+                'voice_file' => null,
+                'is_read' => true,
+            ]);
+        }
 
         $this->loadConversation();
         $this->dispatch('messageSent');
@@ -161,18 +165,20 @@ class VenueChatWidget extends Component
 
         $this->voiceRecording = null;
 
-        $botReply = "🎙️ Shukriya! Aap ka voice message {$this->hall->name} ke concierge desk ko receive ho gaya hai. Hamara venue manager live sun kar foran yahan reply karega.";
-        HallChatMessage::create([
-            'hall_id' => $this->hall->id,
-            'user_id' => null,
-            'ip_address' => $this->visitorIp,
-            'session_id' => $this->visitorSession,
-            'sender_type' => 'bot',
-            'message_type' => 'text',
-            'message' => $botReply,
-            'voice_file' => null,
-            'is_read' => true,
-        ]);
+        if (! $this->humanOnlyMode) {
+            $botReply = "🎙️ Shukriya! Aap ka voice message {$this->hall->name} ke concierge desk ko receive ho gaya hai. Hamara venue manager live sun kar foran yahan reply karega.";
+            HallChatMessage::create([
+                'hall_id' => $this->hall->id,
+                'user_id' => null,
+                'ip_address' => $this->visitorIp,
+                'session_id' => $this->visitorSession,
+                'sender_type' => 'bot',
+                'message_type' => 'text',
+                'message' => $botReply,
+                'voice_file' => null,
+                'is_read' => true,
+            ]);
+        }
 
         $this->loadConversation();
         $this->dispatch('messageSent');
@@ -228,9 +234,12 @@ class VenueChatWidget extends Component
 
         // 5. Shift Timings, Dates & Booking
         if (preg_match('/(date|available|avail|book|reserve|slot|shift|timing|calendar|december|january|february|march|april|november|october|tarikh|din|waqt|time)/i', $lower)) {
+            $shiftSummary = ShiftWindows::summary($hall->tenant?->shift_windows);
+            $fullDay = ShiftWindows::labelForSlot($hall->tenant?->shift_windows, 'FULL_DAY');
+
             return "📅 **Shift Timings & Booking Details:**\n\n"
-                ."• **Afternoon Shift:** 12:00 PM se 04:00 PM (Mehndi / Nikkah / Luncheons)\n"
-                ."• **Evening Shift:** 07:00 PM se 11:30 PM (Barat / Walima Receptions)\n\n"
+                ."• **Operational Shifts:** {$shiftSummary}\n"
+                ."• **Full Day (exclusive takeover):** {$fullDay}\n\n"
                 .'Aap kis specific tarikh ya month ke liye shift dekh rahe hain? Yahan bataiye, manager live dashboard par availability check kar ke slot lock karwa dega!';
         }
 

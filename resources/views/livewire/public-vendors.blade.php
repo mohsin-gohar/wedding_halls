@@ -139,9 +139,11 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 @foreach($this->vendors as $vendor)
                     @php
-                        $cover = $vendor->cover_image
-                            ?: ($vendor->portfolioMedia->first()?->path
-                                ?: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=800&auto=format&fit=crop');
+                        $cover = \App\Support\Media::publicUrl(
+                            $vendor->cover_image
+                                ?: ($vendor->portfolioMedia->first()?->path
+                                    ?: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=800&auto=format&fit=crop')
+                        );
                     @endphp
                     <article class="group relative bg-white dark:bg-[#1C1917] rounded-2xl overflow-hidden border border-[#C6A15B]/25 hover:border-[#C6A15B]/60 transition-all duration-300 shadow-[0_6px_24px_-6px_rgba(23,21,19,0.12)] hover:shadow-[0_20px_44px_-12px_rgba(23,21,19,0.28)] hover:-translate-y-1">
                         <a href="{{ route('public.vendor-profile', ['slug' => $vendor->slug]) }}" class="block">
