@@ -249,10 +249,10 @@ This was a **manual in-app browser sweep**, not a formal Playwright/browser-E2E 
 
 ## Pre-push status recorded at commit time (2026-11-20 ~10:38 PKT)
 
-- The definitive full-suite rerun against the final code is **still running** against disposable MySQL `eventhub_test` on `127.0.0.1:3307`. No exit marker existed at the time of commit. Last observed state: **55 test classes reported `PASS`, 0 reported `FAIL`** (output `F:\opencode-scratch-archive\full_suite_after_review.out`). This is an interim observation, **not** a full-suite pass claim.
-- Last completed definitive evidence remains the targeted final batch: **30 passed, 116 assertions, exit 0** (`...\post_review_targeted_final.out`). The earlier full suite (**392 passed, 1 skipped, 2279 assertions, 1318.91s, exit 0**) predates the post-review source fixes and is explicitly not treated as the final result.
+- The definitive full-suite rerun against the final code has **completed successfully** against disposable MySQL `eventhub_test` on `127.0.0.1:3307`: **397 passed, 1 skipped, 2304 assertions, 2107.68s, exit 0** (`F:\opencode-scratch-archive\full_suite_after_review.out` / `.exit`). No `FAIL` class or `Failed asserting` line appeared in the output. No SQLite fallback was used.
+- This supersedes both the targeted final batch (**30 passed, 116 assertions, exit 0**) and the earlier full suite (**392 passed, 1 skipped, 2279 assertions, 1318.91s, exit 0**), which predated the post-review source fixes.
 - CI run `44602696519` (HEAD `3a9d126`): job `test` failed at step `Run tests` after 231s with exit code 2; deploy job was skipped. Full logs are GitHub-login-gated; the only visible annotations are a Node.js 20 deprecation warning and `Process completed with exit code 2.` A fixed-date booking test collision is a plausible contributor (CI started at 2026-11-20 00:51 PKT and that test previously used hardcoded `2026-11-20`), but the true root cause remains **unconfirmed** until a new CI run is available.
 - The user explicitly authorized committing and pushing **before** the full suite finished. No deployment, production DB change, live-server change, force push, or user-data touch was performed.
 
 ---
-*Last updated: 2026-11-20 pre-push status snapshot; HEAD/origin before this batch `3a9d126`; full-suite rerun in progress; CI green and production verification still not proven.*
+*Last updated: 2026-11-20 final full-suite result (397 passed/1 skipped, exit 0) recorded after push of code commit `aa954bf6b6602ad493625f851bc926e76ca76d6c`; CI green and production verification still to be confirmed.*
