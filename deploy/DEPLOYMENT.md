@@ -1,4 +1,4 @@
-# VenueCloud — Production Deployment Guide
+# Riwaj Grand — Production Deployment Guide
 
 This guide takes the Wedding Hall Booking & Management SaaS from this repo to a
 live production server. It complements the automated pieces added in `deploy/`.
@@ -11,13 +11,13 @@ live production server. It complements the automated pieces added in `deploy/`.
 | PHP | 8.2+ | Extensions: `bcmath ctype curl dom fileinfo json mbstring openssl pcre pdo tokenizer xml redis` |
 | Web server | Nginx | + PHP-FPM 8.2 |
 | Database | MySQL 8.0+ only | No SQLite/PostgreSQL fallback |
-| Cache/Queue | Redis 7+ | |
+| Cache/Queue | Redis 7+ | Shared store required for booking locks |
 | Node | 20 LTS | For `npm ci && npm run build` |
 | Composer | 2.x | |
-| Supervisor | latest | For the queue worker |
+| Supervisor | latest | For PHP-FPM, queue worker and scheduler |
 
-Install PHP Redis extension for the `redis` session/cache/queue drivers used in
-`.env.production`:
+Install the PHP Redis extension for the `redis` session/cache/queue drivers used
+in `.env.production`:
 
 ```bash
 sudo apt install -y php8.2-redis redis-server
@@ -27,11 +27,11 @@ sudo apt install -y php8.2-redis redis-server
 
 ```bash
 cd /var/www
-sudo git clone https://github.com/mohsin-gohar/wedding_halls.git venuecloud
-cd venuecloud
+sudo git clone https://github.com/mohsin-gohar/wedding_halls.git riwaj-grand
+cd riwaj-grand
 
 # Start from the tracked environment template, then apply production values.
-cp .env.example .env
+cp .env.production.example .env
 php artisan key:generate        # fills APP_KEY
 # Set APP_ENV=production, APP_DEBUG=false, and configure DB_*, Redis, mail, storage, APP_URL, and SESSION_*.
 # Set WHATSAPP_APP_SECRET when enabling the signed WhatsApp webhook.
@@ -40,9 +40,9 @@ php artisan key:generate        # fills APP_KEY
 Create the MySQL database and user:
 
 ```sql
-CREATE DATABASE venuecloud CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'venuecloud'@'127.0.0.1' IDENTIFIED BY 'STRONG_PASSWORD';
-GRANT ALL PRIVILEGES ON venuecloud.* TO 'venuecloud'@'127.0.0.1';
+CREATE DATABASE riwaj_grand CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'riwaj'@'127.0.0.1' IDENTIFIED BY 'STRONG_PASSWORD';
+GRANT ALL PRIVILEGES ON riwaj_grand.* TO 'riwaj'@'127.0.0.1';
 FLUSH PRIVILEGES;
 ```
 
@@ -58,46 +58,64 @@ fixes permissions, and restarts the queue.
 ## 4. Web server (Nginx) + SSL
 
 ```bash
-sudo cp deploy/nginx-venuecloud.conf /etc/nginx/sites-available/venuecloud
-sudo ln -s /etc/nginx/sites-available/venuecloud /etc/nginx/sites-enabled/venuecloud
+sudo cp deploy/nginx-riwaj-grand.conf /etc/nginx/sites-available/riwaj-grand
+sudo ln -s /etc/nginx/sites-available/riwaj-grand /etc/nginx/sites-enabled/riwaj-grand
 sudo nginx -t
 sudo systemctl reload nginx
 
 # TLS certificate (HTTP->HTTPS redirect already in the config)
-sudo certbot --nginx -d venuecloud.pk -d www.venuecloud.pk
+sudo certbot --nginx -d YOUR_DOMAIN -d www.YOUR_DOMAIN
 ```
 
-> The app trusts the proxy scheme. If you terminate TLS at Nginx, Laravel's
-> `Request::secure()` works out of the box. If using Cloudflare/LB, set
-> `App\Http\Middleware\TrustProxies` trusted proxies accordingly.
+> Replace `YOUR_DOMAIN` in the Nginx config and certbot command with the real
+> production host. The app trusts the proxy scheme. If you terminate TLS at
+> Nginx, Laravel's `Request::secure()` works out of the box. If using
+> Cloudflare/LB, set `App\Http\Middleware\TrustProxies` trusted proxies
+> accordingly.
 
 ## 5. Queue worker (Supervisor)
 
 ```bash
-sudo cp deploy/supervisor-venuecloud-worker.conf /etc/supervisor/conf.d/venuecloud-worker.conf
+sudo cp deploy/supervisor-riwaj-grand-worker.conf /etc/supervisor/conf.d/riwaj-grand-worker.conf
 sudo supervisorctl reread
 sudo supervisorctl update
-sudo supervisorctl start venuecloud-worker:*
+sudo supervisorctl start riwaj-grand-worker:*
 ```
 
 ## 6. Scheduler (cron)
 
 ```bash
-sudo crontab -e   # for www-data, or edit /etc/cron.d/venuecloud
+sudo crontab -e   # for www-data, or edit /etc/cron.d/riwaj-grand
 ```
 
 ```cron
-* * * * * cd /var/www/venuecloud && php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd /var/www/riwaj-grand && php artisan schedule:run >> /dev/null 2>&1
 ```
 
 The scheduler runs `subscriptions:check-expiry` daily (subscription lifecycle).
 
-## 7. WhatsApp Cloud API webhook
+## 7. Docker deployment (alternative)
+
+`Dockerfile` starts Supervisor so PHP-FPM, the queue worker and the scheduler
+all run inside the application container. `docker-compose.yml` keeps MySQL and
+Redis on the private bridge network and refuses to start without
+`DB_ROOT_PASSWORD` and `DB_PASSWORD`.
+
+```bash
+cp .env.production.example .env    # fill every secret
+docker compose up -d --build
+docker compose exec app php artisan migrate --force
+```
+
+Do not publish MySQL/Redis ports to the public internet. If you need a one-off
+debug session, add a host mapping temporarily and remove it afterwards.
+
+## 8. WhatsApp Cloud API webhook
 
 In the Meta developer console, point the webhook to:
 
 ```
-https://venuecloud.pk/webhooks/whatsapp
+https://YOUR_DOMAIN/webhooks/whatsapp
 ```
 
 - **Verify token**: must equal `WHATSAPP_VERIFY_TOKEN` in `.env`
@@ -106,25 +124,25 @@ https://venuecloud.pk/webhooks/whatsapp
 - Leave `WHATSAPP_ACCESS_TOKEN` / `WHATSAPP_PHONE_NUMBER_ID` empty to run in
   sandbox mode (outbound messages are logged instead of sent).
 
-## 8. Post-deploy verification
+## 9. Post-deploy verification
 
 ```bash
-curl -I https://venuecloud.pk/up          # 200, no debug info
-curl -I https://venuecloud.pk/            # check security headers present
-php artisan about                          # environment = production
+curl -I https://YOUR_DOMAIN/up          # 200, no debug info
+curl -I https://YOUR_DOMAIN/            # check security headers present
+php artisan about                       # environment = production
 ```
 
 - Confirm headers: `Strict-Transport-Security`, `X-Content-Type-Options`,
   `X-Frame-Options`, `Content-Security-Policy`.
-- Confirm no `.env` is web-accessible: `curl -I https://venuecloud.pk/.env` → 403.
+- Confirm no `.env` is web-accessible: `curl -I https://YOUR_DOMAIN/.env` → 403.
 
-## 9. Ongoing operations
+## 10. Ongoing operations
 
 - **Logs**: `storage/logs/laravel-*.log` (daily rotation, 14 days).
 - **Backups**: schedule daily MySQL dumps + S3 sync, e.g.
 
   ```cron
-  0 2 * * * mysqldump -u venuecloud -p venuecloud | gzip > /backups/venuecloud-$(date +\%F).sql.gz
+  0 2 * * * mysqldump -u riwaj -p riwaj_grand | gzip > /backups/riwaj-grand-$(date +\%F).sql.gz
   ```
 
 - **Optional monitoring**: set `SENTRY_LARAVEL_DSN` and install
@@ -134,7 +152,7 @@ php artisan about                          # environment = production
   scale-out readiness, database query workflow, and load-test gates. Do not use
   per-node file/array caches for booking locks on multiple app instances.
 
-## 10. Security features already wired in code
+## 11. Security features already wired in code
 
 - **SecurityHeaders middleware** (`app/Http/Middleware/SecurityHeaders.php`):
   CSP (tuned for Livewire + Alpine + Google Fonts), HSTS (over HTTPS only),
@@ -144,5 +162,8 @@ php artisan about                          # environment = production
 - **Login rate limiting**: both vendor and customer login throttle to
   5 attempts/minute per email+IP via `RateLimiter`.
 - **WhatsApp config** (`config/services.php`) is now properly registered.
+- **POST-only logout**: a GET `/logout` returns 405.
+- **API tokens**: new tokens default to read-only abilities and a 90-day expiry;
+  wildcard access must be explicitly requested.
 
 Toggle CSP off (`SECURITY_HEADERS_CSP=false`) if you serve it from Nginx/Cloudflare.

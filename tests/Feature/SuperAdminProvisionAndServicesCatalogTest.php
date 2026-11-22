@@ -98,7 +98,7 @@ class SuperAdminProvisionAndServicesCatalogTest extends TestCase
 
     public function test_rent_admin_can_add_and_remove_services_catalog(): void
     {
-        $owner = User::where('role', 'ROLE_TENANT_OWNER')->first() ?: User::where('email', 'reception@venuecloud.pk')->first();
+        $owner = User::where('role', 'ROLE_TENANT_OWNER')->first() ?: User::where('email', 'reception@riwajgrand.pk')->first();
         $this->actingAs($owner);
 
         $hall = Hall::where('tenant_id', $owner->tenant_id)->first();

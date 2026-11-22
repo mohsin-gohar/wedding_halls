@@ -46,7 +46,7 @@ class VendorEcosystemSeeder extends Seeder
                 'name' => 'Lens & Lantern Studio', 'slug' => 'lens-and-lantern-studio', 'category' => 'photography',
                 'email' => 'studio@lenslantern.pk', 'phone' => '+92 321 5550110',
                 'city' => 'Lahore', 'area' => 'DHA Phase 5', 'address' => 'Commercial Market, DHA Phase 5, Lahore',
-                'owner' => 'Bilal Ahmed (Lead Photographer)', 'owner_email' => 'photographer@venuecloud.pk',
+                'owner' => 'Bilal Ahmed (Lead Photographer)', 'owner_email' => 'photographer@riwajgrand.pk',
                 'about' => 'Award-winning cinematic wedding photography team — 350+ weddings covered across Pakistan with same-day edit delivery.',
                 'tagline' => 'Rang-e-riwayat, frame by frame',
                 'services' => [
@@ -64,7 +64,7 @@ class VendorEcosystemSeeder extends Seeder
                 'name' => 'Nawab Caterers', 'slug' => 'nawab-caterers', 'category' => 'catering',
                 'email' => 'orders@nawabcaterers.pk', 'phone' => '+92 333 4440990',
                 'city' => 'Karachi', 'area' => 'PECHS Block 2', 'address' => 'Shahrah-e-Faisal, PECHS, Karachi',
-                'owner' => 'Ustad Rafiq Nawab (Executive Chef)', 'owner_email' => 'caterer@venuecloud.pk',
+                'owner' => 'Ustad Rafiq Nawab (Executive Chef)', 'owner_email' => 'caterer@riwajgrand.pk',
                 'about' => 'Three generations of Mughlai catering mastery — live food stations, continental counters and traditional desi feasts for up to 2000 guests.',
                 'tagline' => 'Zaika shahi, service khaas',
                 'services' => [
@@ -80,7 +80,7 @@ class VendorEcosystemSeeder extends Seeder
                 'name' => 'Gulshan Decor House', 'slug' => 'gulshan-decor-house', 'category' => 'decoration',
                 'email' => 'design@gulshandecor.pk', 'phone' => '+92 300 3330770',
                 'city' => 'Islamabad', 'area' => 'F-7 Markaz', 'address' => 'Jinnah Super Market, F-7, Islamabad',
-                'owner' => 'Ayesha Gulshan (Creative Director)', 'owner_email' => 'decorator@venuecloud.pk',
+                'owner' => 'Ayesha Gulshan (Creative Director)', 'owner_email' => 'decorator@riwajgrand.pk',
                 'about' => 'Bespoke wedding stages, floral architecture and luxury lighting design — theme boards approved by you before setup day.',
                 'tagline' => 'Design dil se, setup shaan se',
                 'services' => [
@@ -96,7 +96,7 @@ class VendorEcosystemSeeder extends Seeder
                 'name' => 'Noor Bridal Lounge', 'slug' => 'noor-bridal-lounge', 'category' => 'beauty-bridal',
                 'email' => 'booking@noorbridal.pk', 'phone' => '+92 335 7770220',
                 'city' => 'Lahore', 'area' => 'Gulberg III', 'address' => 'MM Alam Road, Gulberg III, Lahore',
-                'owner' => 'Sana Noor (Celebrity Makeup Artist)', 'owner_email' => 'makeup@venuecloud.pk',
+                'owner' => 'Sana Noor (Celebrity Makeup Artist)', 'owner_email' => 'makeup@riwajgrand.pk',
                 'about' => 'HD airbrush bridal makeup, mehndi artistry and groom styling by a certified team — trials before your big day.',
                 'tagline' => 'Noorat ka naghma',
                 'services' => [
@@ -112,7 +112,7 @@ class VendorEcosystemSeeder extends Seeder
                 'name' => 'Jashan Events Co.', 'slug' => 'jashan-events-co', 'category' => 'wedding-planners',
                 'email' => 'plan@jashanevents.pk', 'phone' => '+92 310 1110550',
                 'city' => 'Islamabad', 'area' => 'Blue Area', 'address' => 'Jinnah Avenue, Blue Area, Islamabad',
-                'owner' => 'Faisal Jashan (Event Director)', 'owner_email' => 'planner@venuecloud.pk',
+                'owner' => 'Faisal Jashan (Event Director)', 'owner_email' => 'planner@riwajgrand.pk',
                 'about' => 'Full-service wedding planning — budgets, vendors, timelines and guest logistics handled end-to-end.',
                 'tagline' => 'Jashan ehtiyaat se, yaadon ke liye',
                 'services' => [
@@ -127,7 +127,7 @@ class VendorEcosystemSeeder extends Seeder
                 'name' => 'Shahi Fleet Rentals', 'slug' => 'shahi-fleet-rentals', 'category' => 'transport',
                 'email' => 'ride@shahifleet.pk', 'phone' => '+92 344 8880330',
                 'city' => 'Karachi', 'area' => 'Clifton', 'address' => 'Khayaban-e-Bukhari, Clifton, Karachi',
-                'owner' => 'Kamran Shahi (Fleet Manager)', 'owner_email' => 'transport@venuecloud.pk',
+                'owner' => 'Kamran Shahi (Fleet Manager)', 'owner_email' => 'transport@riwajgrand.pk',
                 'about' => 'Chauffeur-driven luxury fleet — bridal cars, coasters and vintage rides with uniformed chauffeurs.',
                 'tagline' => 'Dulhan ki dulaan, shaan ke saath',
                 'services' => [
@@ -213,7 +213,7 @@ class VendorEcosystemSeeder extends Seeder
         }
 
         // Featured flagship hall tenant → map to the wedding-halls category
-        $hallTenant = Tenant::query()->where('slug', 'venue-cloud')->first();
+        $hallTenant = Tenant::query()->whereIn('slug', ['riwaj-grand', 'venue-cloud'])->first();
         if ($hallTenant) {
             $hallTenant->forceFill([
                 'vendor_category_id' => $categories['wedding-halls'],

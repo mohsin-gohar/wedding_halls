@@ -1,63 +1,103 @@
-version: '3.8'
-
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: eventhub_app
+    container_name: riwaj_app
     restart: unless-stopped
     working_dir: /var/www
+    env_file:
+      - .env
+    environment:
+      # The container reaches the private services by their compose names.
+      # These override the host-oriented values in .env.
+      DB_HOST: db
+      DB_PORT: "3306"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      CACHE_STORE: ${CACHE_STORE:-redis}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+      BOOKING_LOCK_STORE: ${BOOKING_LOCK_STORE:-redis}
     volumes:
-      - .:/var/www
+      - riwaj_storage:/var/www/storage
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "php-fpm -t > /dev/null 2>&1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     networks:
-      - eventhub
+      - riwaj
 
   db:
     image: mysql:8.0
-    container_name: eventhub_db
+    container_name: riwaj_db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-rootpassword}
-      MYSQL_DATABASE: ${DB_DATABASE:-eventhub}
-      MYSQL_USER: ${DB_USERNAME:-eventhub}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-rootpassword}
+      # No insecure fallback passwords. Compose refuses to start until the
+      # operator supplies strong values in the environment / .env file.
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD must be set}
+      MYSQL_DATABASE: ${DB_DATABASE:-riwaj_grand}
+      MYSQL_USER: ${DB_USERNAME:-riwaj}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
     volumes:
-      - eventhub_dbdata:/var/lib/mysql
-    ports:
-      - "3306:3306"
+      - riwaj_dbdata:/var/lib/mysql
+    # Intentionally NOT published to the host. MySQL is reachable only by the
+    # app service on the private bridge network. Add a host mapping yourself if
+    # you need a one-off local debugging session.
+    expose:
+      - "3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks:
-      - eventhub
+      - riwaj
 
   redis:
     image: redis:alpine
-    container_name: eventhub_redis
+    container_name: riwaj_redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+    # Intentionally internal-only; the app reaches Redis over the bridge network.
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
-      - eventhub
+      - riwaj
 
   nginx:
     image: nginx:alpine
-    container_name: eventhub_nginx
+    container_name: riwaj_nginx
     restart: unless-stopped
     ports:
       - "80:80"
     volumes:
-      - .:/var/www
-      - deploy/nginx.conf:/etc/nginx/conf.d/default.conf
+      # Run `npm ci && npm run build` before `docker compose up` so public/build
+      # exists, and run `php artisan storage:link` once to create public/storage.
+      - ./public:/var/www/public:ro
+      - riwaj_storage:/var/www/storage:ro
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - app
+      app:
+        condition: service_healthy
     networks:
-      - eventhub
+      - riwaj
 
 networks:
-  eventhub:
+  riwaj:
     driver: bridge
 
 volumes:
-  eventhub_dbdata:
+  riwaj_dbdata:
+  riwaj_storage:

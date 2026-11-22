@@ -1,36 +1,57 @@
+# syntax=docker/dockerfile:1
+
+################################################################
+# Stage 1 — build production frontend assets
+################################################################
+FROM node:20-alpine AS assets
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY vite.config.js ./
+COPY resources ./resources
+COPY public ./public
+RUN npm run build
+
+################################################################
+# Stage 2 — production PHP runtime
+################################################################
 FROM php:8.2-fpm
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    unzip \
-    npm \
-    nodejs \
-    supervisor \
-    sqlite3 \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+# $PHPIZE_DEPS is provided by the official PHP image and is removed again after
+# compiling the Redis extension so it does not bloat the runtime image.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        $PHPIZE_DEPS \
+        git \
+        curl \
+        libpng-dev \
+        libonig-dev \
+        libxml2-dev \
+        libzip-dev \
+        unzip \
+        supervisor \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apt-get purge -y --auto-remove $PHPIZE_DEPS \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Install Composer (pinned major so builds stay reproducible)
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Set working directory
 WORKDIR /var/www
 
-# Copy existing application directory contents
-COPY . /var/www
+# Copy the application, then overlay the assets built in stage 1.
+COPY . .
+COPY --from=assets /app/public/build ./public/build
 
-# Install PHP dependencies
-RUN composer install --optimize-autoloader --no-dev
+# Install PHP dependencies from the lock file (no dev packages in production).
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-# Install Node.js dependencies
-RUN npm install && npm run build
-
-# Create storage directories and set permissions
+# Create writable runtime directories. The entrypoint re-applies permissions
+# when a persistent storage volume is mounted over /var/www/storage.
 RUN mkdir -p /var/www/storage/framework/{sessions,views,cache} \
     && mkdir -p /var/www/storage/logs \
     && chown -R www-data:www-data /var/www/storage \
@@ -38,10 +59,13 @@ RUN mkdir -p /var/www/storage/framework/{sessions,views,cache} \
     && chmod -R 775 /var/www/storage \
     && chmod -R 775 /var/www/bootstrap/cache
 
-# Copy supervisor configuration
+# Supervisor is the container entrypoint so PHP-FPM, the queue worker and the
+# scheduler all run; starting php-fpm directly silently skipped the latter two.
 COPY deploy/supervisor.conf /etc/supervisor/conf.d/supervisor.conf
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Expose port 9000 and start php-fpm server
 EXPOSE 9000
 
-CMD ["php-fpm"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisor.conf"]

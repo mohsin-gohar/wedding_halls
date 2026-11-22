@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.app', ['title' => 'Catering Packages & Menus — VenueCloud ERP'])]
+#[Layout('components.layouts.app', ['title' => 'Catering Packages & Menus — Riwaj Grand ERP'])]
 class PackageManager extends Component
 {
     public ?string $feedbackMessage = null;

@@ -6,8 +6,10 @@ use App\Models\AuditLog;
 use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
+use App\Models\User;
 use App\Support\CashOnlyPayments;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class SubscriptionService
 {
@@ -101,39 +103,73 @@ class SubscriptionService
         CashOnlyPayments::assert($paymentMethod, 'subscription payments');
 
         $billingCycle = strtoupper($billingCycle);
-        if (! in_array($billingCycle, ['WEEKLY', 'MONTHLY', 'YEARLY'])) {
-            $billingCycle = 'MONTHLY';
+        if (! in_array($billingCycle, ['WEEKLY', 'MONTHLY', 'YEARLY'], true)) {
+            throw new \InvalidArgumentException('Unsupported subscription billing cycle.');
         }
 
-        if ($amount === null) {
-            $amount = match ($billingCycle) {
-                'WEEKLY' => (float) ($plan->price_weekly ?? 5000),
-                'YEARLY' => (float) $plan->price_yearly,
-                default => (float) $plan->price_monthly,
-            };
+        // The plan is the only price authority. A caller may omit the amount, but
+        // supplying a different one must never activate a subscription cheaply.
+        $planAmount = round((float) match ($billingCycle) {
+            'WEEKLY' => $plan->price_weekly ?? 0,
+            'YEARLY' => $plan->price_yearly ?? 0,
+            default => $plan->price_monthly ?? 0,
+        }, 2);
+
+        if ($planAmount <= 0) {
+            throw new \InvalidArgumentException('The selected subscription plan has no valid price for this cycle.');
         }
 
-        $status = $autoApprove ? 'APPROVED' : 'PENDING';
+        if ($amount !== null && abs(round($amount, 2) - $planAmount) > 0.009) {
+            throw new \InvalidArgumentException('Subscription amount must match the selected plan price.');
+        }
 
-        // Record the payment
-        $payment = SubscriptionPayment::create([
-            'tenant_id' => $tenant->id,
-            'subscription_plan_id' => $plan->id,
-            'billing_cycle' => $billingCycle,
-            'amount' => $amount,
-            'payment_method' => $paymentMethod,
-            'transaction_reference' => $transactionReference ?? ('VC-PAY-'.strtoupper(bin2hex(random_bytes(4)))),
-            'status' => $status,
-            'approved_by_user_id' => $autoApprove ? $approvedByUserId : null,
-            'approved_at' => $autoApprove ? Carbon::now() : null,
-            'notes' => $autoApprove ? 'Instant renewal activated.' : 'Manual payment submitted; pending Super Admin verification.',
-        ]);
+        $amount = $planAmount;
 
+        // Instant activation is a privileged act. It requires an authenticated
+        // Super Admin identity at the service boundary, not merely a boolean flag.
         if ($autoApprove) {
-            $this->applyApprovedSubscription($tenant, $plan, $billingCycle);
+            if (! $approvedByUserId) {
+                throw new \InvalidArgumentException('Instant subscription approval requires an approving Super Admin.');
+            }
+
+            $approver = User::query()->findOrFail($approvedByUserId);
+
+            if (! $approver->isSuperAdmin()) {
+                throw new \InvalidArgumentException('Only a Super Admin may instantly approve a subscription.');
+            }
         }
 
-        return $payment;
+        return DB::transaction(function () use (
+            $tenant,
+            $plan,
+            $billingCycle,
+            $amount,
+            $paymentMethod,
+            $transactionReference,
+            $autoApprove,
+            $approvedByUserId
+        ): SubscriptionPayment {
+            $payment = SubscriptionPayment::create([
+                'tenant_id' => $tenant->id,
+                'subscription_plan_id' => $plan->id,
+                'billing_cycle' => $billingCycle,
+                'amount' => $amount,
+                'payment_method' => $paymentMethod,
+                'transaction_reference' => $transactionReference ?? ('RG-PAY-'.strtoupper(bin2hex(random_bytes(4)))),
+                'status' => $autoApprove ? 'APPROVED' : 'PENDING',
+                'approved_by_user_id' => $autoApprove ? $approvedByUserId : null,
+                'approved_at' => $autoApprove ? Carbon::now() : null,
+                'notes' => $autoApprove
+                    ? 'Instant renewal activated by Super Admin.'
+                    : 'Manual cash payment submitted; pending Super Admin verification.',
+            ]);
+
+            if ($autoApprove) {
+                $this->applyApprovedSubscription($tenant->fresh(), $plan, $billingCycle);
+            }
+
+            return $payment;
+        });
     }
 
     /**

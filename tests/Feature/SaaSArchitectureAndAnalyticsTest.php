@@ -139,7 +139,7 @@ class SaaSArchitectureAndAnalyticsTest extends TestCase
 
         $this->superAdmin = User::create([
             'name' => 'Chief Executive SaaS Admin',
-            'email' => 'superadmin@eventhub.pk',
+            'email' => 'superadmin@riwajgrand.pk',
             'password' => Hash::make('secret123'),
             'role' => 'ROLE_SUPER_ADMIN',
             'status' => 'ACTIVE',

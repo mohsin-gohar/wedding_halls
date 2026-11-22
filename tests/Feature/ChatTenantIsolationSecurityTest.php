@@ -25,7 +25,7 @@ class ChatTenantIsolationSecurityTest extends TestCase
 
     public function test_hall_owner_cannot_open_another_tenants_chat_thread(): void
     {
-        $ownerA = User::where('email', 'owner@venuecloud.pk')->firstOrFail();
+        $ownerA = User::where('email', 'owner@riwajgrand.pk')->firstOrFail();
 
         $tenantB = Tenant::create([
             'name' => 'Rival Banquet Group',

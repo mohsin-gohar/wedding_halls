@@ -64,7 +64,7 @@ class CoordinatorHardeningRegressionTest extends TestCase
     private function venueOwner(): User
     {
         return User::query()
-            ->where('email', 'owner@venuecloud.pk')
+            ->where('email', 'owner@riwajgrand.pk')
             ->firstOrFail();
     }
 }

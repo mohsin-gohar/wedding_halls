@@ -160,19 +160,33 @@ test.describe('Public website', () => {
 
 test.describe('Authentication and RBAC', () => {
   test('protected routes reject unauthenticated access', async ({ page }) => {
-    const failures: Array<{ path: string; status: number }> = [];
+    const failures: Array<{ path: string; status: number; finalPath: string; reason: string }> = [];
     for (const path of protectedRoutes) {
       const response = await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 90_000 });
       const status = response?.status() ?? 0;
-      if (status >= 500) failures.push({ path, status });
+      const finalPath = new URL(page.url()).pathname;
+
+      // A guest must either be redirected to a login screen or receive an
+      // explicit 401/403. A 200 on the protected URL itself is a leak.
+      const redirectedToLogin = finalPath.includes('login');
+      const explicitlyDenied = status === 401 || status === 403;
+      if (!redirectedToLogin && !explicitlyDenied) {
+        failures.push({
+          path,
+          status,
+          finalPath,
+          reason: 'Protected route did not redirect to login or return 401/403',
+        });
+      }
+
       await page.waitForTimeout(300);
     }
-    expect(failures, `Server errors on protected routes:\n${JSON.stringify(failures, null, 2)}`).toEqual([]);
+    expect(failures, `Unauthenticated access was not denied:\n${JSON.stringify(failures, null, 2)}`).toEqual([]);
   });
 
   for (const persona of [
-    { name: 'Super Admin', email: 'admin@eventhub.com', password: 'admin1235', routes: ['/admin', '/dashboard'] },
-    { name: 'Tenant Owner', email: 'owner@venuecloud.pk', password: 'password', routes: ['/dashboard', '/staff', '/staff/payroll', '/calendar'] },
+    { name: 'Super Admin', email: 'admin@riwajgrand.pk', password: 'admin1235', routes: ['/admin', '/dashboard'] },
+    { name: 'Tenant Owner', email: 'owner@riwajgrand.pk', password: 'password', routes: ['/dashboard', '/staff', '/staff/payroll', '/calendar'] },
     { name: 'Customer', email: 'customer@example.com', password: 'password', routes: ['/customer/dashboard', '/customer/events'] },
   ]) {
     test(`${persona.name} can login and open authorized dashboards`, async ({ page }) => {
@@ -187,7 +201,13 @@ test.describe('Authentication and RBAC', () => {
           response = await page.goto(route, { waitUntil: 'domcontentloaded', timeout: 90_000 }).catch(() => null);
         }
         await page.waitForTimeout(800);
-        expect(response?.status() ?? 0).toBeLessThan(500);
+        const status = response?.status() ?? 0;
+        const finalPath = new URL(page.url()).pathname;
+
+        // An authorized persona must actually land on the dashboard, not be
+        // bounced back to a login screen or receive a server error.
+        expect(status, `${persona.name} received ${status} on ${route}`).toBeLessThan(400);
+        expect(finalPath, `${persona.name} was redirected away from ${route}`).not.toContain('login');
         await page.screenshot({ path: `test-results/${persona.name.toLowerCase().replaceAll(' ', '-')}-${route.replaceAll('/', '-')}.png`, fullPage: true });
       }
     });
@@ -199,7 +219,18 @@ test.describe('Authentication and RBAC', () => {
     for (const route of ['/dashboard', '/admin', '/staff/payroll', '/vendor/finance']) {
       const response = await page.goto(route, { waitUntil: 'domcontentloaded', timeout: 90_000 });
       await page.waitForTimeout(500);
-      expect(response?.status() ?? 0).toBeLessThan(500);
+
+      const status = response?.status() ?? 0;
+      const finalPath = new URL(page.url()).pathname;
+
+      // The customer must be denied (401/403), redirected away from the
+      // tenant route, or sent to a login screen — never served the page.
+      const denied = status === 401 || status === 403;
+      const redirectedAway = finalPath !== route;
+      expect(
+        denied || redirectedAway,
+        `Customer was served ${route} (status ${status}, final ${finalPath})`
+      ).toBeTruthy();
     }
   });
 });

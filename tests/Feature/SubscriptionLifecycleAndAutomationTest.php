@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
+use App\Models\User;
 use App\Models\Venue;
 use App\Services\SubscriptionService;
 use Carbon\Carbon;
@@ -81,7 +82,7 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
     public function test_artisan_command_subscriptions_check_expiry_executes_cleanly(): void
     {
         $this->artisan('subscriptions:check-expiry')
-            ->expectsOutputToContain('Starting VenueCloud SaaS Subscription Expiry Audit...')
+            ->expectsOutputToContain('Starting Riwaj Grand SaaS Subscription Expiry Audit...')
             ->expectsOutputToContain('SaaS Subscription Audit completed successfully.')
             ->assertExitCode(0);
     }
@@ -110,9 +111,10 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
         ]);
 
         $service = app(SubscriptionService::class);
+        $superAdminId = (int) User::query()->where('role', 'ROLE_SUPER_ADMIN')->firstOrFail()->id;
 
         // Test Weekly Renewal
-        $payment = $service->renewSubscription($tenant, $plan, 'WEEKLY', 6000, 'CASH', 'TX-101', true);
+        $payment = $service->renewSubscription($tenant, $plan, 'WEEKLY', 6000, 'CASH', 'TX-101', true, $superAdminId);
         $tenant->refresh();
         $this->assertEquals('ACTIVE', $tenant->subscription_status);
         $this->assertEquals('WEEKLY', $tenant->billing_cycle);
@@ -120,7 +122,7 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
         $this->assertFalse($service->isLocked($tenant));
 
         // Test Yearly Renewal
-        $service->renewSubscription($tenant, $plan, 'YEARLY', 200000, 'CASH', 'TX-102', true);
+        $service->renewSubscription($tenant, $plan, 'YEARLY', 200000, 'CASH', 'TX-102', true, $superAdminId);
         $tenant->refresh();
         $this->assertEquals('ACTIVE', $tenant->subscription_status);
         $this->assertEquals('YEARLY', $tenant->billing_cycle);

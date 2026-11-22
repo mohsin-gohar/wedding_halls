@@ -118,7 +118,7 @@ class ConciergeChatbotTest extends TestCase
 
     public function test_hall_admin_receives_inquiry_on_dashboard_and_replies(): void
     {
-        $owner = User::where('email', 'owner@venuecloud.pk')->firstOrFail();
+        $owner = User::where('email', 'owner@riwajgrand.pk')->firstOrFail();
         $hall = Hall::where('tenant_id', $owner->tenant_id)->firstOrFail();
 
         $clientIp = '203.101.12.88';

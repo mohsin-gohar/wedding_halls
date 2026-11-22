@@ -22,17 +22,17 @@ class DemoVenuesSeeder extends Seeder
             throw new \RuntimeException('Demo seeding is disabled in the production environment.');
         }
 
-        // 1. Ensure existing VenueCloud tenant is APPROVED and ACTIVE
-        $venueCloud = Tenant::where('slug', 'venue-cloud')->first();
-        if ($venueCloud) {
-            $venueCloud->update([
+        // 1. Ensure existing Riwaj Grand tenant is APPROVED and ACTIVE
+        $riwajGrand = Tenant::whereIn('slug', ['riwaj-grand', 'venue-cloud'])->first();
+        if ($riwajGrand) {
+            $riwajGrand->update([
                 'verification_status' => 'APPROVED',
                 'is_active' => true,
                 'subscription_status' => 'ACTIVE',
                 'subscription_expires_at' => Carbon::now()->addYear(),
             ]);
-            Hall::where('tenant_id', $venueCloud->id)->update(['is_active' => true]);
-            Venue::where('tenant_id', $venueCloud->id)->update(['is_active' => true]);
+            Hall::where('tenant_id', $riwajGrand->id)->update(['is_active' => true]);
+            Venue::where('tenant_id', $riwajGrand->id)->update(['is_active' => true]);
         }
 
         $plans = SubscriptionPlan::all();

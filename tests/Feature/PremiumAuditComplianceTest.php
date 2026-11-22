@@ -167,7 +167,7 @@ class PremiumAuditComplianceTest extends TestCase
 
         // 1. Super Admin via POST /login
         $response = $this->post(route('login.perform'), [
-            'email' => 'admin@eventhub.com',
+            'email' => 'admin@riwajgrand.pk',
             'password' => 'admin1235',
         ]);
         $response->assertRedirect(route('admin.dashboard'));
@@ -176,7 +176,7 @@ class PremiumAuditComplianceTest extends TestCase
 
         // 2. Hall Owner via POST /login (can switch directly even while logged in)
         $response = $this->post(route('login.perform'), [
-            'email' => 'owner@venuecloud.pk',
+            'email' => 'owner@riwajgrand.pk',
             'password' => 'password',
         ]);
         $response->assertRedirect(route('dashboard'));

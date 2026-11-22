@@ -250,7 +250,7 @@ class EnterpriseRemediationAuditTest extends TestCase
         Livewire::test(Register::class)
             ->set('hallName', 'Blocked Venue')
             ->set('ownerName', 'Blocked Owner')
-            ->set('email', 'blocked@venuecloud.pk')
+            ->set('email', 'blocked@riwajgrand.pk')
             ->set('phone', '03009990011')
             ->set('password', 'password123')
             ->set('password_confirmation', 'password123')

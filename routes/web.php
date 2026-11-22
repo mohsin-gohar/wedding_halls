@@ -404,7 +404,9 @@ $authenticatePortalRequest = function (Request $request) {
 Route::post('/login', $authenticatePortalRequest)->name('login.perform')->middleware('throttle:reload-protection');
 Route::post('/customer/login', $authenticatePortalRequest)->name('customer.login.perform')->middleware('throttle:reload-protection');
 
-Route::match(['get', 'post'], '/logout', function () {
+// POST-only: a GET logout is CSRF-able and can be triggered by a crafted
+// image/link, silently terminating a victim's session.
+Route::post('/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();

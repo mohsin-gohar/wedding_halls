@@ -24,14 +24,14 @@
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
         <!-- Disposable MySQL 8 test database. CI workflow creates/provides
-             eventhub_test:eventhub/rootpassword on 127.0.0.1:3306. For a
+             riwaj_grand_test:riwaj/rootpassword on 127.0.0.1:3306. For a
              different local test instance, override via process env vars
              (e.g. DB_HOST/DB_PORT/DB_DATABASE/DB_USERNAME/DB_PASSWORD). -->
         <env name="DB_CONNECTION" value="mysql"/>
         <env name="DB_HOST" value="127.0.0.1"/>
         <env name="DB_PORT" value="3306"/>
-        <env name="DB_DATABASE" value="eventhub_test"/>
-        <env name="DB_USERNAME" value="eventhub"/>
+        <env name="DB_DATABASE" value="riwaj_grand_test"/>
+        <env name="DB_USERNAME" value="riwaj"/>
         <env name="DB_PASSWORD" value="rootpassword"/>
         <env name="DB_URL" value=""/>
         <env name="DB_SSLMODE" value="prefer"/>

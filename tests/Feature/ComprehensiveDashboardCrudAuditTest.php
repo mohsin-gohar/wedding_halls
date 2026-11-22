@@ -156,7 +156,7 @@ class ComprehensiveDashboardCrudAuditTest extends TestCase
      */
     public function test_hall_admin_dashboard_full_crud_operations(): void
     {
-        $owner = User::where('email', 'owner@venuecloud.pk')->firstOrFail();
+        $owner = User::where('email', 'owner@riwajgrand.pk')->firstOrFail();
         $tenantId = $owner->tenant_id;
         $hall = Hall::where('tenant_id', $tenantId)->firstOrFail();
         $this->actingAs($owner);
@@ -213,7 +213,7 @@ class ComprehensiveDashboardCrudAuditTest extends TestCase
             ->call('openCreateModal')
             ->assertSet('isCreating', true)
             ->set('name', 'Kamran Akmal')
-            ->set('email', 'kamran.staff@venuecloud.pk')
+            ->set('email', 'kamran.staff@riwajgrand.pk')
             ->set('phone', '03019876543')
             ->set('role', 'ROLE_FRONT_DESK')
             ->set('baseSalary', 45000)
@@ -222,7 +222,7 @@ class ComprehensiveDashboardCrudAuditTest extends TestCase
             ->assertHasNoErrors();
 
         $createdStaff = User::where('tenant_id', $tenantId)
-            ->where('email', 'kamran.staff@venuecloud.pk')
+            ->where('email', 'kamran.staff@riwajgrand.pk')
             ->first();
         $this->assertNotNull($createdStaff);
         $this->assertEquals('ROLE_FRONT_DESK', $createdStaff->role);

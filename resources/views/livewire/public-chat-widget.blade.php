@@ -1,4 +1,4 @@
-<div id="eventhub-public-ai-chatbot"
+<div id="riwaj-grand-public-ai-chatbot"
      x-data="{
          open: false,
          init() {
@@ -94,7 +94,7 @@
 
         <!-- Messages Stream Area -->
         <div class="flex-1 min-h-0 overflow-y-auto p-4 space-y-3.5 bg-stone-50/90 dark:bg-[#141210]/95 text-xs" 
-             id="eventhub-public-chat-stream">
+             id="riwaj-grand-public-chat-stream">
             
             <!-- Quick Suggestion Action Chips -->
             <div class="pb-1">
@@ -179,7 +179,7 @@
 
 <script>
     function scrollPublicChat() {
-        const stream = document.getElementById('eventhub-public-chat-stream');
+        const stream = document.getElementById('riwaj-grand-public-chat-stream');
         if (stream) {
             stream.scrollTo({ top: stream.scrollHeight, behavior: 'smooth' });
         }

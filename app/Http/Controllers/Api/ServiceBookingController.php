@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\ServiceBookingException;
 use App\Models\ServiceBooking;
-use App\Models\ServicePayment;
+use App\Services\ServiceBookingService;
 use App\Support\CashOnlyPayments;
 use Illuminate\Http\Request;
 
@@ -15,6 +16,8 @@ use Illuminate\Http\Request;
  */
 class ServiceBookingController extends ApiController
 {
+    public function __construct(protected ServiceBookingService $serviceBookingService) {}
+
     public function index(Request $request)
     {
         $user = $this->apiUser($request);
@@ -77,38 +80,35 @@ class ServiceBookingController extends ApiController
         }
 
         $validated = $request->validate([
-            'amount' => ['required', 'numeric', 'min:1'],
+            'amount' => ['required', 'numeric', 'min:0.01', 'max:100000000'],
             'method' => CashOnlyPayments::validationRule(),
             'kind' => ['nullable', 'in:ADVANCE,INSTALLMENT,FULL'],
-            'reference' => ['nullable', 'string', 'max:100'],
+            'reference' => ['nullable', 'string', 'max:60'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $amount = round((float) $validated['amount'], 2);
-        $balance = $booking->balanceDue();
+        try {
+            $result = $this->serviceBookingService->submitCustomerPayment(
+                $booking,
+                $validated,
+                (int) $booking->customer_id
+            );
+        } catch (\PDOException $exception) {
+            // Never leak SQL/driver details to an API caller.
+            report($exception);
 
-        if ($amount > $balance + 0.009) {
-            return response()->json([
-                'message' => 'Amount exceeds the outstanding balance of PKR '.number_format($balance, 2).'.',
-            ], 422);
+            return response()->json(['message' => 'The payment could not be recorded. Please try again.'], 500);
+        } catch (ServiceBookingException|\InvalidArgumentException|\RuntimeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
         }
-
-        $payment = ServicePayment::create([
-            'tenant_id' => $booking->tenant_id,
-            'service_booking_id' => $booking->id,
-            'customer_id' => $booking->customer_id,
-            'amount' => $amount,
-            'method' => $validated['method'],
-            'reference' => $validated['reference'] ?? null,
-            'status' => 'PENDING',
-            'kind' => $validated['kind'] ?? 'INSTALLMENT',
-            'notes' => $validated['notes'] ?? 'Recorded via API.',
-        ]);
 
         return response()->json([
             'success' => true,
-            'payment' => $payment,
-            'message' => 'Payment recorded and awaiting verification.',
-        ], 201);
+            'payment' => $result['payment'],
+            'replayed' => (bool) ($result['replayed'] ?? false),
+            'message' => ! empty($result['replayed'])
+                ? 'Payment already submitted; returning the original record.'
+                : 'Payment recorded and awaiting verification.',
+        ], ! empty($result['replayed']) ? 200 : 201);
     }
 }

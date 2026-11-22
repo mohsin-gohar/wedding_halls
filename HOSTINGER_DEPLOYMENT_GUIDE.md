@@ -38,8 +38,8 @@ A step-by-step guide to deploying this Laravel + Livewire project on **Hostinger
 
 1. In hPanel, go to **Databases** &rarr; **MySQL Databases**.
 2. Create a new Database:
-   - **MySQL Database Name:** e.g., `eventhub` (Hostinger will prefix it, e.g., `u123456789_eventhub`)
-   - **MySQL Username:** e.g., `eventuser` (Hostinger will prefix it, e.g., `u123456789_eventuser`)
+   - **MySQL Database Name:** e.g., `riwaj_grand` (Hostinger will prefix it, e.g., `u123456789_riwaj_grand`)
+   - **MySQL Username:** e.g., `riwajuser` (Hostinger will prefix it, e.g., `u123456789_riwajuser`)
    - **Password:** Generate a strong password.
 3. Click **Create**.
 4. Save the **Database Name**, **Username**, and **Password** for the next step.
@@ -68,7 +68,7 @@ A step-by-step guide to deploying this Laravel + Livewire project on **Hostinger
 Open the `.env` file in Hostinger File Manager and set:
 
 ```ini
-APP_NAME="EventHub"
+APP_NAME="Riwaj Grand"
 APP_ENV=production
 APP_KEY=base64:YOUR_GENERATED_KEY_HERE
 APP_DEBUG=false
@@ -77,13 +77,16 @@ APP_URL=https://yourdomain.com
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=u123456789_eventhub
+DB_DATABASE=u123456789_riwaj_grand
 DB_USERNAME=u123456789_dbuser
 DB_PASSWORD="your_database_password"
 
 SESSION_DRIVER=database
 SESSION_SECURE_COOKIE=true
 CACHE_STORE=file
+# Shared reservation mutex. `database` uses the cache_locks table and is safe
+# on a single host; use `redis` when multiple app servers share Redis.
+BOOKING_LOCK_STORE=database
 QUEUE_CONNECTION=sync
 FILESYSTEM_DISK=public
 ```

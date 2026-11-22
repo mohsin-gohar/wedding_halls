@@ -110,7 +110,7 @@ class DocumentController extends Controller
             $pdf = Pdf::loadView('documents.agreement', compact('booking'))
                 ->setPaper('a4', 'portrait');
 
-            return $pdf->download("VenueCloud_Contract_{$booking->id}.pdf");
+            return $pdf->download("RiwajGrand_Contract_{$booking->id}.pdf");
         }
 
         return view('documents.agreement', compact('booking'));

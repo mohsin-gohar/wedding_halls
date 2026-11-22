@@ -1,4 +1,4 @@
-# VenueCloud Production Go-Live Checklist
+# Riwaj Grand Production Go-Live Checklist
 
 Use this checklist for every production release. It complements
 [`DEPLOYMENT.md`](DEPLOYMENT.md) and [`SCALING.md`](SCALING.md); it is deliberately
@@ -26,7 +26,7 @@ short enough to copy into a release ticket.
 - [ ] Supervisor queue worker and cron scheduler are installed (see §5–6 of
       `DEPLOYMENT.md`).
 - [ ] Nginx client body size, timeouts, and TLS settings match
-      `deploy/nginx-venuecloud.conf`.
+      `deploy/nginx-riwaj-grand.conf`.
 - [ ] Trusted proxies are configured if TLS terminates at Cloudflare, a load
       balancer, or another reverse proxy; `FORCE_HTTPS=true` only when
       `Request::secure()` can be trusted.
@@ -39,8 +39,9 @@ short enough to copy into a release ticket.
       values (no `CHANGE_ME`, no sandbox tokens).
 - [ ] `SESSION_SECURE_COOKIE=true`, `SESSION_ENCRYPT=true`, and
       `SESSION_DOMAIN` matches the production host.
-- [ ] `CACHE_STORE` and `QUEUE_CONNECTION` are **not** `array`/`sync` in
-      production. The dashboard cache and rate limiters depend on a shared store.
+- [ ] `CACHE_STORE`, `QUEUE_CONNECTION`, and `BOOKING_LOCK_STORE` are **not**
+      `array`/`sync` in production. The dashboard cache, rate limiters and
+      booking reservation locks depend on a shared store.
 - [ ] `LOG_CHANNEL=daily` (or a centralized driver) and `LOG_LEVEL=warning`.
 - [ ] `WHATSAPP_APP_SECRET` and `WHATSAPP_VERIFY_TOKEN` are set before enabling
       the webhook.
@@ -51,8 +52,6 @@ short enough to copy into a release ticket.
 
 - [ ] Take a verified database backup **before** running migrations.
 - [ ] `php artisan migrate --force` completes; no pending migrations remain.
-      migration (`SELECT column_name, data_type, column_default FROM
-      information_schema.columns WHERE table_name = 'bookings';`).
 - [ ] Seed/reference data (subscription plans, platform settings) exists.
 - [ ] Object storage bucket exists, has the expected region, and lifecycle/
       versioning rules are intentional.
@@ -67,7 +66,7 @@ short enough to copy into a release ticket.
 - [ ] `php artisan schedule:list` shows `subscriptions:check-expiry` and any
       other expected tasks.
 - [ ] Cron entry is present for the deploy user:
-      `* * * * * cd /var/www/venuecloud && php artisan schedule:run >> /dev/null 2>&1`.
+      `* * * * * cd /var/www/riwaj-grand && php artisan schedule:run >> /dev/null 2>&1`.
 - [ ] Redis eviction policy is appropriate for cache + sessions + queues
       (do not use `allkeys-lru` for a queue-bearing Redis without review).
 
@@ -79,7 +78,7 @@ short enough to copy into a release ticket.
       `X-Content-Type-Options`, `X-Frame-Options`/`frame-ancestors`, and CSP.
 - [ ] `/admin` returns **403** for non-super-admin accounts (not a redirect that
       confirms the route).
-- [ ] Login throttling works (10 failed attempts per email/IP per minute).
+- [ ] Login throttling works (5 failed attempts per email/IP per minute).
 - [ ] Public page throttles are active (`public-pages`, `public-availability`)
       and contact/RSVP actions have per-component limits.
 - [ ] The Super Admin account uses a unique password and MFA at the edge/
@@ -87,6 +86,9 @@ short enough to copy into a release ticket.
 - [ ] Only `ROLE_SUPER_ADMIN` can reach the platform console; tenant staff
       cannot cross tenant boundaries (spot-check a tenant URL with another
       tenant's account).
+- [ ] A GET request to `/logout` returns 405; the POST form still signs out.
+- [ ] Newly created API tokens are read-only and expire in ~90 days unless
+      wildcard access was explicitly requested.
 
 ## 7. Smoke tests (production URL)
 
@@ -102,6 +104,8 @@ short enough to copy into a release ticket.
 - [ ] Queue-backed mail/WhatsApp notifications are delivered or logged as
       configured.
 - [ ] PDF/document downloads work from the configured filesystem disk.
+- [ ] A cash service payment submission stays `PENDING` until staff verify it,
+      and verification never pushes `paid_amount` above the booking total.
 
 ## 8. Observability and rollback
 

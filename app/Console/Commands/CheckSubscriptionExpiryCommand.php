@@ -26,7 +26,7 @@ class CheckSubscriptionExpiryCommand extends Command
      */
     public function handle(SubscriptionService $subscriptionService): int
     {
-        $this->info('Starting VenueCloud SaaS Subscription Expiry Audit...');
+        $this->info('Starting Riwaj Grand SaaS Subscription Expiry Audit...');
 
         $results = $subscriptionService->checkAndExpireSubscriptions();
 

@@ -19,7 +19,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.app', ['title' => 'Staff Payroll & Salary Slips — VenueCloud ERP'])]
+#[Layout('components.layouts.app', ['title' => 'Staff Payroll & Salary Slips — Riwaj Grand ERP'])]
 class StaffPayroll extends Component
 {
     public string $selectedMonth = '';

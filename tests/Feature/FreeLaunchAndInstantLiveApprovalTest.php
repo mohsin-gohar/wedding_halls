@@ -91,7 +91,7 @@ class FreeLaunchAndInstantLiveApprovalTest extends TestCase
         // 2. Super admin logs in and approves vendor
         $admin = User::create([
             'name' => 'Platform Super Admin',
-            'email' => 'admin@eventhub.com',
+            'email' => 'admin@riwajgrand.pk',
             'phone' => '+92 300 0000000',
             'role' => 'ROLE_SUPER_ADMIN',
             'password' => Hash::make('password123'),

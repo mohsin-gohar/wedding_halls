@@ -54,7 +54,7 @@ class CustomerRegister extends Component
 
         Auth::login($user);
         session()->regenerate();
-        session()->flash('message', 'Welcome to VenueCloud! Your customer account is ready.');
+        session()->flash('message', 'Welcome to Riwaj Grand! Your customer account is ready.');
 
         return redirect()->route('customer.dashboard');
     }

@@ -71,7 +71,7 @@ class PlatformRouteCrawlTest extends TestCase
             ->where('role', 'ROLE_TENANT_OWNER')->firstOrFail();
 
         $customer = User::query()->where('email', 'customer@example.com')->firstOrFail();
-        $admin = User::query()->where('email', 'admin@eventhub.com')->firstOrFail();
+        $admin = User::query()->where('email', 'admin@riwajgrand.pk')->firstOrFail();
 
         $staff = User::query()->where('tenant_id', $vendorTenant->id)
             ->where('role', '!=', 'ROLE_TENANT_OWNER')
@@ -121,7 +121,7 @@ class PlatformRouteCrawlTest extends TestCase
 
     public function test_parameterised_routes_resolve_for_their_owner(): void
     {
-        $owner = User::query()->where('email', 'owner@venuecloud.pk')->firstOrFail();
+        $owner = User::query()->where('email', 'owner@riwajgrand.pk')->firstOrFail();
         $hall = Hall::query()->firstOrFail();
         $booking = Booking::query()->firstOrFail();
         $payment = Payment::query()->firstOrFail();
@@ -147,7 +147,7 @@ class PlatformRouteCrawlTest extends TestCase
         $this->actingAs($customer)->get('/staff')->assertRedirect(route('customer.dashboard'));
 
         // The vendor owner must never reach the platform console.
-        $owner = User::query()->where('email', 'owner@venuecloud.pk')->firstOrFail();
+        $owner = User::query()->where('email', 'owner@riwajgrand.pk')->firstOrFail();
         $this->actingAs($owner)->get('/admin')->assertForbidden();
     }
 

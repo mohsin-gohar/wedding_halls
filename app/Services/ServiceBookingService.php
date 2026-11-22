@@ -18,6 +18,7 @@ use App\Models\VendorWallet;
 use App\Models\WalletTransaction;
 use App\Support\CashOnlyPayments;
 use Carbon\Carbon;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -477,13 +478,49 @@ class ServiceBookingService
      * Record a service payment (e.g. cash collected on site) and apply it to the
      * booking balance. Settlement into the vendor wallet + payout pipeline runs
      * when the booking reaches a fully paid state.
+     *
+     * @internal Trusted server-side callers only. Customer-facing HTTP requests
+     *           must use submitCustomerPayment() and staff verification.
      */
     public function recordServicePayment(ServiceBooking $booking, float $amount, string $method, string $kind = 'INSTALLMENT'): ServicePayment
     {
         CashOnlyPayments::assert($method, 'service payments');
 
+        $actor = auth()->user();
+
+        if ($actor && $actor->isCustomer()) {
+            throw new ServiceBookingException('Only authorized staff may record a verified service payment.');
+        }
+
+        $amount = round($amount, 2);
+
+        if ($amount <= 0) {
+            throw new \InvalidArgumentException('Service payment amount must be greater than zero.');
+        }
+
+        $kind = strtoupper($kind);
+
+        if (! in_array($kind, ['ADVANCE', 'INSTALLMENT', 'FULL'], true)) {
+            throw new \InvalidArgumentException('Unsupported service payment kind.');
+        }
+
         return DB::transaction(function () use ($booking, $amount, $method, $kind): ServicePayment {
             $booking = ServiceBooking::query()->whereKey($booking->id)->lockForUpdate()->firstOrFail();
+
+            // A verified write is still a financial mutation: it must obey the
+            // same booking-state and remaining-balance rules as a staff
+            // verification of a pending customer submission.
+            if (! in_array($booking->status, ['ACCEPTED', 'CONFIRMED', 'IN_PROGRESS'], true)) {
+                throw ServiceBookingException::invalidState('This service booking is not in a payable state.');
+            }
+
+            $balance = round($booking->balanceDue(), 2);
+
+            if ($amount > $balance + 0.009) {
+                throw ServiceBookingException::invalidState(
+                    'Amount exceeds the outstanding balance of PKR '.number_format($balance, 2).'.'
+                );
+            }
 
             $payment = ServicePayment::create([
                 'tenant_id' => $booking->tenant_id,
@@ -502,6 +539,123 @@ class ServiceBookingService
 
             return $payment->fresh();
         });
+    }
+
+    /**
+     * Customer submission of a manual cash payment. The record stays PENDING;
+     * only staff verification changes the booking balance.
+     *
+     * The booking row is locked and the outstanding balance is re-read inside
+     * the transaction, so two concurrent submissions cannot both consume the
+     * same balance. A supplied reference is the idempotency key: replaying it
+     * returns the canonical row instead of creating a duplicate.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{success: bool, payment: ServicePayment, replayed?: bool}
+     */
+    public function submitCustomerPayment(ServiceBooking $booking, array $data, int $customerId): array
+    {
+        CashOnlyPayments::assert($data['method'] ?? CashOnlyPayments::CASH, 'service payments');
+
+        $amount = round((float) ($data['amount'] ?? 0), 2);
+
+        if ($amount <= 0) {
+            throw new \InvalidArgumentException('Payment amount must be greater than zero.');
+        }
+
+        $reference = $this->normalizeSubmissionReference($data['reference'] ?? null);
+        $kind = strtoupper((string) ($data['kind'] ?? 'INSTALLMENT'));
+
+        if (! in_array($kind, ['ADVANCE', 'INSTALLMENT', 'FULL'], true)) {
+            throw new \InvalidArgumentException('Unsupported service payment kind.');
+        }
+
+        return DB::transaction(function () use ($booking, $customerId, $amount, $reference, $kind, $data) {
+            $locked = ServiceBooking::query()->whereKey($booking->id)->lockForUpdate()->firstOrFail();
+
+            if ((string) $locked->customer_id !== (string) $customerId) {
+                throw new \RuntimeException('You can only pay for your own booking.');
+            }
+
+            if (in_array($locked->status, ['CANCELLED', 'DECLINED'], true)) {
+                throw new \RuntimeException('This service booking is no longer accepting payments.');
+            }
+
+            if ($reference !== null) {
+                $existing = ServicePayment::query()
+                    ->where('service_booking_id', $locked->id)
+                    ->where('reference', $reference)
+                    ->first();
+
+                if ($existing) {
+                    return ['success' => true, 'payment' => $existing, 'replayed' => true];
+                }
+            }
+
+            // Verified payments already applied to the booking plus unverified
+            // submissions awaiting staff review must not exceed the total due.
+            $pendingTotal = (float) ServicePayment::query()
+                ->where('service_booking_id', $locked->id)
+                ->where('status', 'PENDING')
+                ->where('kind', '!=', 'REFUND')
+                ->sum('amount');
+
+            $available = round(max(0, $locked->balanceDue() - $pendingTotal), 2);
+
+            if ($amount > $available + 0.009) {
+                throw new \RuntimeException(
+                    'Amount exceeds the outstanding balance of PKR '.number_format($available, 2).'.'
+                );
+            }
+
+            try {
+                $payment = ServicePayment::create([
+                    'tenant_id' => $locked->tenant_id,
+                    'service_booking_id' => $locked->id,
+                    'customer_id' => $locked->customer_id,
+                    'amount' => $amount,
+                    'method' => CashOnlyPayments::CASH,
+                    'reference' => $reference,
+                    'status' => 'PENDING',
+                    'kind' => $kind,
+                    'notes' => $data['notes'] ?? 'Submitted by customer; awaiting physical cash verification.',
+                ]);
+            } catch (UniqueConstraintViolationException $exception) {
+                // Another request won the race for this reference. Return the
+                // canonical row rather than double-recording the submission.
+                $canonical = ServicePayment::query()
+                    ->where('service_booking_id', $locked->id)
+                    ->where('reference', $reference)
+                    ->first();
+
+                if (! $canonical) {
+                    throw $exception;
+                }
+
+                return ['success' => true, 'payment' => $canonical, 'replayed' => true];
+            }
+
+            AuditLog::log(
+                'SERVICE_PAYMENT_SUBMITTED',
+                'Customer submitted a cash service payment of PKR '.number_format($amount, 2).' for booking '.$locked->booking_reference.'; awaiting staff verification.',
+                (string) $locked->tenant_id,
+                ServicePayment::class,
+                (string) $payment->id
+            );
+
+            return ['success' => true, 'payment' => $payment];
+        });
+    }
+
+    private function normalizeSubmissionReference(mixed $reference): ?string
+    {
+        if ($reference === null) {
+            return null;
+        }
+
+        $reference = trim((string) $reference);
+
+        return $reference === '' ? null : substr($reference, 0, 60);
     }
 
     /**
@@ -557,6 +711,39 @@ class ServiceBookingService
                 throw ServiceBookingException::invalidState($exception->getMessage());
             }
 
+            if ((string) $payment->tenant_id !== (string) $booking->tenant_id) {
+                throw ServiceBookingException::invalidState('The payment and booking belong to different tenants.');
+            }
+
+            $amount = round((float) $payment->amount, 2);
+
+            if ($amount <= 0) {
+                throw ServiceBookingException::invalidState('A payment must have a positive amount.');
+            }
+
+            if (in_array($booking->status, ['CANCELLED', 'DECLINED'], true)) {
+                throw ServiceBookingException::invalidState('A cancelled or declined booking cannot receive payments.');
+            }
+
+            // Verification is the last line of defence. Pending submissions may
+            // have been created by an older caller or two staff members may be
+            // settling competing rows; the locked booking balance decides.
+            if ($payment->kind === 'REFUND') {
+                if ($amount > (float) $booking->paid_amount + 0.009) {
+                    throw ServiceBookingException::invalidState(
+                        'Refund exceeds the amount already paid on this booking.'
+                    );
+                }
+            } else {
+                $balance = round($booking->balanceDue(), 2);
+
+                if ($amount > $balance + 0.009) {
+                    throw ServiceBookingException::invalidState(
+                        'Payment exceeds the current outstanding balance of PKR '.number_format($balance, 2).'.'
+                    );
+                }
+            }
+
             $payment->update([
                 'status' => $payment->kind === 'REFUND' ? 'REFUNDED' : 'VERIFIED',
                 'verified_by' => $verifiedByUserId,
@@ -573,6 +760,15 @@ class ServiceBookingService
 
             if ($payment->kind === 'REFUND') {
                 $this->reverseBookingPayment($booking, (float) $payment->amount);
+
+                $remainingPaid = (float) $booking->fresh()->paid_amount;
+                $totalDue = max(0.0, (float) $booking->quoted_amount - (float) $booking->discount_amount);
+
+                $booking->update([
+                    'payment_status' => $remainingPaid <= 0
+                        ? 'REFUNDED'
+                        : ($remainingPaid < $totalDue ? 'PARTIAL' : 'PAID'),
+                ]);
 
                 return ['success' => true, 'refund' => true, 'booking' => $booking->fresh()];
             }

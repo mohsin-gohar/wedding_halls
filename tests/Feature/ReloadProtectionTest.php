@@ -40,7 +40,7 @@ class ReloadProtectionTest extends TestCase
 
     public function test_login_throttling_after_5_attempts_displays_warning(): void
     {
-        $testEmail = 'abuse_tester@venuecloud.pk';
+        $testEmail = 'abuse_tester@riwajgrand.pk';
 
         for ($i = 1; $i <= 5; $i++) {
             Livewire::test(Login::class)

@@ -1,4 +1,4 @@
-# Riwaj Grand (EventHub)
+# Riwaj Grand — Wedding Hall & Event Management Platform
 
 Riwaj Grand is a multi-tenant wedding & event marketplace and operations platform. It provides public discovery and booking for wedding halls **and** a complete multi-vendor ecosystem for photographers, caterers, decorators, beauty artists, planners and transport providers — with a hall ERP, a customer event workspace, vendor finance/commission tooling and a white-label vendor website option.
 

@@ -16,7 +16,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.app', ['title' => 'Staff Attendance & Leave Management — VenueCloud ERP'])]
+#[Layout('components.layouts.app', ['title' => 'Staff Attendance & Leave Management — Riwaj Grand ERP'])]
 class StaffAttendance extends Component
 {
     /** Single source of truth for manual overtime entry, shared with the Blade UI. */

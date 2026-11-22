@@ -22,12 +22,12 @@ class PublicChatbotTest extends TestCase
     {
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('eventhub-public-ai-chatbot')
+            ->assertSee('riwaj-grand-public-ai-chatbot')
             ->assertSee('Riwaj Grand Chatbot');
 
         $this->get(route('public.venues'))
             ->assertOk()
-            ->assertSee('eventhub-public-ai-chatbot')
+            ->assertSee('riwaj-grand-public-ai-chatbot')
             ->assertSee('Riwaj Grand Chatbot');
     }
 
@@ -38,7 +38,7 @@ class PublicChatbotTest extends TestCase
         $this->get(route('hall.showcase', $hall->slug))
             ->assertOk()
             ->assertSee('venue-concierge-chat-widget')
-            ->assertDontSee('eventhub-public-ai-chatbot');
+            ->assertDontSee('riwaj-grand-public-ai-chatbot');
     }
 
     public function test_public_chat_can_answer_platform_questions(): void

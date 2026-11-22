@@ -16,7 +16,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.app', ['title' => 'Inventory & Kitchen Procurement — VenueCloud ERP'])]
+#[Layout('components.layouts.app', ['title' => 'Inventory & Kitchen Procurement — Riwaj Grand ERP'])]
 class InventoryTracker extends Component
 {
     public string $activeTab = 'stock'; // stock, movement, procurement

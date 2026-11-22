@@ -123,7 +123,7 @@ class PortalRoutesTest extends TestCase
         // 2. Super Admin User
         $admin = User::where('role', 'ROLE_SUPER_ADMIN')->first() ?: User::create([
             'name' => 'System Admin',
-            'email' => 'superadmin.test@venuecloud.pk',
+            'email' => 'superadmin.test@riwajgrand.pk',
             'phone' => '+92 300 1111111',
             'role' => 'ROLE_SUPER_ADMIN',
             'password' => Hash::make('secret123'),

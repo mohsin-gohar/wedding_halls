@@ -1,20 +1,21 @@
 #!/usr/bin/env bash
 ################################################################
-# VenueCloud — one-shot production deploy script (run on the server)
+# Riwaj Grand — one-shot production deploy script (run on the server)
 #
 # Usage:
-#   cd /var/www/venuecloud
+#   cd /var/www/riwaj-grand
 #   sudo bash deploy/deploy.sh
 #
 # Assumes: PHP 8.2+, Composer, Node 20+, Redis, MySQL, Nginx already installed
-# and .env already configured (start from .env.example; see deploy/DEPLOYMENT.md).
+# and .env already configured (start from .env.production.example; see
+# deploy/DEPLOYMENT.md).
 #
 # This script is safe to run on every deploy (idempotent).
 ################################################################
 
 set -euo pipefail
 
-APP_DIR="/var/www/venuecloud"
+APP_DIR="/var/www/riwaj-grand"
 cd "$APP_DIR"
 
 echo "==> [1/8] Enabling maintenance mode"
@@ -48,4 +49,4 @@ echo "==> [8/8] Restarting queue workers + bringing app up"
 php artisan queue:restart
 php artisan up
 
-echo "==> Deploy complete. Verify: curl -I https://venuecloud.pk/up"
+echo "==> Deploy complete. Verify: curl -I https://YOUR_DOMAIN/up"

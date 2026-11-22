@@ -44,7 +44,7 @@ class SaaSTenantIsolationAndWorkflowTest extends TestCase
         // 2. Super admin logs in
         $admin = User::create([
             'name' => 'Super Administrator',
-            'email' => 'admin@venuecloud.com',
+            'email' => 'admin@riwajgrand.com',
             'phone' => '+92 300 8888888',
             'role' => 'ROLE_SUPER_ADMIN',
             'password' => Hash::make('password123'),

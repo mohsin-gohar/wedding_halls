@@ -38,7 +38,7 @@ class DashboardClickAuditTest extends TestCase
     public function test_seeded_demo_logins_land_on_the_correct_dashboards(): void
     {
         Livewire::test(Login::class)
-            ->set('email', 'owner@venuecloud.pk')
+            ->set('email', 'owner@riwajgrand.pk')
             ->set('password', 'password')
             ->call('login')
             ->assertHasNoErrors()
@@ -56,7 +56,7 @@ class DashboardClickAuditTest extends TestCase
         $this->post(route('logout'));
 
         Livewire::test(Login::class)
-            ->set('email', 'admin@eventhub.com')
+            ->set('email', 'admin@riwajgrand.pk')
             ->set('password', 'admin1235')
             ->call('login')
             ->assertHasNoErrors()
@@ -65,7 +65,7 @@ class DashboardClickAuditTest extends TestCase
 
     public function test_vendor_owner_can_open_every_erp_page_and_click_core_actions(): void
     {
-        $owner = User::where('email', 'owner@venuecloud.pk')->firstOrFail();
+        $owner = User::where('email', 'owner@riwajgrand.pk')->firstOrFail();
         $hall = Hall::where('tenant_id', $owner->tenant_id)->firstOrFail();
         $booking = Booking::where('tenant_id', $owner->tenant_id)->firstOrFail();
 
@@ -203,7 +203,7 @@ class DashboardClickAuditTest extends TestCase
 
     public function test_admin_dashboard_tabs_and_modals_open_without_errors(): void
     {
-        $admin = User::where('email', 'admin@eventhub.com')->firstOrFail();
+        $admin = User::where('email', 'admin@riwajgrand.pk')->firstOrFail();
         $this->assertNull($admin->tenant_id);
 
         $this->actingAs($admin)

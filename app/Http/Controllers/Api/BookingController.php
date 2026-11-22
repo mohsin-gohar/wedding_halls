@@ -156,6 +156,11 @@ class BookingController extends ApiController
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 409);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
         } catch (\Throwable $e) {
             report($e);
 

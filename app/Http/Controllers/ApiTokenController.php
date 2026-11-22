@@ -37,16 +37,23 @@ class ApiTokenController extends Controller
             'abilities.*' => ['string', Rule::in([ApiToken::ABILITY_ALL, ...ApiToken::ABILITIES])],
         ]);
 
-        $expiresAt = isset($validated['expires_in_days'])
-            ? now()->addDays((int) $validated['expires_in_days'])
-            : null;
+        // New tokens are least-privilege and time-limited by default. A caller
+        // must explicitly request the wildcard ability to receive unrestricted
+        // access. Tokens issued before this change keep their stored `null`
+        // abilities for backward compatibility, but they are never created
+        // through this endpoint again.
+        $abilities = $validated['abilities'] ?? [
+            'bookings.read',
+            'service-bookings.read',
+            'payments.read',
+        ];
 
-        // Omitting `abilities` preserves the legacy unrestricted token used by
-        // first-party clients; supplying it creates a least-privilege token.
+        $expiresAt = now()->addDays((int) ($validated['expires_in_days'] ?? 90));
+
         [$token, $plain] = ApiToken::issue(
             $user,
             $validated['name'],
-            $validated['abilities'] ?? null,
+            $abilities,
             $expiresAt,
         );
 

@@ -1,4 +1,4 @@
-# VenueCloud Scaling & Operations Runbook
+# Riwaj Grand Scaling & Operations Runbook
 
 This runbook is an incremental scaling plan for the Laravel 12 / Livewire 4
 application in this repository. It favors measured changes over adding services

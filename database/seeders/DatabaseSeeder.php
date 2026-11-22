@@ -39,7 +39,7 @@ class DatabaseSeeder extends Seeder
         // Idempotency guard: on an already-seeded database (or a re-run of
         // `db:seed`), only refresh the enterprise-expansion seeders and skip
         // the core demo dataset so unique constraints are never violated.
-        $alreadySeeded = Tenant::query()->where('slug', 'venue-cloud')->exists();
+        $alreadySeeded = Tenant::query()->whereIn('slug', ['riwaj-grand', 'venue-cloud'])->exists();
 
         if ($alreadySeeded) {
             $this->call([
@@ -127,10 +127,10 @@ class DatabaseSeeder extends Seeder
 
         // 2. Tenant
         $tenant = Tenant::create([
-            'name' => 'VenueCloud Luxury Hospitality Group',
-            'slug' => 'venue-cloud',
-            'subdomain' => 'venuecloud',
-            'email' => 'management@venuecloud.pk',
+            'name' => 'Riwaj Grand Hospitality Group',
+            'slug' => 'riwaj-grand',
+            'subdomain' => 'riwaj-grand',
+            'email' => 'management@riwajgrand.pk',
             'phone' => '+92 42 35789000',
             'address' => 'Plot 42, Main Boulevard, Gulberg III, Lahore, Pakistan',
             'subscription_plan' => 'ENTERPRISE',
@@ -149,7 +149,7 @@ class DatabaseSeeder extends Seeder
         $adminUser = User::create([
             'tenant_id' => null,
             'name' => 'Sheikh Ahsan (Platform Director)',
-            'email' => 'admin@eventhub.com',
+            'email' => 'admin@riwajgrand.pk',
             'phone' => '+92 42 35789000',
             'role' => 'ROLE_SUPER_ADMIN',
             'password' => Hash::make($this->demoPassword('DEMO_ADMIN_PASSWORD', 'admin1235')),
@@ -159,7 +159,7 @@ class DatabaseSeeder extends Seeder
         $ownerUser = User::create([
             'tenant_id' => $tenant->id,
             'name' => 'Chaudhry Tariq (Hall Owner)',
-            'email' => 'owner@venuecloud.pk',
+            'email' => 'owner@riwajgrand.pk',
             'phone' => '+92 300 7654321',
             'role' => 'ROLE_TENANT_OWNER',
             'password' => Hash::make($this->demoPassword()),
@@ -179,7 +179,7 @@ class DatabaseSeeder extends Seeder
         $frontDeskUser = User::create([
             'tenant_id' => $tenant->id,
             'name' => 'Usman Tariq (Front Desk)',
-            'email' => 'reception@venuecloud.pk',
+            'email' => 'reception@riwajgrand.pk',
             'phone' => '+92 321 4455667',
             'role' => 'ROLE_FRONT_DESK',
             'password' => Hash::make($this->demoPassword()),
@@ -189,7 +189,7 @@ class DatabaseSeeder extends Seeder
         $chefUser = User::create([
             'tenant_id' => $tenant->id,
             'name' => 'Ustad Niaz Bawarchi (Head Chef)',
-            'email' => 'chef@venuecloud.pk',
+            'email' => 'chef@riwajgrand.pk',
             'phone' => '+92 333 9988776',
             'role' => 'ROLE_CHEF',
             'password' => Hash::make($this->demoPassword()),
@@ -199,13 +199,13 @@ class DatabaseSeeder extends Seeder
         // 4. Venue
         $venue = Venue::create([
             'tenant_id' => $tenant->id,
-            'name' => 'VenueCloud Grand Marquee Complex',
-            'slug' => 'venue-cloud-grand-complex',
+            'name' => 'Riwaj Grand Marquee Complex',
+            'slug' => 'riwaj-grand-marquee-complex',
             'city' => 'Lahore',
             'area' => 'Gulberg III / Cantt',
             'address' => 'Main Boulevard, Gulberg III, Lahore',
             'phone' => '+92 42 35789000',
-            'email' => 'info@venuecloud.pk',
+            'email' => 'info@riwajgrand.pk',
             'description' => 'Flagship 5-star wedding banqueting complex with state-of-the-art climate control and dedicated parking.',
             'is_active' => true,
         ]);
