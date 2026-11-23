@@ -588,6 +588,8 @@ class ServiceBookingService
                     ->first();
 
                 if ($existing) {
+                    $this->assertSubmissionReplayMatches($existing, $amount, $kind);
+
                     return ['success' => true, 'payment' => $existing, 'replayed' => true];
                 }
             }
@@ -632,6 +634,8 @@ class ServiceBookingService
                     throw $exception;
                 }
 
+                $this->assertSubmissionReplayMatches($canonical, $amount, $kind);
+
                 return ['success' => true, 'payment' => $canonical, 'replayed' => true];
             }
 
@@ -656,6 +660,22 @@ class ServiceBookingService
         $reference = trim((string) $reference);
 
         return $reference === '' ? null : substr($reference, 0, 60);
+    }
+
+    /**
+     * A customer-supplied reference is an idempotency key. Replaying it with a
+     * different amount or kind is a conflict, never a silent success.
+     */
+    private function assertSubmissionReplayMatches(ServicePayment $existing, float $amount, string $kind): void
+    {
+        $sameKind = strtoupper((string) $existing->kind) === $kind;
+        $sameAmount = abs((float) $existing->amount - $amount) < 0.005;
+
+        if (! $sameKind || ! $sameAmount) {
+            throw new \RuntimeException(
+                'This payment reference was already used for a different amount or payment kind. Please use a new reference.'
+            );
+        }
     }
 
     /**

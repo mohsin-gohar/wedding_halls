@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\VendorCategory;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -230,6 +231,19 @@ class AdminCategoryManager extends Component
             return;
         }
 
+        // The marketplace taxonomy is exactly two levels deep. The UI only
+        // offers top-level parents, but the server must enforce the same rule
+        // for tampered Livewire payloads.
+        if ($this->parentId !== null) {
+            $parent = VendorCategory::query()->find($this->parentId);
+
+            if ($parent && $parent->parent_id !== null) {
+                $this->addError('parentId', 'Categories support a maximum of two levels; choose a top-level parent.');
+
+                return;
+            }
+        }
+
         $payload = [
             'name' => trim($this->name),
             'slug' => $slug,
@@ -256,7 +270,22 @@ class AdminCategoryManager extends Component
                 return;
             }
 
-            $category->update($payload);
+            // Promoting a parent with children under another parent would
+            // create a third nesting level.
+            if ($this->parentId !== null && $category->children()->exists()) {
+                $this->addError('parentId', 'A category that has subcategories cannot itself become a subcategory.');
+
+                return;
+            }
+
+            try {
+                $category->update($payload);
+            } catch (UniqueConstraintViolationException) {
+                $this->addError('slug', 'A category with this slug already exists. Slugs must be unique.');
+
+                return;
+            }
+
             $this->feedbackMessage = 'Category updated successfully.';
         } else {
             $nextSort = $this->parentId === null
@@ -266,7 +295,14 @@ class AdminCategoryManager extends Component
             $payload['sort'] = $nextSort + 1;
             $payload['is_active'] = true;
 
-            VendorCategory::create($payload);
+            try {
+                VendorCategory::create($payload);
+            } catch (UniqueConstraintViolationException) {
+                $this->addError('slug', 'A category with this slug already exists. Slugs must be unique.');
+
+                return;
+            }
+
             $this->feedbackMessage = $this->parentId === null
                 ? 'Top-level category created.'
                 : 'Subcategory created.';
@@ -354,6 +390,25 @@ class AdminCategoryManager extends Component
 
         foreach ($idsArray as $position => $id) {
             VendorCategory::query()->where('id', $id)->update(['sort' => $base + $position + 1]);
+        }
+
+        // Re-band the children of every top-level sibling so flat dropdowns
+        // still group parent → subcategories after the parent order changes.
+        if ($category->parent_id === null) {
+            foreach ($idsArray as $position => $id) {
+                $band = ($position + 1) * 100;
+                $children = VendorCategory::query()
+                    ->where('parent_id', $id)
+                    ->orderBy('sort')
+                    ->orderBy('name')
+                    ->get(['id']);
+
+                foreach ($children as $childPosition => $child) {
+                    VendorCategory::query()
+                        ->where('id', $child->id)
+                        ->update(['sort' => $band + $childPosition + 1]);
+                }
+            }
         }
 
         $this->feedbackMessage = 'Order updated.';

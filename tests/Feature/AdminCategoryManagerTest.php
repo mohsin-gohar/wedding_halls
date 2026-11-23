@@ -6,6 +6,7 @@ use App\Livewire\AdminCategoryManager;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\VendorCategory;
+use Database\Seeders\VendorCategorySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
@@ -342,5 +343,99 @@ class AdminCategoryManagerTest extends TestCase
             ->call('deleteCategory', (int) $catering->id);
 
         $this->assertNotNull(VendorCategory::query()->where('slug', 'catering')->first());
+    }
+
+    public function test_third_level_nesting_is_rejected_server_side(): void
+    {
+        $parent = VendorCategory::query()->where('slug', 'transport')->firstOrFail();
+
+        $child = VendorCategory::create([
+            'parent_id' => (int) $parent->id,
+            'name' => 'Airport Transfers',
+            'slug' => 'airport-transfers-depth',
+            'booking_mode' => 'TRANSPORT',
+            'is_active' => true,
+            'sort' => 96,
+        ]);
+
+        Livewire::actingAs($this->superAdmin())
+            ->test(AdminCategoryManager::class)
+            ->call('openCreateModal', (int) $child->id)
+            ->set('name', 'Nested Too Deep')
+            ->set('slug', 'nested-too-deep')
+            ->set('bookingMode', 'TRANSPORT')
+            ->call('saveCategory')
+            ->assertHasErrors(['parentId']);
+
+        $this->assertDatabaseMissing('vendor_categories', ['slug' => 'nested-too-deep']);
+    }
+
+    public function test_parent_with_subcategories_cannot_become_a_subcategory(): void
+    {
+        $transport = VendorCategory::query()->where('slug', 'transport')->firstOrFail();
+        $photography = VendorCategory::query()->where('slug', 'photography')->firstOrFail();
+
+        VendorCategory::create([
+            'parent_id' => (int) $transport->id,
+            'name' => 'Bridal Car Fleet',
+            'slug' => 'bridal-car-fleet',
+            'booking_mode' => 'TRANSPORT',
+            'is_active' => true,
+            'sort' => 95,
+        ]);
+
+        Livewire::actingAs($this->superAdmin())
+            ->test(AdminCategoryManager::class)
+            ->call('openEditModal', (int) $transport->id)
+            ->set('parentId', (int) $photography->id)
+            ->call('saveCategory')
+            ->assertHasErrors(['parentId']);
+
+        $this->assertNull($transport->fresh()->parent_id, 'A parent with children must not be demoted.');
+    }
+
+    public function test_moving_parent_rebands_its_subcategory_sorts(): void
+    {
+        $weddingHalls = VendorCategory::query()->where('slug', 'wedding-halls')->firstOrFail();
+        $children = VendorCategory::query()->where('parent_id', $weddingHalls->id)->pluck('id');
+
+        $this->assertGreaterThan(0, $children->count(), 'Precondition: wedding-halls has subcategories.');
+
+        Livewire::actingAs($this->superAdmin())
+            ->test(AdminCategoryManager::class)
+            ->call('moveCategory', (int) $weddingHalls->id, 'down');
+
+        $newParentSort = (int) $weddingHalls->fresh()->sort;
+        $this->assertSame(2, $newParentSort);
+
+        $childSorts = VendorCategory::query()
+            ->where('parent_id', $weddingHalls->id)
+            ->orderBy('sort')
+            ->pluck('sort')
+            ->map(fn ($sort) => (int) $sort)
+            ->all();
+
+        $this->assertSame($newParentSort * 100 + 1, $childSorts[0], 'Children must follow the parent sort band.');
+        $this->assertSame($newParentSort * 100 + count($childSorts), end($childSorts));
+    }
+
+    public function test_reseeding_does_not_overwrite_admin_managed_category_data(): void
+    {
+        $category = VendorCategory::query()->where('slug', 'photography')->firstOrFail();
+
+        $category->update([
+            'name' => 'Admin Renamed Photography',
+            'sort' => 77,
+            'is_active' => false,
+        ]);
+
+        $this->seed(VendorCategorySeeder::class);
+
+        $fresh = $category->fresh();
+
+        $this->assertSame('Admin Renamed Photography', $fresh->name);
+        $this->assertSame(77, (int) $fresh->sort);
+        $this->assertFalse($fresh->is_active);
+        $this->assertSame($category->slug, $fresh->slug);
     }
 }

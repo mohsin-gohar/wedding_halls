@@ -46,8 +46,19 @@ class PaymentController extends ApiController
                 $validated['transaction_reference'] ?? null,
                 $validated['notes'] ?? null
             );
-        } catch (\Throwable $e) {
+        } catch (\PDOException $e) {
+            // Never leak SQL/driver details to an API caller.
+            report($e);
+
+            return response()->json(['message' => 'The cash payment could not be recorded. Please try again.'], 500);
+        } catch (\InvalidArgumentException|\RuntimeException $e) {
+            // Domain-level validation messages are authored server-side and safe
+            // to surface (overpayment, reference conflicts, unsupported type).
             return response()->json(['message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json(['message' => 'The cash payment could not be recorded. Please try again.'], 500);
         }
 
         return response()->json([
@@ -82,8 +93,16 @@ class PaymentController extends ApiController
                 $validated['transaction_reference'] ?? null,
                 $validated['notes'] ?? null
             );
-        } catch (\Throwable $e) {
+        } catch (\PDOException $e) {
+            report($e);
+
+            return response()->json(['message' => 'The cash refund could not be recorded. Please try again.'], 500);
+        } catch (\InvalidArgumentException|\RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json(['message' => 'The cash refund could not be recorded. Please try again.'], 500);
         }
 
         return response()->json([

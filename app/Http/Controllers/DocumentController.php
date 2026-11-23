@@ -238,15 +238,21 @@ class DocumentController extends Controller
         }
 
         if (! $user->isSuperAdmin()) {
-            // Staff of the vendor that owns the booking.
-            $isVendorStaff = $user->tenant_id && $user->tenant_id === $payment->tenant_id;
+            // Least privilege: only financial roles of the owning vendor and
+            // the paying customer may open a confidential cash proof. General
+            // operational staff (chef, floor, front desk, inventory) do not.
+            $isPlatformFinance = $user->isPlatformFinance();
+
+            $isVendorFinanceStaff = $user->tenant_id
+                && $user->tenant_id === $payment->tenant_id
+                && ($user->isTenantOwner() || $user->isManager() || $user->isAccountant());
 
             // The customer who made the payment may always see their own proof.
             $isPayingCustomer = $user->isCustomer()
                 && ((string) $payment->customer_id === (string) $user->id
                     || ($payment->booking && (string) $payment->booking->customer_id === (string) $user->id));
 
-            if (! $isVendorStaff && ! $isPayingCustomer) {
+            if (! $isPlatformFinance && ! $isVendorFinanceStaff && ! $isPayingCustomer) {
                 abort(403, 'Forbidden. You do not have permission to view this payment proof.');
             }
         }
@@ -263,7 +269,9 @@ class DocumentController extends Controller
             abort(400, 'Invalid proof path.');
         }
 
-        $disk = Storage::disk(config('filesystems.default'));
+        // Confidential proofs are only ever read from the private proofs disk;
+        // they must never be web-accessible even when media uses a public disk.
+        $disk = Storage::disk(config('filesystems.proofs_disk', 'local'));
 
         if (! $disk->exists($relative)) {
             abort(404, 'The proof file could not be found.');

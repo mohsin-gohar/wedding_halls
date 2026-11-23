@@ -17,6 +17,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Confidential Payment Proof Disk
+    |--------------------------------------------------------------------------
+    |
+    | Customer-uploaded payment proofs are confidential financial documents.
+    | They are read exclusively through an authorised controller action and
+    | MUST live on a private disk that is never exposed by the web server.
+    | This is deliberately independent of the public media disk above.
+    |
+    */
+
+    'proofs_disk' => env('PROOFS_FILESYSTEM_DISK', 'local'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |

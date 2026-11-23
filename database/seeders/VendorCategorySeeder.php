@@ -16,9 +16,10 @@ use Illuminate\Database\Seeder;
  *    inside the parent's band (parentSort*100 + n) so flat dropdowns ordered
  *    by `sort` stay grouped as parent → children.
  *
- * Idempotent: every row is updateOrCreate'd by slug, so re-seeding never
- * duplicates and never resets admin edits to other fields... it does refresh
- * name/tagline/booking_mode/sort to the canonical values below.
+ * Idempotent and non-destructive: every row is firstOrCreate'd by slug, so a
+ * re-seed never duplicates rows and never overwrites administrator-managed
+ * names, hierarchy, ordering, SEO or activation state. Only missing canonical
+ * categories are inserted.
  */
 class VendorCategorySeeder extends Seeder
 {
@@ -171,7 +172,7 @@ class VendorCategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            VendorCategory::query()->updateOrCreate(
+            VendorCategory::query()->firstOrCreate(
                 ['slug' => $category['slug']],
                 $category + ['is_active' => true, 'parent_id' => null]
             );
@@ -195,7 +196,7 @@ class VendorCategorySeeder extends Seeder
             $parentIcon = (string) VendorCategory::query()->where('slug', $parentSlug)->value('icon');
 
             foreach ($children as $position => $child) {
-                VendorCategory::query()->updateOrCreate(
+                VendorCategory::query()->firstOrCreate(
                     ['slug' => $child['slug']],
                     [
                         'parent_id' => $parents[$parentSlug],

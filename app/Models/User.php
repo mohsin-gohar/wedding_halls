@@ -286,7 +286,15 @@ class User extends Authenticatable
             return $this->dashboardRoute();
         }
 
-        return 'dashboard';
+        if ($this->isTenantOwner() || $this->isManager() || $this->isAccountant()) {
+            return 'dashboard';
+        }
+
+        // Remaining vendor roles (staff member, photographer, inventory, …)
+        // cannot open the role-guarded ERP dashboard. Land them on the shared
+        // notification surface, which every active tenant staff account may
+        // open, instead of redirecting to a route that bounces them back.
+        return 'notifications';
     }
 
     public function customerBookings(): HasMany

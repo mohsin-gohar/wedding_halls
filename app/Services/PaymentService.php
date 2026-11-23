@@ -102,10 +102,10 @@ class PaymentService
             $locked = Booking::whereKey($booking->id)->lockForUpdate()->firstOrFail();
 
             $reference = $this->normalizeReference($transactionReference);
-            $existing = $this->findByReference($locked, $reference, 'CASH', $paymentType);
+            $existing = $this->findByReference($locked, $reference, 'CASH');
 
             if ($existing) {
-                return $existing;
+                return $this->assertReplayMatches($existing, $amount, $paymentType);
             }
 
             $balance = round((float) $locked->grand_total - (float) $locked->advance_paid, 2);
@@ -129,14 +129,15 @@ class PaymentService
                 );
             } catch (UniqueConstraintViolationException) {
                 // A concurrent request won the race for this reference. Return
-                // the canonical row rather than double-crediting the booking.
-                $canonical = $this->findByReference($locked, $reference, 'CASH', $paymentType);
+                // the canonical row only when the payload is identical; a
+                // conflicting retry must never be reported as a success.
+                $canonical = $this->findByReference($locked, $reference, 'CASH');
 
                 if (! $canonical) {
-                    throw new \RuntimeException('Duplicate cash reference could not be resolved.');
+                    throw new \RuntimeException('This payment reference is already in use for another payment in this tenant.');
                 }
 
-                return $canonical;
+                return $this->assertReplayMatches($canonical, $amount, $paymentType);
             }
 
             $locked->advance_paid = round((float) $locked->advance_paid + $amount, 2);
@@ -188,10 +189,10 @@ class PaymentService
             $locked = Booking::whereKey($booking->id)->lockForUpdate()->firstOrFail();
 
             $reference = $this->normalizeReference($transactionReference);
-            $existing = $this->findByReference($locked, $reference, 'CASH', 'REFUND');
+            $existing = $this->findByReference($locked, $reference, 'CASH');
 
             if ($existing) {
-                return $existing;
+                return $this->assertReplayMatches($existing, $amount, 'REFUND');
             }
 
             if ($amount > (float) $locked->advance_paid + 0.009) {
@@ -210,13 +211,13 @@ class PaymentService
                     $notes ?: 'Cash refund recorded by authorized staff.'
                 );
             } catch (UniqueConstraintViolationException) {
-                $canonical = $this->findByReference($locked, $reference, 'CASH', 'REFUND');
+                $canonical = $this->findByReference($locked, $reference, 'CASH');
 
                 if (! $canonical) {
-                    throw new \RuntimeException('Duplicate refund reference could not be resolved.');
+                    throw new \RuntimeException('This refund reference is already in use for another payment in this tenant.');
                 }
 
-                return $canonical;
+                return $this->assertReplayMatches($canonical, $amount, 'REFUND');
             }
 
             $locked->advance_paid = round(max(0, (float) $locked->advance_paid - $amount), 2);
@@ -269,6 +270,25 @@ class PaymentService
             ->where('transaction_reference', $reference)
             ->when($paymentType !== null, fn ($query) => $query->where('payment_type', $paymentType))
             ->first();
+    }
+
+    /**
+     * Treat the reference as an idempotency key: only a byte-identical retry
+     * may return the original row. Reusing a reference with a different
+     * amount or payment type is a client error, never a silent success.
+     */
+    private function assertReplayMatches(Payment $existing, float $amount, string $paymentType): Payment
+    {
+        $sameType = $existing->payment_type === $paymentType;
+        $sameAmount = abs((float) $existing->amount - $amount) < 0.005;
+
+        if (! $sameType || ! $sameAmount) {
+            throw new \RuntimeException(
+                'This payment reference was already used for a different payment amount or type. Please use a new reference.'
+            );
+        }
+
+        return $existing;
     }
 
     public function getPaymentSummary(string $tenantId, string $period = 'MONTHLY'): array
