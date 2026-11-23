@@ -29,6 +29,10 @@
              (e.g. DB_HOST/DB_PORT/DB_DATABASE/DB_USERNAME/DB_PASSWORD). -->
         <env name="DB_CONNECTION" value="mysql"/>
         <env name="DB_HOST" value="127.0.0.1"/>
+<!-- LOCAL OVERRIDE: Adjust DB_PORT if MySQL runs on a non-standard port locally.
+     CI uses Docker MySQL on port 3306 (default). Local may differ.
+     Override via DB_PORT environment variable or .env file. -->
+<!-- <env name="DB_PORT" value="3306"/> -->
         <env name="DB_PORT" value="3306"/>
         <env name="DB_DATABASE" value="riwaj_grand_test"/>
         <env name="DB_USERNAME" value="riwaj"/>

@@ -8,5 +8,5 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('subscriptions:check-expiry')->daily();
-Schedule::command('bookings:expire-holds')->hourly();
+Schedule::command(\App\Console\Commands\CheckSubscriptionExpiry::class)->daily();
+Schedule::command(\App\Console\Commands\ExpireBookingHolds::class)->hourly();
