@@ -43,7 +43,7 @@ class CheckSubscriptionExpiry extends Command
         $processed = 0;
 
         foreach ($tenants as $tenant) {
-            $tenant->update(['subscription_status': 'EXPIRED']);
+            $tenant->update(['subscription_status' => 'EXPIRED']);
 
             // Cancel any active bookings for this tenant
             // $tenant->bookings()->where('status', 'CONFIRMED')->each->update(['status': 'EXPIRED']);

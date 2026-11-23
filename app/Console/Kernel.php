@@ -3,10 +3,10 @@
 namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Foundation\Console\Kernel as Kernel;
+use Illuminate\Foundation\Console\Kernel as BaseKernel;
 use Illuminate\Contracts\Console\Kernel as KernelContract;
 
-class Kernel extends Kernel
+class Kernel extends BaseKernel
 {
     /**
      * The Artisan commands provided by your application.

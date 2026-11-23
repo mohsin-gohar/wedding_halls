@@ -10,14 +10,14 @@ This document catalogues the gaps, limitations, and infrastructure blockers that
 
 | Blocking Issue | Impact | Workaround |
 |----------------|--------|------------|
-| MySQL test database not locally available (expected on 127.0.0.1:3306, actual MySQL runs on port 3307 with database `wedding_hall_mysql_test`) | PHPUnit Feature test suite cannot execute | Manual DB config override required; skip or mark tests as `requires: mysql-on-3306` |
+| MySQL test database not locally available (expected on 127.0.0.1:3306, actual MySQL runs on port 3307 with database `wedding_hall_mysql_test`) | PHPUnit Feature test suite cannot execute | Manual DB config override required; skip or mark tests as `requires: mysql-on-3306`. **Note**: `.env.example` now documents the port override. |
 | Redis not running | Cache, queue, and session drivers fall back to `array` driver, which is unsafe for production multi-instance setups | Start `redis-server` or configure `CACHE_STORE=database` with running DB |
 | Queue workers not running | Background jobs (payouts, notifications, email) are not processed | Run `php artisan queue:work` in production; in development, use `sync` driver |
-| Scheduler not registered/running | Laravel scheduled jobs (cash integrity checks, subscription renewals) do not execute | Add `php artisan schedule:run` to cron; verify in production |
+| Scheduler not registered/running | Laravel scheduled jobs (cash integrity checks, subscription renewals) do not execute | **Implemented**: `CheckSubscriptionExpiry` (daily) and `ExpireBookingHolds` (hourly) commands created and registered in `routes/console.php` and `app/Console/Kernel.php`. Add `php artisan schedule:run` to cron for production. |
 | Meilisearch/Algolia not running | Search functionality cannot be tested end-to-end | Use existing MySQL `LIKE`/`Full-Text` as temporary; index migration pending |
 | Pusher/Echo not running | Real-time notifications via WebSockets not functional | Fallback to `log` broadcast driver; implement Socket.io or similar for production |
 
-**Action**: Configure local MySQL on port 3306 with database `riwaj_grand_test` and user `riwaj/rootpassword`, start Redis, and run `php artisan queue:work --daemon` for local development.
+**Action**: Configure local MySQL on port 3306 with database `riwaj_grand_test`, start Redis, and run `php artisan queue:work --daemon` for local development. Scheduler is now implemented via hourly/daily Artisan commands.
 ## 2. Known Code Debt
 
 | File | Issue | Severity | Ref |
