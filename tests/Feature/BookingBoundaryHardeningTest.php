@@ -218,7 +218,7 @@ class BookingBoundaryHardeningTest extends TestCase
         $hall = Hall::query()->firstOrFail();
         $hall->update(['is_active' => false]);
 
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Venue is not accepting bookings.');
 
         app(BookingService::class)->createReservation($this->payload($hall));
@@ -229,7 +229,7 @@ class BookingBoundaryHardeningTest extends TestCase
         $hall = Hall::query()->firstOrFail();
         $hall->venue()->update(['is_active' => false]);
 
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Venue is not accepting bookings.');
 
         app(BookingService::class)->createReservation($this->payload($hall));
