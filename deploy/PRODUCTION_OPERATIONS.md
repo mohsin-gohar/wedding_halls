@@ -98,12 +98,13 @@ RCLONE_REMOTE='remote:riwaj-grand-backups' \
 bash deploy/backup-docker.sh
 ~~~
 
-The script uses a transaction-consistent MySQL dump, compresses and encrypts
-it before writing the final archive, calculates a SHA-256 checksum, copies the
-encrypted archive and checksum off-site, and prunes local archives older than
-30 days. Configure the remote bucket's versioning and lifecycle retention
-separately. Alert if the scheduled script exits non-zero or no fresh archive
-arrives within 26 hours.
+The script takes a transaction-consistent MySQL dump and a separate archive
+of the persistent storage/app tree (public uploads and private documents),
+compresses and encrypts both before writing final archives, calculates SHA-256
+checksums, copies all encrypted archives and checksums off-site, and prunes
+local archives older than 30 days. Configure the remote bucket's versioning
+and lifecycle retention separately. Alert if the scheduled script exits
+non-zero or either fresh archive is missing within 26 hours.
 
 For each scheduled restore drill, provision a separate, empty staging MySQL
 database whose name ends in _restore_drill (prefer a separate staging DB
@@ -123,9 +124,13 @@ bash deploy/restore-drill.sh /secure/path/riwaj-grand-TIMESTAMP.sql.gz.age
 The restore script refuses the configured production database, requires an
 explicit matching confirmation, requires a pre-created empty staging database,
 and leaves the restored data in staging for integrity and application smoke
-checks. Never point the restore credentials at production. Validate row counts,
-critical tenant/booking/payment relationships, and a staging application
-boot before recording a successful recovery exercise.
+checks. Restore the matching uploaded-file archive to a new, isolated staging
+directory with deploy/restore-storage-drill.sh; it refuses to overwrite an
+existing directory and requires a matching _restore_drill confirmation.
+Never point the restore credentials at production. Validate row counts,
+critical tenant/booking/payment relationships, media file counts, private-file
+access controls, and a staging application boot before recording a successful
+recovery exercise.
 
 ## 4. Uptime monitoring and alerts (Docker VPS)
 
