@@ -117,6 +117,7 @@ class FreeLaunchAndInstantLiveApprovalTest extends TestCase
             ->assertStatus(200)
             ->assertSee('Kohinoor Grand Banquet');
     }
+
     public function test_kyc_approval_does_not_reactivate_a_suspended_tenant_or_its_halls(): void
     {
         $tenant = Tenant::create([
@@ -169,6 +170,4 @@ class FreeLaunchAndInstantLiveApprovalTest extends TestCase
         $this->assertFalse($venue->fresh()->is_active);
         $this->assertFalse($hall->fresh()->is_active);
     }
-
-
 }
