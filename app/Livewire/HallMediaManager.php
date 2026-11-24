@@ -3,10 +3,12 @@
 namespace App\Livewire;
 
 use App\Models\Hall;
+use App\Models\Tenant;
 use App\Models\Venue;
 use App\Support\Media;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -524,31 +526,56 @@ class HallMediaManager extends Component
     public function deleteHall(string $hallId)
     {
         $user = Auth::user();
-        $totalHalls = Hall::where('tenant_id', $user->tenant_id)->count();
-        if ($totalHalls <= 1) {
-            session()->flash('error', 'You must maintain at least one active hall space for your venue.');
+
+        if (! $user?->tenant_id) {
+            abort(403, 'A tenant account is required to delete a hall.');
+        }
+
+        $result = DB::transaction(function () use ($user, $hallId): array {
+            // Use the same tenant → hall lock order as BookingService so a
+            // concurrent reservation cannot slip between the checks and delete.
+            $tenant = Tenant::query()->whereKey($user->tenant_id)->lockForUpdate()->firstOrFail();
+            $hall = Hall::query()
+                ->where('tenant_id', $tenant->id)
+                ->whereKey($hallId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($tenant->halls()->count() <= 1) {
+                return ['error' => 'You must maintain at least one active hall space for your venue.'];
+            }
+
+            $hall->loadCount(['bookings', 'inquiries', 'floorPlans', 'hallViews', 'hallWishlists', 'reviews']);
+
+            if (
+                $hall->bookings_count > 0
+                || $hall->inquiries_count > 0
+                || $hall->floor_plans_count > 0
+                || $hall->hall_views_count > 0
+                || $hall->hall_wishlists_count > 0
+                || $hall->reviews_count > 0
+            ) {
+                return ['error' => "Cannot delete [{$hall->name}] because it has booking or marketplace history. Keep the hall and disable its public listing instead."];
+            }
+
+            $name = $hall->name;
+            $hall->delete();
+
+            return ['name' => $name];
+        });
+
+        if (isset($result['error'])) {
+            session()->flash('error', $result['error']);
 
             return;
         }
 
-        $hall = Hall::where('tenant_id', $user->tenant_id)->findOrFail($hallId);
-
-        $activeBookings = $hall->bookings()->where('status', 'CONFIRMED')->count();
-        if ($activeBookings > 0) {
-            session()->flash('error', "Cannot delete [{$hall->name}] because it has {$activeBookings} active confirmed booking(s). Reassign or cancel the bookings first.");
-
-            return;
-        }
-
-        $hallName = $hall->name;
-        $hall->delete();
-
-        $remaining = Hall::where('tenant_id', $user->tenant_id)->first();
+        $remaining = Hall::query()->where('tenant_id', $user->tenant_id)->first();
         if ($remaining) {
             $this->loadHall($remaining);
         }
 
-        session()->flash('message', "Hall [{$hallName}] deleted successfully.");
+        session()->flash('message', "Hall [{$result['name']}] deleted successfully.");
     }
 
     public function addService()

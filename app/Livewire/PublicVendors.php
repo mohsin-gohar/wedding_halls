@@ -135,19 +135,14 @@ class PublicVendors extends Component
             ->whereNull('parent_id')
             ->where('is_active', true)
             ->orderBy('sort')
-            ->withCount(['tenants' => fn ($q) => $q
-                ->where('marketplace_visible', true)
-                ->where('is_active', true)
-                ->where('verification_status', 'APPROVED')])
+            ->withCount(['tenants' => fn ($q) => $q->marketplaceVisible()])
             ->get();
     }
 
     public function getCitiesProperty()
     {
         return Tenant::query()
-            ->where('marketplace_visible', true)
-            ->where('is_active', true)
-            ->where('verification_status', 'APPROVED')
+            ->marketplaceVisible()
             ->whereNotNull('city')
             ->distinct()
             ->orderBy('city')
@@ -158,9 +153,7 @@ class PublicVendors extends Component
     public function getVendorsProperty()
     {
         $query = Tenant::query()
-            ->where('marketplace_visible', true)
-            ->where('is_active', true)
-            ->where('verification_status', 'APPROVED')
+            ->marketplaceVisible()
             ->with('vendorCategory')
             ->withCount(['vendorServices as services_count' => fn ($q) => $q->where('is_active', true)]);
 

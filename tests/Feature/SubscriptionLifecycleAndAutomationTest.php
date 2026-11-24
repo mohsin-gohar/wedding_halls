@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\SubscriptionPlan;
@@ -25,14 +26,13 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
 
     public function test_subscription_service_expires_accounts_past_grace_period_and_preserves_data(): void
     {
-        // 1. Create a tenant with an active booking and hall
         $tenant = Tenant::create([
             'name' => 'Grand Palace Marquee',
             'slug' => 'grand-palace',
             'email' => 'grand@palace.pk',
             'subscription_status' => 'ACTIVE',
             'verification_status' => 'APPROVED',
-            'subscription_expires_at' => Carbon::now()->subDays(5), // 5 days ago (past 3-day grace)
+            'subscription_expires_at' => Carbon::now()->subDays(5),
             'is_active' => true,
         ]);
 
@@ -58,25 +58,184 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
             'event_date' => Carbon::today()->addDays(10)->format('Y-m-d'),
             'slot_type' => 'EVENING',
             'status' => 'CONFIRMED',
-            'total_amount' => 350000,
-            'advance_amount' => 150000,
+            'grand_total' => 350000,
+            'advance_paid' => 150000,
         ]);
 
         $service = app(SubscriptionService::class);
         $results = $service->checkAndExpireSubscriptions();
 
-        // 2. Assert tenant transitioned to EXPIRED
-        $this->assertEquals(1, $results['expired_count']);
+        $this->assertSame(1, $results['expired_count']);
         $tenant->refresh();
-        $this->assertEquals('EXPIRED', $tenant->subscription_status);
+        $this->assertSame('EXPIRED', $tenant->subscription_status);
 
-        // 3. CRITICAL GUARANTEE: Historical bookings and hall data are NOT deleted
+        // Expiry locks access; it must never delete historical business data.
         $this->assertDatabaseHas('tenants', ['id' => $tenant->id]);
         $this->assertDatabaseHas('halls', ['id' => $hall->id]);
-        $this->assertDatabaseHas('bookings', ['id' => $booking->id, 'customer_name' => 'Hamza Tariq']);
-
-        // 4. Assert lock determination
+        $this->assertDatabaseHas('bookings', [
+            'id' => $booking->id,
+            'customer_name' => 'Hamza Tariq',
+            'grand_total' => 350000,
+            'advance_paid' => 150000,
+        ]);
         $this->assertTrue($service->isLocked($tenant));
+    }
+
+    public function test_grace_period_transition_is_idempotent_then_expires_after_three_days(): void
+    {
+        Carbon::setTestNow('2026-11-24 12:00:00');
+
+        try {
+            $tenant = Tenant::create([
+                'name' => 'Grace Period Venue',
+                'slug' => 'grace-period-venue',
+                'email' => 'grace-period@example.test',
+                'subscription_status' => 'ACTIVE',
+                'verification_status' => 'APPROVED',
+                'subscription_expires_at' => Carbon::now()->subDay(),
+                'is_active' => true,
+            ]);
+
+            $service = app(SubscriptionService::class);
+            $firstPass = $service->checkAndExpireSubscriptions();
+
+            $this->assertSame(1, $firstPass['warning_count']);
+            $this->assertSame('GRACE_PERIOD', $tenant->fresh()->subscription_status);
+
+            $secondPass = $service->checkAndExpireSubscriptions();
+            $this->assertSame(0, $secondPass['warning_count']);
+            $this->assertSame(
+                1,
+                AuditLog::query()
+                    ->where('action', 'SUBSCRIPTION_GRACE_PERIOD')
+                    ->where('entity_id', (string) $tenant->id)
+                    ->count()
+            );
+
+            Carbon::setTestNow('2026-11-28 12:00:00');
+            $finalPass = $service->checkAndExpireSubscriptions();
+
+            $this->assertSame(1, $finalPass['expired_count']);
+            $this->assertSame('EXPIRED', $tenant->fresh()->subscription_status);
+            $this->assertSame(
+                1,
+                AuditLog::query()
+                    ->where('action', 'SUBSCRIPTION_EXPIRED')
+                    ->where('entity_id', (string) $tenant->id)
+                    ->count()
+            );
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_trial_tenants_without_paid_expiry_are_expired_at_trial_end(): void
+    {
+        $expiredTrial = Tenant::create([
+            'name' => 'Expired Trial Venue',
+            'slug' => 'expired-trial-venue',
+            'email' => 'expired-trial@example.test',
+            'subscription_status' => 'TRIAL',
+            'verification_status' => 'APPROVED',
+            'subscription_expires_at' => null,
+            'trial_ends_at' => Carbon::now()->subMinute(),
+            'is_active' => true,
+        ]);
+
+        $activeTrial = Tenant::create([
+            'name' => 'Active Trial Venue',
+            'slug' => 'active-trial-venue',
+            'email' => 'active-trial@example.test',
+            'subscription_status' => 'TRIAL',
+            'verification_status' => 'APPROVED',
+            'subscription_expires_at' => null,
+            'trial_ends_at' => Carbon::now()->addDay(),
+            'is_active' => true,
+        ]);
+
+        $results = app(SubscriptionService::class)->checkAndExpireSubscriptions();
+
+        $this->assertSame(1, $results['expired_count']);
+        $this->assertSame(0, $results['warning_count']);
+        $this->assertSame('EXPIRED', $expiredTrial->fresh()->subscription_status);
+        $this->assertSame('TRIAL', $activeTrial->fresh()->subscription_status);
+        $this->assertSame(
+            1,
+            AuditLog::query()
+                ->where('action', 'SUBSCRIPTION_EXPIRED')
+                ->where('entity_id', (string) $expiredTrial->id)
+                ->count()
+        );
+    }
+
+    public function test_public_visibility_respects_paid_grace_and_trial_entitlement_boundaries(): void
+    {
+        Carbon::setTestNow('2026-11-24 12:00:00');
+
+        try {
+            $active = Tenant::create([
+                'name' => 'Current Subscription',
+                'slug' => 'current-subscription',
+                'email' => 'current-subscription@example.test',
+                'subscription_status' => 'ACTIVE',
+                'subscription_expires_at' => Carbon::now()->addDay(),
+                'verification_status' => 'APPROVED',
+                'is_active' => true,
+            ]);
+            $grace = Tenant::create([
+                'name' => 'Grace Subscription',
+                'slug' => 'grace-subscription',
+                'email' => 'grace-subscription@example.test',
+                'subscription_status' => 'GRACE_PERIOD',
+                'subscription_expires_at' => Carbon::now()->subDay(),
+                'verification_status' => 'APPROVED',
+                'is_active' => true,
+            ]);
+            $pastGrace = Tenant::create([
+                'name' => 'Past Grace Subscription',
+                'slug' => 'past-grace-subscription',
+                'email' => 'past-grace-subscription@example.test',
+                'subscription_status' => 'ACTIVE',
+                'subscription_expires_at' => Carbon::now()->subDays(4),
+                'verification_status' => 'APPROVED',
+                'is_active' => true,
+            ]);
+            $expiredTrial = Tenant::create([
+                'name' => 'Expired Trial Visibility',
+                'slug' => 'expired-trial-visibility',
+                'email' => 'expired-trial-visibility@example.test',
+                'subscription_status' => 'TRIAL',
+                'subscription_expires_at' => null,
+                'trial_ends_at' => Carbon::now()->subMinute(),
+                'verification_status' => 'APPROVED',
+                'is_active' => true,
+            ]);
+            $expired = Tenant::create([
+                'name' => 'Expired Subscription',
+                'slug' => 'expired-subscription',
+                'email' => 'expired-subscription@example.test',
+                'subscription_status' => 'EXPIRED',
+                'subscription_expires_at' => Carbon::now()->addYear(),
+                'verification_status' => 'APPROVED',
+                'is_active' => true,
+            ]);
+
+            $visibleIds = Tenant::query()->publicVisible()->pluck('id')->all();
+
+            $this->assertContains($active->id, $visibleIds);
+            $this->assertContains($grace->id, $visibleIds);
+            $this->assertNotContains($pastGrace->id, $visibleIds);
+            $this->assertNotContains($expiredTrial->id, $visibleIds);
+            $this->assertNotContains($expired->id, $visibleIds);
+            $this->assertFalse($pastGrace->canAcceptBookings());
+            $this->assertFalse($expiredTrial->canAcceptBookings());
+            $this->assertTrue($active->isSubscriptionActive());
+            $this->assertTrue($grace->isSubscriptionActive(), 'Paid grace period retains active entitlement.');
+            $this->assertFalse($pastGrace->isSubscriptionActive());
+            $this->assertFalse($expiredTrial->isSubscriptionActive());
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_artisan_command_subscriptions_check_expiry_executes_cleanly(): void
@@ -113,19 +272,38 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
         $service = app(SubscriptionService::class);
         $superAdminId = (int) User::query()->where('role', 'ROLE_SUPER_ADMIN')->firstOrFail()->id;
 
-        // Test Weekly Renewal
-        $payment = $service->renewSubscription($tenant, $plan, 'WEEKLY', 6000, 'CASH', 'TX-101', true, $superAdminId);
+        $service->renewSubscription($tenant, $plan, 'WEEKLY', 6000, 'CASH', 'TX-101', true, $superAdminId);
         $tenant->refresh();
-        $this->assertEquals('ACTIVE', $tenant->subscription_status);
-        $this->assertEquals('WEEKLY', $tenant->billing_cycle);
+        $this->assertSame('ACTIVE', $tenant->subscription_status);
+        $this->assertSame('WEEKLY', $tenant->billing_cycle);
         $this->assertTrue($tenant->subscription_expires_at->isFuture());
         $this->assertFalse($service->isLocked($tenant));
 
-        // Test Yearly Renewal
         $service->renewSubscription($tenant, $plan, 'YEARLY', 200000, 'CASH', 'TX-102', true, $superAdminId);
         $tenant->refresh();
-        $this->assertEquals('ACTIVE', $tenant->subscription_status);
-        $this->assertEquals('YEARLY', $tenant->billing_cycle);
+        $this->assertSame('ACTIVE', $tenant->subscription_status);
+        $this->assertSame('YEARLY', $tenant->billing_cycle);
         $this->assertTrue($tenant->subscription_expires_at->greaterThan(Carbon::now()->addMonths(11)));
+    }
+
+    public function test_legacy_past_due_subscription_cannot_accept_new_bookings(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'Past Due Legacy Tenant',
+            'slug' => 'past-due-legacy-tenant',
+            'email' => 'past-due-legacy@example.test',
+            'subscription_status' => 'PAST_DUE',
+            'subscription_expires_at' => now()->addMonth(),
+            'verification_status' => 'APPROVED',
+            'is_active' => true,
+            'marketplace_visible' => true,
+        ]);
+
+        $this->assertTrue($tenant->isLocked());
+        $this->assertFalse($tenant->canAcceptBookings());
+        $this->assertFalse(
+            Tenant::query()->publicVisible()->whereKey($tenant->id)->exists(),
+            'Legacy PAST_DUE state must not be publicly discoverable.'
+        );
     }
 }

@@ -341,4 +341,25 @@ class MarketplaceCategoryBrowseTest extends TestCase
         // …and the footer directory link.
         $this->assertStringContainsString('Vendor Marketplace', $html, 'Footer is missing the marketplace link.');
     }
+
+    public function test_expired_tenant_is_excluded_from_vendor_results_and_city_filters(): void
+    {
+        $vendor = Tenant::query()->where('slug', 'nawab-caterers')->firstOrFail();
+        $vendor->update([
+            'city' => 'Hidden Expired City',
+            'subscription_status' => 'EXPIRED',
+            'subscription_expires_at' => now()->addYear(),
+        ]);
+
+        $component = Livewire::test(PublicVendors::class);
+
+        $this->assertFalse(
+            $component->get('vendors')->getCollection()->contains('id', $vendor->id),
+            'Expired tenants must not appear in public marketplace results.'
+        );
+        $this->assertFalse(
+            $component->get('cities')->contains('Hidden Expired City'),
+            'Cities with only expired vendors must not appear in public filters.'
+        );
+    }
 }

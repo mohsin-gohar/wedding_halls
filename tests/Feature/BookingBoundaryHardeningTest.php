@@ -48,6 +48,21 @@ class BookingBoundaryHardeningTest extends TestCase
         ], $overrides);
     }
 
+    public function test_expired_tenant_is_rejected_at_the_booking_service_boundary(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $tenant = Tenant::query()->findOrFail($hall->tenant_id);
+        $tenant->update([
+            'subscription_status' => 'EXPIRED',
+            'subscription_expires_at' => now()->addYear(),
+        ]);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Venue is not accepting bookings.');
+
+        app(BookingService::class)->createReservation($this->payload($hall));
+    }
+
     public function test_caller_supplied_booking_reference_is_never_trusted(): void
     {
         $hall = Hall::query()->firstOrFail();
@@ -196,5 +211,27 @@ class BookingBoundaryHardeningTest extends TestCase
         }
 
         $this->assertSame('0.00', (string) $booking->fresh()->advance_paid);
+    }
+
+    public function test_inactive_hall_cannot_accept_a_new_reservation(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $hall->update(['is_active' => false]);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Venue is not accepting bookings.');
+
+        app(BookingService::class)->createReservation($this->payload($hall));
+    }
+
+    public function test_hall_with_inactive_venue_cannot_accept_a_new_reservation(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $hall->venue()->update(['is_active' => false]);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Venue is not accepting bookings.');
+
+        app(BookingService::class)->createReservation($this->payload($hall));
     }
 }

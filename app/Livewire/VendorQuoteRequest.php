@@ -65,10 +65,8 @@ class VendorQuoteRequest extends Component
         }
 
         $this->vendor = Tenant::query()
+            ->marketplaceVisible()
             ->where('slug', $slug)
-            ->where('marketplace_visible', true)
-            ->where('is_active', true)
-            ->where('verification_status', 'APPROVED')
             ->with('vendorCategory')
             ->firstOrFail();
 
@@ -157,16 +155,27 @@ class VendorQuoteRequest extends Component
         $mode = $this->category?->booking_mode ?? 'DATE_EVENT';
 
         $rfq = DB::transaction(function () use ($validated, $budgetLabels, $service, $mode) {
+            // Recheck under a tenant-row lock: Livewire properties can outlive
+            // a vendor's subscription or marketplace suspension.
+            $vendor = Tenant::query()
+                ->whereKey($this->vendor->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $vendor || ! $vendor->marketplace_visible || ! $vendor->canAcceptBookings()) {
+                return null;
+            }
+
             $rfq = RFQ::create([
                 'client_id' => auth()->id(),
-                'tenant_id' => $this->vendor->id,
-                'vendor_category_id' => $this->vendor->vendor_category_id,
+                'tenant_id' => $vendor->id,
+                'vendor_category_id' => $vendor->vendor_category_id,
                 'title' => $validated['eventName'],
                 'event_date' => $validated['eventDate'],
-                'city' => $validated['city'] ?: $this->vendor->city,
+                'city' => $validated['city'] ?: $vendor->city,
                 'guest_count' => $validated['guestCount'] ?? null,
                 'budget_range' => $budgetLabels[$validated['budgetRange'] ?? 'not-sure'] ?? 'Not specified',
-                'requirements' => $validated['requirements'] !== '' ? $validated['requirements'] : 'Quote request from '.$this->vendor->name.' profile page.',
+                'requirements' => $validated['requirements'] !== '' ? $validated['requirements'] : 'Quote request from '.$vendor->name.' profile page.',
                 'status' => 'OPEN',
                 'preferences' => [
                     'booking_mode' => $mode,
@@ -180,11 +189,17 @@ class VendorQuoteRequest extends Component
             // Target this vendor explicitly — their quotes board reads rfq_targets.
             RfqTarget::firstOrCreate([
                 'rfq_id' => $rfq->id,
-                'tenant_id' => $this->vendor->id,
+                'tenant_id' => $vendor->id,
             ]);
 
             return $rfq;
         });
+
+        if (! $rfq) {
+            $this->addError('requirements', 'This vendor is currently unavailable for new quote requests.');
+
+            return;
+        }
 
         RateLimiter::hit($throttleKey, 3600);
 

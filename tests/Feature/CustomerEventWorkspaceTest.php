@@ -204,6 +204,32 @@ class CustomerEventWorkspaceTest extends TestCase
     // Vendor shortlist
     // ─────────────────────────────────────────────────────────────
 
+    public function test_expired_vendor_is_excluded_from_marketplace_shortlist_and_cannot_be_attached(): void
+    {
+        $customer = $this->customer();
+        $event = $this->makeEvent($customer);
+        $vendor = $this->vendor('nawab-caterers');
+        $vendor->update([
+            'subscription_status' => 'EXPIRED',
+            'subscription_expires_at' => now()->addYear(),
+        ]);
+
+        $component = Livewire::actingAs($customer)
+            ->test(CustomerEventWorkspace::class)
+            ->call('selectEvent', $event->id);
+
+        $visibleVendors = $component->get('marketplaceVendors');
+        $this->assertFalse($visibleVendors->contains('id', $vendor->id));
+
+        $component->call('attachVendor', (string) $vendor->id)
+            ->assertSet('errorMessage', 'That vendor is not available for shortlisting.');
+
+        $this->assertDatabaseMissing('customer_event_vendors', [
+            'customer_event_id' => $event->id,
+            'tenant_id' => $vendor->id,
+        ]);
+    }
+
     public function test_customer_can_shortlist_update_and_detach_a_vendor(): void
     {
         $customer = $this->customer();

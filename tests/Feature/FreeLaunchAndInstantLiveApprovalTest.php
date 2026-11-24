@@ -117,4 +117,57 @@ class FreeLaunchAndInstantLiveApprovalTest extends TestCase
             ->assertStatus(200)
             ->assertSee('Kohinoor Grand Banquet');
     }
+
+    public function test_kyc_approval_does_not_reactivate_a_suspended_tenant_or_its_halls(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'Archived Suspended Vendor',
+            'slug' => 'archived-suspended-vendor',
+            'email' => 'archived@example.test',
+            'subscription_status' => 'SUSPENDED',
+            'verification_status' => 'SUSPENDED',
+            'is_active' => false,
+            'marketplace_visible' => true,
+        ]);
+
+        $venue = Venue::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Archived Venue',
+            'slug' => 'archived-venue',
+            'city' => 'Karachi',
+            'address' => 'Karachi, Pakistan',
+            'is_active' => false,
+        ]);
+
+        $hall = Hall::create([
+            'tenant_id' => $tenant->id,
+            'venue_id' => $venue->id,
+            'name' => 'Archived Hall',
+            'min_capacity' => 100,
+            'max_capacity' => 300,
+            'base_rent' => 100000,
+            'is_active' => false,
+        ]);
+
+        $admin = User::create([
+            'name' => 'KYC Admin',
+            'email' => 'kyc-admin@example.test',
+            'role' => 'ROLE_SUPER_ADMIN',
+            'password' => Hash::make('password123'),
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(AdminDashboard::class)
+            ->call('approveVendor', $tenant->id)
+            ->assertHasNoErrors()
+            ->assertSee('subscription or account restrictions');
+
+        $tenant->refresh();
+        $this->assertSame('APPROVED', $tenant->verification_status);
+        $this->assertSame('SUSPENDED', $tenant->subscription_status);
+        $this->assertFalse($tenant->is_active);
+        $this->assertFalse($tenant->canAcceptBookings());
+        $this->assertFalse($venue->fresh()->is_active);
+        $this->assertFalse($hall->fresh()->is_active);
+    }
 }

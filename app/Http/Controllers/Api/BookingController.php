@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Exceptions\SlotAlreadyBookedException;
+use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\Package;
 use App\Services\BookingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 /**
@@ -89,15 +91,22 @@ class BookingController extends ApiController
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $hall = Hall::findOrFail($request->hall_id);
-
-        // A customer books on their own behalf; tenant staff book for their
-        // own venue. Neither may create a booking on another tenant's hall.
         if ($user->isCustomer()) {
-            abort_unless($hall->tenant->is_active && $hall->tenant->verification_status === 'APPROVED', 403, 'Venue is not accepting bookings.');
+            // Customers may only reserve halls that are currently listed on
+            // the public marketplace; knowing a hidden hall UUID is not access.
+            $hall = Hall::query()
+                ->publicVisible()
+                ->whereKey($request->hall_id)
+                ->with('tenant')
+                ->firstOrFail();
         } else {
+            $hall = Hall::with('tenant')->findOrFail($request->hall_id);
             $this->assertTenantAccess($hall->tenant_id, $user);
         }
+
+        // Every principal is subject to the same subscription and venue
+        // entitlement check before a reservation can be created.
+        abort_unless($hall->tenant && $hall->tenant->canAcceptBookings(), 403, 'Venue is not accepting bookings.');
 
         // NEVER pass raw request input into the booking service: financial
         // fields, lifecycle status, references and payment records must be
@@ -227,21 +236,39 @@ class BookingController extends ApiController
 
         abort_unless($user->isSuperAdmin(), 403, 'Only super admin can delete bookings.');
 
-        $booking = Booking::findOrFail($id);
+        $result = DB::transaction(function () use ($id): array {
+            // Serialize against PaymentService, which locks the same row before
+            // recording a receipt or changing the authoritative cash balance.
+            $booking = Booking::query()->whereKey($id)->lockForUpdate()->firstOrFail();
+            $booking->loadCount(['payments', 'rsvps', 'floorPlan', 'kitchenKot', 'utilityLog']);
 
-        // Payment and receipt history is immutable. Never hard-delete a booking
-        // that has any financial records; archive it by cancelling instead.
-        if ($booking->payments()->exists()) {
-            $booking->update(['status' => 'CANCELLED']);
+            $hasHistory = $booking->payments_count > 0
+                || $booking->rsvps_count > 0
+                || $booking->floor_plan_count > 0
+                || $booking->kitchen_kot_count > 0
+                || $booking->utility_log_count > 0;
 
+            if ($hasHistory || ! in_array($booking->status, ['INQUIRY', 'CANCELLED'], true)) {
+                $booking->update(['status' => 'CANCELLED']);
+
+                return ['archived' => true];
+            }
+
+            $tenantId = $booking->tenant_id;
+            $reference = $booking->booking_reference;
+            $booking->delete();
+            AuditLog::log('BOOKING_DELETED', "Super Admin deleted unfinancialized booking [{$reference}].", $tenantId, 'Booking', $id);
+
+            return ['archived' => false];
+        });
+
+        if ($result['archived']) {
             return response()->json([
                 'success' => true,
                 'archived' => true,
-                'message' => 'Booking has payment history and was archived (cancelled) instead of deleted to preserve financial records.',
+                'message' => 'Booking has financial or operational history and was archived (cancelled) instead of deleted.',
             ]);
         }
-
-        $booking->delete();
 
         return response()->json([
             'success' => true,
@@ -251,7 +278,7 @@ class BookingController extends ApiController
 
     public function availability(Request $request)
     {
-        $this->apiUser($request);
+        $user = $this->apiUser($request);
 
         $validator = Validator::make($request->all(), [
             'hall_id' => 'required|uuid|exists:halls,id',
@@ -265,8 +292,17 @@ class BookingController extends ApiController
 
         $hall = Hall::with(['venue', 'tenant'])->findOrFail($request->hall_id);
 
-        if (! $hall->tenant->is_active || $hall->tenant->verification_status !== 'APPROVED') {
-            return response()->json(['message' => 'Venue is not accepting bookings.'], 403);
+        if ($user->isCustomer()) {
+            abort_unless(
+                Hall::query()
+                    ->publicVisible()
+                    ->whereKey($hall->id)
+                    ->exists(),
+                404,
+                'Venue is not publicly available.'
+            );
+        } else {
+            $this->assertTenantAccess($hall->tenant_id, $user);
         }
 
         $slotType = $request->input('slot_type', 'FULL_DAY');
