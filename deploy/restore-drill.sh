@@ -24,9 +24,8 @@ command -v mysql >/dev/null || { echo "mysql client is required" >&2; exit 1; }
 test -r "$AGE_IDENTITY" || { echo "AGE_IDENTITY is not readable" >&2; exit 1; }
 test -s "$ARCHIVE" || { echo "Backup archive is missing or empty" >&2; exit 1; }
 command -v sha256sum >/dev/null || { echo "sha256sum is required" >&2; exit 1; }
-if [[ -f "$ARCHIVE.sha256" ]]; then
-  (cd "$(dirname "$ARCHIVE")" && sha256sum -c "$(basename "$ARCHIVE").sha256")
-fi
+test -s "$ARCHIVE.sha256" || { echo "Backup checksum file is missing" >&2; exit 1; }
+(cd "$(dirname "$ARCHIVE")" && sha256sum -c "$(basename "$ARCHIVE").sha256")
 
 if [[ "$RESTORE_DB_DATABASE" == "$DB_DATABASE" ]]; then
   echo "Refusing to restore into the production database" >&2
