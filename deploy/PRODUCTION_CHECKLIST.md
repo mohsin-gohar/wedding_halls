@@ -23,7 +23,7 @@ short enough to copy into a release ticket.
 - [ ] PHP 8.2+ with `bcmath ctype curl dom fileinfo json mbstring openssl pcre pdo tokenizer xml redis`.
 - [ ] Composer 2.x, Node 20 LTS (build can run in CI), Nginx, Redis 7+, MySQL 8+.
 - [ ] `storage/` and `bootstrap/cache/` are writable by the web user (`www-data`).
-- [ ] `php artisan storage:link` has been run **if** `FILESYSTEM_DISK=public`.
+- [ ] `php artisan storage:link` has been run **if** `FILESYSTEM_DISK=public` on a conventional shared/Nginx webroot. The Docker VPS stack serves the dedicated public-media volume through an explicit Nginx alias and does not depend on a symlink.
       With S3/R2 the link is not required, but the bucket policy must allow the
       public/CDN reads used by hall galleries.
 - [ ] Supervisor queue worker and cron scheduler are installed (see §5–6 of
