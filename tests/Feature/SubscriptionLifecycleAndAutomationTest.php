@@ -294,6 +294,7 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
             'marketplace_visible' => true,
         ]);
 
+        $this->assertTrue($tenant->isLocked());
         $this->assertFalse($tenant->canAcceptBookings());
         $this->assertFalse(
             Tenant::query()->publicVisible()->whereKey($tenant->id)->exists(),
