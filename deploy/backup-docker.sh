@@ -42,7 +42,7 @@ test -s "$plain"
 echo "Encrypting backup..."
 age -r "$AGE_RECIPIENT" -o "$archive" "$plain"
 test -s "$archive"
-sha256sum "$archive" > "$checksum"
+(cd "$BACKUP_DIR" && sha256sum "$(basename "$archive")" > "$(basename "$checksum")")
 
 echo "Copying encrypted archive and checksum off-site..."
 rclone copyto "$archive" "$RCLONE_REMOTE/$(basename "$archive")"
