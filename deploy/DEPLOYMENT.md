@@ -102,9 +102,11 @@ The scheduler runs `subscriptions:check-expiry` daily (subscription lifecycle).
 ## 7. Docker deployment (alternative)
 
 `Dockerfile` starts Supervisor so PHP-FPM, the queue worker and the scheduler
-all run inside the application container. `docker-compose.yml` keeps MySQL and
-Redis on the private bridge network, uses Caddy for automatic apex/www HTTPS,
-and refuses to start without `APP_DOMAIN`, `DB_ROOT_PASSWORD`, and
+all run inside the application container. `docker-compose.yml` builds a
+separate Nginx image containing the same compiled release assets, serves
+`/storage` from a dedicated public-media volume, and never mounts private
+documents into the web container. MySQL and Redis stay on the private bridge
+network; Caddy provides automatic apex/www HTTPS. Compose refuses to start without `APP_DOMAIN`, `DB_ROOT_PASSWORD`, and
 `DB_PASSWORD`. The app container is not given the MySQL root password.
 
 ```bash
