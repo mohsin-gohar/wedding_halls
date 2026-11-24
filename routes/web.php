@@ -76,7 +76,48 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+
+/*
+|--------------------------------------------------------------------------
+| Dependency-aware readiness probe
+|--------------------------------------------------------------------------
+| Keep /up as a lightweight process liveness check. /ready verifies the
+| database, shared cache, and private filesystem without exposing internals.
+*/
+Route::get('/ready', function () {
+    $cacheKey = 'ops-readiness:'.Str::uuid();
+    $storagePath = 'healthchecks/'.Str::uuid().'.txt';
+
+    try {
+        DB::select('SELECT 1');
+
+        if (! Cache::put($cacheKey, 'ok', 5) || Cache::pull($cacheKey) !== 'ok') {
+            throw new RuntimeException('Cache readiness check failed.');
+        }
+
+        $disk = Storage::disk('local');
+        if (! $disk->put($storagePath, 'ok') || $disk->get($storagePath) !== 'ok') {
+            throw new RuntimeException('Private filesystem readiness check failed.');
+        }
+        $disk->delete($storagePath);
+
+        return response()->json(['status' => 'ready']);
+    } catch (\Throwable $exception) {
+        report($exception);
+
+        try {
+            Storage::disk('local')->delete($storagePath);
+        } catch (\Throwable) {
+            // Preserve the generic readiness response if cleanup also fails.
+        }
+
+        return response()->json(['status' => 'not_ready'], 503);
+    } finally {
+        Cache::forget($cacheKey);
+    }
+})->middleware('throttle:public-pages')->name('health.ready');
 
 /*
 |--------------------------------------------------------------------------
