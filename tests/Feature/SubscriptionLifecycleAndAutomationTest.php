@@ -25,14 +25,13 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
 
     public function test_subscription_service_expires_accounts_past_grace_period_and_preserves_data(): void
     {
-        // 1. Create a tenant with an active booking and hall
         $tenant = Tenant::create([
             'name' => 'Grand Palace Marquee',
             'slug' => 'grand-palace',
             'email' => 'grand@palace.pk',
             'subscription_status' => 'ACTIVE',
             'verification_status' => 'APPROVED',
-            'subscription_expires_at' => Carbon::now()->subDays(5), // 5 days ago (past 3-day grace)
+            'subscription_expires_at' => Carbon::now()->subDays(5),
             'is_active' => true,
         ]);
 
@@ -58,24 +57,26 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
             'event_date' => Carbon::today()->addDays(10)->format('Y-m-d'),
             'slot_type' => 'EVENING',
             'status' => 'CONFIRMED',
-            'total_amount' => 350000,
-            'advance_amount' => 150000,
+            'grand_total' => 350000,
+            'advance_paid' => 150000,
         ]);
 
         $service = app(SubscriptionService::class);
         $results = $service->checkAndExpireSubscriptions();
 
-        // 2. Assert tenant transitioned to EXPIRED
-        $this->assertEquals(1, $results['expired_count']);
+        $this->assertSame(1, $results['expired_count']);
         $tenant->refresh();
-        $this->assertEquals('EXPIRED', $tenant->subscription_status);
+        $this->assertSame('EXPIRED', $tenant->subscription_status);
 
-        // 3. CRITICAL GUARANTEE: Historical bookings and hall data are NOT deleted
+        // Expiry locks access; it must never delete historical business data.
         $this->assertDatabaseHas('tenants', ['id' => $tenant->id]);
         $this->assertDatabaseHas('halls', ['id' => $hall->id]);
-        $this->assertDatabaseHas('bookings', ['id' => $booking->id, 'customer_name' => 'Hamza Tariq']);
-
-        // 4. Assert lock determination
+        $this->assertDatabaseHas('bookings', [
+            'id' => $booking->id,
+            'customer_name' => 'Hamza Tariq',
+            'grand_total' => 350000,
+            'advance_paid' => 150000,
+        ]);
         $this->assertTrue($service->isLocked($tenant));
     }
 
@@ -113,19 +114,17 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
         $service = app(SubscriptionService::class);
         $superAdminId = (int) User::query()->where('role', 'ROLE_SUPER_ADMIN')->firstOrFail()->id;
 
-        // Test Weekly Renewal
-        $payment = $service->renewSubscription($tenant, $plan, 'WEEKLY', 6000, 'CASH', 'TX-101', true, $superAdminId);
+        $service->renewSubscription($tenant, $plan, 'WEEKLY', 6000, 'CASH', 'TX-101', true, $superAdminId);
         $tenant->refresh();
-        $this->assertEquals('ACTIVE', $tenant->subscription_status);
-        $this->assertEquals('WEEKLY', $tenant->billing_cycle);
+        $this->assertSame('ACTIVE', $tenant->subscription_status);
+        $this->assertSame('WEEKLY', $tenant->billing_cycle);
         $this->assertTrue($tenant->subscription_expires_at->isFuture());
         $this->assertFalse($service->isLocked($tenant));
 
-        // Test Yearly Renewal
         $service->renewSubscription($tenant, $plan, 'YEARLY', 200000, 'CASH', 'TX-102', true, $superAdminId);
         $tenant->refresh();
-        $this->assertEquals('ACTIVE', $tenant->subscription_status);
-        $this->assertEquals('YEARLY', $tenant->billing_cycle);
+        $this->assertSame('ACTIVE', $tenant->subscription_status);
+        $this->assertSame('YEARLY', $tenant->billing_cycle);
         $this->assertTrue($tenant->subscription_expires_at->greaterThan(Carbon::now()->addMonths(11)));
     }
 }
