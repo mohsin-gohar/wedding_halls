@@ -234,6 +234,4 @@ class BookingBoundaryHardeningTest extends TestCase
 
         app(BookingService::class)->createReservation($this->payload($hall));
     }
-
-
 }
