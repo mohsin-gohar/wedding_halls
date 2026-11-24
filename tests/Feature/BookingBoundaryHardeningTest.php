@@ -48,6 +48,21 @@ class BookingBoundaryHardeningTest extends TestCase
         ], $overrides);
     }
 
+    public function test_expired_tenant_is_rejected_at_the_booking_service_boundary(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $tenant = Tenant::query()->findOrFail($hall->tenant_id);
+        $tenant->update([
+            'subscription_status' => 'EXPIRED',
+            'subscription_expires_at' => now()->addYear(),
+        ]);
+
+        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Venue is not accepting bookings.');
+
+        app(BookingService::class)->createReservation($this->payload($hall));
+    }
+
     public function test_caller_supplied_booking_reference_is_never_trusted(): void
     {
         $hall = Hall::query()->firstOrFail();
