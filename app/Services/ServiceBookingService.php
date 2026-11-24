@@ -68,6 +68,10 @@ class ServiceBookingService
                 throw ServiceBookingException::notFound('The quotation record could not be found.');
             }
 
+            if (! $tenant->canAcceptBookings()) {
+                throw ServiceBookingException::invalidState('This vendor subscription does not allow new bookings.');
+            }
+
             if ($rfq->status !== 'OPEN') {
                 throw ServiceBookingException::notAwardable('This quotation request has already been awarded or closed.');
             }
@@ -198,7 +202,11 @@ class ServiceBookingService
             // Serialize every booking write for this vendor: the lock is held
             // for the rest of the transaction, so a concurrent direct booking
             // (or RFQ award) waits here and then sees our row.
-            Tenant::query()->whereKey($tenant->id)->lockForUpdate()->first();
+            $tenant = Tenant::query()->whereKey($tenant->id)->lockForUpdate()->first();
+
+            if (! $tenant || ! $tenant->canAcceptBookings()) {
+                throw ServiceBookingException::invalidState('This vendor subscription does not allow new bookings.');
+            }
 
             $eventDate = (string) $attributes['event_date'];
             $startTime = $attributes['start_time'] ?? null;
