@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Exceptions\SlotAlreadyBookedException;
+use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\Package;
 use App\Services\BookingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 /**
@@ -234,28 +236,39 @@ class BookingController extends ApiController
 
         abort_unless($user->isSuperAdmin(), 403, 'Only super admin can delete bookings.');
 
-        $booking = Booking::withCount(['payments', 'rsvps', 'floorPlan', 'kitchenKot', 'utilityLog'])
-            ->findOrFail($id);
+        $result = DB::transaction(function () use ($id): array {
+            // Serialize against PaymentService, which locks the same row before
+            // recording a receipt or changing the authoritative cash balance.
+            $booking = Booking::query()->whereKey($id)->lockForUpdate()->firstOrFail();
+            $booking->loadCount(['payments', 'rsvps', 'floorPlan', 'kitchenKot', 'utilityLog']);
 
-        // Only empty inquiry/cancelled rows may be hard-deleted. Every
-        // confirmed/operational/financial record is retained as a cancellation.
-        $hasHistory = $booking->payments_count > 0
-            || $booking->rsvps_count > 0
-            || $booking->floor_plan_count > 0
-            || $booking->kitchen_kot_count > 0
-            || $booking->utility_log_count > 0;
+            $hasHistory = $booking->payments_count > 0
+                || $booking->rsvps_count > 0
+                || $booking->floor_plan_count > 0
+                || $booking->kitchen_kot_count > 0
+                || $booking->utility_log_count > 0;
 
-        if ($hasHistory || ! in_array($booking->status, ['INQUIRY', 'CANCELLED'], true)) {
-            $booking->update(['status' => 'CANCELLED']);
+            if ($hasHistory || ! in_array($booking->status, ['INQUIRY', 'CANCELLED'], true)) {
+                $booking->update(['status' => 'CANCELLED']);
 
+                return ['archived' => true];
+            }
+
+            $tenantId = $booking->tenant_id;
+            $reference = $booking->booking_reference;
+            $booking->delete();
+            AuditLog::log('BOOKING_DELETED', "Super Admin deleted unfinancialized booking [{$reference}].", $tenantId, 'Booking', $id);
+
+            return ['archived' => false];
+        });
+
+        if ($result['archived']) {
             return response()->json([
                 'success' => true,
                 'archived' => true,
                 'message' => 'Booking has financial or operational history and was archived (cancelled) instead of deleted.',
             ]);
         }
-
-        $booking->delete();
 
         return response()->json([
             'success' => true,
