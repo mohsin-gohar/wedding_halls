@@ -608,44 +608,49 @@ class AdminDashboard extends Component
 
     public function deleteVendor(string $tenantId)
     {
-        $tenant = Tenant::findOrFail($tenantId);
-        $name = $tenant->name;
+        $result = DB::transaction(function () use ($tenantId): array {
+            // BookingService and ServiceBookingService lock the tenant before
+            // creating reservations. Use the same lock so no new business or
+            // payment history can appear between the audit check and archive.
+            $tenant = Tenant::query()->whereKey($tenantId)->lockForUpdate()->firstOrFail();
+            $name = $tenant->name;
 
-        // Financial and audit history is immutable. Never hard-delete a tenant
-        // that has ANY bookings, payments, subscriptions, wallets or audit
-        // trail — suspend it instead so nothing is lost.
-        $hasHistory = $tenant->bookings()->exists()
-            || Payment::where('tenant_id', $tenantId)->exists()
-            || ServiceBooking::where('tenant_id', $tenantId)->exists()
-            || SubscriptionPayment::where('tenant_id', $tenantId)->exists()
-            || VendorWallet::where('tenant_id', $tenantId)->exists()
-            || AuditLog::where('tenant_id', $tenantId)->exists();
+            $hasHistory = $tenant->bookings()->exists()
+                || Payment::where('tenant_id', $tenantId)->exists()
+                || ServiceBooking::where('tenant_id', $tenantId)->exists()
+                || SubscriptionPayment::where('tenant_id', $tenantId)->exists()
+                || VendorWallet::where('tenant_id', $tenantId)->exists()
+                || AuditLog::where('tenant_id', $tenantId)->exists();
 
-        if ($hasHistory) {
-            $tenant->update(['is_active' => false, 'verification_status' => 'SUSPENDED']);
-            // Keep the subscription lock predicate in sync with the suspension.
-            $tenant->forceFill(['subscription_status' => 'SUSPENDED'])->save();
+            if (! $hasHistory) {
+                // Keep the tenant and user records as an archive; never hard-delete
+                // account data even when the business has no financial history.
+                $tenant->halls()->update(['is_active' => false]);
+                $tenant->users()->update(['status' => 'INACTIVE']);
+            }
+
+            $tenant->update([
+                'is_active' => false,
+                'verification_status' => 'SUSPENDED',
+                'subscription_status' => 'SUSPENDED',
+            ]);
+
             AuditLog::log(
-                'VENDOR_SUSPENDED',
-                "Vendor [{$name}] has booking/payment/audit history; suspended instead of deleted to preserve records.",
+                $hasHistory ? 'VENDOR_SUSPENDED' : 'VENDOR_ARCHIVED',
+                $hasHistory
+                    ? "Vendor [{$name}] has booking/payment/audit history; suspended instead of deleted to preserve records."
+                    : "Super Admin archived vendor [{$name}] (no financial history).",
                 null,
                 'Tenant',
                 $tenantId
             );
-            $this->feedbackMessage = "Vendor [{$name}] has financial or audit history. To protect contracts and payment records, the vendor was deactivated and suspended instead of permanently deleted.";
 
-            return;
-        }
+            return ['name' => $name, 'has_history' => $hasHistory];
+        });
 
-        // No financial history: deactivate associated records and archive the
-        // tenant rather than destroying them. No user data is hard-deleted.
-        $tenant->halls()->update(['is_active' => false]);
-        $tenant->users()->update(['status' => 'INACTIVE']);
-        $tenant->update(['is_active' => false, 'verification_status' => 'SUSPENDED']);
-        $tenant->forceFill(['subscription_status' => 'SUSPENDED'])->save();
-
-        AuditLog::log('VENDOR_ARCHIVED', "Super Admin archived vendor [{$name}] (no financial history).", null, 'Tenant', $tenantId);
-        $this->feedbackMessage = "Vendor [{$name}] has been archived and deactivated.";
+        $this->feedbackMessage = $result['has_history']
+            ? "Vendor [{$result['name']}] has financial or audit history. To protect contracts and payment records, the vendor was deactivated and suspended instead of permanently deleted."
+            : "Vendor [{$result['name']}] has been archived and deactivated.";
     }
 
     public function approveVendor(string $tenantId)
