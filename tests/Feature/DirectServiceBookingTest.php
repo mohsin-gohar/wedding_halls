@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Livewire\CustomerDashboard;
 use App\Livewire\DirectBooking;
 use App\Livewire\VendorBookingsBoard;
+use App\Exceptions\ServiceBookingException;
 use App\Models\ServiceBooking;
 use App\Models\Tenant;
 use App\Models\User;
@@ -132,6 +133,39 @@ class DirectServiceBookingTest extends TestCase
         $this->actingAs($this->customer())
             ->get(route('public.vendor-book', ['slug' => $vendor->slug]))
             ->assertNotFound();
+    }
+
+    public function test_expired_vendor_cannot_receive_direct_service_bookings(): void
+    {
+        $vendor = $this->vendor('nawab-caterers');
+        $customer = $this->customer();
+        $service = $this->makeService($vendor);
+
+        $vendor->update([
+            'subscription_status' => 'EXPIRED',
+            'subscription_expires_at' => now()->addYear(),
+        ]);
+
+        try {
+            app(ServiceBookingService::class)->createDirectBooking(
+                $vendor,
+                (int) $customer->id,
+                $service,
+                [
+                    'event_name' => 'Expired Vendor Test Event',
+                    'event_date' => now()->addDays(60)->toDateString(),
+                ]
+            );
+            $this->fail('An expired vendor must not receive a new service booking.');
+        } catch (ServiceBookingException $exception) {
+            $this->assertSame(409, $exception->getCode());
+            $this->assertStringContainsString('subscription does not allow new bookings', $exception->getMessage());
+        }
+
+        $this->assertDatabaseMissing('service_bookings', [
+            'tenant_id' => $vendor->id,
+            'event_name' => 'Expired Vendor Test Event',
+        ]);
     }
 
     public function test_opening_the_page_without_an_item_asks_you_to_pick_one(): void
