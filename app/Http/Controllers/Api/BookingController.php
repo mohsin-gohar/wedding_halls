@@ -89,17 +89,23 @@ class BookingController extends ApiController
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $hall = Hall::findOrFail($request->hall_id);
+        if ($user->isCustomer()) {
+            // Customers may only reserve halls that are currently listed on
+            // the public marketplace; knowing a hidden hall UUID is not access.
+            $hall = Hall::query()
+                ->publicVisible()
+                ->whereKey($request->hall_id)
+                ->whereHas('tenant', fn ($tenant) => $tenant->marketplaceVisible())
+                ->with('tenant')
+                ->firstOrFail();
+        } else {
+            $hall = Hall::with('tenant')->findOrFail($request->hall_id);
+            $this->assertTenantAccess($hall->tenant_id, $user);
+        }
 
         // Every principal is subject to the same subscription and venue
         // entitlement check before a reservation can be created.
         abort_unless($hall->tenant && $hall->tenant->canAcceptBookings(), 403, 'Venue is not accepting bookings.');
-
-        // A customer books on their own behalf; tenant staff book only for
-        // their own venue.
-        if (! $user->isCustomer()) {
-            $this->assertTenantAccess($hall->tenant_id, $user);
-        }
 
         // NEVER pass raw request input into the booking service: financial
         // fields, lifecycle status, references and payment records must be
@@ -260,7 +266,7 @@ class BookingController extends ApiController
 
     public function availability(Request $request)
     {
-        $this->apiUser($request);
+        $user = $this->apiUser($request);
 
         $validator = Validator::make($request->all(), [
             'hall_id' => 'required|uuid|exists:halls,id',
@@ -273,6 +279,20 @@ class BookingController extends ApiController
         }
 
         $hall = Hall::with(['venue', 'tenant'])->findOrFail($request->hall_id);
+
+        if ($user->isCustomer()) {
+            abort_unless(
+                Hall::query()
+                    ->publicVisible()
+                    ->whereKey($hall->id)
+                    ->whereHas('tenant', fn ($tenant) => $tenant->marketplaceVisible())
+                    ->exists(),
+                404,
+                'Venue is not publicly available.'
+            );
+        } else {
+            $this->assertTenantAccess($hall->tenant_id, $user);
+        }
 
         if (! $hall->tenant || ! $hall->tenant->canAcceptBookings()) {
             return response()->json(['message' => 'Venue is not accepting bookings.'], 403);
