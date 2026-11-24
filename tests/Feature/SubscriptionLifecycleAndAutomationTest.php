@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\SubscriptionPlan;
@@ -112,7 +113,7 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
         $this->assertSame('TRIAL', $activeTrial->fresh()->subscription_status);
         $this->assertSame(
             1,
-            \App\Models\AuditLog::query()
+            AuditLog::query()
                 ->where('action', 'SUBSCRIPTION_EXPIRED')
                 ->where('entity_id', (string) $expiredTrial->id)
                 ->count()
