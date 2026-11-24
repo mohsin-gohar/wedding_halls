@@ -17,6 +17,14 @@ class ProductionReadinessEndpointTest extends TestCase
             ->assertExactJson(['status' => 'ready']);
     }
 
+    public function test_production_template_keeps_temporary_uploads_on_the_private_disk(): void
+    {
+        $template = file_get_contents(base_path('.env.production.example'));
+
+        $this->assertIsString($template);
+        $this->assertStringContainsString('LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK=local', $template);
+    }
+
     public function test_livewire_temporary_upload_limit_matches_the_50_mb_media_contract(): void
     {
         $this->assertSame(
