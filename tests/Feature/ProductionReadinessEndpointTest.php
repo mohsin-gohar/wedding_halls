@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -18,7 +19,7 @@ class ProductionReadinessEndpointTest extends TestCase
 
     public function test_readiness_probe_returns_generic_503_when_a_dependency_fails(): void
     {
-        Illuminate\Support\Facades\DB::shouldReceive('select')
+        DB::shouldReceive('select')
             ->once()
             ->with('SELECT 1')
             ->andThrow(new \RuntimeException('sensitive database connection details'));
