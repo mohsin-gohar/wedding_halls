@@ -79,6 +79,7 @@ jobs:
 
           # Exercise the actual Nginx image: built assets and public uploads
           # must be served, while private paths remain unavailable.
+          docker run --rm riwaj-grand-web:ci test -s /var/www/public/build/manifest.json
           mkdir -p "$RUNNER_TEMP/riwaj-public-media"
           printf 'public-media-ok' > "$RUNNER_TEMP/riwaj-public-media/smoke.txt"
           docker run -d --name riwaj-web-smoke --add-host app:127.0.0.1 \
@@ -92,7 +93,11 @@ jobs:
             fi
             sleep 1
           done
-          curl -fsS http://127.0.0.1:8080/build/manifest.json >/dev/null
+          if ! curl -fsS http://127.0.0.1:8080/build/manifest.json >/dev/null; then
+            docker exec riwaj-web-smoke ls -la /var/www/public /var/www/public/build || true
+            docker logs riwaj-web-smoke || true
+            exit 1
+          fi
           test "$(curl -fsS http://127.0.0.1:8080/storage/smoke.txt)" = "public-media-ok"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/storage/app/private/secret.txt)" = "404"
 
