@@ -161,6 +161,39 @@ class SaaSSubscriptionAndErpTest extends TestCase
         $this->assertTrue($tenant->subscription_expires_at->isFuture());
     }
 
+    public function test_super_admin_cannot_delete_a_hall_with_historical_bookings(): void
+    {
+        $superAdmin = User::where('role', 'ROLE_SUPER_ADMIN')->firstOrFail();
+        $booking = Booking::with('hall')->firstOrFail();
+
+        $this->actingAs($superAdmin);
+
+        Livewire::test(AdminDashboard::class)
+            ->call('deleteHall', $booking->hall_id)
+            ->assertSee('has booking history');
+
+        $this->assertDatabaseHas('halls', ['id' => $booking->hall_id]);
+        $this->assertDatabaseHas('bookings', ['id' => $booking->id]);
+    }
+
+    public function test_super_admin_cannot_delete_a_confirmed_booking_without_payment(): void
+    {
+        $superAdmin = User::where('role', 'ROLE_SUPER_ADMIN')->firstOrFail();
+        $booking = Booking::firstOrFail();
+        $booking->update(['status' => 'CONFIRMED']);
+
+        $this->actingAs($superAdmin);
+
+        Livewire::test(AdminDashboard::class)
+            ->call('deleteBooking', $booking->id)
+            ->assertSee('cannot be deleted');
+
+        $this->assertDatabaseHas('bookings', [
+            'id' => $booking->id,
+            'status' => 'CONFIRMED',
+        ]);
+    }
+
     public function test_staff_role_permissions_enforced(): void
     {
         $chef = User::where('role', 'ROLE_CHEF')->first();
