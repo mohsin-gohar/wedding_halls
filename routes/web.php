@@ -107,12 +107,12 @@ Route::get('/ready', function () {
         $disk->delete($storagePath);
 
         return response()->json(['status' => 'ready']);
-    } catch (\Throwable $exception) {
+    } catch (Throwable $exception) {
         report($exception);
 
         try {
             Storage::disk('local')->delete($storagePath);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // Preserve the generic readiness response if cleanup also fails.
         }
 
