@@ -33,9 +33,8 @@ if [[ -e "$RESTORE_STORAGE_DIR" ]]; then
   exit 1
 fi
 
-if [[ -f "$ARCHIVE.sha256" ]]; then
-  (cd "$(dirname "$ARCHIVE")" && sha256sum -c "$(basename "$ARCHIVE").sha256")
-fi
+test -s "$ARCHIVE.sha256" || { echo "Backup checksum file is missing" >&2; exit 1; }
+(cd "$(dirname "$ARCHIVE")" && sha256sum -c "$(basename "$ARCHIVE").sha256")
 
 mkdir -p "$(dirname "$RESTORE_STORAGE_DIR")"
 mkdir "$RESTORE_STORAGE_DIR"
