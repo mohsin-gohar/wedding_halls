@@ -34,7 +34,7 @@ services:
         condition: service_healthy
     healthcheck:
       # Check the live FastCGI listener, not only whether the config parses.
-      test: ["CMD", "php", "-r", "$s=@fsockopen('127.0.0.1',9000); if (!$s) exit(1); fclose($s);"]
+      test: ["CMD", "php", "-r", "$$s=@fsockopen('127.0.0.1',9000); if (!$$s) exit(1); fclose($$s);"]
       interval: 30s
       timeout: 5s
       retries: 3
