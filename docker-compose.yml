@@ -97,6 +97,20 @@ services:
     networks:
       - riwaj
 
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: riwaj_uptime_kuma
+    restart: unless-stopped
+    profiles:
+      - monitoring
+    # Access through an SSH tunnel; never expose the monitoring console publicly.
+    ports:
+      - "127.0.0.1:3001:3001"
+    volumes:
+      - riwaj_uptime_data:/app/data
+    networks:
+      - riwaj
+
   caddy:
     image: caddy:2-alpine
     container_name: riwaj_caddy
@@ -126,3 +140,4 @@ volumes:
   riwaj_storage:
   riwaj_caddy_data:
   riwaj_caddy_config:
+  riwaj_uptime_data:
