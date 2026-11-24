@@ -127,6 +127,7 @@ server). Download an encrypted archive and run:
 
 ~~~bash
 AGE_IDENTITY=/secure/path/age-identity.txt \
+DB_HOST=db \
 DB_DATABASE=riwaj_grand \
 RESTORE_DB_HOST=staging-db.internal \
 RESTORE_DB_DATABASE=riwaj_grand_restore_drill \
@@ -140,8 +141,18 @@ The restore script refuses the configured production database, requires an
 explicit matching confirmation, requires a pre-created empty staging database,
 and leaves the restored data in staging for integrity and application smoke
 checks. Restore the matching uploaded-file archive to a new, isolated staging
-directory with deploy/restore-storage-drill.sh; it refuses to overwrite an
-existing directory and requires a matching _restore_drill confirmation.
+directory outside the live storage tree with deploy/restore-storage-drill.sh:
+
+~~~bash
+AGE_IDENTITY=/secure/path/age-identity.txt \
+PRODUCTION_STORAGE_DIR=/var/www/storage \
+RESTORE_STORAGE_DIR=/var/backups/riwaj-grand-files_restore_drill \
+RESTORE_CONFIRM=riwaj-grand-files_restore_drill \
+bash deploy/restore-storage-drill.sh /secure/path/riwaj-storage-TIMESTAMP.tar.gz.age
+~~~
+
+The script canonicalizes both paths and refuses any restore target inside the
+configured live storage tree, existing targets, or missing checksum files.
 Never point the restore credentials at production. Validate row counts,
 critical tenant/booking/payment relationships, media file counts, private-file
 access controls, and a staging application boot before recording a successful
