@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: app
     container_name: riwaj_app
     restart: unless-stopped
     working_dir: /var/www
@@ -81,17 +82,18 @@ services:
       - riwaj
 
   nginx:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+    image: riwaj-grand-web:production
     container_name: riwaj_nginx
     restart: unless-stopped
     expose:
       - "80"
     volumes:
-      # Run `npm ci && npm run build` before `docker compose up` so public/build
-      # exists, and run `php artisan storage:link` once to create public/storage.
-      - ./public:/var/www/public:ro
+      # Only public uploads are mounted; private files are never web-readable.
       - riwaj_storage:/var/www/storage:ro
-      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       app:
         condition: service_healthy
