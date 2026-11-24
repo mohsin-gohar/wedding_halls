@@ -29,7 +29,13 @@ class SubscriptionService
 
         Tenant::query()
             ->whereIn('subscription_status', ['ACTIVE', 'TRIAL', 'GRACE_PERIOD'])
-            ->whereNotNull('subscription_expires_at')
+            ->where(function ($query): void {
+                $query->whereNotNull('subscription_expires_at')
+                    ->orWhere(function ($trialQuery): void {
+                        $trialQuery->where('subscription_status', 'TRIAL')
+                            ->whereNotNull('trial_ends_at');
+                    });
+            })
             ->select('id')
             ->chunkById(100, function ($candidates) use ($now, &$expiredCount, &$warningCount, &$processedTenants): void {
                 foreach ($candidates as $candidate) {
@@ -39,8 +45,32 @@ class SubscriptionService
                             ->lockForUpdate()
                             ->first();
 
-                        if (! $tenant || ! in_array($tenant->subscription_status, ['ACTIVE', 'TRIAL', 'GRACE_PERIOD'], true) || ! $tenant->subscription_expires_at) {
+                        if (! $tenant || ! in_array($tenant->subscription_status, ['ACTIVE', 'TRIAL', 'GRACE_PERIOD'], true)) {
                             return null;
+                        }
+
+                        // Trial-only tenants may have no paid subscription expiry.
+                        // Their explicit trial_ends_at date is the entitlement boundary.
+                        if (! $tenant->subscription_expires_at) {
+                            if ($tenant->subscription_status !== 'TRIAL' || ! $tenant->trial_ends_at || ! $now->greaterThan($tenant->trial_ends_at)) {
+                                return null;
+                            }
+
+                            $tenant->update(['subscription_status' => 'EXPIRED']);
+                            AuditLog::log(
+                                'SUBSCRIPTION_EXPIRED',
+                                "Tenant [{$tenant->name}] trial ended on [{$tenant->trial_ends_at->toDateTimeString()}] and transitioned to [EXPIRED].",
+                                $tenant->id,
+                                'Tenant',
+                                (string) $tenant->id
+                            );
+
+                            return [
+                                'tenant_id' => $tenant->id,
+                                'name' => $tenant->name,
+                                'action' => 'EXPIRED',
+                                'expired_at' => $tenant->trial_ends_at->toIso8601String(),
+                            ];
                         }
 
                         $expiresAt = $tenant->subscription_expires_at;
