@@ -54,6 +54,12 @@ docker compose exec app php artisan storage:link
 docker compose exec app php artisan optimize
 ~~~
 
+The PHP image loads `deploy/php-production.ini`: 64 MB per uploaded file,
+70 MB POST body, 120-second execution/input limits, and 256 MB memory. Nginx
+allows 64 MB request bodies. Livewire temporary uploads are capped at 50 MB,
+matching the largest vendor media validation rule. Keep the PHP, proxy, and
+Livewire limits aligned if you change this contract.
+
 5. Caddy terminates HTTPS and renews apex + www certificates automatically.
    DNS must already point to the VPS and ports 80/443 must be reachable. The
    app's PHP-FPM port, MySQL, and Redis are not published to the internet.
