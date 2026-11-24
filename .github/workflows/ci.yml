@@ -67,6 +67,7 @@ jobs:
           EOF
           docker compose config --quiet
           docker compose config | grep -F "fsockopen('127.0.0.1',9000)"
+          docker compose config | grep -F "172.30.0.10"
           bash -n deploy/backup-docker.sh deploy/restore-drill.sh deploy/restore-storage-drill.sh deploy/production-smoke.sh
           docker run --rm -e APP_DOMAIN=example.test \
             -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
