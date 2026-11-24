@@ -182,8 +182,15 @@ class SubscriptionService
         }
 
         return DB::transaction(function () use ($tenant, $plan, $billingCycle, $amount, $paymentMethod, $transactionReference, $autoApprove, $approvedByUserId): SubscriptionPayment {
+            // Serialize renewals for the same tenant. A stale caller model must
+            // never overwrite a more recent expiry when two approvals overlap.
+            $lockedTenant = Tenant::query()
+                ->whereKey($tenant->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
             $payment = SubscriptionPayment::create([
-                'tenant_id' => $tenant->id,
+                'tenant_id' => $lockedTenant->id,
                 'subscription_plan_id' => $plan->id,
                 'billing_cycle' => $billingCycle,
                 'amount' => $amount,
@@ -196,7 +203,7 @@ class SubscriptionService
             ]);
 
             if ($autoApprove) {
-                $this->applyApprovedSubscription($tenant->fresh(), $plan, $billingCycle);
+                $this->applyApprovedSubscription($lockedTenant, $plan, $billingCycle);
             }
 
             return $payment;
