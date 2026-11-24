@@ -421,15 +421,13 @@ class Tenant extends Model
 
     public function isSubscriptionActive(): bool
     {
-        if (in_array($this->subscription_status, ['ACTIVE', 'TRIAL'])) {
-            if ($this->subscription_expires_at && $this->subscription_expires_at->isPast()) {
-                return false;
-            }
-
-            return true;
+        if (! in_array(strtoupper((string) $this->subscription_status), ['ACTIVE', 'TRIAL', 'GRACE_PERIOD'], true)) {
+            return false;
         }
 
-        return false;
+        // Use the same entitlement boundary as write access and marketplace
+        // visibility, including the three-day paid grace period and trial end.
+        return ! $this->isLocked();
     }
 
     public function isLocked(): bool
