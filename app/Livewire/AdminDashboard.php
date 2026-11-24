@@ -929,15 +929,16 @@ class AdminDashboard extends Component
     {
         $hall = Hall::findOrFail($hallId);
 
-        if ($hall->bookings()->whereIn('status', ['HOLD', 'CONFIRMED'])->exists()) {
-            $this->errorMessage = "Hall [{$hall->name}] has active or confirmed bookings. Cancel or complete those reservations before deleting the hall.";
+        // Preserve the complete booking ledger. Deleting a hall must never
+        // cascade-delete completed, cancelled, or historical reservations.
+        if ($hall->bookings()->exists()) {
+            $this->errorMessage = "Hall [{$hall->name}] has booking history. Keep the hall record and disable its marketplace visibility instead of deleting historical reservations.";
 
             return;
         }
 
         $name = $hall->name;
         $tenantId = $hall->tenant_id;
-        $hall->bookings()->delete();
         $hall->delete();
 
         AuditLog::log('HALL_DELETED', "Super Admin deleted hall [{$name}].", $tenantId, 'Hall', $hallId);
@@ -1105,15 +1106,23 @@ class AdminDashboard extends Component
 
     public function deleteBooking(string $bookingId)
     {
-        $booking = Booking::findOrFail($bookingId);
+        $booking = Booking::withCount('payments')->findOrFail($bookingId);
+
+        // Bookings are financial/business records, not disposable UI rows.
+        // Keep the booking and every receipt/refund/audit reference intact.
+        if ($booking->payments_count > 0 || ! in_array($booking->status, ['INQUIRY', 'CANCELLED'], true)) {
+            $this->errorMessage = "Booking [{$booking->booking_reference}] cannot be deleted because it contains financial or operational history. Change its status through the booking workflow instead.";
+
+            return;
+        }
+
         $ref = $booking->booking_reference;
         $tenantId = $booking->tenant_id;
-        $booking->payments()->delete();
+
+        AuditLog::log('BOOKING_DELETED', "Super Admin deleted unfinancialized {$booking->status} booking [{$ref}].", $tenantId, 'Booking', $bookingId);
         $booking->delete();
 
-        AuditLog::log('BOOKING_DELETED', "Super Admin deleted booking [{$ref}].", $tenantId, 'Booking', $bookingId);
-
-        $this->feedbackMessage = "Booking [{$ref}] deleted.";
+        $this->feedbackMessage = "Unfinancialized booking [{$ref}] deleted.";
     }
 
     // ==========================================
