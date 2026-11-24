@@ -23,6 +23,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Honor forwarded HTTPS/client information only from explicitly
+        // trusted reverse proxies. Docker's private Caddy/Nginx edge sets this
+        // to '*' because PHP-FPM is not publicly reachable; shared hosting
+        // should leave it unset unless its trusted proxy CIDRs are known.
+        $trustedProxies = array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('TRUSTED_PROXIES', ''))
+        )));
+        $middleware->trustProxies(at: $trustedProxies ?: null);
+
         // Stateless API surface is rate limited (60 req/min per token/IP).
         $middleware->throttleApi();
 
