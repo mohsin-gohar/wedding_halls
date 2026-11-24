@@ -552,10 +552,13 @@ class EnterpriseExpansionTest extends TestCase
 
     public function test_api_availability_route_is_not_shadowed_by_booking_id_route(): void
     {
-        $owner = $this->vendorOwner($this->cateringVendor());
+        // This test covers route resolution, not tenant scoping. The dedicated
+        // API boundary tests cover cross-tenant availability denial.
+        $admin = $this->platformStaff('ROLE_SUPER_ADMIN');
+        $hall = Hall::query()->firstOrFail();
 
-        $response = $this->actingAs($owner)
-            ->getJson('/api/v1/bookings/availability?hall_id='.Hall::query()->where('tenant_id', $owner->tenant_id)->firstOrFail()->id.'&date='.now()->addDays(10)->toDateString());
+        $response = $this->actingAs($admin)
+            ->getJson('/api/v1/bookings/availability?hall_id='.$hall->id.'&date='.now()->addDays(10)->toDateString());
 
         $response->assertOk();
         $this->assertArrayHasKey('available', $response->json());
