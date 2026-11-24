@@ -1,7 +1,12 @@
 # Riwaj Grand — Production Deployment Guide
 
 This guide takes the Wedding Hall Booking & Management SaaS from this repo to a
-live production server. It complements the automated pieces added in `deploy/`.
+live production server. It complements the automated pieces added in deploy/.
+
+> **Current operations runbook:** See [PRODUCTION_OPERATIONS.md](PRODUCTION_OPERATIONS.md)
+> for the supported Hostinger Shared versus VPS split, Caddy TLS, readiness
+> monitoring, encrypted backups, staging restore drills, and live SMTP/WhatsApp
+> evidence. Repository automation does not provision external provider accounts.
 
 ## 1. Server prerequisites
 
@@ -98,13 +103,18 @@ The scheduler runs `subscriptions:check-expiry` daily (subscription lifecycle).
 
 `Dockerfile` starts Supervisor so PHP-FPM, the queue worker and the scheduler
 all run inside the application container. `docker-compose.yml` keeps MySQL and
-Redis on the private bridge network and refuses to start without
-`DB_ROOT_PASSWORD` and `DB_PASSWORD`.
+Redis on the private bridge network, uses Caddy for automatic apex/www HTTPS,
+and refuses to start without `APP_DOMAIN`, `DB_ROOT_PASSWORD`, and
+`DB_PASSWORD`. The app container is not given the MySQL root password.
 
 ```bash
-cp .env.production.example .env    # fill every secret
+cp .env.production.example .env    # fill every secret and APP_DOMAIN
+chmod 600 .env
+docker compose config --quiet
 docker compose up -d --build
 docker compose exec app php artisan migrate --force
+docker compose exec app php artisan storage:link
+docker compose exec app php artisan optimize
 ```
 
 Do not publish MySQL/Redis ports to the public internet. If you need a one-off
@@ -139,14 +149,15 @@ php artisan about                       # environment = production
 ## 10. Ongoing operations
 
 - **Logs**: `storage/logs/laravel-*.log` (daily rotation, 14 days).
-- **Backups**: schedule daily MySQL dumps + S3 sync, e.g.
-
-  ```cron
-  0 2 * * * mysqldump -u riwaj -p riwaj_grand | gzip > /backups/riwaj-grand-$(date +\%F).sql.gz
-  ```
-
-- **Optional monitoring**: set `SENTRY_LARAVEL_DSN` and install
-  `sentry/sentry-laravel` for error tracking.
+- **Backups**: use the encrypted, checksum-verified off-site workflow in
+  [PRODUCTION_OPERATIONS.md](PRODUCTION_OPERATIONS.md); a dump is not a
+  recoverable backup until it has passed a staging restore drill.
+- **Uptime monitoring**: the optional Uptime Kuma service is available with
+  the Docker monitoring profile and binds to localhost only. Configure alert
+  channels and monitors after provisioning the host.
+- **Error tracking**: no Sentry project/DSN is provisioned by this repository.
+  Do not claim error tracking is active until a provider is configured and a
+  test event is received.
 
 - **Scaling**: see [`SCALING.md`](SCALING.md) for Redis/session/queue requirements,
   scale-out readiness, database query workflow, and load-test gates. Do not use
