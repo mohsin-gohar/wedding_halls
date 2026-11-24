@@ -17,6 +17,14 @@ class ProductionReadinessEndpointTest extends TestCase
             ->assertExactJson(['status' => 'ready']);
     }
 
+    public function test_livewire_temporary_upload_limit_matches_the_50_mb_media_contract(): void
+    {
+        $this->assertSame(
+            ['required', 'file', 'max:51200'],
+            config('livewire.temporary_file_upload.rules')
+        );
+    }
+
     public function test_readiness_probe_returns_generic_503_when_a_dependency_fails(): void
     {
         DB::shouldReceive('select')
