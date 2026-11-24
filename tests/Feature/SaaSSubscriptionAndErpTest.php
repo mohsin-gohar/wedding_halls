@@ -157,6 +157,9 @@ class SaaSSubscriptionAndErpTest extends TestCase
         // Verify tenant subscription is updated
         $tenant->refresh();
         $this->assertEquals($plan->id, $tenant->subscription_plan_id);
+        $this->assertEquals($plan->name, $tenant->subscription_plan);
+        $this->assertEquals('YEARLY', $tenant->billing_cycle);
+        $this->assertNotNull($tenant->subscription_starts_at);
         $this->assertEquals('ACTIVE', $tenant->subscription_status);
         $this->assertTrue($tenant->subscription_expires_at->isFuture());
     }
