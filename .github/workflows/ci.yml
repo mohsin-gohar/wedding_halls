@@ -99,7 +99,12 @@ jobs:
             docker logs riwaj-web-smoke || true
             exit 1
           fi
-          test "$(curl -fsS http://127.0.0.1:8080/storage/smoke.txt)" = "public-media-ok"
+          if ! media_response="$(curl -fsS http://127.0.0.1:8080/storage/smoke.txt)"; then
+            docker exec riwaj-web-smoke ls -la /var/www/storage/app/public || true
+            docker logs riwaj-web-smoke || true
+            exit 1
+          fi
+          test "$media_response" = "public-media-ok"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/storage/app/private/secret.txt)" = "404"
 
   test:
