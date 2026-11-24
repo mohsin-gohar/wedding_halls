@@ -168,6 +168,67 @@ class DirectServiceBookingTest extends TestCase
         ]);
     }
 
+    public function test_booking_service_rejects_a_bookable_owned_by_another_vendor(): void
+    {
+        $vendor = $this->vendor('nawab-caterers');
+        $otherVendor = $this->vendor('lens-and-lantern-studio');
+        $customer = $this->customer();
+        $foreignService = $this->makeService($otherVendor);
+
+        try {
+            app(ServiceBookingService::class)->createDirectBooking(
+                $vendor,
+                (int) $customer->id,
+                $foreignService,
+                [
+                    'event_name' => 'Cross Tenant Service Attempt',
+                    'event_date' => now()->addDays(60)->toDateString(),
+                    'guest_count' => 200,
+                ]
+            );
+            $this->fail('A vendor must not book another tenant\'s service.');
+        } catch (ServiceBookingException $exception) {
+            $this->assertSame(404, $exception->getCode());
+            $this->assertStringContainsString('no longer available for this vendor', $exception->getMessage());
+        }
+
+        $this->assertDatabaseMissing('service_bookings', [
+            'tenant_id' => $vendor->id,
+            'event_name' => 'Cross Tenant Service Attempt',
+        ]);
+    }
+
+    public function test_booking_service_rejects_a_stale_inactive_bookable_model(): void
+    {
+        $vendor = $this->vendor('nawab-caterers');
+        $customer = $this->customer();
+        $service = $this->makeService($vendor);
+        $vendor->refresh();
+        $service->update(['is_active' => false]);
+
+        try {
+            app(ServiceBookingService::class)->createDirectBooking(
+                $vendor,
+                (int) $customer->id,
+                $service,
+                [
+                    'event_name' => 'Inactive Service Attempt',
+                    'event_date' => now()->addDays(60)->toDateString(),
+                    'guest_count' => 200,
+                ]
+            );
+            $this->fail('An inactive service must not be bookable through a stale model.');
+        } catch (ServiceBookingException $exception) {
+            $this->assertSame(404, $exception->getCode());
+            $this->assertStringContainsString('no longer available for this vendor', $exception->getMessage());
+        }
+
+        $this->assertDatabaseMissing('service_bookings', [
+            'tenant_id' => $vendor->id,
+            'event_name' => 'Inactive Service Attempt',
+        ]);
+    }
+
     public function test_opening_the_page_without_an_item_asks_you_to_pick_one(): void
     {
         $vendor = $this->vendor('nawab-caterers');
