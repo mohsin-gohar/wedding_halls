@@ -13,12 +13,14 @@ services:
       # These override the host-oriented values in .env.
       DB_HOST: db
       DB_PORT: "3306"
+      DB_ROOT_PASSWORD: null
+      APP_URL: https://${APP_DOMAIN:?APP_DOMAIN must be set}
       REDIS_HOST: redis
       REDIS_PORT: "6379"
-      CACHE_STORE: ${CACHE_STORE:-redis}
-      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
-      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
-      BOOKING_LOCK_STORE: ${BOOKING_LOCK_STORE:-redis}
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      SESSION_DRIVER: redis
+      BOOKING_LOCK_STORE: redis
     volumes:
       - riwaj_storage:/var/www/storage
     depends_on:
@@ -80,8 +82,8 @@ services:
     image: nginx:alpine
     container_name: riwaj_nginx
     restart: unless-stopped
-    ports:
-      - "80:80"
+    expose:
+      - "80"
     volumes:
       # Run `npm ci && npm run build` before `docker compose up` so public/build
       # exists, and run `php artisan storage:link` once to create public/storage.
@@ -94,6 +96,26 @@ services:
     networks:
       - riwaj
 
+  caddy:
+    image: caddy:2-alpine
+    container_name: riwaj_caddy
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?APP_DOMAIN must be set}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - riwaj_caddy_data:/data
+      - riwaj_caddy_config:/config
+    depends_on:
+      nginx:
+        condition: service_started
+    networks:
+      - riwaj
+
 networks:
   riwaj:
     driver: bridge
@@ -101,3 +123,5 @@ networks:
 volumes:
   riwaj_dbdata:
   riwaj_storage:
+  riwaj_caddy_data:
+  riwaj_caddy_config:
