@@ -46,7 +46,12 @@ This section supersedes older snippets in this guide where they differ.
 3. In the search bar or left menu, find **PHP Configuration** (under *Advanced*).
 4. Select **PHP 8.2** or **PHP 8.3** (Recommended).
 5. Click **Save**.
-6. Under the **PHP Extensions** tab, ensure the following are enabled (they are enabled by default on Hostinger):
+6. In PHP Options, set `upload_max_filesize=64M`, `post_max_size=70M`,
+   `max_execution_time=120`, `max_input_time=120`, and `memory_limit=256M`
+   where the selected plan permits. Livewire and vendor media validation allow
+   files up to 50 MB; if Hostinger enforces a lower limit, large media uploads
+   will not work and the plan limit must be resolved before go-live.
+7. Under the **PHP Extensions** tab, ensure the following are enabled (they are enabled by default on Hostinger):
    - `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `curl`, `fileinfo`, `bcmath`, `intl`, `gd`.
 
 ---
