@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\Package;
 use App\Models\Payment;
+use App\Models\Tenant;
 use App\Support\CashOnlyPayments;
 use Carbon\Carbon;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -67,9 +68,14 @@ class BookingService
 
         // The hall record is the only authority for tenant ownership. Resolve it
         // before trusting any caller-controlled financial or lifecycle value.
-        $hall = Hall::with('tenant')->findOrFail($hallId);
+        $hall = Hall::with(['tenant', 'venue'])->findOrFail($hallId);
 
-        if (! $hall->tenant || ! $hall->tenant->canAcceptBookings()) {
+        if (
+            ! $hall->is_active
+            || ! $hall->venue?->is_active
+            || ! $hall->tenant
+            || ! $hall->tenant->canAcceptBookings()
+        ) {
             throw new \InvalidArgumentException('Venue is not accepting bookings.');
         }
 
@@ -97,6 +103,29 @@ class BookingService
 
         try {
             $booking = DB::transaction(function () use ($data, $hall, $hallId, $eventDate, $slotType) {
+                // Recheck subscription and hall state under row locks. This
+                // serializes a reservation against suspension, expiry and
+                // hall archival that may happen after the initial page load.
+                $tenant = Tenant::query()
+                    ->whereKey($hall->tenant_id)
+                    ->lockForUpdate()
+                    ->first();
+                $lockedHall = Hall::with(['tenant', 'venue'])
+                    ->whereKey($hallId)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (
+                    ! $tenant
+                    || ! $lockedHall
+                    || $lockedHall->tenant_id !== $tenant->id
+                    || ! $lockedHall->is_active
+                    || ! $lockedHall->venue?->is_active
+                    || ! $tenant->canAcceptBookings()
+                ) {
+                    throw new \\InvalidArgumentException('Venue is not accepting bookings.');
+                }
+
                 // Strict row-level lock check: Verify no active booking exists in DB
                 $existing = $this->slotConflictQuery($hallId, $eventDate, $slotType)
                     ->lockForUpdate()
@@ -112,7 +141,7 @@ class BookingService
                     );
                 }
 
-                $tenantId = $hall->tenant_id;
+                $tenantId = $lockedHall->tenant_id;
 
                 // Values below were normalized and validated before the lock was
                 // taken; the transaction only persists the authoritative set.
@@ -153,7 +182,7 @@ class BookingService
                     'custom_menu_json' => $data['custom_menu_json'] ?? null,
                     'addons_json' => $data['addons_json'] ?? null,
                     'status' => $data['status'],
-                    'hold_expires_at' => $this->resolveHoldExpiry($hall, $data),
+                    'hold_expires_at' => $this->resolveHoldExpiry($lockedHall, $data),
                     'pipeline_stage' => $data['pipeline_stage'],
                     'notes' => $data['notes'] ?? null,
                 ]);
