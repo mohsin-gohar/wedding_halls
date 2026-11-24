@@ -154,6 +154,7 @@ class DirectServiceBookingTest extends TestCase
                 [
                     'event_name' => 'Expired Vendor Test Event',
                     'event_date' => now()->addDays(60)->toDateString(),
+                    'guest_count' => 200,
                 ]
             );
             $this->fail('An expired vendor must not receive a new service booking.');
