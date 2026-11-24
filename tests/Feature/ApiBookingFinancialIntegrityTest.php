@@ -101,6 +101,24 @@ class ApiBookingFinancialIntegrityTest extends TestCase
         $this->assertSame(0, Booking::query()->where('customer_name', 'Expired Tenant Guest')->count());
     }
 
+    public function test_api_delete_archives_operational_booking_history(): void
+    {
+        $superAdmin = User::query()->where('role', 'ROLE_SUPER_ADMIN')->firstOrFail();
+        $booking = Booking::query()->firstOrFail();
+        $booking->update(['status' => 'CONFIRMED']);
+
+        $this->actingAs($superAdmin)
+            ->deleteJson('/api/v1/bookings/'.$booking->id)
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('archived', true);
+
+        $this->assertDatabaseHas('bookings', [
+            'id' => $booking->id,
+            'status' => 'CANCELLED',
+        ]);
+    }
+
     public function test_client_package_from_another_tenant_is_rejected(): void
     {
         $hall = Hall::query()->firstOrFail();
