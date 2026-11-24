@@ -76,6 +76,25 @@ jobs:
           docker build --target app --tag riwaj-grand:ci .
           docker build --target web --tag riwaj-grand-web:ci .
 
+          # Exercise the actual Nginx image: built assets and public uploads
+          # must be served, while private paths remain unavailable.
+          mkdir -p "$RUNNER_TEMP/riwaj-public-media"
+          printf 'public-media-ok' > "$RUNNER_TEMP/riwaj-public-media/smoke.txt"
+          docker run -d --name riwaj-web-smoke --add-host app:127.0.0.1 \
+            -p 127.0.0.1:8080:80 \
+            -v "$RUNNER_TEMP/riwaj-public-media:/var/www/storage/app/public:ro" \
+            riwaj-grand-web:ci
+          trap 'docker rm -f riwaj-web-smoke >/dev/null 2>&1 || true' EXIT
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8080/build/manifest.json >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8080/build/manifest.json >/dev/null
+          test "$(curl -fsS http://127.0.0.1:8080/storage/smoke.txt)" = "public-media-ok"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/storage/app/private/secret.txt)" = "404"
+
   test:
     name: MySQL test suite
     runs-on: ubuntu-latest
