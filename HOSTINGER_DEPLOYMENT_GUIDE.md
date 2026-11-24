@@ -22,6 +22,23 @@ A step-by-step guide to deploying this Laravel + Livewire project on **Hostinger
 
 ---
 
+
+## Production operations correction (current)
+
+This section supersedes older snippets in this guide where they differ.
+- Do not use `--seed` with `hostinger:setup`; production demo seeding is
+  disabled.
+- On Hostinger Shared/Cloud without Redis and persistent workers, use the
+  database cache/lock/session/queue drivers, not file cache or sync queues.
+- Configure both Laravel cron entries for `schedule:run` and
+  `queue:work database --stop-when-empty` as documented in
+  [deploy/PRODUCTION_OPERATIONS.md](deploy/PRODUCTION_OPERATIONS.md).
+- Use hPanel SSL for shared hosting. The Caddy automatic TLS stack is only for
+  a VPS where Docker can bind public ports 80 and 443.
+- The production go-live checks, encrypted VPS backup scripts, staging restore
+  drill, Uptime Kuma setup, SMTP and WhatsApp live verification are documented
+  in [deploy/PRODUCTION_OPERATIONS.md](deploy/PRODUCTION_OPERATIONS.md).
+
 ## Step 1: Set PHP Version in Hostinger hPanel
 
 1. Log into your **Hostinger hPanel**.
@@ -111,9 +128,12 @@ FILESYSTEM_DISK=public
    ```
 5. Run the automated Hostinger deployment command:
    ```bash
-   php artisan hostinger:setup --seed
+   php artisan hostinger:setup
    ```
-   *(Add `--seed` if you want initial luxury halls and demo catalog data loaded).*
+
+   Demo seeders are intentionally disabled in production. Create the first
+   Super Admin through the documented secure provisioning workflow; never use
+   known demo credentials on a public site.
 
 ---
 
