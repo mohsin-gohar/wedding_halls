@@ -229,6 +229,10 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
             $this->assertNotContains($expired->id, $visibleIds);
             $this->assertFalse($pastGrace->canAcceptBookings());
             $this->assertFalse($expiredTrial->canAcceptBookings());
+            $this->assertTrue($active->isSubscriptionActive());
+            $this->assertTrue($grace->isSubscriptionActive(), 'Paid grace period retains active entitlement.');
+            $this->assertFalse($pastGrace->isSubscriptionActive());
+            $this->assertFalse($expiredTrial->isSubscriptionActive());
         } finally {
             Carbon::setTestNow();
         }
