@@ -246,7 +246,7 @@ class SubscriptionService
     {
         $status = strtoupper((string) $tenant->subscription_status);
 
-        if (in_array($status, ['SUSPENDED', 'EXPIRED', 'CANCELLED'], true)) {
+        if (in_array($status, ['SUSPENDED', 'EXPIRED', 'CANCELLED', 'PAST_DUE'], true)) {
             return true;
         }
 
