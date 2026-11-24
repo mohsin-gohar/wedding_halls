@@ -3,7 +3,7 @@
 ################################################################
 # Stage 1 — build production frontend assets
 ################################################################
-FROM node:20-alpine AS assets
+FROM node:20-bookworm-slim AS assets
 
 WORKDIR /app
 
