@@ -95,7 +95,6 @@ class BookingController extends ApiController
             $hall = Hall::query()
                 ->publicVisible()
                 ->whereKey($request->hall_id)
-                ->whereHas('tenant', fn ($tenant) => $tenant->marketplaceVisible())
                 ->with('tenant')
                 ->firstOrFail();
         } else {
@@ -285,7 +284,6 @@ class BookingController extends ApiController
                 Hall::query()
                     ->publicVisible()
                     ->whereKey($hall->id)
-                    ->whereHas('tenant', fn ($tenant) => $tenant->marketplaceVisible())
                     ->exists(),
                 404,
                 'Venue is not publicly available.'
