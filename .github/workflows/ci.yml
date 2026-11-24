@@ -55,6 +55,58 @@ jobs:
       - name: Production asset build
         run: npm run build
 
+      - name: Validate production Docker stack
+        run: |
+          cp .env.production.example .env
+          cat >> .env <<'EOF'
+          APP_DOMAIN=example.test
+          DB_ROOT_PASSWORD=ci-only-root-password
+          DB_PASSWORD=ci-only-app-password
+          DB_DATABASE=riwaj_grand_ci
+          DB_USERNAME=riwaj_ci
+          EOF
+          docker compose config --quiet
+          docker compose config | grep -F "fsockopen('127.0.0.1',9000)"
+          docker compose config | grep -F "172.30.0.10"
+          bash -n deploy/backup-docker.sh deploy/restore-drill.sh deploy/restore-storage-drill.sh deploy/production-smoke.sh
+          docker run --rm -e APP_DOMAIN=example.test \
+            -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+          docker run --rm --add-host app:127.0.0.1 \
+            -v "$PWD/deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro" \
+            nginx:alpine nginx -t
+          docker build --target app --tag riwaj-grand:ci .
+          docker build --target web --tag riwaj-grand-web:ci .
+
+          # Exercise the actual Nginx image: built assets and public uploads
+          # must be served, while private paths remain unavailable.
+          docker run --rm riwaj-grand-web:ci test -s /var/www/public/build/manifest.json
+          mkdir -p "$RUNNER_TEMP/riwaj-public-media"
+          printf 'public-media-ok' > "$RUNNER_TEMP/riwaj-public-media/smoke.txt"
+          docker run -d --name riwaj-web-smoke --add-host app:127.0.0.1 \
+            -p 127.0.0.1:8080:80 \
+            -v "$RUNNER_TEMP/riwaj-public-media:/var/www/storage/app/public:ro" \
+            riwaj-grand-web:ci
+          trap 'docker rm -f riwaj-web-smoke >/dev/null 2>&1 || true' EXIT
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8080/build/manifest.json >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          if ! curl -fsS http://127.0.0.1:8080/build/manifest.json >/dev/null; then
+            docker exec riwaj-web-smoke ls -la /var/www/public /var/www/public/build || true
+            docker logs riwaj-web-smoke || true
+            exit 1
+          fi
+          if ! media_response="$(curl -fsS http://127.0.0.1:8080/storage/smoke.txt)"; then
+            docker exec riwaj-web-smoke ls -la /var/www/storage/app/public || true
+            docker logs riwaj-web-smoke || true
+            exit 1
+          fi
+          test "$media_response" = "public-media-ok"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/storage/app/private/secret.txt)" = "404"
+
   test:
     name: MySQL test suite
     runs-on: ubuntu-latest

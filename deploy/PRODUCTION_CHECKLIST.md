@@ -8,6 +8,9 @@ short enough to copy into a release ticket.
 
 ## 1. Pre-flight (run locally / CI)
 
+- [ ] GitHub Actions passes on the exact release commit, including Docker
+      Compose validation, Caddy/Nginx config validation, image build, MySQL
+      tests, and Playwright browser QA.
 - [ ] `php artisan test` passes.
 - [ ] `vendor/bin/pint --test` passes (or `vendor/bin/pint` has been committed).
 - [ ] `npm ci && npm run build` completes without errors.
@@ -20,7 +23,7 @@ short enough to copy into a release ticket.
 - [ ] PHP 8.2+ with `bcmath ctype curl dom fileinfo json mbstring openssl pcre pdo tokenizer xml redis`.
 - [ ] Composer 2.x, Node 20 LTS (build can run in CI), Nginx, Redis 7+, MySQL 8+.
 - [ ] `storage/` and `bootstrap/cache/` are writable by the web user (`www-data`).
-- [ ] `php artisan storage:link` has been run **if** `FILESYSTEM_DISK=public`.
+- [ ] `php artisan storage:link` has been run **if** `FILESYSTEM_DISK=public` on a conventional shared/Nginx webroot. The Docker VPS stack serves the dedicated public-media volume through an explicit Nginx alias and does not depend on a symlink.
       With S3/R2 the link is not required, but the bucket policy must allow the
       public/CDN reads used by hall galleries.
 - [ ] Supervisor queue worker and cron scheduler are installed (see §5–6 of
@@ -50,7 +53,11 @@ short enough to copy into a release ticket.
 
 ## 4. Database and files
 
-- [ ] Take a verified database backup **before** running migrations.
+- [ ] Take encrypted off-site database **and uploaded-file** backups before
+      running migrations; verify archive checksums.
+- [ ] Complete a restore drill into an isolated staging database and restore
+      the corresponding public/private storage archive into a separate staging
+      directory; verify critical tenant, booking, payment and file relationships.
 - [ ] `php artisan migrate --force` completes; no pending migrations remain.
 - [ ] Seed/reference data (subscription plans, platform settings) exists.
 - [ ] Object storage bucket exists, has the expected region, and lifecycle/
@@ -74,6 +81,8 @@ short enough to copy into a release ticket.
 
 - [ ] `https://<host>/.env` returns 403/404, never file contents.
 - [ ] `https://<host>/up` returns 200 and leaks no debug information.
+- [ ] `https://<host>/ready` returns 200 only when MySQL, the configured
+      atomic cache-lock store, and private filesystem are usable.
 - [ ] Response headers include `Strict-Transport-Security`,
       `X-Content-Type-Options`, `X-Frame-Options`/`frame-ancestors`, and CSP.
 - [ ] `/admin` returns **403** for non-super-admin accounts (not a redirect that
@@ -109,8 +118,11 @@ short enough to copy into a release ticket.
 
 ## 8. Observability and rollback
 
-- [ ] Uptime monitor points at `/up` and the public home page.
-- [ ] Error tracking (Sentry or equivalent) receives a test event.
+- [ ] Uptime monitor points at `/up`, `/ready`, and the public home page.
+- [ ] Alert delivery is configured and a test alert is received.
+- [ ] Error tracking (Sentry or equivalent) receives a test event if an error
+      tracking provider has been provisioned; do not mark it complete based on
+      daily log files alone.
 - [ ] Alerts exist for 5xx rate, queue backlog, failed jobs, disk usage, and
       database/Redis availability.
 - [ ] Log rotation is configured and logs are shipped off-box.
@@ -135,3 +147,12 @@ php artisan up
 
 If a migration is destructive or irreversible, restore the pre-deploy backup
 instead of rolling back blindly.
+
+
+## Hosting-model note
+
+Hostinger Shared/Cloud without persistent workers uses database cache/locks,
+database sessions, database queues, and cron-driven scheduler/queue workers.
+The Docker/Caddy/Redis/Uptime Kuma stack is for a VPS only. Follow
+[PRODUCTION_OPERATIONS.md](PRODUCTION_OPERATIONS.md) rather than mixing the two
+deployment models.

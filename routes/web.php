@@ -74,9 +74,57 @@ use App\Support\PermissionMatrix;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+
+/*
+|--------------------------------------------------------------------------
+| Dependency-aware readiness probe
+|--------------------------------------------------------------------------
+| Keep /up as a lightweight process liveness check. /ready verifies the
+| database, shared cache, and private filesystem without exposing internals.
+*/
+Route::get('/ready', function () {
+    $cacheKey = 'ops-readiness:'.Str::uuid();
+    $storagePath = 'healthchecks/'.Str::uuid().'.txt';
+
+    try {
+        DB::select('SELECT 1');
+
+        if (! Cache::put($cacheKey, 'ok', 5) || Cache::get($cacheKey) !== 'ok') {
+            throw new RuntimeException('Shared cache readiness check failed.');
+        }
+
+        $lock = Cache::store(config('booking.lock_store'))->lock($cacheKey, 5);
+        if (! $lock->get()) {
+            throw new RuntimeException('Booking lock store readiness check failed.');
+        }
+        $lock->release();
+        Cache::forget($cacheKey);
+
+        $disk = Storage::disk('local');
+        if (! $disk->put($storagePath, 'ok') || $disk->get($storagePath) !== 'ok') {
+            throw new RuntimeException('Private filesystem readiness check failed.');
+        }
+        $disk->delete($storagePath);
+
+        return response()->json(['status' => 'ready']);
+    } catch (Throwable $exception) {
+        error_log('Readiness check failed: '.get_class($exception));
+
+        try {
+            Cache::forget($cacheKey);
+            Storage::disk('local')->delete($storagePath);
+        } catch (Throwable) {
+            // Preserve the generic readiness response if cleanup also fails.
+        }
+
+        return response()->json(['status' => 'not_ready'], 503);
+    }
+})->middleware('throttle:public-pages')->name('health.ready');
 
 /*
 |--------------------------------------------------------------------------

@@ -248,7 +248,7 @@ class WhatsAppWebhookController extends Controller
     {
         $token = config('services.whatsapp.access_token');
         $phoneId = config('services.whatsapp.phone_number_id');
-        $apiVersion = config('services.whatsapp.api_version', 'v19.0');
+        $apiVersion = config('services.whatsapp.api_version', 'v26.0');
 
         if ($token && $phoneId) {
             try {
