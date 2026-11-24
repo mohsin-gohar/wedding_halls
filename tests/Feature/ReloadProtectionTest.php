@@ -30,6 +30,22 @@ class ReloadProtectionTest extends TestCase
         }
     }
 
+    public function test_customer_login_reloads_are_throttled_after_5_attempts(): void
+    {
+        for ($i = 1; $i <= 5; $i++) {
+            $this->withHeaders(['X-Test-Rate-Limit' => 'true'])
+                ->get(route('customer.login'))
+                ->assertOk();
+        }
+
+        $this->withHeaders(['X-Test-Rate-Limit' => 'true'])
+            ->get(route('customer.login'))
+            ->assertStatus(429)
+            ->assertSee('Aap website ko bar bar reload nahi kar saktay')
+            ->assertSee('Server Protection')
+            ->assertSee('countdown');
+    }
+
     public function test_login_throttling_after_5_attempts_displays_warning(): void
     {
         $testEmail = 'abuse_tester@riwajgrand.pk';
