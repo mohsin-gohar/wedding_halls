@@ -15,4 +15,17 @@ class ProductionReadinessEndpointTest extends TestCase
             ->assertOk()
             ->assertExactJson(['status' => 'ready']);
     }
+
+    public function test_readiness_probe_returns_generic_503_when_a_dependency_fails(): void
+    {
+        Illuminate\Support\Facades\DB::shouldReceive('select')
+            ->once()
+            ->with('SELECT 1')
+            ->andThrow(new \RuntimeException('sensitive database connection details'));
+
+        $this->getJson('/ready')
+            ->assertStatus(503)
+            ->assertExactJson(['status' => 'not_ready'])
+            ->assertDontSee('sensitive database connection details');
+    }
 }
