@@ -40,6 +40,11 @@ jobs:
           find app config database routes tests -name '*.php' -print0 \
             | xargs -0 -n1 -P4 php -l
 
+      - name: Diagnose formatting in readiness route
+        run: |
+          vendor/bin/pint routes/web.php
+          git diff -- routes/web.php
+
       - name: Pint style check
         run: vendor/bin/pint --test
 
