@@ -1,0 +1,16 @@
+# Caddy obtains and renews public TLS certificates automatically.
+# Point both the apex and www DNS A/AAAA records at this server first.
+{$APP_DOMAIN} {
+    encode zstd gzip
+    header {
+        -Server
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        X-Frame-Options "SAMEORIGIN"
+    }
+    reverse_proxy nginx:80
+}
+
+www.{$APP_DOMAIN} {
+    redir https://{$APP_DOMAIN}{uri} permanent
+}
