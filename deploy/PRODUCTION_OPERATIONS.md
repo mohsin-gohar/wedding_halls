@@ -224,9 +224,11 @@ outbound credentials are absent.
 - Confirm domain ownership and DNS records in the registrar/Hostinger panel.
 - Confirm apex and www HTTPS certificates, automatic renewal, and HTTP to
   HTTPS redirect using an external TLS checker.
-- If Cloudflare or another proxy is in front, configure only its official
-  current proxy CIDRs in TRUSTED_PROXIES; never blindly trust arbitrary
-  forwarded headers on a publicly reachable PHP app.
+- Docker Compose assigns Nginx the fixed RIWAJ_NGINX_IP (default
+  172.30.0.10) and trusts only that address. Set RIWAJ_SUBNET to a private
+  range that does not overlap existing host networks. For Hostinger Shared or
+  Cloudflare/another proxy, configure only the actual trusted proxy IPs/CIDRs;
+  never blindly trust arbitrary forwarded headers on a public PHP app.
 - Rotate demo/seed credentials, create the first Super Admin with a unique
   password, enable MFA, and store APP_KEY plus recovery credentials safely.
 - Keep MySQL and Redis private; firewall all ports except the required web
