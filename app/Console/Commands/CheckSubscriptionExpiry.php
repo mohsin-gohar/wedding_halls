@@ -2,10 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Services\SubscriptionService;
 use Illuminate\Console\Command;
-use App\Models\Tenant;
-use App\Models\SubscriptionPayment;
-use Carbon\Carbon;
 
 class CheckSubscriptionExpiry extends Command
 {
@@ -21,41 +19,35 @@ class CheckSubscriptionExpiry extends Command
      *
      * @var string
      */
-    protected $description = 'Check and process subscription expirations';
+    protected $description = 'Audit active tenant subscriptions, manage grace periods, and transition expired accounts to locked mode while preserving all historical data.';
 
     /**
      * Execute the console command.
-     *
-     * @return int
      */
-    public function handle()
+    public function handle(SubscriptionService $subscriptionService): int
     {
-        $this->info('Checking subscription expirations...');
+        $this->info('Starting Riwaj Grand SaaS Subscription Expiry Audit...');
 
-        $now = Carbon::now();
+        $results = $subscriptionService->checkAndExpireSubscriptions();
 
-        // Find tenants with trial subscriptions that have expired
-        $tenants = Tenant::where('subscription_status', 'ACTIVE')
-            ->whereNotNull('subscription_expires_at')
-            ->where('subscription_expires_at', '<', $now)
-            ->get();
+        $this->line("• Accounts moved to Grace Period: {$results['warning_count']}");
+        $this->line("• Accounts moved to EXPIRED:      {$results['expired_count']}");
 
-        $processed = 0;
-
-        foreach ($tenants as $tenant) {
-            $tenant->update(['subscription_status' => 'EXPIRED']);
-
-            // Cancel any active bookings for this tenant
-            // $tenant->bookings()->where('status', 'CONFIRMED')->each->update(['status': 'EXPIRED']);
-
-            $processed++;
+        if (! empty($results['details'])) {
+            $this->table(
+                ['Tenant ID', 'Name', 'Action', 'Timestamp'],
+                array_map(function ($item) {
+                    return [
+                        $item['tenant_id'],
+                        $item['name'],
+                        $item['action'],
+                        $item['expired_at'] ?? $item['grace_ends_at'] ?? 'N/A',
+                    ];
+                }, $results['details'])
+            );
         }
 
-        if ($processed > 0) {
-            $this->info("Processed {$processed} expired subscriptions.");
-        } else {
-            $this->info('No subscriptions expired.');
-        }
+        $this->info('SaaS Subscription Audit completed successfully.');
 
         return Command::SUCCESS;
     }

@@ -2,43 +2,58 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
+use App\Models\AuditLog;
 use App\Models\Booking;
-use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class ExpireBookingHolds extends Command
 {
-    /** The name and signature of the console command. */
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
     protected $signature = 'bookings:expire-holds';
 
-    /** The console command description. */
-    protected $description = 'Expire expired booking holds and availability';
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Cancel HOLD bookings whose configured hold_expires_at has passed. Holds without an expiry are left unchanged.';
 
-    /** Execute the console command. */
-    public function handle()
+    /**
+     * Execute the console command.
+     */
+    public function handle(): int
     {
-        $this->info('Expiring booking holds...');
-
-        $now = Carbon::now();
-
-        // Find bookings with hold_expires_at in the past that are still CONFIRMED or HOLD
-        $bookings = Booking::where('hold_expires_at', '<', $now)
-            ->whereIn('status', ['CONFIRMED', 'HOLD'])
+        $expired = Booking::query()
+            ->where('status', 'HOLD')
+            ->whereNotNull('hold_expires_at')
+            ->where('hold_expires_at', '<=', now())
             ->get();
 
-        $expired = 0;
+        foreach ($expired as $booking) {
+            $stamp = $booking->hold_expires_at?->toDateTimeString() ?? now()->toDateTimeString();
 
-        foreach ($bookings as $booking) {
-            // Release the hold - set status back to HOLD or appropriate state
-            $booking->status = 'HOLD';
-            $booking->hold_expires_at = null;
-            $booking->save();
+            $booking->update([
+                'status' => 'CANCELLED',
+                'notes' => trim(($booking->notes ? $booking->notes."\n" : '').'Hold expired automatically at '.$stamp.'.'),
+            ]);
 
-            $expired++;
+            AuditLog::log(
+                'BOOKING_HOLD_EXPIRED',
+                "Hold {$booking->booking_reference} for {$booking->customer_name} on "
+                    .($booking->event_date?->toDateString() ?? 'unknown date')
+                    ." {$booking->slot_type} expired and was cancelled.",
+                $booking->tenant_id,
+                'Booking',
+                $booking->id
+            );
         }
 
-        $this->info("Expired {$expired} booking holds.");
+        $this->info('Expired holds cancelled: '.$expired->count());
 
-        return Command::SUCCESS;
+        return self::SUCCESS;
     }
 }
