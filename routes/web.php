@@ -116,7 +116,11 @@ Route::get('/ready', function () {
 
         return response()->json(['status' => 'not_ready'], 503);
     } finally {
-        Cache::forget($cacheKey);
+        try {
+            Cache::forget($cacheKey);
+        } catch (\Throwable) {
+            // A failed cache backend must not turn the generic 503 into a leak.
+        }
     }
 })->middleware('throttle:public-pages')->name('health.ready');
 
