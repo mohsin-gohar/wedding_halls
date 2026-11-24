@@ -208,6 +208,7 @@ class VendorQuoteRequestTest extends TestCase
 
         $this->assertSame(10, RFQ::query()->where('client_id', $customer->id)->count());
     }
+
     public function test_expired_vendor_cannot_open_quote_request_page(): void
     {
         $vendor = $this->marketplaceVendor('catering');
@@ -243,6 +244,4 @@ class VendorQuoteRequestTest extends TestCase
 
         $this->assertSame(0, RFQ::query()->where('client_id', $customer->id)->count());
     }
-
-
 }
