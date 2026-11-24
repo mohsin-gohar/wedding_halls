@@ -81,6 +81,54 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
         $this->assertTrue($service->isLocked($tenant));
     }
 
+    public function test_grace_period_transition_is_idempotent_then_expires_after_three_days(): void
+    {
+        Carbon::setTestNow('2026-11-24 12:00:00');
+
+        try {
+            $tenant = Tenant::create([
+                'name' => 'Grace Period Venue',
+                'slug' => 'grace-period-venue',
+                'email' => 'grace-period@example.test',
+                'subscription_status' => 'ACTIVE',
+                'verification_status' => 'APPROVED',
+                'subscription_expires_at' => Carbon::now()->subDay(),
+                'is_active' => true,
+            ]);
+
+            $service = app(SubscriptionService::class);
+            $firstPass = $service->checkAndExpireSubscriptions();
+
+            $this->assertSame(1, $firstPass['warning_count']);
+            $this->assertSame('GRACE_PERIOD', $tenant->fresh()->subscription_status);
+
+            $secondPass = $service->checkAndExpireSubscriptions();
+            $this->assertSame(0, $secondPass['warning_count']);
+            $this->assertSame(
+                1,
+                AuditLog::query()
+                    ->where('action', 'SUBSCRIPTION_GRACE_PERIOD')
+                    ->where('entity_id', (string) $tenant->id)
+                    ->count()
+            );
+
+            Carbon::setTestNow('2026-11-28 12:00:00');
+            $finalPass = $service->checkAndExpireSubscriptions();
+
+            $this->assertSame(1, $finalPass['expired_count']);
+            $this->assertSame('EXPIRED', $tenant->fresh()->subscription_status);
+            $this->assertSame(
+                1,
+                AuditLog::query()
+                    ->where('action', 'SUBSCRIPTION_EXPIRED')
+                    ->where('entity_id', (string) $tenant->id)
+                    ->count()
+            );
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
     public function test_trial_tenants_without_paid_expiry_are_expired_at_trial_end(): void
     {
         $expiredTrial = Tenant::create([
