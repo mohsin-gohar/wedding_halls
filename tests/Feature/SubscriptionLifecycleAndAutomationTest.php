@@ -281,4 +281,25 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
         $this->assertSame('YEARLY', $tenant->billing_cycle);
         $this->assertTrue($tenant->subscription_expires_at->greaterThan(Carbon::now()->addMonths(11)));
     }
+    public function test_legacy_past_due_subscription_cannot_accept_new_bookings(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'Past Due Legacy Tenant',
+            'slug' => 'past-due-legacy-tenant',
+            'email' => 'past-due-legacy@example.test',
+            'subscription_status' => 'PAST_DUE',
+            'subscription_expires_at' => now()->addMonth(),
+            'verification_status' => 'APPROVED',
+            'is_active' => true,
+            'marketplace_visible' => true,
+        ]);
+
+        $this->assertFalse($tenant->canAcceptBookings());
+        $this->assertFalse(
+            Tenant::query()->publicVisible()->whereKey($tenant->id)->exists(),
+            'Legacy PAST_DUE state must not be publicly discoverable.'
+        );
+    }
+
+
 }
