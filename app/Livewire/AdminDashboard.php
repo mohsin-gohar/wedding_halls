@@ -651,23 +651,20 @@ class AdminDashboard extends Component
     public function approveVendor(string $tenantId)
     {
         $tenant = Tenant::findOrFail($tenantId);
-        $wasSuspended = $tenant->subscription_status === 'SUSPENDED';
-        $tenant->update([
-            'verification_status' => 'APPROVED',
-            'is_active' => true,
-        ]);
 
-        if ($wasSuspended) {
-            // Only lift an admin-imposed suspension; never rewrite an actual
-            // EXPIRED or CANCELLED subscription.
-            $tenant->forceFill(['subscription_status' => 'ACTIVE'])->save();
+        // KYC approval must never reverse an account suspension or subscription
+        // expiry. Billing/reactivation is a separate, explicit admin workflow.
+        $tenant->update(['verification_status' => 'APPROVED']);
+
+        if ($tenant->canAcceptBookings()) {
+            $tenant->venues()->update(['is_active' => true]);
+            $tenant->halls()->update(['is_active' => true]);
         }
 
-        $tenant->venues()->update(['is_active' => true]);
-        $tenant->halls()->update(['is_active' => true]);
-
-        AuditLog::log('VENDOR_APPROVED', "Super Admin approved and activated vendor [{$tenant->name}].", $tenant->id, 'Tenant', $tenant->id);
-        $this->feedbackMessage = "Vendor [{$tenant->name}] has been approved and is now live on the public website.";
+        AuditLog::log('VENDOR_APPROVED', "Super Admin approved vendor [{$tenant->name}] for KYC.", $tenant->id, 'Tenant', $tenant->id);
+        $this->feedbackMessage = $tenant->canAcceptBookings()
+            ? "Vendor [{$tenant->name}] has been approved and is now live on the public website."
+            : "Vendor [{$tenant->name}] has passed KYC, but subscription or account restrictions still prevent public activation.";
     }
 
     public function approveTenant(string $tenantId)
