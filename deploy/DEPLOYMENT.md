@@ -113,7 +113,6 @@ chmod 600 .env
 docker compose config --quiet
 docker compose up -d --build
 docker compose exec app php artisan migrate --force
-docker compose exec app php artisan storage:link
 docker compose exec app php artisan optimize
 ```
 
