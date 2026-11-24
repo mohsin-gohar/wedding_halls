@@ -25,6 +25,8 @@ services:
       BOOKING_LOCK_STORE: redis
     volumes:
       - riwaj_storage:/var/www/storage
+      # Separate public media volume; Nginx receives only this subdirectory.
+      - riwaj_public_media:/var/www/storage/app/public
     depends_on:
       db:
         condition: service_healthy
@@ -92,8 +94,8 @@ services:
     expose:
       - "80"
     volumes:
-      # Only public uploads are mounted; private files are never web-readable.
-      - riwaj_storage:/var/www/storage:ro
+      # Nginx can read public uploads only, never private documents or app logs.
+      - riwaj_public_media:/var/www/storage/app/public:ro
     depends_on:
       app:
         condition: service_healthy
@@ -141,6 +143,7 @@ networks:
 volumes:
   riwaj_dbdata:
   riwaj_storage:
+  riwaj_public_media:
   riwaj_caddy_data:
   riwaj_caddy_config:
   riwaj_uptime_data:
