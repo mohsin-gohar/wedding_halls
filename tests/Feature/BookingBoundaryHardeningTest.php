@@ -57,7 +57,7 @@ class BookingBoundaryHardeningTest extends TestCase
             'subscription_expires_at' => now()->addYear(),
         ]);
 
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Venue is not accepting bookings.');
 
         app(BookingService::class)->createReservation($this->payload($hall));
