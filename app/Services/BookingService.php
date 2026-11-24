@@ -68,6 +68,11 @@ class BookingService
         // The hall record is the only authority for tenant ownership. Resolve it
         // before trusting any caller-controlled financial or lifecycle value.
         $hall = Hall::with('tenant')->findOrFail($hallId);
+
+        if (! $hall->tenant || ! $hall->tenant->canAcceptBookings()) {
+            throw new \InvalidArgumentException('Venue is not accepting bookings.');
+        }
+
         $data = $this->authorizeReservationInput($data, $hall);
 
         // Serialize every reservation decision for this hall/date. A date-level lock is
