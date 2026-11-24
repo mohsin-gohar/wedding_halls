@@ -213,6 +213,4 @@ class ApiBookingFinancialIntegrityTest extends TestCase
 
         $this->assertSame(0, Booking::query()->where('customer_name', 'Hidden Hall Customer')->count());
     }
-
-
 }
