@@ -194,19 +194,41 @@ class ServiceBookingService
         VendorService|VendorPackage $bookable,
         array $attributes
     ): ServiceBooking {
-        $category = $tenant->vendorCategory;
-        $mode = $category?->booking_mode ?? 'DATE_EVENT';
-        $price = $this->resolveDirectPrice($bookable, $mode, $attributes);
+        $tenantId = (string) $tenant->getKey();
+        $bookableId = $bookable->getKey();
+        $isService = $bookable instanceof VendorService;
 
-        return DB::transaction(function () use ($tenant, $customerId, $bookable, $attributes, $mode, $price) {
+        return DB::transaction(function () use ($tenantId, $customerId, $bookableId, $isService, $attributes): ServiceBooking {
             // Serialize every booking write for this vendor: the lock is held
             // for the rest of the transaction, so a concurrent direct booking
             // (or RFQ award) waits here and then sees our row.
-            $tenant = Tenant::query()->whereKey($tenant->id)->lockForUpdate()->first();
+            $tenant = Tenant::query()->whereKey($tenantId)->lockForUpdate()->first();
 
             if (! $tenant || ! $tenant->canAcceptBookings()) {
                 throw ServiceBookingException::invalidState('This vendor subscription does not allow new bookings.');
             }
+
+            $tenant->load('vendorCategory');
+
+            // Re-resolve the bookable under the vendor lock. Never trust a stale
+            // Livewire model or a caller-supplied service/package from another
+            // tenant; the item must still be active and owned by this vendor.
+            $bookableQuery = $isService
+                ? VendorService::query()
+                : VendorPackage::query();
+            $bookable = $bookableQuery
+                ->whereKey($bookableId)
+                ->where('tenant_id', $tenant->id)
+                ->where('is_active', true)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $bookable) {
+                throw ServiceBookingException::notFound('The selected service or package is no longer available for this vendor.');
+            }
+
+            $mode = $tenant->vendorCategory?->booking_mode ?? 'DATE_EVENT';
+            $price = $this->resolveDirectPrice($bookable, $mode, $attributes);
 
             $eventDate = (string) $attributes['event_date'];
             $startTime = $attributes['start_time'] ?? null;
