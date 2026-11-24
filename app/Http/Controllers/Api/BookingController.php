@@ -305,10 +305,6 @@ class BookingController extends ApiController
             $this->assertTenantAccess($hall->tenant_id, $user);
         }
 
-        if (! $hall->tenant || ! $hall->tenant->canAcceptBookings()) {
-            return response()->json(['message' => 'Venue is not accepting bookings.'], 403);
-        }
-
         $slotType = $request->input('slot_type', 'FULL_DAY');
 
         return response()->json([
