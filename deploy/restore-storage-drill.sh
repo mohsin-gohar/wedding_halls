@@ -61,6 +61,6 @@ if [[ ! -d "$restore_path/storage/app" ]]; then
   exit 1
 fi
 
-file_count="$(find "$RESTORE_STORAGE_DIR/storage/app" -type f | wc -l | tr -d ' ')"
-echo "Storage restore drill passed: $file_count files extracted to $RESTORE_STORAGE_DIR."
+file_count="$(find "$restore_path/storage/app" -type f | wc -l | tr -d ' ')"
+echo "Storage restore drill passed: $file_count files extracted to $restore_path."
 echo "Staging files were retained for manual integrity and access-control checks."
