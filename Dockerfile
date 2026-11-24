@@ -38,6 +38,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get purge -y --auto-remove $PHPIZE_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
+# Align PHP upload/runtime limits with the validated media upload contract.
+COPY deploy/php-production.ini /usr/local/etc/php/conf.d/zz-production.ini
+
 # Install Composer (pinned major so builds stay reproducible)
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
