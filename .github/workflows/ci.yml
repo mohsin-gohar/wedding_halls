@@ -66,6 +66,13 @@ jobs:
           DB_USERNAME=riwaj_ci
           EOF
           docker compose config --quiet
+          bash -n deploy/backup-docker.sh deploy/restore-drill.sh deploy/production-smoke.sh
+          docker run --rm -e APP_DOMAIN=example.test \
+            -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+          docker run --rm \
+            -v "$PWD/deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro" \
+            nginx:alpine nginx -t
           docker build --tag riwaj-grand:ci .
 
   test:
