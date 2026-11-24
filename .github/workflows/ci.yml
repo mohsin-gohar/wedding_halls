@@ -73,7 +73,8 @@ jobs:
           docker run --rm --add-host app:127.0.0.1 \
             -v "$PWD/deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro" \
             nginx:alpine nginx -t
-          docker build --tag riwaj-grand:ci .
+          docker build --target app --tag riwaj-grand:ci .
+          docker build --target web --tag riwaj-grand-web:ci .
 
   test:
     name: MySQL test suite
