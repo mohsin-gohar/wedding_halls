@@ -91,11 +91,13 @@ class BookingController extends ApiController
 
         $hall = Hall::findOrFail($request->hall_id);
 
-        // A customer books on their own behalf; tenant staff book for their
-        // own venue. Neither may create a booking on another tenant's hall.
-        if ($user->isCustomer()) {
-            abort_unless($hall->tenant->is_active && $hall->tenant->verification_status === 'APPROVED', 403, 'Venue is not accepting bookings.');
-        } else {
+        // Every principal is subject to the same subscription and venue
+        // entitlement check before a reservation can be created.
+        abort_unless($hall->tenant && $hall->tenant->canAcceptBookings(), 403, 'Venue is not accepting bookings.');
+
+        // A customer books on their own behalf; tenant staff book only for
+        // their own venue.
+        if (! $user->isCustomer()) {
             $this->assertTenantAccess($hall->tenant_id, $user);
         }
 
@@ -265,7 +267,7 @@ class BookingController extends ApiController
 
         $hall = Hall::with(['venue', 'tenant'])->findOrFail($request->hall_id);
 
-        if (! $hall->tenant->is_active || $hall->tenant->verification_status !== 'APPROVED') {
+        if (! $hall->tenant || ! $hall->tenant->canAcceptBookings()) {
             return response()->json(['message' => 'Venue is not accepting bookings.'], 403);
         }
 
