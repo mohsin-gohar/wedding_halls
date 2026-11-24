@@ -208,4 +208,41 @@ class VendorQuoteRequestTest extends TestCase
 
         $this->assertSame(10, RFQ::query()->where('client_id', $customer->id)->count());
     }
+    public function test_expired_vendor_cannot_open_quote_request_page(): void
+    {
+        $vendor = $this->marketplaceVendor('catering');
+        $vendor->update([
+            'subscription_status' => 'EXPIRED',
+            'subscription_expires_at' => now()->addYear(),
+        ]);
+
+        $this->actingAs($this->customer())
+            ->get(route('public.vendor-quote', ['slug' => $vendor->slug]))
+            ->assertNotFound();
+    }
+
+    public function test_vendor_expiring_after_form_mount_cannot_receive_quote_request(): void
+    {
+        $customer = $this->customer();
+        $vendor = $this->marketplaceVendor('catering');
+
+        $component = Livewire::actingAs($customer)
+            ->test(VendorQuoteRequest::class, ['slug' => $vendor->slug])
+            ->set('eventName', 'Expired Vendor Test')
+            ->set('eventDate', now()->addDays(35)->toDateString())
+            ->set('guestCount', 250);
+
+        $vendor->update([
+            'subscription_status' => 'EXPIRED',
+            'subscription_expires_at' => now()->addYear(),
+        ]);
+
+        $component->call('save')
+            ->assertHasErrors(['requirements'])
+            ->assertSet('submitted', false);
+
+        $this->assertSame(0, RFQ::query()->where('client_id', $customer->id)->count());
+    }
+
+
 }
