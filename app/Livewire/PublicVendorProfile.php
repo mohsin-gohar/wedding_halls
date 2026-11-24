@@ -25,10 +25,8 @@ class PublicVendorProfile extends Component
     public function mount(string $slug): void
     {
         $this->vendor = Tenant::query()
+            ->marketplaceVisible()
             ->where('slug', $slug)
-            ->where('marketplace_visible', true)
-            ->where('is_active', true)
-            ->where('verification_status', 'APPROVED')
             ->with(['vendorCategory', 'portfolioMedia', 'vendorServices' => fn ($q) => $q->where('is_active', true)->orderBy('sort'), 'vendorPackages' => fn ($q) => $q->where('is_active', true)->orderBy('sort')])
             ->withCount(['approvedReviews as reviews_published_count'])
             ->firstOrFail();
@@ -118,11 +116,9 @@ class PublicVendorProfile extends Component
         }
 
         return Tenant::query()
+            ->marketplaceVisible()
             ->where('id', '!=', $this->vendor->id)
             ->where('vendor_category_id', $this->category->id)
-            ->where('marketplace_visible', true)
-            ->where('is_active', true)
-            ->where('verification_status', 'APPROVED')
             ->orderByDesc('is_featured')
             ->orderByDesc('rating_avg')
             ->take(3)
