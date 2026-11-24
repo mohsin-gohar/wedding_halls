@@ -55,6 +55,19 @@ jobs:
       - name: Production asset build
         run: npm run build
 
+      - name: Validate production Docker stack
+        run: |
+          cp .env.production.example .env
+          cat >> .env <<'EOF'
+          APP_DOMAIN=example.test
+          DB_ROOT_PASSWORD=ci-only-root-password
+          DB_PASSWORD=ci-only-app-password
+          DB_DATABASE=riwaj_grand_ci
+          DB_USERNAME=riwaj_ci
+          EOF
+          docker compose config --quiet
+          docker build --tag riwaj-grand:ci .
+
   test:
     name: MySQL test suite
     runs-on: ubuntu-latest
