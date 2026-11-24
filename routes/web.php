@@ -113,7 +113,7 @@ Route::get('/ready', function () {
 
         return response()->json(['status' => 'ready']);
     } catch (Throwable $exception) {
-        report($exception);
+        logger()->warning('Readiness check failed.', ['exception_class' => get_class($exception)]);
 
         try {
             Cache::forget($cacheKey);
