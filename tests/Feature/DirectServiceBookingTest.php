@@ -203,8 +203,7 @@ class DirectServiceBookingTest extends TestCase
         $vendor = $this->vendor('nawab-caterers');
         $customer = $this->customer();
         $service = $this->makeService($vendor);
-        $vendor->refresh();
-        $service->update(['is_active' => false]);
+        VendorService::query()->whereKey($service->id)->update(['is_active' => false]);
 
         try {
             app(ServiceBookingService::class)->createDirectBooking(
