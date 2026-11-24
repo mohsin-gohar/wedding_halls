@@ -924,31 +924,39 @@ class AdminDashboard extends Component
 
     public function deleteHall(string $hallId)
     {
-        $hall = Hall::withCount(['bookings', 'inquiries', 'floorPlans', 'hallViews', 'hallWishlists', 'reviews'])
-            ->findOrFail($hallId);
+        // Lock the hall row so a concurrent reservation cannot be inserted
+        // between the history check and deletion.
+        $result = DB::transaction(function () use ($hallId): array {
+            $hall = Hall::query()->whereKey($hallId)->lockForUpdate()->firstOrFail();
+            $hall->loadCount(['bookings', 'inquiries', 'floorPlans', 'hallViews', 'hallWishlists', 'reviews']);
 
-        // Preserve every operational and marketplace record associated with
-        // this hall, not only active bookings.
-        if (
-            $hall->bookings_count > 0
-            || $hall->inquiries_count > 0
-            || $hall->floor_plans_count > 0
-            || $hall->hall_views_count > 0
-            || $hall->hall_wishlists_count > 0
-            || $hall->reviews_count > 0
-        ) {
-            $this->errorMessage = "Hall [{$hall->name}] has booking history. Keep the hall record and disable its marketplace visibility instead of deleting historical reservations.";
+            if (
+                $hall->bookings_count > 0
+                || $hall->inquiries_count > 0
+                || $hall->floor_plans_count > 0
+                || $hall->hall_views_count > 0
+                || $hall->hall_wishlists_count > 0
+                || $hall->reviews_count > 0
+            ) {
+                return ['error' => "Hall [{$hall->name}] has booking or marketplace history. Keep the hall record and disable its visibility instead of deleting historical records."];
+            }
+
+            $name = $hall->name;
+            $tenantId = $hall->tenant_id;
+            $hall->delete();
+
+            AuditLog::log('HALL_DELETED', "Super Admin deleted hall [{$name}].", $tenantId, 'Hall', $hallId);
+
+            return ['name' => $name];
+        });
+
+        if (isset($result['error'])) {
+            $this->errorMessage = $result['error'];
 
             return;
         }
 
-        $name = $hall->name;
-        $tenantId = $hall->tenant_id;
-        $hall->delete();
-
-        AuditLog::log('HALL_DELETED', "Super Admin deleted hall [{$name}].", $tenantId, 'Hall', $hallId);
-
-        $this->feedbackMessage = "Hall [{$name}] deleted successfully.";
+        $this->feedbackMessage = "Hall [{$result['name']}] deleted successfully.";
     }
 
     public function toggleHallStatus(string $hallId)
@@ -1114,30 +1122,39 @@ class AdminDashboard extends Component
 
     public function deleteBooking(string $bookingId)
     {
-        $booking = Booking::withCount(['payments', 'rsvps', 'floorPlan', 'kitchenKot', 'utilityLog'])
-            ->findOrFail($bookingId);
+        // PaymentService locks this same booking row before writing a receipt.
+        // Sharing the lock closes the check-then-delete race with new payments.
+        $result = DB::transaction(function () use ($bookingId): array {
+            $booking = Booking::query()->whereKey($bookingId)->lockForUpdate()->firstOrFail();
+            $booking->loadCount(['payments', 'rsvps', 'floorPlan', 'kitchenKot', 'utilityLog']);
 
-        // Bookings are financial/business records, not disposable UI rows.
-        // Keep receipts, RSVPs, floor plans, KOT and utility records intact.
-        $hasOperationalHistory = $booking->payments_count > 0
-            || $booking->rsvps_count > 0
-            || $booking->floor_plan_count > 0
-            || $booking->kitchen_kot_count > 0
-            || $booking->utility_log_count > 0;
+            $hasOperationalHistory = $booking->payments_count > 0
+                || $booking->rsvps_count > 0
+                || $booking->floor_plan_count > 0
+                || $booking->kitchen_kot_count > 0
+                || $booking->utility_log_count > 0;
 
-        if ($hasOperationalHistory || ! in_array($booking->status, ['INQUIRY', 'CANCELLED'], true)) {
-            $this->errorMessage = "Booking [{$booking->booking_reference}] cannot be deleted because it contains financial or operational history. Change its status through the booking workflow instead.";
+            if ($hasOperationalHistory || ! in_array($booking->status, ['INQUIRY', 'CANCELLED'], true)) {
+                return ['error' => "Booking [{$booking->booking_reference}] cannot be deleted because it contains financial or operational history. Change its status through the booking workflow instead."];
+            }
+
+            $reference = $booking->booking_reference;
+            $tenantId = $booking->tenant_id;
+            $status = $booking->status;
+
+            AuditLog::log('BOOKING_DELETED', "Super Admin deleted unfinancialized {$status} booking [{$reference}].", $tenantId, 'Booking', $bookingId);
+            $booking->delete();
+
+            return ['reference' => $reference];
+        });
+
+        if (isset($result['error'])) {
+            $this->errorMessage = $result['error'];
 
             return;
         }
 
-        $ref = $booking->booking_reference;
-        $tenantId = $booking->tenant_id;
-
-        AuditLog::log('BOOKING_DELETED', "Super Admin deleted unfinancialized {$booking->status} booking [{$ref}].", $tenantId, 'Booking', $bookingId);
-        $booking->delete();
-
-        $this->feedbackMessage = "Unfinancialized booking [{$ref}] deleted.";
+        $this->feedbackMessage = "Unfinancialized booking [{$result['reference']}] deleted.";
     }
 
     // ==========================================
