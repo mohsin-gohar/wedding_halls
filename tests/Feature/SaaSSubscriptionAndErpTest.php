@@ -173,7 +173,7 @@ class SaaSSubscriptionAndErpTest extends TestCase
 
         Livewire::test(AdminDashboard::class)
             ->call('deleteHall', $booking->hall_id)
-            ->assertSee('has booking history');
+            ->assertSee('booking or marketplace history');
 
         $this->assertDatabaseHas('halls', ['id' => $booking->hall_id]);
         $this->assertDatabaseHas('bookings', ['id' => $booking->id]);
