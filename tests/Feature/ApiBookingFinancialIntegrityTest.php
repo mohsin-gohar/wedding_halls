@@ -209,7 +209,7 @@ class ApiBookingFinancialIntegrityTest extends TestCase
             'guest_count' => 150,
             'customer_name' => 'Hidden Hall Customer',
             'customer_phone' => '+92 300 4445588',
-        ])->assertNotFound();
+        ])->assertForbidden();
 
         $this->assertSame(0, Booking::query()->where('customer_name', 'Hidden Hall Customer')->count());
     }
