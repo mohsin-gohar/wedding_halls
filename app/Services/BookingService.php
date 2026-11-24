@@ -123,7 +123,7 @@ class BookingService
                     || ! $lockedHall->venue?->is_active
                     || ! $tenant->canAcceptBookings()
                 ) {
-                    throw new \\InvalidArgumentException('Venue is not accepting bookings.');
+                    throw new \InvalidArgumentException('Venue is not accepting bookings.');
                 }
 
                 // Strict row-level lock check: Verify no active booking exists in DB
