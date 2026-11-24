@@ -24,9 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Honor forwarded HTTPS/client information only from explicitly
-        // trusted reverse proxies. Docker's private Caddy/Nginx edge sets this
-        // to '*' because PHP-FPM is not publicly reachable; shared hosting
-        // should leave it unset unless its trusted proxy CIDRs are known.
+        // trusted reverse proxies. Docker Compose trusts only the fixed Nginx address on its private bridge;
+        // shared hosting should list only its actual trusted proxy CIDRs.
         $trustedProxies = array_values(array_filter(array_map(
             'trim',
             explode(',', (string) env('TRUSTED_PROXIES', ''))
