@@ -98,6 +98,14 @@ RCLONE_REMOTE='remote:riwaj-grand-backups' \
 bash deploy/backup-docker.sh
 ~~~
 
+Store the age recipient and rclone remote in a root-readable, mode-600
+environment file (for example /etc/riwaj-backup.env), not in the repository.
+A daily root cron entry can load that file and run the script:
+
+~~~cron
+0 2 * * * root cd /var/www/riwaj-grand && set -a && . /etc/riwaj-backup.env && set +a && bash deploy/backup-docker.sh >> /var/log/riwaj-backup.log 2>&1
+~~~
+
 The script takes a transaction-consistent MySQL dump and a separate archive
 of the persistent storage/app tree (public uploads and private documents),
 compresses and encrypts both before writing final archives, calculates SHA-256
