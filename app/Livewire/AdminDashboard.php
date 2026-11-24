@@ -927,11 +927,19 @@ class AdminDashboard extends Component
 
     public function deleteHall(string $hallId)
     {
-        $hall = Hall::findOrFail($hallId);
+        $hall = Hall::withCount(['bookings', 'inquiries', 'floorPlans', 'hallViews', 'hallWishlists', 'reviews'])
+            ->findOrFail($hallId);
 
-        // Preserve the complete booking ledger. Deleting a hall must never
-        // cascade-delete completed, cancelled, or historical reservations.
-        if ($hall->bookings()->exists()) {
+        // Preserve every operational and marketplace record associated with
+        // this hall, not only active bookings.
+        if (
+            $hall->bookings_count > 0
+            || $hall->inquiries_count > 0
+            || $hall->floor_plans_count > 0
+            || $hall->hall_views_count > 0
+            || $hall->hall_wishlists_count > 0
+            || $hall->reviews_count > 0
+        ) {
             $this->errorMessage = "Hall [{$hall->name}] has booking history. Keep the hall record and disable its marketplace visibility instead of deleting historical reservations.";
 
             return;
@@ -1106,11 +1114,18 @@ class AdminDashboard extends Component
 
     public function deleteBooking(string $bookingId)
     {
-        $booking = Booking::withCount('payments')->findOrFail($bookingId);
+        $booking = Booking::withCount(['payments', 'rsvps', 'floorPlan', 'kitchenKot', 'utilityLog'])
+            ->findOrFail($bookingId);
 
         // Bookings are financial/business records, not disposable UI rows.
-        // Keep the booking and every receipt/refund/audit reference intact.
-        if ($booking->payments_count > 0 || ! in_array($booking->status, ['INQUIRY', 'CANCELLED'], true)) {
+        // Keep receipts, RSVPs, floor plans, KOT and utility records intact.
+        $hasOperationalHistory = $booking->payments_count > 0
+            || $booking->rsvps_count > 0
+            || $booking->floor_plan_count > 0
+            || $booking->kitchen_kot_count > 0
+            || $booking->utility_log_count > 0;
+
+        if ($hasOperationalHistory || ! in_array($booking->status, ['INQUIRY', 'CANCELLED'], true)) {
             $this->errorMessage = "Booking [{$booking->booking_reference}] cannot be deleted because it contains financial or operational history. Change its status through the booking workflow instead.";
 
             return;
