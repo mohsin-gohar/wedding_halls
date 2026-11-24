@@ -94,9 +94,11 @@ Route::get('/ready', function () {
     try {
         DB::select('SELECT 1');
 
-        if (! Cache::put($cacheKey, 'ok', 5) || Cache::pull($cacheKey) !== 'ok') {
-            throw new RuntimeException('Cache readiness check failed.');
+        $lock = Cache::lock($cacheKey, 5);
+        if (! $lock->get()) {
+            throw new RuntimeException('Shared cache lock readiness check failed.');
         }
+        $lock->release();
 
         $disk = Storage::disk('local');
         if (! $disk->put($storagePath, 'ok') || $disk->get($storagePath) !== 'ok') {
@@ -115,12 +117,6 @@ Route::get('/ready', function () {
         }
 
         return response()->json(['status' => 'not_ready'], 503);
-    } finally {
-        try {
-            Cache::forget($cacheKey);
-        } catch (\Throwable) {
-            // A failed cache backend must not turn the generic 503 into a leak.
-        }
     }
 })->middleware('throttle:public-pages')->name('health.ready');
 
