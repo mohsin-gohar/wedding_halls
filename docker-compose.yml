@@ -16,7 +16,7 @@ services:
       DB_PORT: "3306"
       DB_ROOT_PASSWORD: null
       APP_URL: https://${APP_DOMAIN:?APP_DOMAIN must be set}
-      TRUSTED_PROXIES: "*"
+      TRUSTED_PROXIES: ${RIWAJ_NGINX_IP:-172.30.0.10}
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       CACHE_STORE: redis
@@ -100,7 +100,8 @@ services:
       app:
         condition: service_healthy
     networks:
-      - riwaj
+      riwaj:
+        ipv4_address: ${RIWAJ_NGINX_IP:-172.30.0.10}
 
   uptime-kuma:
     image: louislam/uptime-kuma:1
@@ -139,6 +140,9 @@ services:
 networks:
   riwaj:
     driver: bridge
+    ipam:
+      config:
+        - subnet: ${RIWAJ_SUBNET:-172.30.0.0/24}
 
 volumes:
   riwaj_dbdata:
