@@ -1007,7 +1007,10 @@ class AdminDashboard extends Component
 
             $tenant->update([
                 'subscription_plan_id' => $payment->subscription_plan_id,
+                'subscription_plan' => $payment->plan?->name,
+                'billing_cycle' => strtoupper($payment->billing_cycle),
                 'subscription_status' => 'ACTIVE',
+                'subscription_starts_at' => Carbon::now(),
                 'subscription_expires_at' => $newExpiry,
                 'is_active' => true,
             ]);
