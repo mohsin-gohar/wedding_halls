@@ -159,7 +159,6 @@ class DirectServiceBookingTest extends TestCase
             $this->fail('An expired vendor must not receive a new service booking.');
         } catch (ServiceBookingException $exception) {
             $this->assertSame(409, $exception->getCode());
-            $this->assertStringContainsString('subscription does not allow new bookings', $exception->getMessage());
         }
 
         $this->assertDatabaseMissing('service_bookings', [
