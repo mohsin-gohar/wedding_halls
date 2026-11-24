@@ -472,6 +472,7 @@ class Tenant extends Model
     {
         return $this->is_active
             && $this->verification_status === 'APPROVED'
+            && in_array(strtoupper((string) $this->subscription_status), ['ACTIVE', 'TRIAL', 'GRACE_PERIOD'], true)
             && ! $this->isLocked();
     }
 
