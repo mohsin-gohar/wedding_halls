@@ -94,11 +94,16 @@ Route::get('/ready', function () {
     try {
         DB::select('SELECT 1');
 
-        $lock = Cache::lock($cacheKey, 5);
+        if (! Cache::put($cacheKey, 'ok', 5) || Cache::get($cacheKey) !== 'ok') {
+            throw new RuntimeException('Shared cache readiness check failed.');
+        }
+
+        $lock = Cache::store(config('booking.lock_store'))->lock($cacheKey, 5);
         if (! $lock->get()) {
-            throw new RuntimeException('Shared cache lock readiness check failed.');
+            throw new RuntimeException('Booking lock store readiness check failed.');
         }
         $lock->release();
+        Cache::forget($cacheKey);
 
         $disk = Storage::disk('local');
         if (! $disk->put($storagePath, 'ok') || $disk->get($storagePath) !== 'ok') {
@@ -111,6 +116,7 @@ Route::get('/ready', function () {
         report($exception);
 
         try {
+            Cache::forget($cacheKey);
             Storage::disk('local')->delete($storagePath);
         } catch (Throwable) {
             // Preserve the generic readiness response if cleanup also fails.
