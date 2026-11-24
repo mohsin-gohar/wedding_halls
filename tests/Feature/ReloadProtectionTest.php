@@ -24,7 +24,7 @@ class ReloadProtectionTest extends TestCase
         // Simulate rapid reloads of a page with the test rate limit header active
         for ($i = 1; $i <= 5; $i++) {
             $response = $this->withHeaders(['X-Test-Rate-Limit' => 'true'])
-                ->get('/login');
+                ->get(route('customer.login'));
             $response->assertStatus(200);
         }
 
