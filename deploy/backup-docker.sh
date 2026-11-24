@@ -22,7 +22,13 @@ stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 plain="$(mktemp "$BACKUP_DIR/.riwaj-grand-$stamp.XXXXXX.sql.gz")"
 archive="$BACKUP_DIR/riwaj-grand-$stamp.sql.gz.age"
 checksum="$archive.sha256"
-cleanup() { rm -f "$plain"; }
+success=0
+cleanup() {
+  rm -f "$plain"
+  if [[ "$success" != "1" ]]; then
+    rm -f "$archive" "$checksum"
+  fi
+}
 trap cleanup EXIT
 
 echo "Creating a transaction-consistent database dump..."
@@ -41,6 +47,7 @@ sha256sum "$archive" > "$checksum"
 echo "Copying encrypted archive and checksum off-site..."
 rclone copyto "$archive" "$RCLONE_REMOTE/$(basename "$archive")"
 rclone copyto "$checksum" "$RCLONE_REMOTE/$(basename "$checksum")"
+success=1
 
 find "$BACKUP_DIR" -maxdepth 1 -type f \
   \( -name 'riwaj-grand-*.sql.gz.age' -o -name 'riwaj-grand-*.sql.gz.age.sha256' \) \
