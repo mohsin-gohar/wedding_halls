@@ -8,7 +8,6 @@ use App\Models\CustomerEventVendor;
 use App\Models\ServiceBooking;
 use App\Models\Tenant;
 use App\Models\VendorCategory;
-use App\Services\SubscriptionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -373,31 +372,38 @@ class CustomerEventWorkspace extends Component
     {
         $event = $this->currentEvent();
 
-        $tenant = Tenant::query()
-            ->where('id', $tenantId)
-            ->where('verification_status', 'APPROVED')
-            ->where('is_active', true)
-            ->where('marketplace_visible', true)
-            ->first();
+        $vendorName = DB::transaction(function () use ($tenantId, $event): ?string {
+            $tenant = Tenant::query()
+                ->marketplaceVisible()
+                ->whereKey($tenantId)
+                ->lockForUpdate()
+                ->first();
 
-        if (! $tenant || app(SubscriptionService::class)->isLocked($tenant)) {
+            if (! $tenant || ! $tenant->canAcceptBookings()) {
+                return null;
+            }
+
+            CustomerEventVendor::updateOrCreate(
+                [
+                    'customer_event_id' => $event->id,
+                    'tenant_id' => $tenant->id,
+                ],
+                [
+                    'status' => 'SHORTLISTED',
+                    'service_booking_id' => null,
+                ]
+            );
+
+            return $tenant->name;
+        });
+
+        if ($vendorName === null) {
             $this->errorMessage = 'That vendor is not available for shortlisting.';
 
             return;
         }
 
-        CustomerEventVendor::updateOrCreate(
-            [
-                'customer_event_id' => $event->id,
-                'tenant_id' => $tenant->id,
-            ],
-            [
-                'status' => 'SHORTLISTED',
-                'service_booking_id' => null,
-            ]
-        );
-
-        $this->feedbackMessage = $tenant->name.' added to the shortlist.';
+        $this->feedbackMessage = $vendorName.' added to the shortlist.';
     }
 
     public function detachVendor(string $vendorRowId): void
