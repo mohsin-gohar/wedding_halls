@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Exceptions\ServiceBookingException;
 use App\Livewire\CustomerDashboard;
 use App\Livewire\DirectBooking;
 use App\Livewire\VendorBookingsBoard;
-use App\Exceptions\ServiceBookingException;
 use App\Models\ServiceBooking;
 use App\Models\Tenant;
 use App\Models\User;
