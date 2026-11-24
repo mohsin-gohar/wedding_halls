@@ -398,7 +398,7 @@
                 </p>
             </div>
 
-            <div class="flex flex-wrap items-center gap-4 shrink-0">
+            <div class="flex min-w-0 flex-wrap items-center justify-center gap-3 sm:gap-4">
                 <a href="{{ route('public.contact') }}" class="btn-gold !h-11 !px-6 text-xs font-semibold uppercase font-sans">
                     Speak with Concierge &rarr;
                 </a>
