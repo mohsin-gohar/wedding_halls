@@ -307,11 +307,11 @@ Route::get('/services', PublicServices::class)->middleware('throttle:public-page
 
 // Company & Customer Assistance
 Route::get('/about', PublicAbout::class)->middleware('throttle:public-pages')->name('public.about');
-Route::get('/contact', PublicContact::class)->name('public.contact')->middleware('throttle:reload-protection');
+Route::get('/contact', PublicContact::class)->name('public.contact')->middleware('throttle:public-pages');
 Route::get('/faqs', PublicFaqs::class)->middleware('throttle:public-pages')->name('public.faqs');
 Route::get('/check-availability', PublicAvailabilityChecker::class)->name('public.availability')->middleware('throttle:public-availability');
 Route::redirect('/availability', '/check-availability', 301);
-Route::get('/rsvp', PublicGuestRsvp::class)->name('public.rsvp')->middleware('throttle:reload-protection');
+Route::get('/rsvp', PublicGuestRsvp::class)->name('public.rsvp')->middleware('throttle:public-pages');
 
 // Legal Policies
 Route::get('/policies/terms', PublicPolicies::class)->middleware('throttle:public-pages')->name('public.policies.terms');
@@ -352,8 +352,8 @@ Route::middleware(['auth', 'portal.role:ROLE_CUSTOMER'])->prefix('customer')->gr
 | 3. Unified & Vendor Authentication Routes (Livewire + Native HTTP POST)
 |--------------------------------------------------------------------------
 */
-Route::get('/login', Login::class)->name('login')->middleware('throttle:reload-protection');
-Route::get('/register', Register::class)->name('register')->middleware('throttle:reload-protection');
+Route::get('/login', Login::class)->name('login')->middleware('throttle:public-pages');
+Route::get('/register', Register::class)->name('register')->middleware('throttle:public-pages');
 
 $authenticatePortalRequest = function (Request $request) {
     $credentials = $request->validate([
