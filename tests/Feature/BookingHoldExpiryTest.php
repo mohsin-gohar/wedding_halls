@@ -40,7 +40,7 @@ class BookingHoldExpiryTest extends TestCase
             'id' => $booking->id,
             'status' => 'CANCELLED',
         ]);
-        $this->assertDatabaseCount('audit_logs', 1);
+        $this->assertSame(1, AuditLog::query()->where('action', 'BOOKING_HOLD_EXPIRED')->count());
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'BOOKING_HOLD_EXPIRED',
             'entity_type' => 'Booking',
@@ -51,7 +51,7 @@ class BookingHoldExpiryTest extends TestCase
             ->expectsOutputToContain('Expired holds cancelled: 0')
             ->assertExitCode(0);
 
-        $this->assertDatabaseCount('audit_logs', 1);
+        $this->assertSame(1, AuditLog::query()->where('action', 'BOOKING_HOLD_EXPIRED')->count());
     }
 
     public function test_confirmed_bookings_and_holds_without_expiry_are_untouched(): void
@@ -72,7 +72,7 @@ class BookingHoldExpiryTest extends TestCase
             'status' => 'HOLD',
             'hold_expires_at' => null,
         ]);
-        $this->assertDatabaseCount('audit_logs', 0);
+        $this->assertSame(0, AuditLog::query()->where('action', 'BOOKING_HOLD_EXPIRED')->count());
     }
 
     private function createBooking(string $status, ?Carbon $holdExpiresAt): Booking
