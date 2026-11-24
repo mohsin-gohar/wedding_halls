@@ -168,6 +168,72 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
         );
     }
 
+    public function test_public_visibility_respects_paid_grace_and_trial_entitlement_boundaries(): void
+    {
+        Carbon::setTestNow('2026-11-24 12:00:00');
+
+        try {
+            $active = Tenant::create([
+                'name' => 'Current Subscription',
+                'slug' => 'current-subscription',
+                'email' => 'current-subscription@example.test',
+                'subscription_status' => 'ACTIVE',
+                'subscription_expires_at' => Carbon::now()->addDay(),
+                'verification_status' => 'APPROVED',
+                'is_active' => true,
+            ]);
+            $grace = Tenant::create([
+                'name' => 'Grace Subscription',
+                'slug' => 'grace-subscription',
+                'email' => 'grace-subscription@example.test',
+                'subscription_status' => 'GRACE_PERIOD',
+                'subscription_expires_at' => Carbon::now()->subDay(),
+                'verification_status' => 'APPROVED',
+                'is_active' => true,
+            ]);
+            $pastGrace = Tenant::create([
+                'name' => 'Past Grace Subscription',
+                'slug' => 'past-grace-subscription',
+                'email' => 'past-grace-subscription@example.test',
+                'subscription_status' => 'ACTIVE',
+                'subscription_expires_at' => Carbon::now()->subDays(4),
+                'verification_status' => 'APPROVED',
+                'is_active' => true,
+            ]);
+            $expiredTrial = Tenant::create([
+                'name' => 'Expired Trial Visibility',
+                'slug' => 'expired-trial-visibility',
+                'email' => 'expired-trial-visibility@example.test',
+                'subscription_status' => 'TRIAL',
+                'subscription_expires_at' => null,
+                'trial_ends_at' => Carbon::now()->subMinute(),
+                'verification_status' => 'APPROVED',
+                'is_active' => true,
+            ]);
+            $expired = Tenant::create([
+                'name' => 'Expired Subscription',
+                'slug' => 'expired-subscription',
+                'email' => 'expired-subscription@example.test',
+                'subscription_status' => 'EXPIRED',
+                'subscription_expires_at' => Carbon::now()->addYear(),
+                'verification_status' => 'APPROVED',
+                'is_active' => true,
+            ]);
+
+            $visibleIds = Tenant::query()->publicVisible()->pluck('id')->all();
+
+            $this->assertContains($active->id, $visibleIds);
+            $this->assertContains($grace->id, $visibleIds);
+            $this->assertNotContains($pastGrace->id, $visibleIds);
+            $this->assertNotContains($expiredTrial->id, $visibleIds);
+            $this->assertNotContains($expired->id, $visibleIds);
+            $this->assertFalse($pastGrace->canAcceptBookings());
+            $this->assertFalse($expiredTrial->canAcceptBookings());
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
     public function test_artisan_command_subscriptions_check_expiry_executes_cleanly(): void
     {
         $this->artisan('subscriptions:check-expiry')
