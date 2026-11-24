@@ -175,19 +175,13 @@ class CustomerEventWorkspace extends Component
             ? CustomerEventVendor::query()->where('customer_event_id', $event->id)->pluck('tenant_id')->all()
             : [];
 
-        $subscriptions = app(SubscriptionService::class);
-
         return Tenant::query()
-            ->where('verification_status', 'APPROVED')
-            ->where('is_active', true)
-            ->where('marketplace_visible', true)
+            ->marketplaceVisible()
             ->whereNotIn('id', $attached)
             ->with('vendorCategory:id,name,slug')
             ->orderBy('name')
             ->limit(40)
-            ->get()
-            ->reject(fn (Tenant $tenant) => $subscriptions->isLocked($tenant))
-            ->values();
+            ->get();
     }
 
     public function getCategoriesProperty()
