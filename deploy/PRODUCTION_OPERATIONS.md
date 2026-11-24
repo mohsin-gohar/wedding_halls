@@ -55,7 +55,9 @@ docker compose exec app php artisan optimize
 
 The PHP image loads `deploy/php-production.ini`: 64 MB per uploaded file,
 70 MB POST body, 120-second execution/input limits, and 256 MB memory. Nginx
-allows 64 MB request bodies. Livewire temporary uploads are capped at 50 MB,
+allows 64 MB request bodies and mounts only the dedicated public-media volume
+at `/storage`; private documents remain in the app-only storage volume.
+Livewire temporary uploads are capped at 50 MB,
 matching the largest vendor media validation rule. Keep the PHP, proxy, and
 Livewire limits aligned if you change this contract.
 
