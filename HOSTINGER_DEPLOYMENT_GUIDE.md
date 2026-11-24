@@ -100,11 +100,11 @@ DB_PASSWORD="your_database_password"
 
 SESSION_DRIVER=database
 SESSION_SECURE_COOKIE=true
-CACHE_STORE=file
+CACHE_STORE=database
 # Shared reservation mutex. `database` uses the cache_locks table and is safe
 # on a single host; use `redis` when multiple app servers share Redis.
 BOOKING_LOCK_STORE=database
-QUEUE_CONNECTION=sync
+QUEUE_CONNECTION=database
 FILESYSTEM_DISK=public
 ```
 
