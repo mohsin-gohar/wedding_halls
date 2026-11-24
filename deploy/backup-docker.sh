@@ -20,13 +20,16 @@ chmod 700 "$BACKUP_DIR"
 
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 plain="$(mktemp "$BACKUP_DIR/.riwaj-grand-$stamp.XXXXXX.sql.gz")"
+media_plain="$(mktemp "$BACKUP_DIR/.riwaj-storage-$stamp.XXXXXX.tar.gz")"
 archive="$BACKUP_DIR/riwaj-grand-$stamp.sql.gz.age"
 checksum="$archive.sha256"
+media_archive="$BACKUP_DIR/riwaj-storage-$stamp.tar.gz.age"
+media_checksum="$media_archive.sha256"
 success=0
 cleanup() {
-  rm -f "$plain"
+  rm -f "$plain" "$media_plain"
   if [[ "$success" != "1" ]]; then
-    rm -f "$archive" "$checksum"
+    rm -f "$archive" "$checksum" "$media_archive" "$media_checksum"
   fi
 }
 trap cleanup EXIT
@@ -39,18 +42,26 @@ docker compose exec -T db sh -ec '
 ' | gzip -c > "$plain"
 
 test -s "$plain"
-echo "Encrypting backup..."
-age -r "$AGE_RECIPIENT" -o "$archive" "$plain"
-test -s "$archive"
-(cd "$BACKUP_DIR" && sha256sum "$(basename "$archive")" > "$(basename "$checksum")")
+echo "Creating an archive of public and private uploaded files..."
+docker compose exec -T app tar -czf - -C /var/www storage/app > "$media_plain"
+test -s "$media_plain"
 
-echo "Copying encrypted archive and checksum off-site..."
-rclone copyto "$archive" "$RCLONE_REMOTE/$(basename "$archive")"
-rclone copyto "$checksum" "$RCLONE_REMOTE/$(basename "$checksum")"
+echo "Encrypting database and uploaded-file backups..."
+age -r "$AGE_RECIPIENT" -o "$archive" "$plain"
+age -r "$AGE_RECIPIENT" -o "$media_archive" "$media_plain"
+test -s "$archive" && test -s "$media_archive"
+(cd "$BACKUP_DIR" && sha256sum "$(basename "$archive")" > "$(basename "$checksum")")
+(cd "$BACKUP_DIR" && sha256sum "$(basename "$media_archive")" > "$(basename "$media_checksum")")
+
+echo "Copying encrypted archives and checksums off-site..."
+for file in "$archive" "$checksum" "$media_archive" "$media_checksum"; do
+  rclone copyto "$file" "$RCLONE_REMOTE/$(basename "$file")"
+done
 success=1
 
 find "$BACKUP_DIR" -maxdepth 1 -type f \
-  \( -name 'riwaj-grand-*.sql.gz.age' -o -name 'riwaj-grand-*.sql.gz.age.sha256' \) \
+  \( -name 'riwaj-grand-*.sql.gz.age' -o -name 'riwaj-grand-*.sql.gz.age.sha256' \
+     -o -name 'riwaj-storage-*.tar.gz.age' -o -name 'riwaj-storage-*.tar.gz.age.sha256' \) \
   -mtime "+$RETENTION_DAYS" -delete
 
 echo "Backup complete: $archive"
