@@ -208,7 +208,10 @@ failed job. A configured SMTP hostname is not proof of delivery.
 
 ### WhatsApp Cloud API
 Set WHATSAPP_VERIFY_TOKEN, WHATSAPP_APP_SECRET, WHATSAPP_ACCESS_TOKEN,
-WHATSAPP_PHONE_NUMBER_ID, and the supported WHATSAPP_API_VERSION. Register
+WHATSAPP_PHONE_NUMBER_ID, and the supported WHATSAPP_API_VERSION (the
+template is pinned to Graph API v26.0, released 29 July 2026; verify Meta's
+[version table](https://developers.facebook.com/docs/graph-api/changelog/versions/)
+before upgrading or changing the pin). Register
 https://YOUR_DOMAIN/webhooks/whatsapp in the Meta developer console, enable
 the required webhook subscription, and verify Meta's challenge succeeds.
 Send a test message only to an explicitly approved test recipient; verify the
