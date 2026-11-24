@@ -73,10 +73,10 @@ sudo certbot --nginx -d YOUR_DOMAIN -d www.YOUR_DOMAIN
 ```
 
 > Replace `YOUR_DOMAIN` in the Nginx config and certbot command with the real
-> production host. The app trusts the proxy scheme. If you terminate TLS at
-> Nginx, Laravel's `Request::secure()` works out of the box. If using
-> Cloudflare/LB, set `App\Http\Middleware\TrustProxies` trusted proxies
-> accordingly.
+> production host. For this non-Docker Nginx deployment, trust only the
+> actual proxy IP/CIDRs in `TRUSTED_PROXIES` when TLS is terminated upstream.
+> The Docker Compose stack instead pins Nginx to `RIWAJ_NGINX_IP` (default
+> `172.30.0.10`) and trusts only that fixed private address.
 
 ## 5. Queue worker (Supervisor)
 
