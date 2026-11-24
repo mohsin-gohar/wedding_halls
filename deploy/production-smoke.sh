@@ -23,7 +23,15 @@ check_status() {
 }
 
 check_status "$base/up" 200
+check_status "$base/ready" 200
 check_status "$base/" 200
+
+http_base="http://${base#https://}"
+redirect_code="$(curl --silent --show-error -o "$tmp" -w '%{http_code}' "$http_base/")"
+case "$redirect_code" in
+  301|308) echo "PASS HTTP to HTTPS redirect ($redirect_code)" ;;
+  *) echo "FAIL HTTP endpoint did not redirect to HTTPS (got $redirect_code)" >&2; exit 1 ;;
+esac
 
 for path in /.env /.git/config /composer.json; do
   code="$(curl --silent --show-error -o "$tmp" -w '%{http_code}' "$base$path")"
@@ -34,7 +42,7 @@ for path in /.env /.git/config /composer.json; do
 done
 
 headers="$(curl --silent --show-error --head "$base/")"
-for header in strict-transport-security x-content-type-options x-frame-options; do
+for header in strict-transport-security x-content-type-options x-frame-options content-security-policy; do
   if ! grep -qi "^$header:" <<<"$headers"; then
     echo "FAIL missing security header: $header" >&2
     exit 1
