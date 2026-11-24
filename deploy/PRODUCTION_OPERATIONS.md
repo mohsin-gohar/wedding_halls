@@ -132,6 +132,19 @@ critical tenant/booking/payment relationships, media file counts, private-file
 access controls, and a staging application boot before recording a successful
 recovery exercise.
 
+### Hostinger Shared/Cloud backup path
+
+The Docker backup scripts do not run on a shared plan. In hPanel, enable the
+plan's scheduled website and database backups if available, and take a fresh
+manual backup before every migration. Also export the MySQL database through
+phpMyAdmin and archive the complete application storage directory (including
+private files) to a separate off-site location. Restore both into a separate
+staging database and staging file tree; do not use the provider's in-place
+production restore as a drill. Retain the dated backup IDs, checksums where
+available, and the successful staging verification evidence. If the plan does
+not provide scheduled backups or enough access to perform a restore drill,
+that is a production blocker, not a completed checklist item.
+
 ## 4. Uptime monitoring and alerts (Docker VPS)
 
 Start the optional Uptime Kuma service:
