@@ -18,7 +18,7 @@ RUN npm run build
 ################################################################
 # Stage 2 — production PHP runtime
 ################################################################
-FROM php:8.2-fpm
+FROM php:8.2-fpm AS app
 
 # $PHPIZE_DEPS is provided by the official PHP image and is removed again after
 # compiling the Redis extension so it does not bloat the runtime image.
@@ -72,3 +72,12 @@ EXPOSE 9000
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisor.conf"]
+
+################################################################
+# Stage 3 — static web edge (shares only public uploads volume)
+################################################################
+FROM nginx:alpine AS web
+
+COPY public/ /var/www/public/
+COPY --from=assets /app/public/build /var/www/public/build
+COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
