@@ -555,7 +555,7 @@ class EnterpriseExpansionTest extends TestCase
         $owner = $this->vendorOwner($this->cateringVendor());
 
         $response = $this->actingAs($owner)
-            ->getJson('/api/v1/bookings/availability?hall_id='.Hall::first()->id.'&date='.now()->addDays(10)->toDateString());
+            ->getJson('/api/v1/bookings/availability?hall_id='.Hall::query()->where('tenant_id', $owner->tenant_id)->firstOrFail()->id.'&date='.now()->addDays(10)->toDateString());
 
         $response->assertOk();
         $this->assertArrayHasKey('available', $response->json());
