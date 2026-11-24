@@ -80,6 +80,45 @@ class SubscriptionLifecycleAndAutomationTest extends TestCase
         $this->assertTrue($service->isLocked($tenant));
     }
 
+    public function test_trial_tenants_without_paid_expiry_are_expired_at_trial_end(): void
+    {
+        $expiredTrial = Tenant::create([
+            'name' => 'Expired Trial Venue',
+            'slug' => 'expired-trial-venue',
+            'email' => 'expired-trial@example.test',
+            'subscription_status' => 'TRIAL',
+            'verification_status' => 'APPROVED',
+            'subscription_expires_at' => null,
+            'trial_ends_at' => Carbon::now()->subMinute(),
+            'is_active' => true,
+        ]);
+
+        $activeTrial = Tenant::create([
+            'name' => 'Active Trial Venue',
+            'slug' => 'active-trial-venue',
+            'email' => 'active-trial@example.test',
+            'subscription_status' => 'TRIAL',
+            'verification_status' => 'APPROVED',
+            'subscription_expires_at' => null,
+            'trial_ends_at' => Carbon::now()->addDay(),
+            'is_active' => true,
+        ]);
+
+        $results = app(SubscriptionService::class)->checkAndExpireSubscriptions();
+
+        $this->assertSame(1, $results['expired_count']);
+        $this->assertSame(0, $results['warning_count']);
+        $this->assertSame('EXPIRED', $expiredTrial->fresh()->subscription_status);
+        $this->assertSame('TRIAL', $activeTrial->fresh()->subscription_status);
+        $this->assertSame(
+            1,
+            \App\Models\AuditLog::query()
+                ->where('action', 'SUBSCRIPTION_EXPIRED')
+                ->where('entity_id', (string) $expiredTrial->id)
+                ->count()
+        );
+    }
+
     public function test_artisan_command_subscriptions_check_expiry_executes_cleanly(): void
     {
         $this->artisan('subscriptions:check-expiry')
