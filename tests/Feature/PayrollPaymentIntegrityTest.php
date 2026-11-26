@@ -62,6 +62,19 @@ class PayrollPaymentIntegrityTest extends TestCase
         ]);
     }
 
+    public function test_general_manager_without_payroll_permission_cannot_open_payroll(): void
+    {
+        $manager = User::factory()->create([
+            'tenant_id' => $this->tenant->id,
+            'role' => 'ROLE_MANAGER',
+            'status' => 'ACTIVE',
+        ]);
+
+        Livewire::actingAs($manager)
+            ->test(StaffPayroll::class)
+            ->assertStatus(403);
+    }
+
     public function test_draft_payroll_cannot_be_paid_and_creates_no_expense(): void
     {
         $payroll = $this->payroll('DRAFT');
