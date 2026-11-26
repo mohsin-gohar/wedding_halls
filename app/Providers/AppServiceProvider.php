@@ -44,8 +44,8 @@ class AppServiceProvider extends ServiceProvider
         // Named rate limiters for public, read-heavy pages. These sit in front
         // of Livewire's initial page render; Livewire action requests are
         // additionally protected by per-component guards where needed.
-        RateLimiter::for('public-pages', fn (Request $request) => Limit::perMinute(120)->by($request->ip()));
-        RateLimiter::for('public-availability', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
+        RateLimiter::for('public-pages', fn (Request $request) => Limit::perMinute(config('rate-limits.public_pages_per_minute', 120))->by($request->ip()));
+        RateLimiter::for('public-availability', fn (Request $request) => Limit::perMinute(config('rate-limits.public_availability_per_minute', 60))->by($request->ip()));
 
         // API throttle: keyed by token prefix when present, else IP.
         RateLimiter::for('api', function (Request $request) {
@@ -62,7 +62,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Reload Protection: Limits rapid reloads to 5 per minute per IP + path
         RateLimiter::for('reload-protection', function (Request $request) {
-            return Limit::perMinute(5)
+            return Limit::perMinute(config('rate-limits.reload_protection_per_minute', 5))
                 ->by($request->ip().'|'.$request->path())
                 ->response(function (Request $request, array $headers) {
                     $retryAfter = (int) ($headers['Retry-After'] ?? 60);
