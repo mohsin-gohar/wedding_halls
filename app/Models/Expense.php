@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Expense extends Model
 {
@@ -72,5 +73,10 @@ class Expense extends Model
     public function voidedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'voided_by_user_id')->withTrashed();
+    }
+
+    public function utilityLog(): HasOne
+    {
+        return $this->hasOne(UtilityLog::class, 'expense_id');
     }
 }
