@@ -79,10 +79,44 @@ class StaffPayroll extends Model
         return $this->belongsTo(User::class);
     }
 
+    public const MAX_MONEY_CENTS = 999_999_999_999;
+
+    public const MAX_MONEY_AMOUNT = 9_999_999_999.99;
+
+    public const MAX_RATE_AMOUNT = 99_999_999.99;
+
+    public const MAX_HOURS = 9_999.99;
+
     public static function calculateNet(float $basic, float $otHours, float $otRate, float $allowances, float $deductions): float
     {
-        $otPay = $otHours * $otRate;
+        foreach ([$basic, $otHours, $otRate, $allowances, $deductions] as $amount) {
+            if (! is_finite($amount) || $amount < 0) {
+                throw new \\InvalidArgumentException('Payroll values must be finite and non-negative.');
+            }
+        }
 
-        return max(0, round($basic + $otPay + $allowances - $deductions, 2));
+        if ($basic > self::MAX_MONEY_AMOUNT
+            || $allowances > self::MAX_MONEY_AMOUNT
+            || $deductions > self::MAX_MONEY_AMOUNT
+            || $otRate > self::MAX_RATE_AMOUNT
+            || $otHours > self::MAX_HOURS) {
+            throw new \\InvalidArgumentException('Payroll values exceed the supported storage range.');
+        }
+
+        // Work in paisa to avoid binary-float drift in payroll totals.
+        $basicCents = (int) round($basic * 100);
+        $hoursHundredths = (int) round($otHours * 100);
+        $rateCents = (int) round($otRate * 100);
+        $overtimeCents = (int) round(($hoursHundredths * $rateCents) / 100);
+        $allowanceCents = (int) round($allowances * 100);
+        $deductionCents = (int) round($deductions * 100);
+
+        $netCents = max(0, $basicCents + $overtimeCents + $allowanceCents - $deductionCents);
+
+        if ($netCents > self::MAX_MONEY_CENTS) {
+            throw new \\InvalidArgumentException('Calculated net salary exceeds the supported storage range.');
+        }
+
+        return $netCents / 100;
     }
 }
