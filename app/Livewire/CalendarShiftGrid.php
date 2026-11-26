@@ -8,6 +8,7 @@ use App\Models\Hall;
 use App\Models\Tenant;
 use App\Models\Venue;
 use App\Services\HallAvailabilityService;
+use App\Support\PermissionMatrix;
 use App\Support\ShiftWindows;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -115,8 +116,9 @@ class CalendarShiftGrid extends Component
     public function saveShiftPolicy(): void
     {
         $user = Auth::user();
-        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isSuperAdmin())) {
-            abort(403);
+        if (! $user || (! $user->isSuperAdmin()
+            && (! $user->tenant_id || ! PermissionMatrix::userCan($user, 'availability.manage')))) {
+            abort(403, 'Only users with availability.manage may change shift policy.');
         }
 
         $hall = $this->selectedHallId
@@ -311,6 +313,7 @@ class CalendarShiftGrid extends Component
     public function render()
     {
         $user = Auth::user();
+        abort_unless($user && ($user->isSuperAdmin() || ($user->tenant_id && ! $user->isCustomer())), 403);
         $hallsQuery = $this->accessibleHalls();
         $venuesQuery = Venue::query()->where('is_active', true);
         if (! $user?->isSuperAdmin()) {
