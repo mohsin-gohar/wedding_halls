@@ -18,7 +18,7 @@ short enough to copy into a release ticket.
 ## 2. Server and PHP runtime
 
 - [ ] PHP 8.2+ with `bcmath ctype curl dom fileinfo json mbstring openssl pcre pdo tokenizer xml redis`.
-- [ ] Composer 2.x, Node 20 LTS (build can run in CI), Nginx, Redis 7+, MySQL 8+.
+- [ ] Composer 2.x, Node 24 LTS (build can run in CI), Nginx, Redis 7+, MySQL 8+.
 - [ ] `storage/` and `bootstrap/cache/` are writable by the web user (`www-data`).
 - [ ] `php artisan storage:link` has been run **if** `FILESYSTEM_DISK=public`.
       With S3/R2 the link is not required, but the bucket policy must allow the
