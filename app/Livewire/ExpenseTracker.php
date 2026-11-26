@@ -72,7 +72,7 @@ class ExpenseTracker extends Component
     protected $rules = [
         'category' => 'required|string',
         'title' => 'required|string|max:150',
-        'amount' => 'required|numeric|min:1',
+        'amount' => 'required|numeric|min:1|max:9999999999.99',
         'expense_date' => 'required|date',
         'payee' => 'nullable|string|max:150',
         'payment_method' => 'required|in:CASH',
@@ -185,7 +185,7 @@ class ExpenseTracker extends Component
             'edit_hall_id' => ['nullable', Rule::exists('halls', 'id')->where('tenant_id', $tenantId)],
             'edit_category' => 'required|string',
             'edit_title' => 'required|string|max:150',
-            'edit_amount' => 'required|numeric|min:1',
+            'edit_amount' => 'required|numeric|min:1|max:9999999999.99',
             'edit_expense_date' => 'required|date',
             'edit_payee' => 'nullable|string|max:150',
             'edit_payment_method' => ['required', Rule::in($allowedMethods)],
