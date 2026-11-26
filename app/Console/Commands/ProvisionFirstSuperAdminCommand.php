@@ -23,13 +23,20 @@ class ProvisionFirstSuperAdminCommand extends Command
             return self::FAILURE;
         }
 
+        // MySQL advisory locks serialize concurrent first-admin provisioning.
+        // SQLite (used by the automated test suite) has no GET_LOCK function;
+        // production deployments are required to use MySQL.
         $lockName = 'riwaj-grand-first-super-admin';
-        $lock = DB::selectOne('SELECT GET_LOCK(?, 10) AS acquired', [$lockName]);
+        $hasAdvisoryLock = DB::connection()->getDriverName() === 'mysql';
 
-        if ((int) ($lock->acquired ?? 0) !== 1) {
-            $this->error('Could not acquire the first-admin provisioning lock. Try again.');
+        if ($hasAdvisoryLock) {
+            $lock = DB::selectOne('SELECT GET_LOCK(?, 10) AS acquired', [$lockName]);
 
-            return self::FAILURE;
+            if ((int) ($lock->acquired ?? 0) !== 1) {
+                $this->error('Could not acquire the first-admin provisioning lock. Try again.');
+
+                return self::FAILURE;
+            }
         }
 
         try {
@@ -117,7 +124,9 @@ class ProvisionFirstSuperAdminCommand extends Command
 
             return self::FAILURE;
         } finally {
-            DB::selectOne('SELECT RELEASE_LOCK(?)', [$lockName]);
+            if ($hasAdvisoryLock) {
+                DB::selectOne('SELECT RELEASE_LOCK(?)', [$lockName]);
+            }
         }
     }
 
