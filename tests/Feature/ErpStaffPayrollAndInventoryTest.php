@@ -727,6 +727,13 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
         Livewire::actingAs($accountant)
             ->test(InventoryTracker::class)
             ->assertOk()
+            ->assertDontSee('+ Add Inventory Item')
+            ->call('saveItem')
+            ->assertStatus(403);
+
+        Livewire::actingAs($accountant)
+            ->test(InventoryTracker::class)
+            ->assertOk()
             ->set('poSupplierName', 'Accountant Approved Supplier')
             ->set('poTotalAmount', 12500)
             ->set('poDate', Carbon::today()->toDateString())
