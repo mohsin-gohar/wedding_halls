@@ -169,6 +169,40 @@ class PayrollPaymentIntegrityTest extends TestCase
         $this->assertSame(42000.00, (float) $payroll->fresh()->net_salary);
     }
 
+    public function test_approved_payroll_cannot_be_edited_and_keeps_its_final_amount(): void
+    {
+        $payroll = $this->payroll('APPROVED');
+
+        Livewire::actingAs($this->owner)
+            ->test(StaffPayroll::class)
+            ->set('editingPayrollId', $payroll->id)
+            ->set('editBasicSalary', 100.00)
+            ->set('editOvertimeHours', 1.25)
+            ->set('editOvertimeRate', 10.25)
+            ->set('editAllowances', 20.00)
+            ->set('editDeductions', 5.00)
+            ->set('editPaymentMethod', 'CASH')
+            ->call('updatePayroll')
+            ->assertSee('finalised');
+
+        $payroll->refresh();
+        $this->assertSame('APPROVED', $payroll->status);
+        $this->assertSame(42000.00, (float) $payroll->basic_salary);
+        $this->assertSame(42000.00, (float) $payroll->net_salary);
+    }
+
+    public function test_only_approved_payroll_can_be_reopened_to_draft(): void
+    {
+        $draft = $this->payroll('DRAFT');
+
+        Livewire::actingAs($this->owner)
+            ->test(StaffPayroll::class)
+            ->call('reopenPayroll', $draft->id)
+            ->assertSee('Only an approved payroll can be reopened');
+
+        $this->assertSame('DRAFT', $draft->fresh()->status);
+    }
+
     public function test_paid_payroll_cannot_be_reopened_or_edited(): void
     {
         $payroll = $this->payroll('PAID');
