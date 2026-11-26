@@ -8,6 +8,7 @@ use App\Models\InventoryItem;
 use App\Models\InventoryLog;
 use App\Models\PurchaseOrder;
 use App\Support\CashOnlyPayments;
+use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -83,9 +84,7 @@ class InventoryTracker extends Component
     public function mount()
     {
         $user = Auth::user();
-        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isChef() && ! $user->isAccountant() && ! $user->isInventoryManager() && ! $user->isSuperAdmin())) {
-            abort(403, 'Unauthorized. Access to Inventory ERP is restricted to Owners, Chefs, and Managers.');
-        }
+        abort_unless($user && PermissionMatrix::userCan($user, 'inventory.view'), 403, 'Inventory view permission is required.');
 
         $this->poDate = Carbon::today()->format('Y-m-d');
     }
@@ -98,17 +97,11 @@ class InventoryTracker extends Component
             abort(403, 'Unauthorized.');
         }
 
-        $isPrivileged = $user->isSuperAdmin() || $user->isTenantOwner() || $user->isManager();
-
-        if (in_array($action, ['item.create', 'item.update', 'item.delete', 'stock.movement'], true)
-            && ! ($isPrivileged || $user->isChef() || $user->isInventoryManager())) {
-            abort(403, 'Unauthorized to modify inventory stock.');
-        }
-
-        if (in_array($action, ['po.create', 'po.paid'], true)
-            && ! ($isPrivileged || $user->isAccountant())) {
-            abort(403, 'Unauthorized to modify procurement records.');
-        }
+        abort_unless(
+            PermissionMatrix::userCan($user, 'inventory.manage'),
+            403,
+            'Inventory management permission is required for this action.'
+        );
     }
 
     public function setTab(string $tab)
