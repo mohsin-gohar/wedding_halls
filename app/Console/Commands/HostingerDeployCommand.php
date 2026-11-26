@@ -48,7 +48,16 @@ class HostingerDeployCommand extends Command
 
         if (! file_exists($publicLink)) {
             try {
-                Artisan::call('storage:link');
+                $exitCode = Artisan::call('storage:link');
+                $storageOutput = trim(Artisan::output());
+                if ($storageOutput !== '') {
+                    $this->line($storageOutput);
+                }
+
+                if ($exitCode !== self::SUCCESS) {
+                    throw new \RuntimeException('Laravel storage:link command returned a failure status.');
+                }
+
                 $this->line('<info>✅</info> Public storage symlink created: '.$publicLink);
             } catch (\Throwable $e) {
                 $this->warn('! Symlink creation failed, trying relative link or copy: '.$e->getMessage());
@@ -60,8 +69,18 @@ class HostingerDeployCommand extends Command
         // 3. Database Migration
         $this->info('Running database migrations...');
         try {
-            Artisan::call('migrate', ['--force' => true]);
-            $this->line(trim(Artisan::output()));
+            $exitCode = Artisan::call('migrate', ['--force' => true]);
+            $migrationOutput = trim(Artisan::output());
+            if ($migrationOutput !== '') {
+                $this->line($migrationOutput);
+            }
+
+            if ($exitCode !== self::SUCCESS) {
+                $this->error('Database migration command returned a failure status.');
+
+                return self::FAILURE;
+            }
+
             $this->line('<info>✅</info> Database migrations executed successfully');
         } catch (\Throwable $e) {
             $this->error('Database migration failed: '.$e->getMessage());
@@ -136,7 +155,7 @@ class HostingerDeployCommand extends Command
         $this->info('====================================================');
         $this->info('  HOSTINGER DEPLOYMENT READY & OPTIMIZED!           ');
         $this->info('====================================================');
-        $this->line('Your site is live and operating with peak performance.');
+        $this->line('Setup tasks completed. Verify HTTPS, health, login, and key workflows before opening the site to customers.');
 
         return self::SUCCESS;
     }
