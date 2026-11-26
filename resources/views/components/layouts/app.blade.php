@@ -492,7 +492,7 @@
             </div><!-- Sidebar Footer User Account -->
             <div class="p-3.5 shrink-0 border-t border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#1a1714]">
                 <div class="flex items-center justify-between gap-2.5">
-                    <a href="{{ auth()->user()->isSuperAdmin() ? route('admin.dashboard') : route('staff') }}" class="flex items-center gap-2.5 min-w-0 group cursor-pointer" title="Manage Profile & Team">
+                    <a href="{{ auth()->user()->isSuperAdmin() ? route('admin.dashboard') : (\App\Support\PermissionMatrix::userCan(auth()->user(), 'staff.manage') ? route('staff') : route(auth()->user()->dashboardRoute())) }}" class="flex items-center gap-2.5 min-w-0 group cursor-pointer" title="Manage Profile & Team">
                         <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D4AF67] to-[#8F7239] text-[#171513] font-bold text-xs flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition">
                             {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
                         </div>
@@ -501,7 +501,10 @@
                             <span class="text-[9px] text-[#8F7239] dark:text-[#C6A15B] uppercase font-mono block tracking-wider truncate">
                                 @if(auth()->user()->isSuperAdmin()) 👑 Super Admin
                                 @elseif(auth()->user()->isTenantOwner()) 👑 Hall Owner
+                                @elseif(auth()->user()->isHrManager()) 👥 HR Manager
+                                @elseif(auth()->user()->isBookingManager()) 📋 Booking Manager
                                 @elseif(auth()->user()->isManager()) 👔 Manager
+                                @elseif(auth()->user()->role === 'ROLE_CATERING_STAFF') 🍽️ Catering Staff
                                 @elseif(auth()->user()->isChef()) 👨‍🍳 Head Chef
                                 @else 🛎️ {{ auth()->user()->role }}
                                 @endif
@@ -566,71 +569,57 @@
                     </button>
 
                     <!-- ERP Quick Action Dropdown -->
-                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isFrontDesk() || auth()->user()->isAccountant())
+                    @if(
+                        \App\Support\PermissionMatrix::userCan(auth()->user(), 'bookings.create')
+                        || \App\Support\PermissionMatrix::userCan(auth()->user(), 'expenses.manage')
+                        || \App\Support\PermissionMatrix::userCan(auth()->user(), 'utilities.manage')
+                        || \App\Support\PermissionMatrix::userCan(auth()->user(), 'staff.attendance')
+                        || \App\Support\PermissionMatrix::userCan(auth()->user(), 'payroll.manage')
+                        || \App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.manage')
+                        || \App\Support\PermissionMatrix::userCan(auth()->user(), 'kitchen.view')
+                        || \App\Support\PermissionMatrix::userCan(auth()->user(), 'floor-plans.view')
+                    )
                         <div class="relative" x-data="{ quickMenuOpen: false }">
-                            <button type="button" 
-                                    @click="quickMenuOpen = !quickMenuOpen" 
+                            <button type="button" @click="quickMenuOpen = !quickMenuOpen"
                                     class="h-9 px-3 rounded-lg bg-[#F8F5EF] dark:bg-[#1f1c18] border border-[#E7E5E4] dark:border-[#C6A15B]/40 hover:border-[#C6A15B] text-[#171513] dark:text-[#C6A15B] text-xs font-sans font-bold uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer">
                                 <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                                 <span class="hidden sm:inline">ERP Quick Actions</span>
                                 <svg class="w-3.5 h-3.5 transition-transform" :class="quickMenuOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </button>
-
-                            <div x-show="quickMenuOpen" 
-                                 @click.outside="quickMenuOpen = false" 
+                            <div x-show="quickMenuOpen" @click.outside="quickMenuOpen = false"
                                  x-transition:enter="transition ease-out duration-150"
                                  x-transition:enter-start="opacity-0 scale-95"
                                  x-transition:enter-end="opacity-100 scale-100"
                                  class="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/40 shadow-2xl py-2 z-50 text-xs font-sans"
                                  style="display: none;">
-                                <div class="px-3 py-1.5 text-[9px] uppercase tracking-widest font-sans text-[#8F7239] dark:text-[#C6A15B] font-bold border-b border-[#E7E5E4] dark:border-white/10">
-                                    Quick ERP Commands
-                                </div>
-                                <button type="button" 
-                                        onclick="Livewire.dispatch('openWalkInModal')" 
-                                        @click="quickMenuOpen = false"
+                                <div class="px-3 py-1.5 text-[9px] uppercase tracking-widest font-sans text-[#8F7239] dark:text-[#C6A15B] font-bold border-b border-[#E7E5E4] dark:border-white/10">Quick ERP Commands</div>
+                                @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'bookings.create'))
+                                <button type="button" onclick="Livewire.dispatch('openWalkInModal')" @click="quickMenuOpen = false"
                                         class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">
-                                    <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                     <span>New Event Reservation</span>
                                 </button>
-                                <a href="{{ route('dashboard') }}" 
-                                   @click="quickMenuOpen = false"
-                                   class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">
-                                    <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                    <span>Log Daily Kharcha / Fuel</span>
-                                </a>
-                                <a href="{{ route('staff.attendance') }}" 
-                                   @click="quickMenuOpen = false"
-                                   class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">
-                                    <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                    <span>Staff Attendance Roster</span>
-                                </a>
-                                <a href="{{ route('staff.payroll') }}" 
-                                   @click="quickMenuOpen = false"
-                                   class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">
-                                    <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                    <span>Generate Payroll Slip</span>
-                                </a>
-                                <a href="{{ route('inventory') }}" 
-                                   @click="quickMenuOpen = false"
-                                   class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">
-                                    <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                                    <span>Add Stock / Inventory</span>
-                                </a>
-                                @if(config('platform.kitchen_module_enabled'))
-                                <a href="{{ route('kitchen.board') }}" 
-                                   @click="quickMenuOpen = false"
-                                   class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">
-                                    <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                                    <span>Live Kitchen KOTs</span>
-                                </a>
                                 @endif
-                                <a href="{{ route('seating.planner') }}" 
-                                   @click="quickMenuOpen = false"
-                                   class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">
-                                    <svg class="w-3.5 h-3.5 text-[#C6A15B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
-                                    <span>Floor Seating Designer</span>
-                                </a>
+                                @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'expenses.manage'))
+                                <a href="{{ route('expenses') }}" @click="quickMenuOpen = false" class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">Log Daily Kharcha</a>
+                                @endif
+                                @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'utilities.manage'))
+                                <a href="{{ route('utility.fuel') }}" @click="quickMenuOpen = false" class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">Log Generator Fuel</a>
+                                @endif
+                                @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'staff.attendance'))
+                                <a href="{{ route('staff.attendance') }}" @click="quickMenuOpen = false" class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">Staff Attendance Roster</a>
+                                @endif
+                                @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'payroll.manage'))
+                                <a href="{{ route('staff.payroll') }}" @click="quickMenuOpen = false" class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">Generate Payroll</a>
+                                @endif
+                                @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.manage'))
+                                <a href="{{ route('inventory') }}" @click="quickMenuOpen = false" class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">Add Stock / Inventory</a>
+                                @endif
+                                @if(config('platform.kitchen_module_enabled') && \App\Support\PermissionMatrix::userCan(auth()->user(), 'kitchen.view'))
+                                <a href="{{ route('kitchen.board') }}" @click="quickMenuOpen = false" class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">Live Kitchen KOTs</a>
+                                @endif
+                                @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'floor-plans.view'))
+                                <a href="{{ route('seating.planner') }}" @click="quickMenuOpen = false" class="w-full text-left px-3 py-2 text-stone-700 dark:text-stone-200 hover:bg-[#C6A15B]/15 hover:text-[#C6A15B] flex items-center gap-2">Floor Seating Designer</a>
+                                @endif
                             </div>
                         </div>
                     @endif
@@ -674,19 +663,27 @@
                         @endif
                         @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'expenses.view'))
                             <a href="{{ route('expenses') }}" class="py-2 hover:text-[#C6A15B]">Expenses &amp; P&amp;L</a>
+                        @endif
+                        @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'staff.attendance'))
                             <a href="{{ route('staff.attendance') }}" class="py-2 hover:text-[#C6A15B]">Attendance</a>
+                        @endif
+                        @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'payroll.manage'))
                             <a href="{{ route('staff.payroll') }}" class="py-2 hover:text-[#C6A15B]">Payroll</a>
                         @endif
                         @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'staff.manage'))
                             <a href="{{ route('staff') }}" class="py-2 hover:text-[#C6A15B]">Team &amp; Staff</a>
+                        @endif
+                        @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'business.view'))
                             <a href="{{ route('hall.media') }}" class="py-2 hover:text-[#C6A15B]">Website &amp; Halls</a>
+                        @endif
+                        @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'utilities.view'))
                             <a href="{{ route('utility.fuel') }}" class="py-2 hover:text-[#C6A15B]">Generator Fuel</a>
                         @endif
                         @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.view'))
                             <a href="{{ route('inventory') }}" class="py-2 hover:text-[#C6A15B]">Inventory</a>
-                            @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'packages.view'))
+                        @endif
+                        @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'packages.view'))
                             <a href="{{ route('packages.manager') }}" class="py-2 hover:text-[#C6A15B]">Catering Menus</a>
-                            @endif
                         @endif
                         @if(config('platform.kitchen_module_enabled') && \App\Support\PermissionMatrix::userCan(auth()->user(), 'kitchen.view'))
                             <a href="{{ route('kitchen.board') }}" class="py-2 hover:text-[#C6A15B]">Kitchen KOT</a>
