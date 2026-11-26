@@ -58,8 +58,9 @@ class CalendarShiftGrid extends Component
     public function mount()
     {
         $user = Auth::user();
-        if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
-            abort(403, 'Unauthorized. Tenant staff access required.');
+        if (! $user || (! $user->isSuperAdmin()
+            && (! $user->tenant_id || ! PermissionMatrix::userCan($user, 'bookings.view')))) {
+            abort(403, 'Unauthorized. Calendar access requires bookings.view within a tenant.');
         }
 
         $this->currentMonth = Carbon::now()->format('Y-m');
@@ -322,7 +323,7 @@ class CalendarShiftGrid extends Component
     public function render()
     {
         $user = Auth::user();
-        abort_unless($user && ($user->isSuperAdmin() || ($user->tenant_id && ! $user->isCustomer())), 403);
+        abort_unless($user && ($user->isSuperAdmin() || ($user->tenant_id && PermissionMatrix::userCan($user, 'bookings.view'))), 403);
         $hallsQuery = $this->accessibleHalls();
         $venuesQuery = Venue::query()->where('is_active', true);
         if (! $user?->isSuperAdmin()) {
