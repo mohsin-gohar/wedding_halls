@@ -290,6 +290,7 @@
             </div>
             @endif
 
+            @if($canViewInventory)
             <!-- 2. Bawarchi Pantry & Inventory Health -->
             <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-xl p-5 shadow-sm space-y-4 hover:border-[#C6A15B]/60 transition duration-200 flex flex-col justify-between">
                 <div class="space-y-2">
@@ -318,6 +319,9 @@
                 </a>
             </div>
 
+            @endif
+
+            @if($canViewAttendance)
             <!-- 3. Workforce & Duty Roster -->
             <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-xl p-5 shadow-sm space-y-4 hover:border-[#C6A15B]/60 transition duration-200 flex flex-col justify-between">
                 <div class="space-y-2">
@@ -348,6 +352,8 @@
                     </a>
                 </div>
             </div>
+
+            @endif
 
             <!-- 4. Energy Fleet & Daily Kharcha -->
             <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-xl p-5 shadow-sm space-y-4 hover:border-[#C6A15B]/60 transition duration-200 flex flex-col justify-between">
@@ -631,7 +637,7 @@
 
             <div class="mt-4">
                 <span class="font-cinzel text-2xl sm:text-3xl text-[#171513] dark:text-white font-bold tracking-tight block">
-                    {{ number_format($allLeads->count()) }}
+                    @if($canViewLeads){{ number_format($allLeads->count()) }}@else{{ number_format($pendingInquiriesCount) }}@endif
                 </span>
             </div>
 
@@ -1292,6 +1298,7 @@
     <!-- ===================================================================
          INQUIRY & LEAD TRACKING CRM (Interactive Kanban Pipeline)
          =================================================================== -->
+    @if($canViewLeads)
     <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-2xl p-6 shadow-sm space-y-6 transition-colors duration-200">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#E7E5E4] dark:border-white/10 pb-4">
             <div>
@@ -1345,9 +1352,11 @@
                                 <button wire:click="openCustomerDetails('{{ $lead->id }}')" class="tbtn tbtn-outline">
                                     Details &rarr;
                                 </button>
-                                <button wire:click="updateLeadStage('{{ $lead->id }}', 'SITE_VISIT')" class="tbtn tbtn-dark">
+                                @if($canManageLeads)
+<button wire:click="updateLeadStage('{{ $lead->id }}', 'SITE_VISIT')" class="tbtn tbtn-dark">
                                     Visit &rarr;
                                 </button>
+@endif
                             </div>
                         </div>
                     @empty
@@ -1383,12 +1392,16 @@
                                     Details &rarr;
                                 </button>
                                 <div class="flex items-center gap-1">
-                                    <button wire:click="updateLeadStage('{{ $lead->id }}', 'NEW_INQUIRY')" title="Move Back" class="tbtn tbtn-icon tbtn-outline">
+                                    @if($canManageLeads)
+<button wire:click="updateLeadStage('{{ $lead->id }}', 'NEW_INQUIRY')" title="Move Back" class="tbtn tbtn-icon tbtn-outline">
                                         &larr;
                                     </button>
-                                    <button wire:click="updateLeadStage('{{ $lead->id }}', 'QUOTATION')" class="tbtn tbtn-dark">
+@endif
+                                    @if($canManageLeads)
+<button wire:click="updateLeadStage('{{ $lead->id }}', 'QUOTATION')" class="tbtn tbtn-dark">
                                         Quote &rarr;
                                     </button>
+@endif
                                 </div>
                             </div>
                         </div>
@@ -1425,12 +1438,16 @@
                                     Details &rarr;
                                 </button>
                                 <div class="flex items-center gap-1">
-                                    <button wire:click="updateLeadStage('{{ $lead->id }}', 'SITE_VISIT')" title="Move Back" class="tbtn tbtn-icon tbtn-outline">
+                                    @if($canManageLeads)
+<button wire:click="updateLeadStage('{{ $lead->id }}', 'SITE_VISIT')" title="Move Back" class="tbtn tbtn-icon tbtn-outline">
                                         &larr;
                                     </button>
-                                    <button wire:click="updateLeadStage('{{ $lead->id }}', 'CONFIRMED')" class="tbtn tbtn-gold">
+@endif
+                                    @if($canManageLeads)
+<button wire:click="updateLeadStage('{{ $lead->id }}', 'CONFIRMED')" class="tbtn tbtn-gold">
                                         Confirm ✓
                                     </button>
+@endif
                                 </div>
                             </div>
                         </div>
@@ -1485,6 +1502,8 @@
     <!-- ===================================================================
          LIVE GUEST CONCIERGE INQUIRIES & CHATBOT LEADS (Hall Owner Messenger)
          =================================================================== -->
+    @endif
+    @if($canViewMessages)
     <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 rounded-2xl p-6 shadow-sm space-y-4 transition-colors duration-200">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#E7E5E4] dark:border-white/10 pb-4">
             <div>
@@ -1766,6 +1785,7 @@
                             Ref: {{ $selectedLead->booking_reference ?? $selectedLead->id }} • {{ $selectedLead->event_type }}
                         </span>
                     </div>
+                        @endif
                     <button wire:click="closeCustomerDetails" class="text-stone-400 hover:text-white text-2xl font-sans leading-none">&times;</button>
                 </div>
 
@@ -1839,10 +1859,12 @@
                     </label>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         @foreach(['NEW_INQUIRY' => '1. New Inquiry', 'SITE_VISIT' => '2. Site Visit', 'QUOTATION' => '3. Quotation', 'CONFIRMED' => '4. Confirmed'] as $stageKey => $stageLabel)
-                            <button wire:click="updateLeadStage('{{ $selectedLead->id }}', '{{ $stageKey }}')"
+                            @if($canManageLeads)
+<button wire:click="updateLeadStage('{{ $selectedLead->id }}', '{{ $stageKey }}')"
                                     class="px-3 py-2 rounded-lg text-xs font-sans font-bold uppercase transition border {{ ($selectedLead->crm_stage === $stageKey || ($stageKey === 'NEW_INQUIRY' && empty($selectedLead->crm_stage) && $selectedLead->status !== 'CONFIRMED')) ? 'bg-[#C6A15B] text-[#171513] border-[#C6A15B]' : 'bg-white/5 text-stone-300 border-white/10 hover:border-[#C6A15B]' }}">
                                 {{ $stageLabel }}
                             </button>
+@endif
                         @endforeach
                     </div>
                 </div>
@@ -1862,6 +1884,7 @@
 
                     <!-- Add Note Input -->
                     <div class="space-y-2 pt-2">
+                        @if($canManageLeads)
                         <textarea wire:model="leadNoteText" rows="2" placeholder="Record new customer interaction note (e.g. called client, discussed menu customization, agreed on 500 guests)..."
                                   class="w-full rounded-lg bg-[#171513] border border-white/20 text-white text-xs p-3 font-sans outline-none focus:border-[#C6A15B]"></textarea>
                         <div class="flex justify-end">
@@ -2072,7 +2095,7 @@
     <!-- ===================================================================
          MODAL: CONCIERGE CHAT INQUIRY & REAL-TIME REPLY
          =================================================================== -->
-    @if($showChatModal)
+    @if($canViewMessages && $showChatModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
             <div class="bg-white dark:bg-[#171513] border border-[#C6A15B]/60 rounded-2xl max-w-2xl w-full p-6 sm:p-7 space-y-4 shadow-2xl relative my-8">
                 <button wire:click="closeChatModal" class="absolute top-4 right-4 text-stone-400 hover:text-stone-700 dark:hover:text-white text-xl font-sans">&times;</button>
