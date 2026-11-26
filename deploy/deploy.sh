@@ -21,12 +21,17 @@ cd "$APP_DIR"
 # Once maintenance mode has been requested, always attempt to bring the app
 # back up on every exit path. A failed deploy must never strand the site in 503.
 maintenance_mode_attempted=0
+migration_started=0
 restore_application() {
     local deploy_exit_code=$?
 
     if [ "$maintenance_mode_attempted" -eq 1 ]; then
-        echo "==> Restoring application availability after deployment attempt"
-        php artisan up || echo "WARNING: automatic recovery failed; run 'php artisan up' manually." >&2
+        if [ "$migration_started" -eq 0 ]; then
+            echo "==> Restoring application availability (deployment failed before migrations)"
+            php artisan up || echo "WARNING: automatic recovery failed; run 'php artisan up' manually." >&2
+        else
+            echo "WARNING: migration/deployment failed after migrations started; leaving maintenance mode enabled for safe manual recovery." >&2
+        fi
     fi
 
     return "$deploy_exit_code"
@@ -34,8 +39,11 @@ restore_application() {
 trap restore_application EXIT
 
 echo "==> [1/8] Enabling maintenance mode"
-maintenance_mode_attempted=1
-php artisan down --render="errors::503" || true
+if php artisan down --render="errors::503"; then
+    maintenance_mode_attempted=1
+else
+    echo "WARNING: could not enable maintenance mode; continuing because the app may already be down." >&2
+fi
 
 echo "==> [2/8] Pulling latest code (git)"
 git pull --ff-only
@@ -48,6 +56,7 @@ npm ci
 npm run build
 
 echo "==> [5/8] Running database migrations"
+migration_started=1
 php artisan migrate --force
 
 echo "==> [6/8] Refreshing Laravel caches"
@@ -65,6 +74,7 @@ echo "==> [8/8] Restarting queue workers + bringing app up"
 php artisan queue:restart
 php artisan up
 maintenance_mode_attempted=0
+migration_started=0
 trap - EXIT
 
 echo "==> Deploy complete. Verify: curl -I https://YOUR_DOMAIN/up"
