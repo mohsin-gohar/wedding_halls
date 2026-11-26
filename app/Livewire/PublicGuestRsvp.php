@@ -84,6 +84,12 @@ class PublicGuestRsvp extends Component
             ->filter(fn (GuestRsvp $rsvp): bool => $this->normalizePhone($rsvp->phone) === $canonical)
             ->values();
 
+        // A capped candidate set is not proof of uniqueness. Fail closed if
+        // the suffix bucket reaches the cap rather than trusting a partial scan.
+        if ($matches->count() >= 50) {
+            return 'ambiguous';
+        }
+
         return match ($matches->count()) {
             0 => null,
             1 => $matches->first(),
