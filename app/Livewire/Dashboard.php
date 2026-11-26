@@ -967,7 +967,13 @@ class Dashboard extends Component
             ->sum('wapda_units_consumed');
 
         return view('livewire.dashboard', [
-            'kitchenEnabled' => (bool) config('platform.kitchen_module_enabled', false),
+            'kitchenEnabled' => (bool) config('platform.kitchen_module_enabled', false) && PermissionMatrix::userCan($user, 'kitchen.view'),
+            'canViewKitchen' => PermissionMatrix::userCan($user, 'kitchen.view'),
+            'canViewInventory' => PermissionMatrix::userCan($user, 'inventory.view'),
+            'canViewAttendance' => PermissionMatrix::userCan($user, 'staff.attendance'),
+            'canViewLeads' => PermissionMatrix::userCan($user, 'leads.view'),
+            'canManageLeads' => PermissionMatrix::userCan($user, 'leads.manage'),
+            'canViewMessages' => PermissionMatrix::userCan($user, 'messages.view'),
             'todayKitchenKotsCount' => $todayKitchenKotsCount,
             'todayTotalDiners' => $todayTotalDiners,
             'todayMeatNeeded' => $todayMeatNeeded,
