@@ -76,7 +76,7 @@ class StaffPayroll extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public static function calculateNet(float $basic, float $otHours, float $otRate, float $allowances, float $deductions): float
