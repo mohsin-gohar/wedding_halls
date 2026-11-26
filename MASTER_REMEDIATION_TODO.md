@@ -148,3 +148,8 @@ The following remediation work has been committed to the audit branch. These ent
 - CI workflow push trigger was widened from `main` only to all branches so future branch pushes can run the same quality, MySQL and Playwright gates. GitHub Actions has not yet reported a run for these commits; no test pass is claimed.
 
 **Verification gate:** run PHP lint, Pint, full MySQL suite and Playwright against the exact latest branch head. Review any failures and correct them before checking these tasks complete.
+
+
+- Additional RBAC review found role/permission drift in attendance, shift policy, procurement, and the walk-in booking modal. These areas now use the central permission matrix; floor staff received the explicit `bookings.create` capability already implied by the calendar workflow. Accountant inventory access is read-only, while procurement settlement requires `expenses.manage`.
+- The public RSVP lookup candidate scan now fails closed when its 50-row candidate cap is reached. **This does not solve the phone-ownership verification gap** tracked in SEC-010.
+- New tests added for attendance permissions, shift-policy permissions, walk-in booking permissions and forged Livewire staff-mode lookup. All remain unverified until the full suite runs.
