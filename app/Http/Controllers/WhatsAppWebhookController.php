@@ -259,16 +259,24 @@ class WhatsAppWebhookController extends Controller
     {
         $token = config('services.whatsapp.access_token');
         $phoneId = config('services.whatsapp.phone_number_id');
-        $apiVersion = config('services.whatsapp.api_version', 'v19.0');
+        $apiVersion = config('services.whatsapp.api_version', 'v26.0');
 
         if ($token && $phoneId) {
             try {
-                Http::withToken($token)->post("https://graph.facebook.com/{$apiVersion}/{$phoneId}/messages", [
-                    'messaging_product' => 'whatsapp',
-                    'to' => $toPhone,
-                    'type' => 'text',
-                    'text' => ['body' => $message],
-                ]);
+                $response = Http::withToken($token)
+                    ->timeout(10)
+                    ->post("https://graph.facebook.com/{$apiVersion}/{$phoneId}/messages", [
+                        'messaging_product' => 'whatsapp',
+                        'to' => $toPhone,
+                        'type' => 'text',
+                        'text' => ['body' => $message],
+                    ]);
+
+                if ($response->failed()) {
+                    Log::warning('WhatsApp Cloud API rejected an outbound message.', [
+                        'http_status' => $response->status(),
+                    ]);
+                }
             } catch (\Exception $e) {
                 Log::error('WhatsApp dispatch error: '.$e->getMessage());
             }
