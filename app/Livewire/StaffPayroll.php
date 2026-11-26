@@ -351,11 +351,17 @@ class StaffPayroll extends Component
         );
     }
 
-    public function updatePayroll()
+    public function updatePayroll(): void
     {
         $this->authorizePayrollManager();
-        $record = PayrollModel::where('tenant_id', Auth::user()->tenant_id)
-            ->with('user')->findOrFail($this->editingPayrollId);
+
+        $tenantId = (string) Auth::user()->tenant_id;
+        $payrollId = $this->editingPayrollId;
+        $record = PayrollModel::query()
+            ->where('tenant_id', $tenantId)
+            ->with('user')
+            ->findOrFail($payrollId);
+
         $originalMethod = (string) ($record->payment_method ?? '');
         $allowedMethods = $originalMethod === CashOnlyPayments::CASH
             ? CashOnlyPayments::METHODS
@@ -369,19 +375,6 @@ class StaffPayroll extends Component
             'editDeductions' => 'required|numeric|min:0|max:9999999999.99',
             'editPaymentMethod' => ['required', Rule::in($allowedMethods)],
         ]);
-
-        if ($record->status === 'PAID') {
-            $this->showEditModal = false;
-            $this->errorMessage = 'A paid payroll cannot be edited. Use a separate adjustment entry.';
-
-            return;
-        }
-        if ($record->status === 'APPROVED') {
-            $this->showEditModal = false;
-            $this->errorMessage = 'This payroll is finalised. Reopen it to DRAFT before editing.';
-
-            return;
-        }
 
         $net = PayrollModel::calculateNet(
             $this->editBasicSalary,
@@ -402,16 +395,53 @@ class StaffPayroll extends Component
             'notes' => $this->editNotes,
         ];
 
-        // Preserve historical labels on unrelated edits; only an explicit
-        // conversion to cash may rewrite the method field.
-        if ($this->editPaymentMethod === CashOnlyPayments::CASH && $originalMethod) {
-            $update['payment_method'] = CashOnlyPayments::CASH;
+        $outcome = DB::transaction(function () use ($tenantId, $payrollId, $update): string {
+            $locked = PayrollModel::query()
+                ->where('tenant_id', $tenantId)
+                ->whereKey($payrollId)
+                ->lockForUpdate()
+                ->with('user')
+                ->firstOrFail();
+
+            if ($locked->status === 'PAID') {
+                return 'paid';
+            }
+
+            if ($locked->status !== 'DRAFT') {
+                return 'finalized';
+            }
+
+            $originalMethod = (string) ($locked->payment_method ?? '');
+            if ($this->editPaymentMethod === CashOnlyPayments::CASH && $originalMethod !== '') {
+                $update['payment_method'] = CashOnlyPayments::CASH;
+            }
+
+            $locked->update($update);
+
+            if ($this->updateBaseSalaryOnProfile && $locked->user) {
+                User::query()
+                    ->where('tenant_id', $tenantId)
+                    ->whereKey($locked->user_id)
+                    ->lockForUpdate()
+                    ->firstOrFail()
+                    ->update(['base_salary' => $this->editBasicSalary]);
+            }
+
+            return 'updated';
+        });
+
+        if ($outcome === 'paid') {
+            $this->showEditModal = false;
+            $this->errorMessage = 'A paid payroll cannot be edited. Use a separate adjustment entry.';
+
+            return;
         }
 
-        $record->update($update);
+        if ($outcome === 'finalized') {
+            $this->showEditModal = false;
+            $this->errorMessage = 'This payroll is finalised. Reopen it to DRAFT before editing.';
 
-        if ($this->updateBaseSalaryOnProfile && $record->user) {
-            $record->user->update(['base_salary' => $this->editBasicSalary]);
+            return;
         }
 
         $this->showEditModal = false;
