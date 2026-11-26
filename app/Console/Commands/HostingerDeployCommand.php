@@ -79,7 +79,7 @@ class HostingerDeployCommand extends Command
                 '--force' => true,
             ]);
             if ($exitCode !== self::SUCCESS) {
-                throw new \\RuntimeException('Vendor category reference seeding failed.');
+                throw new \RuntimeException('Vendor category reference seeding failed.');
             }
             $this->line(trim(Artisan::output()));
 
@@ -89,7 +89,7 @@ class HostingerDeployCommand extends Command
                     '--force' => true,
                 ]);
                 if ($exitCode !== self::SUCCESS) {
-                    throw new \\RuntimeException('Initial RBAC permission seeding failed.');
+                    throw new \RuntimeException('Initial RBAC permission seeding failed.');
                 }
                 $this->line(trim(Artisan::output()));
             } else {
@@ -97,7 +97,7 @@ class HostingerDeployCommand extends Command
             }
 
             Artisan::call('permission:cache-reset');
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             $this->error('Reference-data bootstrap failed: '.$e->getMessage());
 
             return self::FAILURE;
