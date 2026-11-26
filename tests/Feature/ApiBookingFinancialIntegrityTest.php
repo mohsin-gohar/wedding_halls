@@ -216,7 +216,20 @@ class ApiBookingFinancialIntegrityTest extends TestCase
 
     public function test_front_desk_cannot_cancel_a_booking_without_bookings_cancel_permission(): void
     {
-        $booking = Booking::query()->firstOrFail();
+        $hall = Hall::query()->firstOrFail();
+        $booking = app(\App\Services\BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(280)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Front Desk Cancellation Guard',
+            'customer_phone' => '+92 300 7774020',
+            'guest_count' => 120,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'CONFIRMED',
+        ]);
         $frontDesk = User::factory()->create([
             'tenant_id' => $booking->tenant_id,
             'role' => 'ROLE_FRONT_DESK',
@@ -232,7 +245,20 @@ class ApiBookingFinancialIntegrityTest extends TestCase
 
     public function test_booking_manager_can_cancel_a_booking_with_explicit_permission(): void
     {
-        $booking = Booking::query()->firstOrFail();
+        $hall = Hall::query()->firstOrFail();
+        $booking = app(\App\Services\BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(281)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Booking Manager Cancellation',
+            'customer_phone' => '+92 300 7774021',
+            'guest_count' => 120,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'CONFIRMED',
+        ]);
         $bookingManager = User::factory()->create([
             'tenant_id' => $booking->tenant_id,
             'role' => 'ROLE_BOOKING_MANAGER',
