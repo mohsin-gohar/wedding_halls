@@ -213,4 +213,48 @@ class ApiBookingFinancialIntegrityTest extends TestCase
 
         $this->assertSame(0, Booking::query()->where('customer_name', 'Hidden Hall Customer')->count());
     }
+
+    public function test_content_moderator_cannot_read_booking_or_service_booking_api_records(): void
+    {
+        $moderator = User::factory()->create([
+            'role' => 'ROLE_CONTENT_MODERATOR',
+            'status' => 'ACTIVE',
+            'tenant_id' => null,
+        ]);
+        $moderator->assignRole('ROLE_CONTENT_MODERATOR');
+
+        $this->actingAs($moderator)
+            ->getJson('/api/v1/bookings')
+            ->assertForbidden();
+
+        $this->actingAs($moderator)
+            ->getJson('/api/v1/service-bookings')
+            ->assertForbidden();
+    }
+
+    public function test_platform_support_can_read_global_booking_queues_but_finance_cannot(): void
+    {
+        $support = User::factory()->create([
+            'role' => 'ROLE_PLATFORM_SUPPORT',
+            'status' => 'ACTIVE',
+            'tenant_id' => null,
+        ]);
+        $support->assignRole('ROLE_PLATFORM_SUPPORT');
+
+        $finance = User::factory()->create([
+            'role' => 'ROLE_PLATFORM_FINANCE',
+            'status' => 'ACTIVE',
+            'tenant_id' => null,
+        ]);
+        $finance->assignRole('ROLE_PLATFORM_FINANCE');
+
+        $this->actingAs($support)
+            ->getJson('/api/v1/bookings')
+            ->assertOk();
+
+        $this->actingAs($finance)
+            ->getJson('/api/v1/bookings')
+            ->assertForbidden();
+    }
+
 }
