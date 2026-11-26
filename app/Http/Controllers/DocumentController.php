@@ -259,7 +259,8 @@ class DocumentController extends Controller
             // Least privilege: only financial roles of the owning vendor and
             // the paying customer may open a confidential cash proof. General
             // operational staff (chef, floor, front desk, inventory) do not.
-            $isPlatformFinance = $user->isPlatformFinance()\n                && PermissionMatrix::userCan($user, 'payments.view');
+            $isPlatformFinance = $user->isPlatformFinance()
+                && PermissionMatrix::userCan($user, 'payments.view');
 
             $isVendorFinanceStaff = $user->tenant_id
                 && (string) $user->tenant_id === (string) $payment->tenant_id
