@@ -29,7 +29,13 @@ class DocumentController extends Controller
             return;
         }
 
-        // 2. Tenant owner and authorized staff of this specific tenant
+        // Platform finance may access financial documents across tenants,
+        // but only where its role has the specific financial permission.
+        if ($user->isPlatformFinance() && PermissionMatrix::userCan($user, $permission)) {
+            return;
+        }
+
+        // 2. Tenant staff must have both the tenant match and document permission.
         if ($user->tenant_id && (string) $user->tenant_id === (string) $booking->tenant_id
             && PermissionMatrix::userCan($user, $permission)) {
             return;
@@ -58,7 +64,12 @@ class DocumentController extends Controller
             return;
         }
 
-        // 2. Tenant owner and staff of this specific tenant
+        // Platform finance has cross-tenant read scope, limited to payment visibility.
+        if ($user->isPlatformFinance() && PermissionMatrix::userCan($user, 'payments.view')) {
+            return;
+        }
+
+        // 2. Tenant staff must belong to this tenant and hold financial read access.
         if ($user->tenant_id && (string) $user->tenant_id === (string) $payment->tenant_id
             && PermissionMatrix::userCan($user, 'payments.view')) {
             return;
