@@ -5,7 +5,9 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use RuntimeException;
 use Spatie\Permission\Models\Role;
+use Throwable;
 
 class HostingerDeployCommand extends Command
 {
@@ -66,9 +68,9 @@ class HostingerDeployCommand extends Command
                 }
 
                 if ($exitCode !== self::SUCCESS || ! is_link($publicLink)) {
-                    throw new \RuntimeException('Laravel storage:link did not create the expected symbolic link.');
+                    throw new RuntimeException('Laravel storage:link did not create the expected symbolic link.');
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->error('Public storage link is required but could not be created: '.$e->getMessage());
                 $this->line('Create public/storage -> storage/app/public in the Hostinger File Manager, then rerun setup.');
 
@@ -105,7 +107,7 @@ class HostingerDeployCommand extends Command
             }
 
             $this->line('<info>✅</info> Database migrations executed successfully');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->error('Database migration failed: '.$e->getMessage());
 
             return self::FAILURE;
@@ -121,7 +123,7 @@ class HostingerDeployCommand extends Command
                 '--force' => true,
             ]);
             if ($exitCode !== self::SUCCESS) {
-                throw new \RuntimeException('Vendor category reference seeding failed.');
+                throw new RuntimeException('Vendor category reference seeding failed.');
             }
             $this->line(trim(Artisan::output()));
 
@@ -131,7 +133,7 @@ class HostingerDeployCommand extends Command
                     '--force' => true,
                 ]);
                 if ($exitCode !== self::SUCCESS) {
-                    throw new \RuntimeException('Initial RBAC permission seeding failed.');
+                    throw new RuntimeException('Initial RBAC permission seeding failed.');
                 }
                 $this->line(trim(Artisan::output()));
             } else {
@@ -139,7 +141,7 @@ class HostingerDeployCommand extends Command
             }
 
             Artisan::call('permission:cache-reset');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->error('Reference-data bootstrap failed: '.$e->getMessage());
 
             return self::FAILURE;
