@@ -1,57 +1,82 @@
-# Final Acceptance Report — Riwaj Grand
+# Final Acceptance Report — Riwaj Grand (Independent Re-Audit)
 
 **Branch:** `audit/riwaj-grand-repair-20261126`  
-**Base commit:** `df8de43717415f3c7f47d50845f114502f437037`  
-**Final commit:** recorded in git log at `HEAD` (repair commits `1ebe778` → `9b7c387` → `2e3018a` → documentation commit)  
-**Date:** 2026-11-26  
-**No commit was made to `main`; nothing was pushed or deployed.**
+**Base / merge-base with `main`:** `df8de43717415f3c7f47d50845f114502f437037`  
+**GitHub `main` baseline:** `07bc5fe397fbb0fd7de05678d68830fc027a8872`  
+**Final SHA:** `f83728308a0717380e6c55f13cd471de894b7c3e`  
+**Audit date:** 2026-11-27  
+**Tracked files:** 617 (review coverage: `FILE_BY_FILE_REVIEW_MATRIX.md`)  
+**No changes to `main`; no force-push, reset, deployment or production-data change.**
 
-## 1. Acceptance gates
+## 1. CI evidence (authoritative, GitHub-confirmed)
 
-| Gate | Status | Evidence |
+| Run | Head | Conclusion | Details |
+|---|---|---|---|
+| [45868534419](https://github.com/mohsin-gohar/wedding_halls/actions/runs/45868534419) | `3b819d0` | **FAILURE** | Static quality gates FAILED at **Composer security audit** (3 vulnerable packages: `symfony/http-kernel` CVE-2026-133743, `symfony/mailer` CVE-2026-133751/133755, `symfony/routing` CVE-2026-133746/133754); NPM audit/build/Docker checks skipped. MySQL test suite FAILED at "Run tests". Playwright browser QA **PASSED**. Deploy job SKIPPED (intentionally disabled). |
+| [45875899779](https://github.com/mohsin-gohar/wedding_halls/actions/runs/45875899779) | `5330962` | FAILURE | (intermediate head; same audit era) |
+| [45880136572](https://github.com/mohsin-gohar/wedding_halls/actions/runs/45880136572) | `f837283` | **SUCCESS** | All jobs green on the final code: static quality gates (PHP lint, Pint, **Composer audit: 0 advisories**, npm audit, Vite build, Docker config/build/smoke), MySQL test suite, Playwright browser QA; deploy intentionally skipped. |
+
+Advisories were fixed by updating the lockfile to patched Symfony releases (`composer update symfony/http-kernel symfony/mailer symfony/routing --with-dependencies`); no advisory was suppressed and no security check removed.
+
+## 2. Test evidence (executed, not estimated)
+
+| Gate | Result | Artifact |
 |---|---|---|
-| CRITICAL defects resolved | Yes (see below) | Refund/wallet, concurrent cancellation, undefined method, JSON-LD XSS, broken Blade markup |
-| HIGH defects resolved | Yes, except documented design decisions | RBAC/API scope, tenant leak, open redirect, account status checks, audit gaps |
-| Cross-tenant access tests | Present and green in targeted runs | `CrossTenantIsolationRegressionTest`, `TenantPrivacyAndSecurityAuditTest`, `ApiBookingFinancialIntegrityTest` |
-| Role/permission tests | Green after policy alignment | `PermissionMatrixLeastPrivilegeTest` (extends Laravel TestCase), `StaffManagerRoleAssignmentTest`, `PortalRoleRoutingTest`, `Dashboard/AttendanceAuthorizationTest` |
-| Financial integrity tests | Green in targeted runs | `ServiceSettlementIntegrityTest`, `CashOnlyPaymentTest`, `PaymentIdempotencyConflictTest`, `PayrollPaymentIntegrityTest`, `StrictCashOnlyEnforcementTest` |
-| MySQL 8 integration suite | Final count: see §4 | `full_suite_repair2.out` |
-| Frontend production build | Passed (earlier round) | `npm run build` |
-| Browser QA | Partially verified; rate-limit windows required | `TESTING_AND_BROWSER_QA_REPORT.md` |
-| No known critical security issue | Yes in application code; infra items remain | Security report §5 |
-| Deployment documented | Yes | `PRODUCTION_DEPLOYMENT_READINESS.md` |
-| Final diff free of unrelated changes/secrets | Yes | `git diff --check` exit 0; source secret scan 0; no `.env` tracked |
+| Final full MySQL suite on `f837283`-equivalent code | **605 passed, 3 skipped, 0 failed (3,129 assertions)** | `full_suite_final.out` |
+| Prior full suite (before final corrections) | 602 passed, 3 skipped, 0 failed (3,115 assertions) | `full_suite_repair3.out` |
+| New onboarding/utility/GMV/refund regression batch | **8 passed** (initial utility expectation corrected, final re-run 1/1) | `correction_tests.out`, `utility_test.out` |
+| Composer audit | **0 advisories**, exit 0 | `composer audit --locked` |
+| NPM audit / `npm run build` | build exit 0 (CI npm audit passed on final head) | CI run 45880136572 |
+| Pint / PHP lint / `git diff --check` | all exit 0 | local + CI |
+| Playwright | CI job **PASS** on final head; local rounds 4/6 passed login and responsive suites when rate-limit windows were clear | CI run 45880136572 |
 
-## 2. Modules audited
+The earlier documented baseline "444 tests / 2,602 assertions" is superseded: it applies to an older head and does **not** cover the later changes. The placeholder in the previous `FINAL_ACCEPTANCE_REPORT.md` is now resolved by the 605/3,129 result above.
 
-SaaS admin/subscriptions, hall & marketplace, availability/bookings, RFQ/service bookings, customer workspace, hall ERP (staff, attendance, payroll, inventory, procurement, KOT, expenses), vendor ERP/finance, platform API, auth/2FA/password reset, uploads/documents, WhatsApp RSVP, frontend/responsive UI, database/migrations, scheduled tasks, CI/CD and deployment.
+## 3. Claim-versus-evidence verification (independent)
 
-## 3. Bugs fixed (summary)
+| Claim in earlier docs | Verdict | Evidence |
+|---|---|---|
+| "Full suite green" (old reports, 444 tests) | Stale | Superseded by 605 tests on current head; old number not valid for new changes |
+| "Composer audit passes" | FALSE at `3b819d0`, TRUE now | CI run 45868534419 failed; lockfile updated; CI run 45880136572 green |
+| "Production ready" | NOT VERIFIED externally | Docker/Redis/mail/host/restore drill not executed locally; deployment job disabled |
+| "Cash-only preserved" | TRUE | `CASH_ONLY_PAYMENTS.md`, cash guard layers, cash-only suites green |
+| "No critical security issue" | TRUE for app code after fixes | JSON-LD XSS, open redirect, tenant leak, RBAC drift fixed; remaining items are documented policy/infra risks |
+| "All business workflows complete" | PARTIAL | Hall refund UI, source-linked correction UI, utility historical backfill remain (see §7) |
 
-- **Financial:** refund reversal semantics + payout reservation cancellation + audit; concurrency lock/idempotency on cancellation; wallet `balance_after` freshness; customer API read scope; owner refund permission; `acceptQuote` ownership assertions.
-- **Security:** JSON-LD stored XSS; 2FA open redirect; cross-tenant walk-in hall leak; accountant/floor-staff RBAC drift; login/reset status checks; password-reset enumeration; HR privilege boundaries.
-- **Correctness/ops:** inherited merge conflict resolution (16 files); three broken PHP test files; unbalanced Blade markup; missing `assertExpenseCanBeVoided()`; migration ordering/guards; stale route/view caches; flaky rate-limiter test state; several invalid test fixtures.
+## 4. Defects found and fixed (this independent pass)
 
-## 4. Tests actually executed (exact counts)
+**Confirmed from CI:** vulnerable Symfony lockfile versions (patched); 24 failing MySQL tests on `3b819d0` (fixed progressively → 0 on final head).
 
-- Targeted inherited-merge batch: **11 failed, 2 skipped, 77 passed (272 assertions)** — `merge_targeted.out`.
-- Post-repair targeted batch: **3 failed, 1 skipped, 78 passed (283 assertions)** — `repair_round1.out`.
-- Refund/API/vendor re-run: **42 passed (176 assertions)** — `repair_round2.out`.
-- First full suite after repair: **24 failed, 3 skipped, 578 passed (2,956 assertions)** — `full_suite_repair.out`.
-- Focused re-run of failing classes: **17 failed, 78 passed (489 assertions)** — `repair_failures_batch.out`.
-- Final full suite after all fixes: **[to be filled from `full_suite_repair2.out` on completion]**.
-- Playwright: rounds 2/4/5/6 as recorded in `TESTING_AND_BROWSER_QA_REPORT.md`; live logout GET → 405.
+**Product defects:** complimentary onboarding 30-day vs 12-month mismatch → unified on `config('platform.free_access_days')`; utility tracker not linking expense → atomic, idempotent `expense_id` linkage; HOLD value counted as GMV → excluded from analytics GMV/inflow; service refund reversal/wallet/payout/audit defects; concurrent cancellation double refund; API customer read denial; RBAC drift (accountant attendance, floor-staff bookings, HR role assignment); stored XSS in JSON-LD; open redirect after 2FA; cross-tenant walk-in hall leak; status checks in login/reset; undefined `assertExpenseCanBeVoided()`; merge-broken Blade markup; test fixture inconsistencies.
 
-## 5. Browser routes and personas
+## 5. Browser QA scope
 
-Routes: public homepage and discovered links, `/venues`, `/marketplace`, `/vendors`, gallery, packages, menus, services, about, contact, FAQs, availability, RSVP, policies, sitemap; protected route sweep; `/login`, `/customer/login`, `/admin`, `/dashboard`, `/staff`, `/staff/payroll`, `/calendar`, `/customer/dashboard`, `/customer/events`. Personas: guest, Super Admin, Tenant Owner, Customer, plus negative RBAC checks; feature tests cover Manager, Accountant, Front Desk, Chef, Vendor and support.
+CI Playwright job on `f837283`: **PASS**. Local real-Chromium verification covered public pages and discovered links, responsive widths (320/360/375/390/430/768/1024/1280/1440/1920), guest RBAC rejection, Super Admin / Tenant Owner / Customer login + dashboards, hidden-hall and customer own-record API behavior, POST-only logout (`GET /logout` → 405). Personas exercised via feature tests additionally: Manager, Accountant, Front Desk, Chef, HR Manager, Vendor, support roles.
 
-## 6. Remaining blockers / not verified
+## 6. Final status by category
 
-- Docker daemon unavailable; `composer audit` blocked by missing network; no NPM audit or Lighthouse/load test this pass.
-- CI has not run on this branch head; no staging/production deployment or migration rehearsal.
-- Product decisions outstanding: hall-cash-refund UI, complimentary onboarding duration, utility `expense_id` backfill, platform-support API scope, wildcard token policy, Livewire update throttling, FK cascade hardening, upload-limit alignment.
+| Category | Status |
+|---|---|
+| PHP lint / Pint / diff hygiene / build / Composer audit | **PASS** |
+| Full MySQL suite (isolated DB, clean migrations) | **PASS** — 605 passed, 3 skipped, 3,129 assertions |
+| CI (GitHub, final head) | **PASS** — run 45880136572 |
+| Playwright browser QA | **PASS** (CI) / partial local (rate-limiter windows) |
+| Cross-tenant & RBAC regression tests | **PASS** |
+| Financial integrity regression tests | **PASS** |
+| Production deployment / staging restore drill / live mail/WhatsApp | **NOT VERIFIED** — owner infrastructure and approval required |
+| Docker runtime on this workstation | **NOT RUN** — no daemon; CI container checks passed |
+| Load/Lighthouse testing | **NOT RUN** — tooling unavailable |
 
-## 7. Completion statement
+## 7. Remaining gaps and accepted risks
 
-All safely repairable CRITICAL and HIGH application defects discovered in this pass were fixed with regression tests where practical. The final test count above is the authoritative evidence; no 100% completion is claimed while infrastructure-dependent gates remain unverified.
+1. No dedicated authorized-staff UI for hall cancellation cash refunds (API exists).
+2. Source-linked expense correction UI (payroll/PO/utility) is guard-only, not a full workflow.
+3. Historical `utility_logs` rows lack `expense_id` backfill (new writes are linked correctly).
+4. Financial FK `restrictOnDelete()` hardening and unique indexes for booking/PO references need a staging duplicate audit + migration rehearsal.
+5. Platform-support global API read, wildcard token self-issuance, Livewire update throttling: **ACCEPTED RISK** pending owner product decision (documented in security report).
+6. Upload-limit mismatch across standalone Nginx (32m), PHP (70m) and Livewire (50MB) remains a deployment-config item.
+7. No 100% claim: host-level secrets, HTTPS, workers, scheduler, backups/restore, mail and WhatsApp delivery are unverified.
+
+## 8. Deliverables
+
+`COMPLETE_REPOSITORY_AUDIT.md`, `FILE_BY_FILE_REVIEW_MATRIX.md`, `SECURITY_AND_TENANT_ISOLATION_REPORT.md`, `BUSINESS_MODULE_COMPLETION_REPORT.md`, `DATABASE_AND_FINANCIAL_INTEGRITY_REPORT.md`, `TESTING_AND_BROWSER_QA_REPORT.md`, `PRODUCTION_DEPLOYMENT_READINESS.md`, this report. All are committed on the repair branch.

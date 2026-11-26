@@ -12,7 +12,7 @@
 | Frontend production build | Verified locally (earlier round) | `npm run build` produced versioned CSS/JS assets |
 | Route/view cacheability | Verified locally | Stale route cache cleared; `route:list` and `/ready` tests pass |
 | Browser QA | Partially verified locally | Playwright public/RBAC/login/responsive rounds passed when rate-limit windows clear; see testing report |
-| CI workflow | Configured, **not verified locally** | `.github/workflows/ci.yml` runs lint, Pint, audits, build, MySQL suite, Docker validation, browser suite; deploy job `if: false` |
+| CI workflow | **Verified in CI — green** | Run [45880136572](https://github.com/mohsin-gohar/wedding_halls/actions/runs/45880136572) on head `f837283`: all jobs PASS (static gates including Composer audit, MySQL suite, Playwright); deploy intentionally skipped. Earlier run [45868534419](https://github.com/mohsin-gohar/wedding_halls/actions/runs/45868534419) failed at Composer audit and MySQL tests; both blockers fixed. |
 | Docker container runtime | **Not verified** — no daemon on this workstation | `Dockerfile`, `docker-compose.yml`, `deploy/*` reviewed only |
 | Composer/NPM advisories | Composer **blocked** (no network); NPM audit not run this pass | External-infrastructure blocker |
 | Staging migration rehearsal | **Not run** | Requires owner-approved isolated MySQL 8 staging copy |

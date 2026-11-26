@@ -29,7 +29,9 @@ Artifacts: `F:\opencode-scratch-archive\*.out`. Browser: `php artisan serve --ho
 | Refund/API/vendor re-run | **42 passed (176 assertions)** | `repair_round2.out` |
 | Full suite (first complete run after repair commit `9b7c387`) | **24 failed, 3 skipped, 578 passed (2,956 assertions)** — dominated by merge-broken Blade markup and RBAC drift | `full_suite_repair.out` |
 | Focused re-run of 15 failing classes | **17 failed, 78 passed (489 assertions)**; root causes isolated (Blade, cache, role fixtures, API customer scope, limiter state) | `repair_failures_batch.out` |
-| Full suite (final run after `2e3018a`) | See `FINAL_ACCEPTANCE_REPORT.md` for the exact final count | `full_suite_repair2.out` |
+| Full suite (final run on `f837283`-equivalent code) | **605 passed, 3 skipped, 0 failed (3,129 assertions)** | `full_suite_final.out` |
+| CI on final head `f837283` | **SUCCESS — all jobs green** | https://github.com/mohsin-gohar/wedding_halls/actions/runs/45880136572 |
+| CI on `3b819d0` | FAILURE at Composer audit (3 Symfony advisories) + MySQL tests; Playwright PASS; deploy skipped | https://github.com/mohsin-gohar/wedding_halls/actions/runs/45868534419 |
 
 Failures were fixed at the root (app code, merge artifacts, or invalid test fixtures). No assertion was deleted or weakened to force a green result; the few expectation changes are documented in `COMPLETE_REPOSITORY_AUDIT.md` and were policy alignments (e.g., hidden-hall non-disclosure 404, source-linked expense protection).
 
