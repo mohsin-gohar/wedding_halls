@@ -105,8 +105,12 @@ class VendorQuotesBoard extends Component
             abort(403, 'Forbidden. You do not have an active vendor organization assigned.');
         }
 
+        // Vendor bids are commercially confidential. Each vendor may see
+        // only its own offer, never a competitor's amount or identity.
         return $this->visibleRfqs($tenantId)
-            ->with(['bids' => fn ($q) => $q->with('vendor:id,name,email')])
+            ->with(['bids' => fn ($q) => $q
+                ->where('vendor_id', Auth::id())
+                ->with('vendor:id,name')])
             ->where('status', 'OPEN')
             ->orderByDesc('created_at')
             ->paginate(10);
@@ -135,7 +139,10 @@ class VendorQuotesBoard extends Component
             return;
         }
 
-        $latestBid = $rfq->bids()->latest('created_at')->first();
+        $latestBid = $rfq->bids()
+            ->where('vendor_id', Auth::id())
+            ->latest('created_at')
+            ->first();
 
         $this->selectedRfqId = $rfq->id;
         $this->selectedRfq = $rfq;
