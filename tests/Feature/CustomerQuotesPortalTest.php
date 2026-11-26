@@ -129,6 +129,47 @@ class CustomerQuotesPortalTest extends TestCase
             ->assertSet('activeTab', 'bookings');
     }
 
+    public function test_customer_dashboard_rejects_non_customer_component_actions(): void
+    {
+        $vendor = $this->vendor('catering');
+        $staff = User::query()->where('tenant_id', $vendor->id)
+            ->where('role', 'ROLE_TENANT_OWNER')
+            ->firstOrFail();
+
+        Livewire::actingAs($staff)
+            ->test(CustomerDashboard::class)
+            ->call('switchTab', 'quotes')
+            ->assertForbidden();
+
+        Livewire::actingAs($staff)
+            ->test(CustomerDashboard::class)
+            ->call('closeBookingModal')
+            ->assertForbidden();
+
+        Livewire::actingAs($staff)
+            ->test(CustomerDashboard::class)
+            ->assertForbidden();
+    }
+
+    public function test_super_admin_cannot_call_customer_dashboard_component_actions(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'ROLE_SUPER_ADMIN',
+            'tenant_id' => null,
+            'status' => 'ACTIVE',
+        ]);
+        $admin->assignRole('ROLE_SUPER_ADMIN');
+
+        Livewire::actingAs($admin)
+            ->test(CustomerDashboard::class)
+            ->call('switchTab', 'quotes')
+            ->assertForbidden();
+
+        Livewire::actingAs($admin)
+            ->test(CustomerDashboard::class)
+            ->assertForbidden();
+    }
+
     public function test_vendor_staff_cannot_call_customer_dashboard_mutations(): void
     {
         $vendor = $this->vendor('catering');
