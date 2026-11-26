@@ -213,4 +213,41 @@ class ApiBookingFinancialIntegrityTest extends TestCase
 
         $this->assertSame(0, Booking::query()->where('customer_name', 'Hidden Hall Customer')->count());
     }
+
+    public function test_staff_without_payment_view_permission_cannot_list_or_summarize_payments(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $chef = User::factory()->create([
+            'tenant_id' => $hall->tenant_id,
+            'role' => 'ROLE_CHEF',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($chef)
+            ->getJson('/api/v1/payments')
+            ->assertForbidden();
+
+        $this->actingAs($chef)
+            ->getJson('/api/v1/payments/summary')
+            ->assertForbidden();
+    }
+
+    public function test_staff_with_payment_view_permission_can_read_own_tenant_financials(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $frontDesk = User::factory()->create([
+            'tenant_id' => $hall->tenant_id,
+            'role' => 'ROLE_FRONT_DESK',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($frontDesk)
+            ->getJson('/api/v1/payments')
+            ->assertOk();
+
+        $this->actingAs($frontDesk)
+            ->getJson('/api/v1/payments/summary')
+            ->assertOk();
+    }
+
 }
