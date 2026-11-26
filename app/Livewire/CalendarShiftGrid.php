@@ -357,6 +357,7 @@ class CalendarShiftGrid extends Component
             foreach ($bookings as $booking) {
                 $safeText = static function ($value): string {
                     $value = (string) ($value ?? '');
+
                     return preg_match('/^[=+@\\-\\t\\r]/', $value) ? "'".$value : $value;
                 };
 
