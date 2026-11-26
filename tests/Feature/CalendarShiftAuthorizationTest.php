@@ -38,7 +38,7 @@ class CalendarShiftAuthorizationTest extends TestCase
     public function test_tenant_owner_can_change_shift_policy(): void
     {
         $owner = User::query()
-            ->where('slug', '!=', '')
+            ->whereNotNull('tenant_id')
             ->where('role', 'ROLE_TENANT_OWNER')
             ->firstOrFail();
 
