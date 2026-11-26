@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\PermissionMatrix;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -70,10 +71,12 @@ abstract class ApiController extends Controller
     }
 
     /**
-     * Server-side permission gate for API actions.
+     * Server-side permission gate for API actions. Use the same canonical
+     * role matrix as Livewire and navigation so a missing Spatie seed cannot
+     * accidentally make a valid role fail closed or drift from UI policy.
      */
     protected function assertPermission(User $user, string $permission): void
     {
-        abort_unless($user->hasPermissionTo($permission), 403, 'Missing required permission: '.$permission);
+        abort_unless(PermissionMatrix::userCan($user, $permission), 403, 'Missing required permission: '.$permission);
     }
 }
