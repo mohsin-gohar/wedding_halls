@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\AuditLog;
 use App\Models\Package;
 use App\Models\Tenant;
+use App\Support\PermissionMatrix;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -65,14 +66,12 @@ class PackageManager extends Component
     private function authorizePackageAction(string $action): void
     {
         $user = Auth::user();
-        if (! $user || (! $user->isSuperAdmin() && ! $user->isTenantOwner() && ! $user->isManager() && ! $user->isChef())) {
-            abort(403, 'Unauthorized. Access to Catering Packages is restricted to Venue Owners, Chefs, and Managers.');
+        if (! $user) {
+            abort(403, 'Unauthorized.');
         }
 
-        if (in_array($action, ['package.status', 'package.delete'], true)
-            && ! ($user->isSuperAdmin() || $user->isTenantOwner() || $user->isManager())) {
-            abort(403, 'Unauthorized to change package availability.');
-        }
+        $permission = $action === 'package.view' ? 'packages.view' : 'packages.manage';
+        abort_unless(PermissionMatrix::userCan($user, $permission), 403, 'Missing catering package permission.');
     }
 
     /** The tenant context for reads: null means "nothing visible" for a platform admin. */
