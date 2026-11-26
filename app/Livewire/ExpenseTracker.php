@@ -392,6 +392,7 @@ class ExpenseTracker extends Component
 
         return view('livewire.expense-tracker', [
             'expenses' => $expenses,
+            'paidPoNumbers' => PurchaseOrder::where('tenant_id', $tenantId)->where('status', 'PAID')->pluck('po_number'),
             'halls' => $halls,
             'totalExpenses' => $totalExpenses,
             'totalRevenue' => $totalRevenue,
