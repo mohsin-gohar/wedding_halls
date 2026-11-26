@@ -141,11 +141,11 @@ class WhatsAppRsvpManager extends Component
             $status = 'DECLINED';
             $count = 0;
             $reply = "Thank you {$rsvp->guest_name}. We have updated your status to Declined.";
-        } elseif (preg_match('/(?:\\battending\\b|\\byes\\b|\\baunga\\b|\\bhaan\\b|\\bpersons?\\b|\\bpeople\\b|\\bguests?\\b|\\bhead\\b)[\\s:]*(\\d+)?/i', $body, $matches)
+        } elseif (preg_match('/(?:\\b(?:attending|yes|aunga|haan)\\b(?:[\\s:]*(\\d+))?|\\b(?:persons?|people|guests?|head)\\b[\\s:]*(\\d+))/i', $body, $matches)
             || preg_match('/^(\\d+)$/', $body, $matches)) {
             $status = 'ATTENDING';
-            $count = isset($matches[1]) && $matches[1] !== ''
-                ? max(1, min(20, (int) $matches[1]))
+            $count = isset($matches[1]) && $matches[1] !== '' || isset($matches[2]) && $matches[2] !== ''
+                ? max(1, min(20, (int) ($matches[1] !== '' ? $matches[1] : $matches[2]))
                 : 1;
             $reply = "Confirmed! Thank you {$rsvp->guest_name}, {$count} attendee(s) registered on the hall door checklist.";
         } else {
