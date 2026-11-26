@@ -34,6 +34,12 @@ class StaffPayrollMoneyTest extends TestCase
         StaffPayroll::calculateNet(100, 0, 0, -1, 0);
     }
 
+    public function test_overtime_breakdown_uses_the_same_paisa_rounding_as_net_pay(): void
+    {
+        self::assertSame(12.81, StaffPayroll::calculateOvertimePay(1.25, 10.25));
+        self::assertSame(127.81, StaffPayroll::calculateNet(100.00, 1.25, 10.25, 20.00, 5.00));
+    }
+
     public function test_payroll_net_rounds_overtime_to_the_nearest_paisa(): void
     {
         self::assertSame(100.01, StaffPayroll::calculateNet(100.00, 0.01, 1.00, 0, 0));
