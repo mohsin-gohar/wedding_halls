@@ -787,4 +787,36 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
         ]);
     }
 
+    public function test_inventory_item_removal_archives_the_record_instead_of_deleting_it(): void
+    {
+        $tenant = Tenant::query()->where('slug', 'riwaj-grand')->firstOrFail();
+        $owner = User::query()
+            ->where('tenant_id', $tenant->id)
+            ->where('role', 'ROLE_TENANT_OWNER')
+            ->firstOrFail();
+
+        $item = InventoryItem::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Archive retention regression item',
+            'category' => 'OTHER',
+            'unit' => 'PIECES',
+            'current_stock' => 0,
+            'min_threshold' => 0,
+            'unit_cost' => 10,
+            'is_active' => true,
+        ]);
+
+        Livewire::actingAs($owner)
+            ->test(InventoryTracker::class)
+            ->call('deleteItem', $item->id)
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('inventory_items', [
+            'id' => $item->id,
+            'tenant_id' => $tenant->id,
+            'is_active' => false,
+        ]);
+        $this->assertNotNull(InventoryItem::find($item->id));
+    }
+
 }
