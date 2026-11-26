@@ -39,7 +39,10 @@ abstract class ApiController extends Controller
      */
     protected function scopeToPrincipal(Builder $query, User $user, string $tenantColumn = 'tenant_id', string $customerColumn = 'customer_id'): Builder
     {
-        if ($user->isSuperAdmin() || $user->isPlatformFinance() || $user->isContentModerator()) {
+        // Only platform administrators and support staff have global
+        // operational read scope. Finance and moderation roles must not inherit
+        // access to every booking merely because they are platform accounts.
+        if ($user->isSuperAdmin() || $user->isPlatformSupport()) {
             return $query;
         }
 
