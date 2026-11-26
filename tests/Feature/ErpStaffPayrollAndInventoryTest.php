@@ -704,6 +704,11 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
             'role' => 'ROLE_INVENTORY_MANAGER',
             'status' => 'ACTIVE',
         ]);
+        $accountant = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_ACCOUNTANT',
+            'status' => 'ACTIVE',
+        ]);
 
         Livewire::actingAs($manager)
             ->test(InventoryTracker::class)
@@ -718,6 +723,35 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
         Livewire::actingAs($inventoryManager)
             ->test(InventoryTracker::class)
             ->assertOk();
+
+        Livewire::actingAs($accountant)
+            ->test(InventoryTracker::class)
+            ->assertOk()
+            ->set('poSupplierName', 'Accountant Approved Supplier')
+            ->set('poTotalAmount', 12500)
+            ->set('poDate', Carbon::today()->toDateString())
+            ->call('createPurchaseOrder')
+            ->assertHasNoErrors();
+
+        $purchaseOrder = PurchaseOrder::query()
+            ->where('tenant_id', $tenant->id)
+            ->where('supplier_name', 'Accountant Approved Supplier')
+            ->firstOrFail();
+
+        Livewire::actingAs($accountant)
+            ->test(InventoryTracker::class)
+            ->call('markPoPaid', $purchaseOrder->id)
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('purchase_orders', [
+            'id' => $purchaseOrder->id,
+            'status' => 'PAID',
+        ]);
+        $this->assertDatabaseHas('expenses', [
+            'tenant_id' => $tenant->id,
+            'receipt_number' => $purchaseOrder->po_number,
+            'payment_method' => 'CASH',
+        ]);
     }
 
     public function test_hr_manager_cannot_assign_or_manage_elevated_finance_roles(): void
