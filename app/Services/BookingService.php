@@ -10,6 +10,7 @@ use App\Models\Package;
 use App\Models\Payment;
 use App\Models\Tenant;
 use App\Support\CashOnlyPayments;
+use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -280,16 +281,31 @@ class BookingService
 
         // When a principal is present it is the only valid creator; console
         // callers and fixtures may still supply an explicit staff ID.
-        $createdBy = $authenticated?->id ?? ($data['created_by_user_id'] ?? null);
+        $createdBy = $authenticated?->id
+            ?? (app()->runningInConsole() ? ($data['created_by_user_id'] ?? null) : null);
 
         if ($createdBy !== null && ! is_numeric($createdBy)) {
             throw new \InvalidArgumentException('Invalid booking creator.');
         }
 
-        $status = strtoupper((string) ($data['status'] ?? 'CONFIRMED'));
+        $defaultStatus = $authenticated?->isCustomer()
+            || (! $authenticated && ! app()->runningInConsole())
+            ? 'INQUIRY'
+            : 'CONFIRMED';
+        $status = strtoupper((string) ($data['status'] ?? $defaultStatus));
 
         if (! in_array($status, ['INQUIRY', 'HOLD', 'CONFIRMED'], true)) {
             throw new \InvalidArgumentException('Unsupported booking lifecycle state at creation.');
+        }
+
+        if ((! $authenticated && ! app()->runningInConsole()) || $authenticated?->isCustomer()) {
+            if ($status !== 'INQUIRY') {
+                throw new \Illuminate\Auth\Access\AuthorizationException('Public customers may only submit booking inquiries.');
+            }
+        } elseif ($authenticated && ! $authenticated->isSuperAdmin()) {
+            if (! PermissionMatrix::userCan($authenticated, 'bookings.create')) {
+                throw new \Illuminate\Auth\Access\AuthorizationException('Booking creation permission is required.');
+            }
         }
 
         $guestCount = (int) ($data['guest_count'] ?? 100);
