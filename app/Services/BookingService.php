@@ -407,9 +407,14 @@ class BookingService
             throw new \InvalidArgumentException('Booking no longer exists.');
         }
 
-        $hall = Hall::with('tenant')->findOrFail($snapshot->hall_id);
+        $hall = Hall::with(['tenant', 'venue'])->findOrFail($snapshot->hall_id);
         $eventDate = Carbon::parse($snapshot->event_date)->format('Y-m-d');
         $slotType = strtoupper((string) $snapshot->slot_type);
+
+        if (in_array($status, ['HOLD', 'CONFIRMED'], true) && Carbon::parse($eventDate)->isBefore(Carbon::today())) {
+            throw new \\InvalidArgumentException('The event date cannot be in the past.');
+        }
+
         $lockKey = "lock:hall:{$hall->id}:date:{$eventDate}";
         $lock = Cache::store(config('booking.lock_store'))->lock($lockKey, 600);
 
@@ -428,13 +433,36 @@ class BookingService
 
         try {
             return DB::transaction(function () use ($snapshot, $hall, $eventDate, $slotType, $status): Booking {
+                // Keep the same lock order as createReservation(): tenant,
+                // hall, booking. A concurrent suspension/archive cannot race
+                // a confirmation into a venue that is no longer bookable.
+                $tenant = Tenant::query()
+                    ->whereKey($hall->tenant_id)
+                    ->lockForUpdate()
+                    ->first();
+                $lockedHall = Hall::with(['tenant', 'venue'])
+                    ->whereKey($hall->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (in_array($status, ['HOLD', 'CONFIRMED'], true) && (
+                    ! $tenant
+                    || ! $lockedHall
+                    || (string) $lockedHall->tenant_id !== (string) $tenant->id
+                    || ! $lockedHall->is_active
+                    || ! $lockedHall->venue?->is_active
+                    || ! $tenant->canAcceptBookings()
+                )) {
+                    throw new \\InvalidArgumentException('Venue is not accepting bookings.');
+                }
+
                 $lockedBooking = Booking::query()
                     ->whereKey($snapshot->id)
                     ->lockForUpdate()
                     ->firstOrFail();
 
                 if (in_array($status, ['HOLD', 'CONFIRMED'], true)) {
-                    $conflict = $this->slotConflictQuery((string) $hall->id, $eventDate, $slotType)
+                    $conflict = $this->slotConflictQuery((string) $lockedHall->id, $eventDate, $slotType)
                         ->where('id', '!=', $lockedBooking->id)
                         ->lockForUpdate()
                         ->first();
@@ -454,7 +482,7 @@ class BookingService
                 $updates = ['status' => $status];
 
                 if ($status === 'HOLD') {
-                    $updates['hold_expires_at'] = $this->resolveHoldExpiry($hall, [
+                    $updates['hold_expires_at'] = $this->resolveHoldExpiry($lockedHall ?? $hall, [
                         'status' => 'HOLD',
                         'hold_expires_at' => $lockedBooking->hold_expires_at,
                     ]);
