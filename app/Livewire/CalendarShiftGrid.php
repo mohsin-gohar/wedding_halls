@@ -250,6 +250,15 @@ class CalendarShiftGrid extends Component
 
     public function openWalkInModal(?string $date = null, ?string $slot = null)
     {
+        $user = Auth::user();
+        abort_unless(
+            $user && ($user->isSuperAdmin()
+                || PermissionMatrix::userCan($user, 'bookings.create')
+                || PermissionMatrix::userCan($user, 'bookings.manage')),
+            403,
+            'Booking creation permission is required to open the walk-in terminal.'
+        );
+
         if (! $this->selectedHallId || ! $this->accessibleHalls()->whereKey($this->selectedHallId)->exists()) {
             return;
         }
