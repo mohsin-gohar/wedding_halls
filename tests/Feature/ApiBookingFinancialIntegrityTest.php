@@ -214,6 +214,38 @@ class ApiBookingFinancialIntegrityTest extends TestCase
         $this->assertSame(0, Booking::query()->where('customer_name', 'Hidden Hall Customer')->count());
     }
 
+    public function test_front_desk_cannot_cancel_a_booking_without_bookings_cancel_permission(): void
+    {
+        $booking = Booking::query()->firstOrFail();
+        $frontDesk = User::factory()->create([
+            'tenant_id' => $booking->tenant_id,
+            'role' => 'ROLE_FRONT_DESK',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($frontDesk)
+            ->putJson('/api/v1/bookings/'.$booking->id, ['status' => 'CANCELLED'])
+            ->assertForbidden();
+
+        self::assertNotSame('CANCELLED', $booking->fresh()->status);
+    }
+
+    public function test_booking_manager_can_cancel_a_booking_with_explicit_permission(): void
+    {
+        $booking = Booking::query()->firstOrFail();
+        $bookingManager = User::factory()->create([
+            'tenant_id' => $booking->tenant_id,
+            'role' => 'ROLE_BOOKING_MANAGER',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($bookingManager)
+            ->putJson('/api/v1/bookings/'.$booking->id, ['status' => 'CANCELLED'])
+            ->assertOk();
+
+        self::assertSame('CANCELLED', $booking->fresh()->status);
+    }
+
     public function test_booking_api_only_serializes_relations_allowed_by_the_callers_permissions(): void
     {
         $booking = Booking::query()->firstOrFail();
