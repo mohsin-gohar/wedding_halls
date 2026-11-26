@@ -1574,6 +1574,7 @@
             </div>
         @endif
     </div>
+    @endif
          =================================================================== -->
     <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/25 rounded-2xl shadow-sm overflow-hidden transition-colors duration-200">
         <div class="p-6 border-b border-[#E7E5E4] dark:border-white/10 bg-[#F8F5EF] dark:bg-[#171513] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -1892,6 +1893,7 @@
                                 + Save Interaction Note
                             </button>
                         </div>
+                        @endif
                     </div>
                 </div>
 
