@@ -550,49 +550,102 @@ class StaffPayroll extends Component
     public function markAsApproved(string $payrollId): void
     {
         $this->authorizePayrollManager();
-        $tenantId = Auth::user()->tenant_id;
-        $record = PayrollModel::where('tenant_id', $tenantId)->findOrFail($payrollId);
+        $tenantId = (string) Auth::user()->tenant_id;
 
-        if ($record->status === 'PAID') {
+        $outcome = DB::transaction(function () use ($tenantId, $payrollId): string {
+            $record = PayrollModel::query()
+                ->where('tenant_id', $tenantId)
+                ->whereKey($payrollId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($record->status === 'PAID') {
+                return 'paid';
+            }
+
+            if ($record->status === 'APPROVED') {
+                return 'approved';
+            }
+
+            if ($record->status !== 'DRAFT') {
+                return 'invalid';
+            }
+
+            $record->update([
+                'status' => 'APPROVED',
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+            ]);
+
+            AuditLog::log('PAYROLL_APPROVED', "Payroll [{$payrollId}] approved; attendance period locked.", $tenantId, 'StaffPayroll', $payrollId);
+
+            return 'approved-now';
+        });
+
+        if ($outcome === 'paid') {
             $this->errorMessage = 'A paid payroll cannot be re-approved.';
 
             return;
         }
-        if ($record->status === 'APPROVED') {
+
+        if ($outcome === 'approved') {
             $this->errorMessage = 'This payroll is already approved.';
 
             return;
         }
 
-        $record->update([
-            'status' => 'APPROVED',
-            'approved_by' => Auth::id(),
-            'approved_at' => now(),
-        ]);
+        if ($outcome === 'invalid') {
+            $this->errorMessage = 'This payroll cannot be approved from its current state.';
 
-        AuditLog::log('PAYROLL_APPROVED', "Payroll [{$payrollId}] approved; attendance period locked.", $tenantId, 'StaffPayroll', $payrollId);
+            return;
+        }
+
         $this->feedbackMessage = 'Payroll approved. Source attendance for this month is now locked.';
     }
 
     public function reopenPayroll(string $payrollId): void
     {
         $this->authorizePayrollManager();
-        $tenantId = Auth::user()->tenant_id;
-        $record = PayrollModel::where('tenant_id', $tenantId)->findOrFail($payrollId);
+        $tenantId = (string) Auth::user()->tenant_id;
 
-        if ($record->status === 'PAID') {
+        $outcome = DB::transaction(function () use ($tenantId, $payrollId): string {
+            $record = PayrollModel::query()
+                ->where('tenant_id', $tenantId)
+                ->whereKey($payrollId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($record->status === 'PAID') {
+                return 'paid';
+            }
+
+            if ($record->status !== 'APPROVED') {
+                return 'not-approved';
+            }
+
+            $record->update([
+                'status' => 'DRAFT',
+                'approved_by' => null,
+                'approved_at' => null,
+            ]);
+
+            AuditLog::log('PAYROLL_REOPENED', "Payroll [{$payrollId}] reopened to DRAFT by an authorized manager.", $tenantId, 'StaffPayroll', $payrollId);
+
+            return 'reopened';
+        });
+
+        if ($outcome === 'paid') {
             $this->errorMessage = 'A paid payroll cannot be reopened. Use a separate adjustment entry.';
 
             return;
         }
 
-        $record->update([
-            'status' => 'DRAFT',
-            'approved_by' => null,
-            'approved_at' => null,
-        ]);
+        if ($outcome === 'not-approved') {
+            $this->errorMessage = 'Only an approved payroll can be reopened.';
 
-        AuditLog::log('PAYROLL_REOPENED', "Payroll [{$payrollId}] reopened to DRAFT by an authorized manager.", $tenantId, 'StaffPayroll', $payrollId);
+            return;
+        }
+
         $this->feedbackMessage = 'Payroll reopened to draft; attendance period unlocked.';
     }
 
