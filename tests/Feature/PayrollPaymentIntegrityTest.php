@@ -169,6 +169,44 @@ class PayrollPaymentIntegrityTest extends TestCase
         $this->assertSame(42000.00, (float) $payroll->fresh()->net_salary);
     }
 
+    public function test_payroll_editor_surfaces_overflow_without_throwing_or_mutating_draft(): void
+    {
+        $payroll = $this->payroll('DRAFT');
+
+        Livewire::actingAs($this->owner)
+            ->test(StaffPayroll::class)
+            ->set('editingPayrollId', $payroll->id)
+            ->set('editBasicSalary', 9_999_999_999.99)
+            ->set('editOvertimeHours', 0)
+            ->set('editOvertimeRate', 0)
+            ->set('editAllowances', 999_999_999.99)
+            ->set('editDeductions', 0)
+            ->set('editPaymentMethod', 'CASH')
+            ->call('updatePayroll')
+            ->assertHasErrors(['editNetSalary']);
+
+        $this->assertSame(42000.00, (float) $payroll->fresh()->basic_salary);
+        $this->assertSame(42000.00, (float) $payroll->fresh()->net_salary);
+    }
+
+    public function test_recalculate_edit_net_reports_invalid_overflow_as_validation_error(): void
+    {
+        $payroll = $this->payroll('DRAFT');
+
+        Livewire::actingAs($this->owner)
+            ->test(StaffPayroll::class)
+            ->set('editingPayrollId', $payroll->id)
+            ->set('editBasicSalary', 9_999_999_999.99)
+            ->set('editOvertimeHours', 0)
+            ->set('editOvertimeRate', 0)
+            ->set('editAllowances', 999_999_999.99)
+            ->set('editDeductions', 0)
+            ->call('recalculateEditNet')
+            ->assertHasErrors(['editNetSalary']);
+
+        $this->assertSame(42000.00, (float) $payroll->fresh()->net_salary);
+    }
+
     public function test_approved_payroll_cannot_be_edited_and_keeps_its_final_amount(): void
     {
         $payroll = $this->payroll('APPROVED');
