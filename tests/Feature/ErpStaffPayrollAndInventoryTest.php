@@ -720,4 +720,37 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
             ->assertOk();
     }
 
+    public function test_hr_manager_cannot_assign_or_manage_elevated_finance_roles(): void
+    {
+        $tenant = Tenant::query()->where('slug', 'riwaj-grand')->firstOrFail();
+        $hrManager = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_HR_MANAGER',
+            'status' => 'ACTIVE',
+        ]);
+        $accountant = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_ACCOUNTANT',
+            'status' => 'ACTIVE',
+        ]);
+
+        Livewire::actingAs($hrManager)
+            ->test(StaffManager::class)
+            ->set('name', 'Elevated Finance User')
+            ->set('email', 'elevated-finance@example.test')
+            ->set('role', 'ROLE_ACCOUNTANT')
+            ->set('password', 'secure-password-123')
+            ->call('createStaffMember')
+            ->assertHasErrors(['role']);
+
+        Livewire::actingAs($hrManager)
+            ->test(StaffManager::class)
+            ->call('openEditModal', $accountant->id)
+            ->assertStatus(403);
+
+        $this->assertDatabaseMissing('users', [
+            'email' => 'elevated-finance@example.test',
+        ]);
+    }
+
 }
