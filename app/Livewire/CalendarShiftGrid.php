@@ -308,6 +308,77 @@ class CalendarShiftGrid extends Component
         $this->conflictDetails = null;
     }
 
+    /** Export only bookings visible to the authenticated tenant and selected calendar period. */
+    public function exportCalendarCsv()
+    {
+        $user = Auth::user();
+        if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
+            abort(403);
+        }
+
+        $hall = $this->selectedHallId
+            ? $this->accessibleHalls()->whereKey($this->selectedHallId)->first()
+            : null;
+
+        if (! $hall) {
+            abort(404, 'The selected hall is unavailable.');
+        }
+
+        $anchor = $this->anchor();
+        [$start, $end] = match ($this->viewMode) {
+            'week' => [$anchor->copy()->startOfWeek(Carbon::MONDAY), $anchor->copy()->endOfWeek(Carbon::SUNDAY)],
+            'day' => [$anchor->copy(), $anchor->copy()],
+            'agenda' => [$anchor->copy(), $anchor->copy()->addDays(13)],
+            default => [$this->normalizedMonth(), $this->normalizedMonth()->endOfMonth()],
+        };
+
+        $bookings = Booking::query()
+            ->where('tenant_id', $hall->tenant_id)
+            ->where('hall_id', $hall->id)
+            ->whereBetween('event_date', [$start->toDateString(), $end->toDateString()])
+            ->orderBy('event_date')
+            ->orderBy('slot_type')
+            ->orderBy('created_at')
+            ->get([
+                'booking_reference', 'event_date', 'slot_type', 'status', 'event_type',
+                'customer_name', 'customer_phone', 'guest_count', 'grand_total',
+                'advance_paid', 'balance_due',
+            ]);
+
+        return response()->streamDownload(function () use ($bookings): void {
+            $stream = fopen('php://output', 'w');
+            fwrite($stream, "\xEF\xBB\xBF");
+            fputcsv($stream, [
+                'Booking reference', 'Event date', 'Shift', 'Status', 'Event type',
+                'Customer', 'Phone', 'Guests', 'Grand total (PKR)',
+                'Advance paid (PKR)', 'Balance due (PKR)',
+            ]);
+
+            foreach ($bookings as $booking) {
+                $safeText = static function ($value): string {
+                    $value = (string) ($value ?? '');
+                    return preg_match('/^[=+@\\-\\t\\r]/', $value) ? "'".$value : $value;
+                };
+
+                fputcsv($stream, [
+                    $safeText($booking->booking_reference),
+                    $booking->event_date?->toDateString() ?? '',
+                    $safeText($booking->slot_type),
+                    $safeText($booking->status),
+                    $safeText($booking->event_type),
+                    $safeText($booking->customer_name),
+                    $safeText($booking->customer_phone),
+                    (int) $booking->guest_count,
+                    number_format((float) $booking->grand_total, 2, '.', ''),
+                    number_format((float) $booking->advance_paid, 2, '.', ''),
+                    number_format((float) $booking->balance_due, 2, '.', ''),
+                ]);
+            }
+
+            fclose($stream);
+        }, 'riwaj-grand-calendar.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
     public function render()
     {
         $user = Auth::user();
