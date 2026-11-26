@@ -513,12 +513,27 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
         $staff->refresh();
         $this->assertEquals('ACTIVE', $staff->status);
 
-        // 3. Purge Staff Member permanently
-        Livewire::test(StaffManager::class)
-            ->call('purgeStaffMember', $staff->id);
+        // 3. Archive the staff account while retaining financial history.
+        $payroll = PayrollModel::create([
+            'tenant_id' => $tenant->id,
+            'user_id' => $staff->id,
+            'month_year' => Carbon::today()->format('Y-m'),
+            'basic_salary' => 30000,
+            'net_salary' => 30000,
+            'status' => 'PAID',
+            'payment_method' => 'CASH',
+        ]);
 
-        $this->assertDatabaseMissing('users', [
+        Livewire::test(StaffManager::class)
+            ->call('removeStaffMember', $staff->id);
+
+        $this->assertSoftDeleted('users', [
             'id' => $staff->id,
+        ]);
+        $this->assertDatabaseHas('staff_payrolls', [
+            'id' => $payroll->id,
+            'user_id' => $staff->id,
+            'status' => 'PAID',
         ]);
     }
 
