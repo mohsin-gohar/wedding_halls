@@ -66,8 +66,16 @@ class BookingController extends ApiController
             $this->assertPermission($user, 'bookings.view');
         }
 
-        $query = Booking::with(['hall.venue', 'package', 'payments', 'rsvps', 'kitchenKot', 'floorPlan']);
+        $relations = ['hall.venue', 'package', 'payments', 'rsvps', 'floorPlan'];
 
+        // Kitchen production tickets are internal operational records. They
+        // are never serialized to customer principals, even for their own
+        // booking (the document endpoint applies the same restriction).
+        if (! $user->isCustomer()) {
+            $relations[] = 'kitchenKot';
+        }
+
+        $query = Booking::with($relations);
         $query = $this->scopeToPrincipal($query, $user);
 
         $booking = $query->findOrFail($id);
