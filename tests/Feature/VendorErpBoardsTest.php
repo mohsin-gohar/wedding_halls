@@ -390,4 +390,20 @@ class VendorErpBoardsTest extends TestCase
             ->assertSet('bidProposal', '');
     }
 
+
+    public function test_vendor_cannot_submit_or_overwrite_bid_after_rfq_is_closed(): void
+    {
+        $vendor = $this->cateringVendor();
+        $owner = $this->vendorOwner($vendor);
+        $rfq = $this->openRfq($vendor, $this->customer());
+        $rfq->update(['status' => 'CLOSED']);
+
+        Livewire::actingAs($owner)
+            ->test(VendorQuotesBoard::class)
+            ->call('submitBid', $rfq->id, 1250000, 'A detailed quotation that must not be accepted after closure.')
+            ->assertSet('errorMessage', 'This quotation is no longer open for offers.');
+
+        $this->assertSame(0, RfqBid::query()->where('rfq_id', $rfq->id)->count());
+    }
+
 }
