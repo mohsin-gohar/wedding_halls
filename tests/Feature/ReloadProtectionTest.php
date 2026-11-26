@@ -30,7 +30,7 @@ class ReloadProtectionTest extends TestCase
 
         // 6th reload request must be throttled with HTTP 429
         $sixthResponse = $this->withHeaders(['X-Test-Rate-Limit' => 'true'])
-            ->get('/login');
+            ->get('/rsvp');
 
         $sixthResponse->assertStatus(429);
         $sixthResponse->assertSee('Aap website ko bar bar reload nahi kar saktay');
