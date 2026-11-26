@@ -149,4 +149,27 @@ class CalendarViewsAndHoldExpiryTest extends TestCase
         $this->assertSame('HOLD', $unstamped->status);
         $this->assertTrue(AuditLog::where('action', 'BOOKING_HOLD_EXPIRED')->where('entity_id', $stamped->id)->exists());
     }
+
+    public function test_calendar_csv_export_is_available_to_tenant_owner_and_scoped_to_selected_hall(): void
+    {
+        $hall = $this->hall();
+        $date = Carbon::now()->addDays(40)->toDateString();
+        Booking::create([
+            'tenant_id' => $hall->tenant_id,
+            'hall_id' => $hall->id,
+            'customer_name' => 'CSV Export Host',
+            'customer_phone' => '+92 300 5557788',
+            'event_date' => $date,
+            'slot_type' => 'EVENING',
+            'status' => 'CONFIRMED',
+        ]);
+
+        Livewire::actingAs($this->owner($hall))
+            ->test(CalendarShiftGrid::class)
+            ->set('anchorDate', $date)
+            ->set('selectedHallId', $hall->id)
+            ->set('viewMode', 'day')
+            ->call('exportCalendarCsv')
+            ->assertFileDownloaded('riwaj-grand-calendar.csv');
+    }
 }

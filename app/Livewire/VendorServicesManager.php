@@ -175,6 +175,8 @@ class VendorServicesManager extends Component
             abort(403);
         }
 
+        $this->serviceName = trim($this->serviceName);
+
         if ($this->serviceName === '') {
             $this->addError('serviceName', 'Service name is required.');
 
@@ -216,7 +218,7 @@ class VendorServicesManager extends Component
             return;
         }
 
-        DB::transaction(function () use ($tenantId) {
+        DB::transaction(function () use ($tenantId, $from, $to) {
             if ($this->isEditing) {
                 $service = VendorService::query()->where('tenant_id', $tenantId)->find($this->editingServiceId);
 
@@ -229,8 +231,8 @@ class VendorServicesManager extends Component
                     'name' => $this->serviceName,
                     'description' => $this->serviceDescription ?: null,
                     'pricing_type' => $this->pricingType,
-                    'price_from' => $this->priceFrom,
-                    'price_to' => $this->priceTo,
+                    'price_from' => $from,
+                    'price_to' => $to,
                     'unit' => $this->serviceUnit,
                 ]);
 
@@ -242,8 +244,8 @@ class VendorServicesManager extends Component
                     'name' => $this->serviceName,
                     'description' => $this->serviceDescription ?: null,
                     'pricing_type' => $this->pricingType,
-                    'price_from' => $this->priceFrom,
-                    'price_to' => $this->priceTo,
+                    'price_from' => $from,
+                    'price_to' => $to,
                     'unit' => $this->serviceUnit,
                     'is_active' => true,
                 ]);

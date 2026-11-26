@@ -119,12 +119,12 @@ class StaffPayroll extends Component
     {
         $this->authorizePayrollManager();
         $this->validate([
-            'policyOvertimeRate' => 'required|numeric|min:0',
-            'policyLateDeduction' => 'required|numeric|min:0',
-            'policyAbsenceDeduction' => 'required|numeric|min:0',
-            'policyHalfDayDeduction' => 'required|numeric|min:0',
-            'policyUnpaidLeaveDeduction' => 'required|numeric|min:0',
-            'policyDefaultSalary' => 'nullable|numeric|min:1',
+            'policyOvertimeRate' => 'required|numeric|min:0|max:99999999.99',
+            'policyLateDeduction' => 'required|numeric|min:0|max:99999999.99',
+            'policyAbsenceDeduction' => 'required|numeric|min:0|max:99999999.99',
+            'policyHalfDayDeduction' => 'required|numeric|min:0|max:99999999.99',
+            'policyUnpaidLeaveDeduction' => 'required|numeric|min:0|max:99999999.99',
+            'policyDefaultSalary' => 'nullable|numeric|min:1|max:9999999999.99',
         ]);
 
         $tenantId = Auth::user()->tenant_id;
@@ -197,7 +197,7 @@ class StaffPayroll extends Component
                 });
 
             $otRate = (float) $policy->overtime_rate_per_hour;
-            $otPay = round($otHours * $otRate, 2);
+            $otPay = PayrollModel::calculateOvertimePay($otHours, $otRate);
             $lateDeduction = round($counts['LATE'] * (float) $policy->late_deduction_per_day, 2);
             $absenceDeduction = round($counts['ABSENT'] * (float) $policy->absence_deduction_per_day, 2);
             $halfDayDeduction = round($counts['HALF_DAY'] * (float) $policy->half_day_deduction, 2);
@@ -336,77 +336,124 @@ class StaffPayroll extends Component
     {
         $this->authorizePayrollManager();
         $this->validate([
+            'editBasicSalary' => 'required|numeric|min:0|max:9999999999.99',
             'editOvertimeHours' => 'required|numeric|min:0|max:'.AttendanceComponent::MAX_OVERTIME_HOURS,
+            'editOvertimeRate' => 'required|numeric|min:0|max:9999999999.99',
+            'editAllowances' => 'required|numeric|min:0|max:9999999999.99',
+            'editDeductions' => 'required|numeric|min:0|max:9999999999.99',
         ]);
-        $this->editNetSalary = PayrollModel::calculateNet(
-            $this->editBasicSalary,
-            $this->editOvertimeHours,
-            $this->editOvertimeRate,
-            $this->editAllowances,
-            $this->editDeductions
-        );
+        try {
+            $this->editNetSalary = PayrollModel::calculateNet(
+                $this->editBasicSalary,
+                $this->editOvertimeHours,
+                $this->editOvertimeRate,
+                $this->editAllowances,
+                $this->editDeductions
+            );
+            $this->errorMessage = null;
+        } catch (\InvalidArgumentException $exception) {
+            $this->addError('editNetSalary', $exception->getMessage());
+        }
     }
 
-    public function updatePayroll()
+    public function updatePayroll(): void
     {
         $this->authorizePayrollManager();
-        $record = PayrollModel::where('tenant_id', Auth::user()->tenant_id)
-            ->with('user')->findOrFail($this->editingPayrollId);
+
+        $tenantId = (string) Auth::user()->tenant_id;
+        $payrollId = $this->editingPayrollId;
+        $record = PayrollModel::query()
+            ->where('tenant_id', $tenantId)
+            ->with('user')
+            ->findOrFail($payrollId);
+
         $originalMethod = (string) ($record->payment_method ?? '');
         $allowedMethods = $originalMethod === CashOnlyPayments::CASH
             ? CashOnlyPayments::METHODS
             : [$originalMethod, CashOnlyPayments::CASH];
 
         $this->validate([
-            'editBasicSalary' => 'required|numeric|min:0',
+            'editBasicSalary' => 'required|numeric|min:0|max:9999999999.99',
             'editOvertimeHours' => 'required|numeric|min:0|max:'.AttendanceComponent::MAX_OVERTIME_HOURS,
-            'editOvertimeRate' => 'required|numeric|min:0',
-            'editAllowances' => 'required|numeric|min:0',
-            'editDeductions' => 'required|numeric|min:0',
+            'editOvertimeRate' => 'required|numeric|min:0|max:9999999999.99',
+            'editAllowances' => 'required|numeric|min:0|max:9999999999.99',
+            'editDeductions' => 'required|numeric|min:0|max:9999999999.99',
             'editPaymentMethod' => ['required', Rule::in($allowedMethods)],
         ]);
 
-        if ($record->status === 'PAID') {
-            $this->showEditModal = false;
-            $this->errorMessage = 'A paid payroll cannot be edited. Use a separate adjustment entry.';
+        try {
+            $net = PayrollModel::calculateNet(
+                $this->editBasicSalary,
+                $this->editOvertimeHours,
+                $this->editOvertimeRate,
+                $this->editAllowances,
+                $this->editDeductions
+            );
+            $overtimePay = PayrollModel::calculateOvertimePay($this->editOvertimeHours, $this->editOvertimeRate);
+        } catch (\InvalidArgumentException $exception) {
+            $this->addError('editNetSalary', $exception->getMessage());
 
             return;
         }
-        if ($record->status === 'APPROVED') {
-            $this->showEditModal = false;
-            $this->errorMessage = 'This payroll is finalised. Reopen it to DRAFT before editing.';
-
-            return;
-        }
-
-        $net = PayrollModel::calculateNet(
-            $this->editBasicSalary,
-            $this->editOvertimeHours,
-            $this->editOvertimeRate,
-            $this->editAllowances,
-            $this->editDeductions
-        );
 
         $update = [
             'basic_salary' => $this->editBasicSalary,
             'overtime_hours' => $this->editOvertimeHours,
             'overtime_rate' => $this->editOvertimeRate,
+            'overtime_pay' => $overtimePay,
             'allowances' => $this->editAllowances,
             'deductions' => $this->editDeductions,
             'net_salary' => $net,
             'notes' => $this->editNotes,
         ];
 
-        // Preserve historical labels on unrelated edits; only an explicit
-        // conversion to cash may rewrite the method field.
-        if ($this->editPaymentMethod === CashOnlyPayments::CASH && $originalMethod) {
-            $update['payment_method'] = CashOnlyPayments::CASH;
+        $outcome = DB::transaction(function () use ($tenantId, $payrollId, $update): string {
+            $locked = PayrollModel::query()
+                ->where('tenant_id', $tenantId)
+                ->whereKey($payrollId)
+                ->lockForUpdate()
+                ->with('user')
+                ->firstOrFail();
+
+            if ($locked->status === 'PAID') {
+                return 'paid';
+            }
+
+            if ($locked->status !== 'DRAFT') {
+                return 'finalized';
+            }
+
+            $originalMethod = (string) ($locked->payment_method ?? '');
+            if ($this->editPaymentMethod === CashOnlyPayments::CASH && $originalMethod !== '') {
+                $update['payment_method'] = CashOnlyPayments::CASH;
+            }
+
+            $locked->update($update);
+
+            if ($this->updateBaseSalaryOnProfile && $locked->user) {
+                User::query()
+                    ->where('tenant_id', $tenantId)
+                    ->whereKey($locked->user_id)
+                    ->lockForUpdate()
+                    ->firstOrFail()
+                    ->update(['base_salary' => $this->editBasicSalary]);
+            }
+
+            return 'updated';
+        });
+
+        if ($outcome === 'paid') {
+            $this->showEditModal = false;
+            $this->errorMessage = 'A paid payroll cannot be edited. Use a separate adjustment entry.';
+
+            return;
         }
 
-        $record->update($update);
+        if ($outcome === 'finalized') {
+            $this->showEditModal = false;
+            $this->errorMessage = 'This payroll is finalised. Reopen it to DRAFT before editing.';
 
-        if ($this->updateBaseSalaryOnProfile && $record->user) {
-            $record->user->update(['base_salary' => $this->editBasicSalary]);
+            return;
         }
 
         $this->showEditModal = false;
@@ -515,49 +562,102 @@ class StaffPayroll extends Component
     public function markAsApproved(string $payrollId): void
     {
         $this->authorizePayrollManager();
-        $tenantId = Auth::user()->tenant_id;
-        $record = PayrollModel::where('tenant_id', $tenantId)->findOrFail($payrollId);
+        $tenantId = (string) Auth::user()->tenant_id;
 
-        if ($record->status === 'PAID') {
+        $outcome = DB::transaction(function () use ($tenantId, $payrollId): string {
+            $record = PayrollModel::query()
+                ->where('tenant_id', $tenantId)
+                ->whereKey($payrollId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($record->status === 'PAID') {
+                return 'paid';
+            }
+
+            if ($record->status === 'APPROVED') {
+                return 'approved';
+            }
+
+            if ($record->status !== 'DRAFT') {
+                return 'invalid';
+            }
+
+            $record->update([
+                'status' => 'APPROVED',
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+            ]);
+
+            AuditLog::log('PAYROLL_APPROVED', "Payroll [{$payrollId}] approved; attendance period locked.", $tenantId, 'StaffPayroll', $payrollId);
+
+            return 'approved-now';
+        });
+
+        if ($outcome === 'paid') {
             $this->errorMessage = 'A paid payroll cannot be re-approved.';
 
             return;
         }
-        if ($record->status === 'APPROVED') {
+
+        if ($outcome === 'approved') {
             $this->errorMessage = 'This payroll is already approved.';
 
             return;
         }
 
-        $record->update([
-            'status' => 'APPROVED',
-            'approved_by' => Auth::id(),
-            'approved_at' => now(),
-        ]);
+        if ($outcome === 'invalid') {
+            $this->errorMessage = 'This payroll cannot be approved from its current state.';
 
-        AuditLog::log('PAYROLL_APPROVED', "Payroll [{$payrollId}] approved; attendance period locked.", $tenantId, 'StaffPayroll', $payrollId);
+            return;
+        }
+
         $this->feedbackMessage = 'Payroll approved. Source attendance for this month is now locked.';
     }
 
     public function reopenPayroll(string $payrollId): void
     {
         $this->authorizePayrollManager();
-        $tenantId = Auth::user()->tenant_id;
-        $record = PayrollModel::where('tenant_id', $tenantId)->findOrFail($payrollId);
+        $tenantId = (string) Auth::user()->tenant_id;
 
-        if ($record->status === 'PAID') {
+        $outcome = DB::transaction(function () use ($tenantId, $payrollId): string {
+            $record = PayrollModel::query()
+                ->where('tenant_id', $tenantId)
+                ->whereKey($payrollId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($record->status === 'PAID') {
+                return 'paid';
+            }
+
+            if ($record->status !== 'APPROVED') {
+                return 'not-approved';
+            }
+
+            $record->update([
+                'status' => 'DRAFT',
+                'approved_by' => null,
+                'approved_at' => null,
+            ]);
+
+            AuditLog::log('PAYROLL_REOPENED', "Payroll [{$payrollId}] reopened to DRAFT by an authorized manager.", $tenantId, 'StaffPayroll', $payrollId);
+
+            return 'reopened';
+        });
+
+        if ($outcome === 'paid') {
             $this->errorMessage = 'A paid payroll cannot be reopened. Use a separate adjustment entry.';
 
             return;
         }
 
-        $record->update([
-            'status' => 'DRAFT',
-            'approved_by' => null,
-            'approved_at' => null,
-        ]);
+        if ($outcome === 'not-approved') {
+            $this->errorMessage = 'Only an approved payroll can be reopened.';
 
-        AuditLog::log('PAYROLL_REOPENED', "Payroll [{$payrollId}] reopened to DRAFT by an authorized manager.", $tenantId, 'StaffPayroll', $payrollId);
+            return;
+        }
+
         $this->feedbackMessage = 'Payroll reopened to draft; attendance period unlocked.';
     }
 
@@ -579,7 +679,7 @@ class StaffPayroll extends Component
             ->get();
 
         $totalBasic = $payrolls->sum('basic_salary');
-        $totalOvertime = $payrolls->sum(fn ($p) => $p->overtime_hours * $p->overtime_rate);
+        $totalOvertime = $payrolls->sum('overtime_pay');
         $totalAllowances = $payrolls->sum('allowances');
         $totalDeductions = $payrolls->sum('deductions');
         $totalNetPayroll = $payrolls->sum('net_salary');

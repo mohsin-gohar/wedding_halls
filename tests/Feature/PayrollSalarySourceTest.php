@@ -115,6 +115,24 @@ class PayrollSalarySourceTest extends TestCase
         $this->assertSame(500.00, (float) $payroll->overtime_pay);
     }
 
+    public function test_payroll_policy_rejects_values_outside_database_decimal_precision(): void
+    {
+        Livewire::actingAs($this->owner)
+            ->test(StaffPayroll::class)
+            ->set('policyOvertimeRate', 100000000)
+            ->set('policyLateDeduction', 500)
+            ->set('policyAbsenceDeduction', 1000)
+            ->set('policyHalfDayDeduction', 500)
+            ->set('policyUnpaidLeaveDeduction', 1000)
+            ->set('policyDefaultSalary', '41000')
+            ->call('savePolicy')
+            ->assertHasErrors(['policyOvertimeRate']);
+
+        $policy = PayrollPolicy::where('tenant_id', $this->tenant->id)->firstOrFail();
+        $this->assertSame(250.00, (float) $policy->overtime_rate_per_hour);
+        $this->assertNull($policy->default_basic_salary);
+    }
+
     public function test_paid_payroll_is_not_regenerated(): void
     {
         $employee = User::factory()->create([

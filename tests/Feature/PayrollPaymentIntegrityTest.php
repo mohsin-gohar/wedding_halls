@@ -128,6 +128,119 @@ class PayrollPaymentIntegrityTest extends TestCase
         $this->assertSame(1, Expense::where('payroll_id', $payroll->id)->count());
     }
 
+    public function test_editing_draft_payroll_updates_the_overtime_breakdown_with_net_pay(): void
+    {
+        $payroll = $this->payroll('DRAFT');
+
+        Livewire::actingAs($this->owner)
+            ->test(StaffPayroll::class)
+            ->set('editingPayrollId', $payroll->id)
+            ->set('editBasicSalary', 100.00)
+            ->set('editOvertimeHours', 1.25)
+            ->set('editOvertimeRate', 10.25)
+            ->set('editAllowances', 20.00)
+            ->set('editDeductions', 5.00)
+            ->set('editPaymentMethod', 'CASH')
+            ->call('updatePayroll')
+            ->assertHasNoErrors();
+
+        $payroll->refresh();
+        $this->assertSame(12.81, (float) $payroll->overtime_pay);
+        $this->assertSame(127.81, (float) $payroll->net_salary);
+    }
+
+    public function test_payroll_editor_rejects_money_values_above_decimal_storage_limit(): void
+    {
+        $payroll = $this->payroll('DRAFT');
+
+        Livewire::actingAs($this->owner)
+            ->test(StaffPayroll::class)
+            ->set('editingPayrollId', $payroll->id)
+            ->set('editBasicSalary', 10_000_000_000)
+            ->set('editOvertimeHours', 0)
+            ->set('editOvertimeRate', 0)
+            ->set('editAllowances', 0)
+            ->set('editDeductions', 0)
+            ->set('editPaymentMethod', 'CASH')
+            ->call('updatePayroll')
+            ->assertHasErrors(['editBasicSalary']);
+
+        $this->assertSame(42000.00, (float) $payroll->fresh()->basic_salary);
+        $this->assertSame(42000.00, (float) $payroll->fresh()->net_salary);
+    }
+
+    public function test_payroll_editor_surfaces_overflow_without_throwing_or_mutating_draft(): void
+    {
+        $payroll = $this->payroll('DRAFT');
+
+        Livewire::actingAs($this->owner)
+            ->test(StaffPayroll::class)
+            ->set('editingPayrollId', $payroll->id)
+            ->set('editBasicSalary', 9_999_999_999.99)
+            ->set('editOvertimeHours', 0)
+            ->set('editOvertimeRate', 0)
+            ->set('editAllowances', 999_999_999.99)
+            ->set('editDeductions', 0)
+            ->set('editPaymentMethod', 'CASH')
+            ->call('updatePayroll')
+            ->assertHasErrors(['editNetSalary']);
+
+        $this->assertSame(42000.00, (float) $payroll->fresh()->basic_salary);
+        $this->assertSame(42000.00, (float) $payroll->fresh()->net_salary);
+    }
+
+    public function test_recalculate_edit_net_reports_invalid_overflow_as_validation_error(): void
+    {
+        $payroll = $this->payroll('DRAFT');
+
+        Livewire::actingAs($this->owner)
+            ->test(StaffPayroll::class)
+            ->set('editingPayrollId', $payroll->id)
+            ->set('editBasicSalary', 9_999_999_999.99)
+            ->set('editOvertimeHours', 0)
+            ->set('editOvertimeRate', 0)
+            ->set('editAllowances', 999_999_999.99)
+            ->set('editDeductions', 0)
+            ->call('recalculateEditNet')
+            ->assertHasErrors(['editNetSalary']);
+
+        $this->assertSame(42000.00, (float) $payroll->fresh()->net_salary);
+    }
+
+    public function test_approved_payroll_cannot_be_edited_and_keeps_its_final_amount(): void
+    {
+        $payroll = $this->payroll('APPROVED');
+
+        Livewire::actingAs($this->owner)
+            ->test(StaffPayroll::class)
+            ->set('editingPayrollId', $payroll->id)
+            ->set('editBasicSalary', 100.00)
+            ->set('editOvertimeHours', 1.25)
+            ->set('editOvertimeRate', 10.25)
+            ->set('editAllowances', 20.00)
+            ->set('editDeductions', 5.00)
+            ->set('editPaymentMethod', 'CASH')
+            ->call('updatePayroll')
+            ->assertSee('finalised');
+
+        $payroll->refresh();
+        $this->assertSame('APPROVED', $payroll->status);
+        $this->assertSame(42000.00, (float) $payroll->basic_salary);
+        $this->assertSame(42000.00, (float) $payroll->net_salary);
+    }
+
+    public function test_only_approved_payroll_can_be_reopened_to_draft(): void
+    {
+        $draft = $this->payroll('DRAFT');
+
+        Livewire::actingAs($this->owner)
+            ->test(StaffPayroll::class)
+            ->call('reopenPayroll', $draft->id)
+            ->assertSee('Only an approved payroll can be reopened');
+
+        $this->assertSame('DRAFT', $draft->fresh()->status);
+    }
+
     public function test_paid_payroll_cannot_be_reopened_or_edited(): void
     {
         $payroll = $this->payroll('PAID');

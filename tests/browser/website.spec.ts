@@ -56,7 +56,19 @@ const protectedRoutes = [
 async function openPage(page: Page, path: string) {
   const failures: Array<{ type: string; value: string }> = [];
   page.on('console', message => {
-    if (message.type() === 'error') failures.push({ type: 'console', value: message.text() });
+    if (message.type() !== 'error') return;
+
+    const location = message.location();
+    const isYouTubeComputePressurePolicyWarning =
+      message.text() === 'Permissions policy violation: compute-pressure is not allowed in this document.' &&
+      new URL(location.url || 'http://127.0.0.1').hostname === 'www.youtube.com';
+
+    // YouTube's embedded player probes the Compute Pressure API, which this
+    // app intentionally does not grant. This browser policy warning is not an
+    // application JavaScript error; keep every other console error fatal.
+    if (!isYouTubeComputePressurePolicyWarning) {
+      failures.push({ type: 'console', value: message.text() });
+    }
   });
   page.on('pageerror', error => failures.push({ type: 'pageerror', value: error.message }));
   page.on('response', response => {

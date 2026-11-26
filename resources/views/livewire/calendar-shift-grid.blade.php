@@ -68,6 +68,9 @@
             <button wire:click="goToToday" class="ml-2 px-3 py-1.5 border border-[#E7E5E4] dark:border-white/10 bg-white dark:bg-white/10 hover:bg-[#F8F5EF] dark:hover:bg-white/15 text-stone-800 dark:text-stone-200 text-xs font-mono uppercase tracking-wider font-semibold transition">
                 Today
             </button>
+            <button type="button" wire:click="exportCalendarCsv" class="px-3 py-1.5 border border-[#C6A15B] text-[#8F7239] dark:text-[#C6A15B] text-[11px] font-mono uppercase tracking-wider font-bold hover:bg-[#C6A15B]/10 transition" aria-label="Export visible calendar bookings as CSV">
+                Export CSV
+            </button>
             <div class="flex border border-[#E7E5E4] dark:border-white/10" role="tablist" aria-label="Calendar view">
                 @foreach(['month' => 'Month', 'week' => 'Week', 'day' => 'Day', 'agenda' => 'Agenda'] as $mode => $label)
                     <button type="button" wire:click="setView('{{ $mode }}')" role="tab" aria-selected="{{ $viewMode === $mode ? 'true' : 'false' }}" class="px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider {{ $viewMode === $mode ? 'bg-[#171513] text-[#F8F5EF]' : 'bg-white dark:bg-transparent text-stone-600 dark:text-stone-300' }}">{{ $label }}</button>

@@ -2,9 +2,14 @@
 
 namespace App\Console\Commands;
 
+use Database\Seeders\PermissionMatrixSeeder;
+use Database\Seeders\VendorCategorySeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use RuntimeException;
+use Spatie\Permission\Models\Role;
+use Throwable;
 
 class HostingerDeployCommand extends Command
 {
@@ -20,7 +25,7 @@ class HostingerDeployCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Automate production deployment checks, storage symlinking, database migrations, and caching for Hostinger hosting';
+    protected $description = 'Run safe production migrations, reference-data bootstrap, storage checks, and cache optimization for Hostinger hosting';
 
     /**
      * Execute the console command.
@@ -45,31 +50,104 @@ class HostingerDeployCommand extends Command
             File::makeDirectory($storageTarget, 0755, true);
         }
 
-        if (! file_exists($publicLink)) {
-            try {
-                Artisan::call('storage:link');
-                $this->line('<info>✅</info> Public storage symlink created: '.$publicLink);
-            } catch (\Throwable $e) {
-                $this->warn('! Symlink creation failed, trying relative link or copy: '.$e->getMessage());
+        $publicDiskRequired = config('filesystems.default') === 'public';
+
+        if (! is_link($publicLink) && file_exists($publicLink)) {
+            $message = 'public/storage exists but is not a symbolic link.';
+            if ($publicDiskRequired) {
+                $this->error($message.' Replace it with the correct storage link before continuing.');
+
+                return self::FAILURE;
             }
-        } else {
+
+            $this->warn($message.' Public disk is not configured, so no link is required.');
+        } elseif (! is_link($publicLink) && $publicDiskRequired) {
+            try {
+                $exitCode = Artisan::call('storage:link');
+                $storageOutput = trim(Artisan::output());
+                if ($storageOutput !== '') {
+                    $this->line($storageOutput);
+                }
+
+                if ($exitCode !== self::SUCCESS || ! is_link($publicLink)) {
+                    throw new RuntimeException('Laravel storage:link did not create the expected symbolic link.');
+                }
+            } catch (Throwable $e) {
+                $this->error('Public storage link is required but could not be created: '.$e->getMessage());
+                $this->line('Create public/storage -> storage/app/public in the Hostinger File Manager, then rerun setup.');
+
+                return self::FAILURE;
+            }
+        } elseif (is_link($publicLink)) {
+            $actualTarget = realpath($publicLink);
+            $expectedTarget = realpath($storageTarget);
+
+            if ($publicDiskRequired && ($actualTarget === false || $actualTarget !== $expectedTarget)) {
+                $this->error('public/storage points to an unexpected target. Correct the symlink before continuing.');
+
+                return self::FAILURE;
+            }
+
             $this->line('<info>✅</info> Public storage symlink already exists');
+        } else {
+            $this->line('Public disk is not configured; storage symlink is not required.');
         }
 
         // 3. Database Migration
         $this->info('Running database migrations...');
         try {
-            Artisan::call('migrate', ['--force' => true]);
-            $this->line(trim(Artisan::output()));
+            $exitCode = Artisan::call('migrate', ['--force' => true]);
+            $migrationOutput = trim(Artisan::output());
+            if ($migrationOutput !== '') {
+                $this->line($migrationOutput);
+            }
+
+            if ($exitCode !== self::SUCCESS) {
+                $this->error('Database migration command returned a failure status.');
+
+                return self::FAILURE;
+            }
+
             $this->line('<info>✅</info> Database migrations executed successfully');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->error('Database migration failed: '.$e->getMessage());
 
             return self::FAILURE;
         }
 
-        // 4. Seeding is intentionally not available. Demo seeders create
-        //    known credentials and must never run against production data.
+        // 4. Bootstrap only non-demo reference data. VendorCategorySeeder is
+        //    firstOrCreate-only; PermissionMatrixSeeder runs only on a fresh
+        //    RBAC store so later deployments never overwrite custom role grants.
+        $this->info('Bootstrapping non-demo reference data...');
+        try {
+            $exitCode = Artisan::call('db:seed', [
+                '--class' => VendorCategorySeeder::class,
+                '--force' => true,
+            ]);
+            if ($exitCode !== self::SUCCESS) {
+                throw new RuntimeException('Vendor category reference seeding failed.');
+            }
+            $this->line(trim(Artisan::output()));
+
+            if (! Role::query()->exists()) {
+                $exitCode = Artisan::call('db:seed', [
+                    '--class' => PermissionMatrixSeeder::class,
+                    '--force' => true,
+                ]);
+                if ($exitCode !== self::SUCCESS) {
+                    throw new RuntimeException('Initial RBAC permission seeding failed.');
+                }
+                $this->line(trim(Artisan::output()));
+            } else {
+                $this->line('Existing RBAC roles detected; preserving their configured permissions.');
+            }
+
+            Artisan::call('permission:cache-reset');
+        } catch (Throwable $e) {
+            $this->error('Reference-data bootstrap failed: '.$e->getMessage());
+
+            return self::FAILURE;
+        }
 
         // 5. Caching for peak performance on Hostinger LiteSpeed/Apache
         $this->info('Optimizing caches for production...');
@@ -104,7 +182,7 @@ class HostingerDeployCommand extends Command
         $this->info('====================================================');
         $this->info('  HOSTINGER DEPLOYMENT READY & OPTIMIZED!           ');
         $this->info('====================================================');
-        $this->line('Your site is live and operating with peak performance.');
+        $this->line('Setup tasks completed. Verify HTTPS, health, login, and key workflows before opening the site to customers.');
 
         return self::SUCCESS;
     }

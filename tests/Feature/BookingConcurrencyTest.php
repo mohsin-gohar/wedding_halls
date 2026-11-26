@@ -87,7 +87,7 @@ class BookingConcurrencyTest extends TestCase
         $hall = Hall::first();
         $bookingService = app(BookingService::class);
 
-        $testDate = '2026-11-25';
+        $testDate = now()->addDays(90)->toDateString();
         $testSlot = 'EVENING';
 
         $data = [
@@ -123,7 +123,7 @@ class BookingConcurrencyTest extends TestCase
     {
         $hall = Hall::first();
         $bookingService = app(BookingService::class);
-        $testDate = '2026-11-26';
+        $testDate = now()->addDays(91)->toDateString();
 
         $fullDayReservation = [
             'hall_id' => $hall->id,
@@ -151,7 +151,7 @@ class BookingConcurrencyTest extends TestCase
             $this->assertTrue(true);
         }
 
-        $individualShiftDate = '2026-11-27';
+        $individualShiftDate = now()->addDays(92)->toDateString();
         $bookingService->createReservation([
             ...$fullDayReservation,
             'event_date' => $individualShiftDate,
@@ -169,6 +169,40 @@ class BookingConcurrencyTest extends TestCase
             'customer_name' => 'Conflicting Full Day Client',
             'customer_phone' => '+92 300 6666666',
         ]);
+    }
+
+    public function test_cancelled_booking_releases_its_hall_slot_for_a_new_reservation(): void
+    {
+        $hall = Hall::firstOrFail();
+        $service = app(BookingService::class);
+        $eventDate = now()->addDays(240)->toDateString();
+
+        $booking = $service->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => $eventDate,
+            'slot_type' => 'EVENING',
+            'customer_name' => 'First Booking Customer',
+            'customer_phone' => '+92 300 1112233',
+            'guest_count' => 120,
+            'per_head_rate' => 1800,
+        ]);
+
+        $booking->update(['status' => 'CANCELLED']);
+
+        $this->assertTrue($service->checkSlotAvailability($hall->id, $eventDate, 'EVENING'));
+
+        $replacement = $service->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => $eventDate,
+            'slot_type' => 'EVENING',
+            'customer_name' => 'Replacement Booking Customer',
+            'customer_phone' => '+92 300 2223344',
+            'guest_count' => 140,
+            'per_head_rate' => 1900,
+        ]);
+
+        $this->assertSame('CONFIRMED', $replacement->status);
+        $this->assertNotSame($booking->id, $replacement->id);
     }
 
     public function test_document_routes_return_ok()

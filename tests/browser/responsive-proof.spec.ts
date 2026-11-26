@@ -87,6 +87,11 @@ test.describe('Responsive browser proof', () => {
       await page.setViewportSize({ width, height: 900 });
 
       for (const route of PUBLIC_ROUTES) {
+        // /rsvp intentionally has a strict five-requests-per-minute reload
+        // guard. Exercise it once here; repeated viewport checks belong to
+        // the layout test, not to the rate-limit policy.
+        if (route === '/rsvp' && width !== REQUIRED_VIEWPORTS[0]) continue;
+
         const pageIssues = watchPage(page, baseURL);
 
         const response = await page.goto(route, { waitUntil: 'domcontentloaded', timeout: 90_000 });

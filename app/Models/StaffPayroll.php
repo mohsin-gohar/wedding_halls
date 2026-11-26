@@ -79,10 +79,79 @@ class StaffPayroll extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Calculate overtime pay in integer paisa to avoid binary floating-point drift.
+     */
+    public static function calculateOvertimePay(float $otHours, float $otRate): float
+    {
+        return self::calculateOvertimePaisa($otHours, $otRate) / 100;
+    }
+
+    private static function calculateOvertimePaisa(float $otHours, float $otRate): int
+    {
+        foreach (['overtime hours' => $otHours, 'overtime rate' => $otRate] as $field => $value) {
+            if (! is_finite($value) || $value < 0) {
+                throw new \InvalidArgumentException("Payroll {$field} must be a finite, non-negative number.");
+            }
+        }
+
+        $maximumPaisa = 999_999_999_999;
+        $roundedRate = round($otRate, 2);
+        if ($roundedRate > ($maximumPaisa / 100)) {
+            throw new \InvalidArgumentException('Payroll overtime rate exceeds the supported storage limit.');
+        }
+
+        $ratePaisa = (int) round($roundedRate * 100);
+        if ($otHours > 10_000) {
+            throw new \InvalidArgumentException('Payroll overtime hours exceed the supported limit.');
+        }
+
+        $hoursHundredths = (int) round($otHours * 100);
+
+        $overtimePaisa = intdiv(($hoursHundredths * $ratePaisa) + 50, 100);
+        if ($overtimePaisa > $maximumPaisa) {
+            throw new \InvalidArgumentException('Payroll overtime pay exceeds the supported storage limit.');
+        }
+
+        return $overtimePaisa;
+    }
+
+    /**
+     * Calculate payroll in integer paisa to avoid binary floating-point drift.
+     *
+     * Values are validated against the DECIMAL(12,2) storage range before
+     * conversion; callers cannot persist infinities, NaN, or overflowing totals.
+     */
     public static function calculateNet(float $basic, float $otHours, float $otRate, float $allowances, float $deductions): float
     {
-        $otPay = $otHours * $otRate;
+        $values = compact('basic', 'otHours', 'otRate', 'allowances', 'deductions');
 
-        return max(0, round($basic + $otPay + $allowances - $deductions, 2));
+        foreach ($values as $field => $value) {
+            if (! is_finite($value) || $value < 0) {
+                throw new \InvalidArgumentException("Payroll {$field} must be a finite, non-negative number.");
+            }
+        }
+
+        $maximumPaisa = 999_999_999_999;
+        $toPaisa = static function (float $amount, string $field) use ($maximumPaisa): int {
+            $rounded = round($amount, 2);
+            if ($rounded > ($maximumPaisa / 100)) {
+                throw new \InvalidArgumentException("Payroll {$field} exceeds the supported storage limit.");
+            }
+
+            return (int) round($rounded * 100);
+        };
+
+        $basicPaisa = $toPaisa($basic, 'basic salary');
+        $overtimePaisa = self::calculateOvertimePaisa($otHours, $otRate);
+        $allowancesPaisa = $toPaisa($allowances, 'allowances');
+        $deductionsPaisa = $toPaisa($deductions, 'deductions');
+        $netPaisa = $basicPaisa + $overtimePaisa + $allowancesPaisa - $deductionsPaisa;
+
+        if ($netPaisa > $maximumPaisa) {
+            throw new \InvalidArgumentException('Payroll net salary exceeds the supported storage limit.');
+        }
+
+        return max(0, $netPaisa) / 100;
     }
 }

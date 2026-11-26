@@ -24,13 +24,13 @@ class ReloadProtectionTest extends TestCase
         // Simulate rapid reloads of a page with the test rate limit header active
         for ($i = 1; $i <= 5; $i++) {
             $response = $this->withHeaders(['X-Test-Rate-Limit' => 'true'])
-                ->get('/login');
+                ->get('/rsvp');
             $response->assertStatus(200);
         }
 
         // 6th reload request must be throttled with HTTP 429
         $sixthResponse = $this->withHeaders(['X-Test-Rate-Limit' => 'true'])
-            ->get('/login');
+            ->get('/rsvp');
 
         $sixthResponse->assertStatus(429);
         $sixthResponse->assertSee('Aap website ko bar bar reload nahi kar saktay');

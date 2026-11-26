@@ -337,8 +337,8 @@ Route::get('/refund', function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('customer')->group(function () {
-    Route::get('/login', CustomerLogin::class)->name('customer.login')->middleware('throttle:reload-protection');
-    Route::get('/register', CustomerRegister::class)->name('customer.register')->middleware('throttle:reload-protection');
+    Route::get('/login', CustomerLogin::class)->name('customer.login')->middleware('throttle:public-pages');
+    Route::get('/register', CustomerRegister::class)->name('customer.register')->middleware('throttle:public-pages');
 });
 
 Route::middleware(['auth', 'portal.role:ROLE_CUSTOMER'])->prefix('customer')->group(function () {
@@ -352,8 +352,8 @@ Route::middleware(['auth', 'portal.role:ROLE_CUSTOMER'])->prefix('customer')->gr
 | 3. Unified & Vendor Authentication Routes (Livewire + Native HTTP POST)
 |--------------------------------------------------------------------------
 */
-Route::get('/login', Login::class)->name('login')->middleware('throttle:reload-protection');
-Route::get('/register', Register::class)->name('register')->middleware('throttle:reload-protection');
+Route::get('/login', Login::class)->name('login')->middleware('throttle:public-pages');
+Route::get('/register', Register::class)->name('register')->middleware('throttle:public-pages');
 
 $authenticatePortalRequest = function (Request $request) {
     $credentials = $request->validate([

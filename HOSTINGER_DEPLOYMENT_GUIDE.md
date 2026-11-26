@@ -8,7 +8,7 @@ A step-by-step guide to deploying this Laravel + Livewire project on **Hostinger
 >
 > **Demo seeding is disabled in production.** `hostinger:setup` no longer offers
 > a `--seed` option, and the demo seeders refuse to run when `APP_ENV=production`.
-> Create the first Super Admin explicitly with `php artisan` after deployment.
+> Create the first Super Admin with the interactive `php artisan app:provision-super-admin` command after setup; it is available only when `APP_ENV=production` and refuses to create a second platform administrator.
 
 ---
 
@@ -109,11 +109,31 @@ FILESYSTEM_DISK=public
    ```bash
    php artisan key:generate
    ```
-5. Run the automated Hostinger deployment command:
+5. Run the production setup command (no demo seeding option exists):
    ```bash
-   php artisan hostinger:setup --seed
+   php artisan hostinger:setup
    ```
-   *(Add `--seed` if you want initial luxury halls and demo catalog data loaded).*
+   This applies migrations, creates the non-demo vendor-category reference data,
+   and installs the initial RBAC matrix only when the roles table is empty. It
+   does not create demo tenants, demo vendors, sample bookings, or known demo
+   credentials.
+6. Provision the first platform administrator interactively:
+   ```bash
+   php artisan app:provision-super-admin
+   ```
+   Enter a unique email and a password of at least 12 characters when prompted.
+   Store the credentials securely, sign in, and enable two-factor authentication.
+   The command refuses to run outside `APP_ENV=production` and refuses to add
+   a second Super Admin.
+
+7. Configure the Hostinger cron job so subscription and booking-hold expiry
+   tasks actually run. In hPanel, open **Advanced → Cron Jobs**, choose every
+   minute, and use the command below (adjust the project path to your account):
+   ```bash
+   cd /home/ACCOUNT/public_html && /usr/bin/php artisan schedule:run >> /dev/null 2>&1
+   ```
+   Confirm `php artisan schedule:list` includes the daily
+   `subscriptions:check-expiry` and hourly `bookings:expire-holds` tasks.
 
 ---
 

@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -27,9 +27,9 @@ jobs:
           coverage: none
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
           cache: npm
 
       - name: Install Composer dependencies
@@ -37,14 +37,19 @@ jobs:
 
       - name: PHP syntax lint
         run: |
-          find app config database routes tests -name '*.php' -print0 \
+          find app config database routes tests scripts -name '*.php' -print0 \
             | xargs -0 -n1 -P4 php -l
+          bash -n deploy/deploy.sh
+          bash -n deploy-hostinger.sh
 
       - name: Pint style check
-        run: vendor/bin/pint --test
+        run: vendor/bin/pint --test -v
 
       - name: Composer security audit
         run: composer audit --locked --no-interaction
+
+      - name: Symfony security patch floor
+        run: php scripts/check-symfony-security-floor.php
 
       - name: Install NPM dependencies
         run: npm ci
@@ -87,7 +92,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -97,9 +102,9 @@ jobs:
           coverage: none
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
           cache: npm
 
       - name: Install Composer dependencies
@@ -128,6 +133,12 @@ jobs:
             echo "REDIS_HOST=127.0.0.1"
             echo "REDIS_PORT=6379"
           } >> .env
+
+      - name: Validate Docker Compose configuration
+        env:
+          DB_ROOT_PASSWORD: ci-root-password
+          DB_PASSWORD: ci-db-password
+        run: docker compose config --quiet
 
       - name: Verify MySQL is ready
         run: |
@@ -180,7 +191,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -190,9 +201,9 @@ jobs:
           coverage: none
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
           cache: npm
 
       - name: Install Composer dependencies

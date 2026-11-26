@@ -129,6 +129,72 @@ class CustomerQuotesPortalTest extends TestCase
             ->assertSet('activeTab', 'bookings');
     }
 
+    public function test_customer_dashboard_rejects_non_customer_component_actions(): void
+    {
+        $vendor = $this->vendor('catering');
+        $customer = $this->customer();
+
+        // Mount while the account is a customer, then revoke that role while
+        // the Livewire snapshot remains open (the realistic stale-session case).
+        $switchTab = Livewire::actingAs($customer)->test(CustomerDashboard::class);
+        $closeModal = Livewire::actingAs($customer)->test(CustomerDashboard::class);
+
+        $customer->update([
+            'role' => 'ROLE_TENANT_OWNER',
+            'tenant_id' => $vendor->id,
+        ]);
+
+        $switchTab->call('switchTab', 'quotes')->assertForbidden();
+        $closeModal->call('closeBookingModal')->assertForbidden();
+    }
+
+    public function test_super_admin_cannot_call_customer_dashboard_component_actions(): void
+    {
+        $customer = $this->customer();
+        $component = Livewire::actingAs($customer)->test(CustomerDashboard::class);
+
+        $customer->update([
+            'role' => 'ROLE_SUPER_ADMIN',
+            'tenant_id' => null,
+        ]);
+        $customer->assignRole('ROLE_SUPER_ADMIN');
+
+        $component->call('switchTab', 'quotes')->assertForbidden();
+    }
+
+    public function test_vendor_staff_cannot_call_customer_dashboard_mutations(): void
+    {
+        $vendor = $this->vendor('catering');
+        $customer = $this->customer();
+
+        $updateProfile = Livewire::actingAs($customer)->test(CustomerDashboard::class);
+        $acceptQuote = Livewire::actingAs($customer)->test(CustomerDashboard::class);
+
+        $customer->update([
+            'role' => 'ROLE_TENANT_OWNER',
+            'tenant_id' => $vendor->id,
+        ]);
+
+        $updateProfile->call('updateProfile')->assertForbidden();
+        $acceptQuote->call('acceptQuote', 1)->assertForbidden();
+    }
+
+    public function test_platform_admin_cannot_call_customer_dashboard_mutations(): void
+    {
+        $customer = $this->customer();
+        $updateProfile = Livewire::actingAs($customer)->test(CustomerDashboard::class);
+        $acceptQuote = Livewire::actingAs($customer)->test(CustomerDashboard::class);
+
+        $customer->update([
+            'role' => 'ROLE_SUPER_ADMIN',
+            'tenant_id' => null,
+        ]);
+        $customer->assignRole('ROLE_SUPER_ADMIN');
+
+        $updateProfile->call('updateProfile')->assertForbidden();
+        $acceptQuote->call('acceptQuote', 1)->assertForbidden();
+    }
+
     public function test_guest_is_redirected_from_the_dashboard(): void
     {
         $this->get(route('customer.dashboard'))->assertRedirect(route('login'));

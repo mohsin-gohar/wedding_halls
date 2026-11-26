@@ -239,6 +239,56 @@ class VendorErpBoardsTest extends TestCase
             ->assertHasErrors(['serviceName']);
     }
 
+    public function test_service_creation_trims_name_and_persists_rounded_validated_prices(): void
+    {
+        $vendor = $this->cateringVendor();
+        $owner = $this->vendorOwner($vendor);
+
+        Livewire::actingAs($owner)
+            ->test(VendorServicesManager::class)
+            ->set('serviceName', '  Premium Stage Setup  ')
+            ->set('pricingType', 'FIXED')
+            ->set('priceFrom', 1250.456)
+            ->set('priceTo', 2500.456)
+            ->set('serviceUnit', 'per event')
+            ->set('vendorCategoryId', (int) $vendor->vendor_category_id)
+            ->call('saveService')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('vendor_services', [
+            'tenant_id' => $vendor->id,
+            'name' => 'Premium Stage Setup',
+            'price_from' => 1250.46,
+            'price_to' => 2500.46,
+        ]);
+    }
+
+    public function test_service_creation_rejects_invalid_price_ranges_and_negative_prices(): void
+    {
+        $vendor = $this->cateringVendor();
+        $owner = $this->vendorOwner($vendor);
+
+        Livewire::actingAs($owner)
+            ->test(VendorServicesManager::class)
+            ->set('serviceName', 'Invalid Price Range')
+            ->set('pricingType', 'FIXED')
+            ->set('priceFrom', 5000)
+            ->set('priceTo', 4000)
+            ->call('saveService')
+            ->assertHasErrors(['priceTo']);
+
+        Livewire::actingAs($owner)
+            ->test(VendorServicesManager::class)
+            ->set('serviceName', 'Negative Price')
+            ->set('pricingType', 'FIXED')
+            ->set('priceFrom', -1)
+            ->call('saveService')
+            ->assertHasErrors(['priceFrom']);
+
+        $this->assertDatabaseMissing('vendor_services', ['tenant_id' => $vendor->id, 'name' => 'Invalid Price Range']);
+        $this->assertDatabaseMissing('vendor_services', ['tenant_id' => $vendor->id, 'name' => 'Negative Price']);
+    }
+
     // ─────────────────────────────────────────────────────────────
     // Vendor Service Bookings board
     // ─────────────────────────────────────────────────────────────

@@ -385,7 +385,7 @@
          SECTION 7: WHITE-GLOVE CONCIERGE & RENT ADMIN ONBOARDING CTA
          =================================================================== -->
     <section class="py-16 bg-[#171513] text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div class="space-y-2">
                 <span class="text-[11px] font-sans uppercase tracking-[0.2em] text-[#C6A15B] block font-semibold">
                     Riwaj Grand Concierge
@@ -398,7 +398,7 @@
                 </p>
             </div>
 
-            <div class="flex flex-wrap items-center gap-4 shrink-0">
+            <div class="flex flex-wrap items-center gap-4">
                 <a href="{{ route('public.contact') }}" class="btn-gold !h-11 !px-6 text-xs font-semibold uppercase font-sans">
                     Speak with Concierge &rarr;
                 </a>

@@ -12,7 +12,7 @@ live production server. It complements the automated pieces added in `deploy/`.
 | Web server | Nginx | + PHP-FPM 8.2 |
 | Database | MySQL 8.0+ only | No SQLite/PostgreSQL fallback |
 | Cache/Queue | Redis 7+ | Shared store required for booking locks |
-| Node | 20 LTS | For `npm ci && npm run build` |
+| Node | 24 LTS | For `npm ci && npm run build` |
 | Composer | 2.x | |
 | Supervisor | latest | For PHP-FPM, queue worker and scheduler |
 
@@ -92,7 +92,7 @@ sudo crontab -e   # for www-data, or edit /etc/cron.d/riwaj-grand
 * * * * * cd /var/www/riwaj-grand && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-The scheduler runs `subscriptions:check-expiry` daily (subscription lifecycle).
+The scheduler runs `subscriptions:check-expiry` daily (subscription lifecycle) and `bookings:expire-holds` hourly (expired hall-slot holds).
 
 ## 7. Docker deployment (alternative)
 
@@ -101,11 +101,23 @@ all run inside the application container. `docker-compose.yml` keeps MySQL and
 Redis on the private bridge network and refuses to start without
 `DB_ROOT_PASSWORD` and `DB_PASSWORD`.
 
+The Compose Nginx service serves the host-mounted `./public` directory.
+Build those assets on the host before bringing the stack up, then create the
+storage link from the application container:
+
 ```bash
 cp .env.production.example .env    # fill every secret
+npm ci
+npm run build
 docker compose up -d --build
+docker compose exec app php artisan storage:link --force
 docker compose exec app php artisan migrate --force
 ```
+
+The Compose Nginx service listens on HTTP port 80 only. Put it behind a
+TLS-terminating reverse proxy or load balancer before exposing the application
+to the public internet, and configure Laravel trusted proxies/HTTPS settings
+for that topology. Do not assume the Compose Nginx service provides TLS.
 
 Do not publish MySQL/Redis ports to the public internet. If you need a one-off
 debug session, add a host mapping temporarily and remove it afterwards.
