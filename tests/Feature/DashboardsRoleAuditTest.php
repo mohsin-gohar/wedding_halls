@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\AdminDashboard;
 use App\Livewire\Dashboard;
+use App\Livewire\ExpenseTracker;
 use App\Models\Expense;
 use App\Models\Hall;
 use App\Models\PlatformTask;
@@ -106,11 +107,15 @@ class DashboardsRoleAuditTest extends TestCase
         $this->assertEquals(290.0, (float) $utilityLog->diesel_rate_per_liter);
         $this->assertEquals(5.0, (float) $utilityLog->generator_run_hours);
 
-        // Delete the expense
+        // Void the expense while retaining its original financial evidence.
         Livewire::actingAs($owner)
-            ->test(Dashboard::class)
-            ->call('deleteDailyExpense', $expense->id);
+            ->test(ExpenseTracker::class)
+            ->call('openVoidModal', $expense->id)
+            ->set('voidReason', 'Reversal for dashboard role audit test')
+            ->call('voidExpense')
+            ->assertHasNoErrors();
 
         $this->assertNull(Expense::find($expense->id));
+        $this->assertTrue((bool) Expense::withVoided()->findOrFail($expense->id)->is_voided);
     }
 }
