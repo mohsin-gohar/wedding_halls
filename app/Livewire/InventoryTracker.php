@@ -97,11 +97,21 @@ class InventoryTracker extends Component
     private function authorizeInventoryAction(string $action): void
     {
         $user = Auth::user();
+        $canManageInventory = $user && $user->tenant_id
+            && PermissionMatrix::userCan($user, 'inventory.manage');
+        $canManageExpenses = $user && $user->tenant_id
+            && PermissionMatrix::userCan($user, 'expenses.manage');
+
+        $allowed = match ($action) {
+            'po.create' => $canManageInventory || $canManageExpenses,
+            'po.paid' => $canManageExpenses,
+            default => $canManageInventory,
+        };
 
         abort_unless(
-            $user && $user->tenant_id && PermissionMatrix::userCan($user, 'inventory.manage'),
+            $allowed,
             403,
-            'Unauthorized. Inventory changes require inventory.manage within a tenant.'
+            'This inventory or procurement action is not permitted for your role.'
         );
     }
 
