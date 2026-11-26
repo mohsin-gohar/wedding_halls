@@ -8,6 +8,7 @@ use App\Models\StaffAttendance;
 use App\Models\StaffLeave;
 use App\Models\StaffPayroll;
 use App\Models\User;
+use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -86,8 +87,8 @@ class StaffManager extends Component
     private function authorizeStaffManager(): void
     {
         $user = Auth::user();
-        if (! $user || (! $user->isTenantOwner() && ! $user->isManager()) || ! $user->tenant_id) {
-            abort(403, 'Unauthorized. Only Venue Owners or General Managers can access Staff Management.');
+        if (! $user || ! $user->tenant_id || ! PermissionMatrix::userCan($user, 'staff.manage')) {
+            abort(403, 'Unauthorized. Staff management permission is required.');
         }
     }
 
