@@ -8,6 +8,7 @@ use App\Models\CustomerEventVendor;
 use App\Models\ServiceBooking;
 use App\Models\Tenant;
 use App\Models\VendorCategory;
+use App\Models\User;
 use App\Services\SubscriptionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -61,6 +62,15 @@ class CustomerEventWorkspace extends Component
 
     public string $taskDueDate = '';
 
+    private function assertCustomer(): User
+    {
+        $user = Auth::user();
+
+        abort_unless($user && $user->isCustomer(), 403, 'Customer account required.');
+
+        return $user;
+    }
+
     public function mount(): void
     {
         $user = Auth::user();
@@ -76,6 +86,7 @@ class CustomerEventWorkspace extends Component
 
     public function getEventsProperty()
     {
+        $this->assertCustomer();
         return CustomerEvent::query()
             ->where('user_id', Auth::id())
             ->withCount(['bookings', 'tasks', 'vendors'])
@@ -158,6 +169,7 @@ class CustomerEventWorkspace extends Component
     /** The signed-in customer's service bookings not yet linked to any event. */
     public function getUnlinkedBookingsProperty()
     {
+        $this->assertCustomer();
         return ServiceBooking::query()
             ->where('customer_id', Auth::id())
             ->whereNull('customer_event_id')
@@ -168,6 +180,7 @@ class CustomerEventWorkspace extends Component
 
     public function getMarketplaceVendorsProperty()
     {
+        $this->assertCustomer();
         // Approved, visible and unlocked vendors the customer can shortlist,
         // excluding those already attached to this (owned) event.
         $event = $this->ownedSelectedEvent();
@@ -192,6 +205,7 @@ class CustomerEventWorkspace extends Component
 
     public function getCategoriesProperty()
     {
+        $this->assertCustomer();
         return VendorCategory::query()->where('is_active', true)->orderBy('sort')->get(['id', 'name', 'slug']);
     }
 
@@ -209,6 +223,7 @@ class CustomerEventWorkspace extends Component
 
     public function openCreateEventModal(): void
     {
+        $this->assertCustomer();
         $this->reset(['eventName', 'eventCity', 'venueText', 'guestCount', 'estimatedBudget', 'eventNotes']);
         $this->eventType = 'WEDDING';
         $this->eventStatus = 'PLANNING';
@@ -244,12 +259,14 @@ class CustomerEventWorkspace extends Component
 
     public function closeEventModal(): void
     {
+        $this->assertCustomer();
         $this->showEventModal = false;
         $this->isEditingEvent = false;
     }
 
     public function saveEvent(): void
     {
+        $this->assertCustomer();
         $this->validate([
             'eventName' => ['required', 'string', 'max:150'],
             'eventType' => ['required', 'in:'.implode(',', CustomerEvent::EVENT_TYPES)],
@@ -514,6 +531,7 @@ class CustomerEventWorkspace extends Component
 
     private function currentEvent(): CustomerEvent
     {
+        $this->assertCustomer();
         if (! $this->selectedEventId) {
             abort(400, 'Select an event first.');
         }
@@ -529,6 +547,7 @@ class CustomerEventWorkspace extends Component
 
     private function ownedEvent(string $eventId): ?CustomerEvent
     {
+        $this->assertCustomer();
         return CustomerEvent::query()
             ->where('id', $eventId)
             ->where('user_id', Auth::id())
@@ -547,6 +566,7 @@ class CustomerEventWorkspace extends Component
 
     public function render()
     {
+        $this->assertCustomer();
         return view('livewire.customer-event-workspace')
             ->layout('components.layouts.public', [
                 'title' => 'My Event Workspace — Riwaj Grand',
