@@ -171,6 +171,44 @@ class BookingConcurrencyTest extends TestCase
         ]);
     }
 
+    public function test_inquiry_cannot_be_confirmed_when_an_overlapping_booking_exists(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $service = app(BookingService::class);
+        $date = now()->addDays(220)->toDateString();
+
+        $base = [
+            'hall_id' => $hall->id,
+            'event_date' => $date,
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'guest_count' => 200,
+            'per_head_rate' => 1500,
+            'hall_rent' => 100000,
+            'advance_paid' => 0,
+            'payment_method' => 'CASH',
+        ];
+
+        $inquiry = $service->createReservation(array_merge($base, [
+            'customer_name' => 'Pending Inquiry',
+            'customer_phone' => '+92 300 7771001',
+            'status' => 'INQUIRY',
+        ]));
+
+        $service->createReservation(array_merge($base, [
+            'customer_name' => 'Confirmed Reservation',
+            'customer_phone' => '+92 300 7771002',
+            'status' => 'CONFIRMED',
+        ]));
+
+        try {
+            $service->transitionStatus($inquiry, 'CONFIRMED');
+            $this->fail('An inquiry must not be confirmed over an existing active reservation.');
+        } catch (SlotAlreadyBookedException) {
+            $this->assertSame('INQUIRY', $inquiry->fresh()->status);
+        }
+    }
+
     public function test_document_routes_return_ok()
     {
         $booking = Booking::with('payments', 'kitchenKot')->first();
