@@ -171,7 +171,7 @@ class PermissionMatrix
             'availability.view',
         ],
         'ROLE_CHEF' => ['kitchen.view', 'kitchen.manage', 'inventory.view', 'bookings.view', 'service-bookings.view'],
-        'ROLE_FLOOR_STAFF' => ['bookings.view', 'kitchen.view', 'service-bookings.view'],
+        'ROLE_FLOOR_STAFF' => ['bookings.view', 'bookings.create', 'kitchen.view', 'service-bookings.view'],
         'ROLE_SERVICE_STAFF' => ['dashboard.view', 'service-bookings.view', 'rfq.view', 'availability.view', 'portfolio.view'],
 
         // ── Explicitly named vendor roles (enterprise vocabulary) ──
