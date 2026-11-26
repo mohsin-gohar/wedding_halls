@@ -6,7 +6,7 @@
 #   cd /var/www/riwaj-grand
 #   sudo bash deploy/deploy.sh
 #
-# Assumes: PHP 8.2+, Composer, Node 20+, Redis, MySQL, Nginx already installed
+# Assumes: PHP 8.2+, Composer, Node 24+, Redis, MySQL, Nginx already installed
 # and .env already configured (start from .env.production.example; see
 # deploy/DEPLOYMENT.md).
 #
