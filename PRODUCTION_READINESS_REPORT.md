@@ -11,8 +11,9 @@ The following repository changes were added after the recorded verification base
 - Vendor service pricing now rejects non-finite/negative amounts, reversed ranges, and missing/non-positive PER_HEAD/HOURLY base prices; regression tests were added.
 - API booking/service-booking list and detail endpoints now require explicit read permissions; Finance and Content Moderator no longer inherit global booking visibility. Regression tests were added.
 - WhatsApp webhook and simulator now require explicit RSVP intent; unclear messages receive clarification and leave RSVP state unchanged. Regression tests were added. Outbound WhatsApp requests now have a 10-second timeout and provider HTTP failures are logged; the fallback Graph API version is v26.0.
+- Vendor quote boards now expose only the signed-in vendor's own bid, never competitor amounts/identity; modal prefill is similarly scoped. Bid submission locks and rechecks that the RFQ is still OPEN, with regression tests for confidentiality and closed-RFQ rejection.
 
-Latest follow-up commit checked: `bef3966cd582f943165e3c60c4d9f54c8f797b3e`. GitHub currently reports no workflow run or status checks for this head. Therefore the historical test/build/browser results below apply only to their recorded baseline and **must not be represented as verification of these follow-up changes** until CI is run successfully.
+Latest code follow-up commits checked: `bef3966cd582f943165e3c60c4d9f54c8f797b3e`, `5cade99da456b29bdd4e6f6150c3459784f3e617`, `6f01c263e1e662002f2bae2f68d5ea096f94d97b`, `36bb0d4b63e3929ce648102b82ef93a563617ee4`, `7044976a9acc95acd9325e29f2b97383df27982c`. GitHub currently reports no workflow run or status checks for this head. Therefore the historical test/build/browser results below apply only to their recorded baseline and **must not be represented as verification of these follow-up changes** until CI is run successfully.
 
 ## 1. Decision summary
 
