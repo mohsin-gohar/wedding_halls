@@ -265,6 +265,9 @@ class VendorBookingsBoard extends Component
 
     public function render()
     {
+        $user = Auth::user();
+        abort_unless($user && $user->tenant_id && PermissionMatrix::userCan($user, 'service-bookings.view'), 403);
+
         return view('livewire.vendor-bookings-board')
             ->layout('components.layouts.app', [
                 'title' => 'Service Bookings — Vendor ERP',
