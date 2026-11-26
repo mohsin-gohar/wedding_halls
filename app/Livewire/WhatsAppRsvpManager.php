@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Booking;
 use App\Models\GuestRsvp;
+use App\Support\PermissionMatrix;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -23,8 +24,17 @@ class WhatsAppRsvpManager extends Component
 
     public ?string $simBotReply = null;
 
+    private function authorizeRsvpAction(string $permission): void
+    {
+        $user = Auth::user();
+        abort_unless($user && ! $user->isCustomer(), 403);
+        abort_unless($user->isSuperAdmin() || $user->tenant_id, 403);
+        abort_unless(PermissionMatrix::userCan($user, $permission), 403, 'Missing RSVP permission.');
+    }
+
     public function mount()
     {
+        $this->authorizeRsvpAction('rsvps.view');
         $user = Auth::user();
         if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized. Tenant staff access required.');
@@ -47,6 +57,7 @@ class WhatsAppRsvpManager extends Component
 
     public function updatedSelectedBookingId($val)
     {
+        $this->authorizeRsvpAction('rsvps.view');
         $user = Auth::user();
         $query = GuestRsvp::where('booking_id', $val);
         if ($user && $user->tenant_id && ! $user->isSuperAdmin()) {
@@ -62,6 +73,7 @@ class WhatsAppRsvpManager extends Component
 
     public function addGuest()
     {
+        $this->authorizeRsvpAction('rsvps.manage');
         $this->validate([
             'guest_name' => 'required|string|min:3',
             'phone' => 'required|string|min:7',
@@ -95,6 +107,7 @@ class WhatsAppRsvpManager extends Component
 
     public function simulateWhatsAppReply()
     {
+        $this->authorizeRsvpAction('rsvps.manage');
         $user = Auth::user();
         $canonical = $this->normalizePhone($this->simPhone);
 
@@ -179,6 +192,7 @@ class WhatsAppRsvpManager extends Component
 
     public function render()
     {
+        $this->authorizeRsvpAction('rsvps.view');
         $user = Auth::user();
         $query = Booking::whereIn('status', ['CONFIRMED', 'HOLD'])->latest();
         if ($user && $user->tenant_id) {
