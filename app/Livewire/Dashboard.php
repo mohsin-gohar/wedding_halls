@@ -320,7 +320,7 @@ class Dashboard extends Component
     public function updateLeadStage(string $bookingId, string $newStage): void
     {
         $actor = Auth::user();
-        abort_unless($actor && \\App\\Support\\PermissionMatrix::userCan($actor, 'bookings.update'), 403);
+        abort_unless($actor && \App\Support\PermissionMatrix::userCan($actor, 'bookings.update'), 403);
 
         $tenantId = $actor->tenant_id;
         if (! $tenantId) {
@@ -338,8 +338,8 @@ class Dashboard extends Component
 
         if ($newStage === 'CONFIRMED' && $booking->status !== 'CONFIRMED') {
             try {
-                $booking = app(\\App\\Services\\BookingService::class)->transitionStatus($booking, 'CONFIRMED');
-            } catch (\\App\\Exceptions\\SlotAlreadyBookedException|\\InvalidArgumentException $exception) {
+                $booking = app(\App\Services\BookingService::class)->transitionStatus($booking, 'CONFIRMED');
+            } catch (\App\Exceptions\SlotAlreadyBookedException|\InvalidArgumentException $exception) {
                 $this->crmFeedback = $exception->getMessage();
 
                 return;
