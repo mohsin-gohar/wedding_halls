@@ -46,7 +46,7 @@ class Payment extends Model
 
     public function receivedByUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'received_by_user_id'->withTrashed();
+        return $this->belongsTo(User::class, 'received_by_user_id')->withTrashed();
     }
 
     public static function generateReceiptNumber(): string
