@@ -199,6 +199,12 @@ class ExpenseTracker extends Component
 
         $tenantId = Auth::user()->tenant_id;
         $expense = Expense::where('tenant_id', $tenantId)->findOrFail($this->editingExpenseId);
+        $before = [
+            'category' => $expense->category,
+            'title' => $expense->title,
+            'amount' => (string) $expense->amount,
+            'expense_date' => $expense->expense_date?->format('Y-m-d'),
+        ];
         $originalMethod = (string) ($expense->payment_method ?? '');
         $allowedMethods = $originalMethod === CashOnlyPayments::CASH
             ? CashOnlyPayments::METHODS
@@ -242,10 +248,15 @@ class ExpenseTracker extends Component
 
         AuditLog::log(
             'EXPENSE_UPDATED',
-            "Updated expense [{$expense->title}] of PKR ".number_format($expense->amount),
-            Auth::user()->tenant_id,
-            'Expense',
-            $expense->id
+            'Updated expense. Before: '.json_encode($before, JSON_UNESCAPED_SLASHES).' After: '.json_encode([
+                'category' => $expense->category,
+                'title' => $expense->title,
+                'amount' => (string) $expense->amount,
+                'expense_date' => $expense->expense_date?->format('Y-m-d'),
+            ], JSON_UNESCAPED_SLASHES),
+            $tenantId,
+            Expense::class,
+            (string) $expense->id
         );
 
         $this->feedbackMessage = "Expense [{$expense->title}] updated successfully!";
