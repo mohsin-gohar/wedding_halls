@@ -96,6 +96,7 @@ class DashboardAuthorizationTest extends TestCase
 
         Livewire::actingAs($accountant)
             ->test(Dashboard::class)
+            ->call('openDailyExpenseModal', 'GENERATOR_DIESEL')
             ->set('expenseTitle', 'Dashboard expense atomicity regression')
             ->call('saveDailyExpense')
             ->assertHasNoErrors();
@@ -132,6 +133,7 @@ class DashboardAuthorizationTest extends TestCase
 
         Livewire::actingAs($accountant)
             ->test(Dashboard::class)
+            ->call('openDailyExpenseModal', 'GENERATOR_DIESEL')
             ->set('expenseTitle', 'Dashboard expense atomicity regression')
             ->set('fuelBookingId', $foreignBooking->id)
             ->call('saveDailyExpense')
