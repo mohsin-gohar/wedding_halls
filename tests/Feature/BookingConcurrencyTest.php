@@ -221,6 +221,54 @@ class BookingConcurrencyTest extends TestCase
         app(BookingService::class)->transitionStatus($booking->fresh(), 'CONFIRMED');
     }
 
+    public function test_cancelled_booking_cannot_be_reopened(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $booking = app(BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(273)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Cancelled Booking',
+            'customer_phone' => '+92 300 7774013',
+            'guest_count' => 120,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'INQUIRY',
+        ]);
+
+        $cancelled = app(BookingService::class)->transitionStatus($booking, 'CANCELLED');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        app(BookingService::class)->transitionStatus($cancelled, 'CONFIRMED');
+    }
+
+    public function test_expired_hold_cannot_be_renewed(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $booking = app(BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(274)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Expired Hold Renewal',
+            'customer_phone' => '+92 300 7774014',
+            'guest_count' => 120,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'HOLD',
+        ]);
+
+        $booking->update(['hold_expires_at' => now()->subMinute()]);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        app(BookingService::class)->transitionStatus($booking->fresh(), 'HOLD');
+    }
+
     public function test_floor_staff_cannot_cancel_an_existing_booking_through_the_service(): void
     {
         $hall = Hall::query()->firstOrFail();
