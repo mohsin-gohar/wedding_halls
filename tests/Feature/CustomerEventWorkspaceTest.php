@@ -79,6 +79,32 @@ class CustomerEventWorkspaceTest extends TestCase
         $this->get(route('customer.events'))->assertRedirect(route('login'));
     }
 
+    public function test_role_revocation_blocks_customer_event_workspace_actions_after_mount(): void
+    {
+        $customer = $this->customer();
+        $vendor = $this->vendor('nawab-caterers');
+
+        $component = Livewire::actingAs($customer)
+            ->test(CustomerEventWorkspace::class)
+            ->call('openCreateEventModal')
+            ->assertSet('showEventModal', true);
+
+        // Simulate a platform role change while the existing Livewire session remains open.
+        $customer->update([
+            'role' => 'ROLE_TENANT_OWNER',
+            'tenant_id' => $vendor->id,
+        ]);
+
+        $component
+            ->call('saveEvent')
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('customer_events', [
+            'user_id' => $customer->id,
+            'name' => 'Ali & Fatima Wedding',
+        ]);
+    }
+
     public function test_authenticated_customer_can_open_the_workspace(): void
     {
         $customer = $this->customer();
