@@ -149,6 +149,26 @@ class PayrollPaymentIntegrityTest extends TestCase
         $this->assertSame(127.81, (float) $payroll->net_salary);
     }
 
+    public function test_payroll_editor_rejects_money_values_above_decimal_storage_limit(): void
+    {
+        $payroll = $this->payroll('DRAFT');
+
+        Livewire::actingAs($this->owner)
+            ->test(StaffPayroll::class)
+            ->set('editingPayrollId', $payroll->id)
+            ->set('editBasicSalary', 10_000_000_000)
+            ->set('editOvertimeHours', 0)
+            ->set('editOvertimeRate', 0)
+            ->set('editAllowances', 0)
+            ->set('editDeductions', 0)
+            ->set('editPaymentMethod', 'CASH')
+            ->call('updatePayroll')
+            ->assertHasErrors(['editBasicSalary']);
+
+        $this->assertSame(42000.00, (float) $payroll->fresh()->basic_salary);
+        $this->assertSame(42000.00, (float) $payroll->fresh()->net_salary);
+    }
+
     public function test_paid_payroll_cannot_be_reopened_or_edited(): void
     {
         $payroll = $this->payroll('PAID');
