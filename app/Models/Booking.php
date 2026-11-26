@@ -92,12 +92,12 @@ class Booking extends Model
 
     public function createdByUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by_user_id');
+        return $this->belongsTo(User::class, 'created_by_user_id'->withTrashed();
     }
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'customer_id');
+        return $this->belongsTo(User::class, 'customer_id'->withTrashed();
     }
 
     public function payments(): HasMany
