@@ -77,12 +77,7 @@ class ExpenseTracker extends Component
     public string $voidReason = '';
 
     protected $rules = [
-        'category' => ['required', Rule::in([
-            'GENERATOR_DIESEL', 'WAPDA_ELECTRICITY', 'RAW_FOOD_MEAT',
-            'FRESH_FLORAL_DECOR', 'STAFF_WAGES', 'STAFF_DAILY_WAGES',
-            'MAINTENANCE_REPAIRS', 'CATERING_SUPPLIES', 'MARKETING_ADS',
-            'OTHER', 'CHILLER_AC', 'CLEANING_HYGIENE', 'KITCHEN_GAS', 'MISC_OPERATIONAL',
-        ])],
+        'category' => 'required|in:GENERATOR_DIESEL,WAPDA_ELECTRICITY,RAW_FOOD_MEAT,FRESH_FLORAL_DECOR,STAFF_WAGES,STAFF_DAILY_WAGES,MAINTENANCE_REPAIRS,CATERING_SUPPLIES,MARKETING_ADS,OTHER,CHILLER_AC,CLEANING_HYGIENE,KITCHEN_GAS,MISC_OPERATIONAL',
         'title' => 'required|string|max:150',
         'amount' => 'required|numeric|min:1',
         'expense_date' => 'required|date',
