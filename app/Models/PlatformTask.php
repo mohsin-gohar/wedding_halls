@@ -30,6 +30,6 @@ class PlatformTask extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by_user_id');
+        return $this->belongsTo(User::class, 'created_by_user_id')->withTrashed();
     }
 }
