@@ -147,12 +147,15 @@ class User extends Authenticatable
             || $this->isTenantOwner()
             || $this->isManager()
             || $this->isFrontDesk()
+            || $this->isBookingManager()
             || $this->isFloorStaff();
     }
 
     public function isChef(): bool
     {
-        return $this->isRoleFamily('ROLE_CHEF');
+        return $this->isRoleFamily('ROLE_CHEF')
+            || $this->role === 'ROLE_CATERING_STAFF'
+            || $this->hasRole('ROLE_CATERING_STAFF');
     }
 
     public function isManager(): bool
@@ -202,7 +205,7 @@ class User extends Authenticatable
 
     public function isBookingManager(): bool
     {
-        return $this->isRoleFamily('ROLE_FRONT_DESK');
+        return $this->role === 'ROLE_BOOKING_MANAGER' || $this->hasRole('ROLE_BOOKING_MANAGER');
     }
 
     public function isStaffMember(): bool
@@ -269,6 +272,10 @@ class User extends Authenticatable
             return 'support.center';
         }
 
+        if ($this->isHrManager()) {
+            return 'staff.payroll';
+        }
+
         if ($this->isAccountant()) {
             return 'expenses';
         }
@@ -277,7 +284,7 @@ class User extends Authenticatable
             return config('platform.kitchen_module_enabled') ? 'kitchen.board' : 'inventory';
         }
 
-        if ($this->isFrontDesk() || $this->role === 'ROLE_FLOOR_STAFF' || $this->hasRole('ROLE_FLOOR_STAFF')) {
+        if ($this->isFrontDesk() || $this->isBookingManager() || $this->role === 'ROLE_FLOOR_STAFF' || $this->hasRole('ROLE_FLOOR_STAFF')) {
             return 'calendar';
         }
 
@@ -290,10 +297,12 @@ class User extends Authenticatable
             return 'dashboard';
         }
 
-        // Remaining vendor roles (staff member, photographer, inventory, …)
-        // cannot open the role-guarded ERP dashboard. Land them on the shared
-        // notification surface, which every active tenant staff account may
-        // open, instead of redirecting to a route that bounces them back.
+        if ($this->isInventoryManager()) {
+            return 'inventory';
+        }
+
+        // Remaining vendor roles (staff member, photographer, …) land on the
+        // shared notification surface rather than a route they cannot open.
         return 'notifications';
     }
 
