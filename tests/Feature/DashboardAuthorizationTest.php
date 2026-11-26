@@ -65,7 +65,11 @@ class DashboardAuthorizationTest extends TestCase
         Livewire::actingAs($accountant)
             ->test(Dashboard::class)
             ->assertOk()
-            ->assertSee('Earning / Gross');
+            ->assertSee('Earning / Gross')
+            ->assertDontSee('Lead Management CRM')
+            ->assertDontSee('Live Guest Inquiries')
+            ->assertDontSee('Kitchen KOTs')
+            ->assertDontSee('Workforce Duty');
     }
 
     public function test_service_staff_without_booking_visibility_cannot_open_hall_dashboard(): void
