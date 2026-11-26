@@ -238,7 +238,7 @@ class StaffPayroll extends Component
                 $totalDeductions = round($lateDeduction + $absenceDeduction + $halfDayDeduction + $unpaidLeaveDeduction + $advances + $other, 2);
                 try {
                     $net = PayrollModel::calculateNet((float) $existing->basic_salary, $otHours, $otRate, $allowances + $bonuses, $totalDeductions);
-                } catch (\\InvalidArgumentException $exception) {
+                } catch (\InvalidArgumentException $exception) {
                     $skipped[] = $m->name.' ('.$exception->getMessage().')';
 
                     continue;
@@ -270,7 +270,7 @@ class StaffPayroll extends Component
                 $totalDeductions = round($lateDeduction + $absenceDeduction + $halfDayDeduction + $unpaidLeaveDeduction, 2);
                 try {
                     $net = PayrollModel::calculateNet($defaultBasic, $otHours, $otRate, 0, $totalDeductions);
-                } catch (\\InvalidArgumentException $exception) {
+                } catch (\InvalidArgumentException $exception) {
                     $skipped[] = $m->name.' ('.$exception->getMessage().')';
 
                     continue;
@@ -378,7 +378,7 @@ class StaffPayroll extends Component
                 $this->editAllowances,
                 $this->editDeductions
             );
-        } catch (\\InvalidArgumentException $exception) {
+        } catch (\InvalidArgumentException $exception) {
             $this->addError('editBasicSalary', $exception->getMessage());
         }
     }
@@ -424,7 +424,7 @@ class StaffPayroll extends Component
                 $this->editAllowances,
                 $this->editDeductions
             );
-        } catch (\\InvalidArgumentException $exception) {
+        } catch (\InvalidArgumentException $exception) {
             $this->addError('editBasicSalary', $exception->getMessage());
 
             return;
