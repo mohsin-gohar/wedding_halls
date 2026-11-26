@@ -101,3 +101,6 @@ disabled (`if: false`). No deployment is performed by this change.
 - The original amount, category, date, creator, voiding actor, timestamp and reason remain available in the expense audit register.
 - Voided expenses are excluded from revenue/expense totals and reports by default; the expense register can explicitly show voided entries for audit review.
 - Corrections should be entered as a new expense after the incorrect entry is voided. This preserves the audit trail and avoids silently rewriting financial history.
+
+- Payroll-linked and paid purchase-order expenses cannot be edited or voided from the generic expense register; they must be corrected through their source payroll/procurement workflow.
+- Inventory master items are archived/restored instead of physically deleted, preserving stock movement and procurement references.
