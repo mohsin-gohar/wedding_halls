@@ -260,6 +260,9 @@ jobs:
           {
             echo "APP_ENV=local"
             echo "APP_DEBUG=false"
+            echo "PUBLIC_PAGES_RATE_LIMIT=5000"
+            echo "PUBLIC_AVAILABILITY_RATE_LIMIT=5000"
+            echo "RELOAD_PROTECTION_RATE_LIMIT=5000"
             echo "DB_CONNECTION=mysql"
             echo "DB_HOST=127.0.0.1"
             echo "DB_PORT=3306"
