@@ -57,7 +57,7 @@ class BookingPolicy
         }
 
         if ($user->isCustomer()) {
-            return (string) $booking->customer_id === (string) $user->id;
+            return false;
         }
 
         return $user->tenant_id
