@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Spatie\Permission\Models\Role;
 
 class HostingerDeployCommand extends Command
 {
@@ -68,8 +69,39 @@ class HostingerDeployCommand extends Command
             return self::FAILURE;
         }
 
-        // 4. Seeding is intentionally not available. Demo seeders create
-        //    known credentials and must never run against production data.
+        // 4. Bootstrap only non-demo reference data. VendorCategorySeeder is
+        //    firstOrCreate-only; PermissionMatrixSeeder runs only on a fresh
+        //    RBAC store so later deployments never overwrite custom role grants.
+        $this->info('Bootstrapping non-demo reference data...');
+        try {
+            $exitCode = Artisan::call('db:seed', [
+                '--class' => \Database\Seeders\VendorCategorySeeder::class,
+                '--force' => true,
+            ]);
+            if ($exitCode !== self::SUCCESS) {
+                throw new \\RuntimeException('Vendor category reference seeding failed.');
+            }
+            $this->line(trim(Artisan::output()));
+
+            if (! Role::query()->exists()) {
+                $exitCode = Artisan::call('db:seed', [
+                    '--class' => \Database\Seeders\PermissionMatrixSeeder::class,
+                    '--force' => true,
+                ]);
+                if ($exitCode !== self::SUCCESS) {
+                    throw new \\RuntimeException('Initial RBAC permission seeding failed.');
+                }
+                $this->line(trim(Artisan::output()));
+            } else {
+                $this->line('Existing RBAC roles detected; preserving their configured permissions.');
+            }
+
+            Artisan::call('permission:cache-reset');
+        } catch (\\Throwable $e) {
+            $this->error('Reference-data bootstrap failed: '.$e->getMessage());
+
+            return self::FAILURE;
+        }
 
         // 5. Caching for peak performance on Hostinger LiteSpeed/Apache
         $this->info('Optimizing caches for production...');
