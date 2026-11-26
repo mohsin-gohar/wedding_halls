@@ -91,7 +91,7 @@ class StaffPayroll extends Model
     {
         foreach ([$basic, $otHours, $otRate, $allowances, $deductions] as $amount) {
             if (! is_finite($amount) || $amount < 0) {
-                throw new \\InvalidArgumentException('Payroll values must be finite and non-negative.');
+                throw new \InvalidArgumentException('Payroll values must be finite and non-negative.');
             }
         }
 
@@ -100,7 +100,7 @@ class StaffPayroll extends Model
             || $deductions > self::MAX_MONEY_AMOUNT
             || $otRate > self::MAX_RATE_AMOUNT
             || $otHours > self::MAX_HOURS) {
-            throw new \\InvalidArgumentException('Payroll values exceed the supported storage range.');
+            throw new \InvalidArgumentException('Payroll values exceed the supported storage range.');
         }
 
         // Work in paisa to avoid binary-float drift in payroll totals.
@@ -114,7 +114,7 @@ class StaffPayroll extends Model
         $netCents = max(0, $basicCents + $overtimeCents + $allowanceCents - $deductionCents);
 
         if ($netCents > self::MAX_MONEY_CENTS) {
-            throw new \\InvalidArgumentException('Calculated net salary exceeds the supported storage range.');
+            throw new \InvalidArgumentException('Calculated net salary exceeds the supported storage range.');
         }
 
         return $netCents / 100;
