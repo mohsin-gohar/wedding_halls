@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\Expense;
 use App\Models\Hall;
@@ -18,6 +19,7 @@ use App\Support\CashOnlyPayments;
 use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -310,44 +312,66 @@ class Dashboard extends Component
         $this->syncCategoryAmounts();
 
         $this->validate([
-            'expenseCategory' => 'required|string',
-            'expenseTitle' => 'required|string|max:160',
-            'expenseAmount' => 'required|numeric|min:1',
+            'expenseCategory' => ['required', Rule::in([
+                'GENERATOR_DIESEL', 'STAFF_DAILY_WAGES', 'CLEANING_HYGIENE',
+                'WAPDA_ELECTRICITY', 'CHILLER_AC', 'KITCHEN_GAS', 'MISC_OPERATIONAL',
+            ])],
+            'expenseTitle' => 'required|string|max:150',
+            'expenseAmount' => 'required|numeric|min:1|max:9999999999.99',
             'expenseDate' => 'required|date',
+            'expensePayee' => 'nullable|string|max:150',
+            'expenseReceiptNumber' => 'nullable|string|max:80',
+            'expenseNotes' => 'nullable|string|max:2000',
             'expensePaymentMethod' => CashOnlyPayments::validationRule(),
             'expenseHallId' => ['nullable', Rule::exists('halls', 'id')->where('tenant_id', $tenantId)],
+            'fuelBookingId' => ['nullable', Rule::exists('bookings', 'id')->where('tenant_id', $tenantId)],
+            'fuelDieselLiters' => 'required_if:expenseCategory,GENERATOR_DIESEL|numeric|min:1|max:100000',
+            'fuelRatePerLiter' => 'required_if:expenseCategory,GENERATOR_DIESEL|numeric|min:1|max:1000000',
+            'fuelRunHours' => 'required_if:expenseCategory,GENERATOR_DIESEL|numeric|min:0|max:10000',
+            'electricityUnits' => 'required_if:expenseCategory,WAPDA_ELECTRICITY|numeric|min:1|max:1000000',
+            'electricityUnitRate' => 'required_if:expenseCategory,WAPDA_ELECTRICITY|numeric|min:1|max:100000',
         ]);
 
-        // 1. Create Expense record
-        $expense = Expense::create([
-            'tenant_id' => $tenantId,
-            'hall_id' => $this->expenseHallId,
-            'category' => $this->expenseCategory,
-            'title' => trim($this->expenseTitle),
-            'amount' => (float) $this->expenseAmount,
-            'expense_date' => $this->expenseDate,
-            'payee' => ! empty($this->expensePayee) ? trim($this->expensePayee) : 'Cash Drawer / Vendor',
-            'payment_method' => $this->expensePaymentMethod,
-            'receipt_number' => $this->expenseReceiptNumber,
-            'notes' => $this->expenseNotes,
-            'created_by_user_id' => $user->id,
-        ]);
-
-        // 2. If Generator Fuel or Wapda, log into utility_logs for shift tracking
-        if ($this->expenseCategory === 'GENERATOR_DIESEL' || $this->expenseCategory === 'WAPDA_ELECTRICITY') {
-            UtilityLog::create([
+        $expense = DB::transaction(function () use ($tenantId, $user): Expense {
+            $expense = Expense::create([
                 'tenant_id' => $tenantId,
-                'booking_id' => ! empty($this->fuelBookingId) ? $this->fuelBookingId : null,
-                'generator_run_hours' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelRunHours : 0,
-                'diesel_liters_consumed' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelDieselLiters : 0,
-                'diesel_rate_per_liter' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelRatePerLiter : 0,
-                'wapda_units_consumed' => $this->expenseCategory === 'WAPDA_ELECTRICITY' ? $this->electricityUnits : 0,
-                'wapda_unit_rate' => $this->expenseCategory === 'WAPDA_ELECTRICITY' ? $this->electricityUnitRate : 0,
-                'total_utility_cost' => (float) $this->expenseAmount,
-                'logged_by' => $user->name,
-                'notes' => "Logged from Daily Kharcha Desk. Ref: {$expense->title}",
+                'hall_id' => $this->expenseHallId,
+                'category' => $this->expenseCategory,
+                'title' => trim($this->expenseTitle),
+                'amount' => round((float) $this->expenseAmount, 2),
+                'expense_date' => $this->expenseDate,
+                'payee' => ! empty($this->expensePayee) ? trim($this->expensePayee) : 'Cash Drawer / Vendor',
+                'payment_method' => $this->expensePaymentMethod,
+                'receipt_number' => $this->expenseReceiptNumber,
+                'notes' => $this->expenseNotes,
+                'created_by_user_id' => $user->id,
             ]);
-        }
+
+            if (in_array($this->expenseCategory, ['GENERATOR_DIESEL', 'WAPDA_ELECTRICITY'], true)) {
+                UtilityLog::create([
+                    'tenant_id' => $tenantId,
+                    'booking_id' => $this->fuelBookingId ?: null,
+                    'generator_run_hours' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelRunHours : 0,
+                    'diesel_liters_consumed' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelDieselLiters : 0,
+                    'diesel_rate_per_liter' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelRatePerLiter : 0,
+                    'wapda_units_consumed' => $this->expenseCategory === 'WAPDA_ELECTRICITY' ? $this->electricityUnits : 0,
+                    'wapda_unit_rate' => $this->expenseCategory === 'WAPDA_ELECTRICITY' ? $this->electricityUnitRate : 0,
+                    'total_utility_cost' => round((float) $this->expenseAmount, 2),
+                    'logged_by' => $user->name,
+                    'notes' => "Logged from Daily Kharcha Desk. Ref: {$expense->title}",
+                ]);
+            }
+
+            return $expense;
+        });
+
+        AuditLog::log(
+            'EXPENSE_CREATED',
+            'Recorded expense PKR '.number_format((float) $expense->amount, 2).' ['.$expense->title.'].',
+            $tenantId,
+            Expense::class,
+            (string) $expense->id
+        );
 
         $this->showDailyExpenseModal = false;
         $this->expenseFeedback = 'Daily Kharcha [Rs '.number_format($this->expenseAmount).'] recorded successfully.';
