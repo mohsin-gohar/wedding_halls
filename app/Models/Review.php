@@ -42,7 +42,7 @@ class Review extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function hall(): BelongsTo
@@ -63,7 +63,7 @@ class Review extends Model
 
     public function moderator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'moderated_by');
+        return $this->belongsTo(User::class, 'moderated_by')->withTrashed();
     }
 
     public function scopeApproved($query)
