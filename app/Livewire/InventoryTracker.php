@@ -211,6 +211,8 @@ class InventoryTracker extends Component
 
         $tenantId = Auth::user()->tenant_id;
         $item = InventoryItem::where('tenant_id', $tenantId)->where('is_active', true)->findOrFail($itemId);
+        abort_unless((float) $item->current_stock <= 0, 422, 'Record a stock-out or transfer before archiving an item with remaining stock.');
+
         $name = $item->name;
 
         // Inventory master records are retained for audit continuity even
