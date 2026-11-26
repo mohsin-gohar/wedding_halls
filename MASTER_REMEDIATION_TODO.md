@@ -47,6 +47,7 @@
 - [ ] **FIN-001 — Cash-only policy audit.** Prove all new payment entry points reject non-cash methods; customers can only submit pending records; authorized staff alone verify physical cash. Preserve legacy historical method labels.
 - [ ] **FIN-002 — Financial arithmetic and ledger.** Review every monetary calculation for integer paisa/decimal precision, rounding, negative values, overpayment, partial payment, balance, commissions, wallet, payouts and reconciliation.
 - [ ] **FIN-003 — Idempotency and concurrency.** Test duplicate requests, replay with changed amount/type, simultaneous verification, payout reservation, rollback and audit-log uniqueness.
+- [ ] **FIN-005 — Source-linked ledger corrections. Payroll-, purchase-order- and utility-linked expense rows are protected from generic edits/voids, but the source-specific reversal/correction workflows still need complete UI, permissions, audit evidence and tests.
 - [ ] **FIN-004 — Subscription lifecycle.** Verify trial, complimentary onboarding, activation, expiry, grace period, suspension, renewal, manual payment approval, scheduler execution and tenant access lock.
 - [ ] **VND-001 — Vendor service catalogue.** Run latest pricing validation tests for blank names, NaN/INF, negative amounts, range ordering, required base price and currency normalization.
 - [ ] **VND-002 — Vendor portfolio, documents and locations.** Verify MIME/extension/size validation, private/public storage boundaries, deletion, ownership and multi-location scoping.
