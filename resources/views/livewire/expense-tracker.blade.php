@@ -239,8 +239,6 @@
                         <div>
                             <label class="block text-xs uppercase font-bold text-[#171513] dark:text-[#C6A15B] mb-1">Expense Category *</label>
                             <select wire:model="category" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 font-medium outline-none">
-                                <option value="GENERATOR_DIESEL">Generator Diesel / Fuel</option>
-                                <option value="WAPDA_ELECTRICITY">WAPDA / Commercial Power</option>
                                 <option value="RAW_FOOD_MEAT">Bawarchi Raw Meat &amp; Provisions</option>
                                 <option value="FRESH_FLORAL_DECOR">Fresh Floral &amp; Stage Decor</option>
                                 <option value="STAFF_WAGES">Staff Wages &amp; Daily Labor</option>
@@ -331,8 +329,6 @@
                         <div>
                             <label class="block text-xs uppercase font-bold text-[#171513] dark:text-[#C6A15B] mb-1">Expense Category *</label>
                             <select wire:model="edit_category" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 font-medium outline-none">
-                                <option value="GENERATOR_DIESEL">Generator Diesel / Fuel</option>
-                                <option value="WAPDA_ELECTRICITY">WAPDA / Commercial Power</option>
                                 <option value="RAW_FOOD_MEAT">Bawarchi Raw Meat &amp; Provisions</option>
                                 <option value="FRESH_FLORAL_DECOR">Fresh Floral &amp; Stage Decor</option>
                                 <option value="STAFF_WAGES">Staff Wages &amp; Daily Labor</option>
