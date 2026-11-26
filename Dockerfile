@@ -3,7 +3,7 @@
 ################################################################
 # Stage 1 — build production frontend assets
 ################################################################
-FROM node:20-alpine AS assets
+FROM node:24-alpine AS assets
 
 WORKDIR /app
 
