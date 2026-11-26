@@ -342,13 +342,18 @@ class StaffPayroll extends Component
             'editAllowances' => 'required|numeric|min:0|max:9999999999.99',
             'editDeductions' => 'required|numeric|min:0|max:9999999999.99',
         ]);
-        $this->editNetSalary = PayrollModel::calculateNet(
-            $this->editBasicSalary,
-            $this->editOvertimeHours,
-            $this->editOvertimeRate,
-            $this->editAllowances,
-            $this->editDeductions
-        );
+        try {
+            $this->editNetSalary = PayrollModel::calculateNet(
+                $this->editBasicSalary,
+                $this->editOvertimeHours,
+                $this->editOvertimeRate,
+                $this->editAllowances,
+                $this->editDeductions
+            );
+            $this->errorMessage = null;
+        } catch (\\InvalidArgumentException $exception) {
+            $this->addError('editNetSalary', $exception->getMessage());
+        }
     }
 
     public function updatePayroll(): void
@@ -376,19 +381,26 @@ class StaffPayroll extends Component
             'editPaymentMethod' => ['required', Rule::in($allowedMethods)],
         ]);
 
-        $net = PayrollModel::calculateNet(
-            $this->editBasicSalary,
-            $this->editOvertimeHours,
-            $this->editOvertimeRate,
-            $this->editAllowances,
-            $this->editDeductions
-        );
+        try {
+            $net = PayrollModel::calculateNet(
+                $this->editBasicSalary,
+                $this->editOvertimeHours,
+                $this->editOvertimeRate,
+                $this->editAllowances,
+                $this->editDeductions
+            );
+            $overtimePay = PayrollModel::calculateOvertimePay($this->editOvertimeHours, $this->editOvertimeRate);
+        } catch (\\InvalidArgumentException $exception) {
+            $this->addError('editNetSalary', $exception->getMessage());
+
+            return;
+        }
 
         $update = [
             'basic_salary' => $this->editBasicSalary,
             'overtime_hours' => $this->editOvertimeHours,
             'overtime_rate' => $this->editOvertimeRate,
-            'overtime_pay' => PayrollModel::calculateOvertimePay($this->editOvertimeHours, $this->editOvertimeRate),
+            'overtime_pay' => $overtimePay,
             'allowances' => $this->editAllowances,
             'deductions' => $this->editDeductions,
             'net_salary' => $net,
