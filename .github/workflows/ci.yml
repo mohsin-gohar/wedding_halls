@@ -39,6 +39,7 @@ jobs:
         run: |
           find app config database routes tests scripts -name '*.php' -print0 \
             | xargs -0 -n1 -P4 php -l
+          bash -n deploy/deploy.sh
 
       - name: Pint style check
         run: vendor/bin/pint --test
@@ -131,6 +132,12 @@ jobs:
             echo "REDIS_HOST=127.0.0.1"
             echo "REDIS_PORT=6379"
           } >> .env
+
+      - name: Validate Docker Compose configuration
+        env:
+          DB_ROOT_PASSWORD: ci-root-password
+          DB_PASSWORD: ci-db-password
+        run: docker compose config --quiet
 
       - name: Verify MySQL is ready
         run: |
