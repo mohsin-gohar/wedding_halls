@@ -231,7 +231,7 @@ class PackageManager extends Component
         $this->validate([
             'packageName' => 'required|string|min:3|max:120',
             'perHeadPrice' => 'required|numeric|min:500|max:99999999.99',
-            'minGuests' => 'required|integer|min:20',
+            'minGuests' => 'required|integer|min:20|max:1000000',
             'packageDescription' => 'nullable|string|max:1000',
             'menuItems' => 'required|array|min:1|max:100',
             'menuItems.*' => 'required|string|max:120',
