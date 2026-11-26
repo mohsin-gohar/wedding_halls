@@ -351,7 +351,7 @@ class StaffPayroll extends Component
                 $this->editDeductions
             );
             $this->errorMessage = null;
-        } catch (\\InvalidArgumentException $exception) {
+        } catch (\InvalidArgumentException $exception) {
             $this->addError('editNetSalary', $exception->getMessage());
         }
     }
@@ -390,7 +390,7 @@ class StaffPayroll extends Component
                 $this->editDeductions
             );
             $overtimePay = PayrollModel::calculateOvertimePay($this->editOvertimeHours, $this->editOvertimeRate);
-        } catch (\\InvalidArgumentException $exception) {
+        } catch (\InvalidArgumentException $exception) {
             $this->addError('editNetSalary', $exception->getMessage());
 
             return;
