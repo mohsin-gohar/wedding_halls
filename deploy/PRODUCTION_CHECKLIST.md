@@ -63,8 +63,8 @@ short enough to copy into a release ticket.
       views, events).
 - [ ] `php artisan queue:restart` so workers load the new code.
 - [ ] Queue worker logs show successful jobs after deploy.
-- [ ] `php artisan schedule:list` shows `subscriptions:check-expiry` and any
-      other expected tasks.
+- [ ] `php artisan schedule:list` shows `subscriptions:check-expiry` (daily) and
+      `bookings:expire-holds` (hourly).
 - [ ] Cron entry is present for the deploy user:
       `* * * * * cd /var/www/riwaj-grand && php artisan schedule:run >> /dev/null 2>&1`.
 - [ ] Redis eviction policy is appropriate for cache + sessions + queues
