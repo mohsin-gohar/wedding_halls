@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Expense;
 use App\Models\Hall;
 use App\Models\PurchaseOrder;
+use App\Models\UtilityLog;
 use App\Support\CashOnlyPayments;
 use App\Support\PermissionMatrix;
 use Carbon\Carbon;
@@ -272,6 +273,10 @@ class ExpenseTracker extends Component
             abort(403, 'Payroll-linked expenses must be corrected through the payroll workflow.');
         }
 
+        if (UtilityLog::where('expense_id', $expense->id)->exists()) {
+            abort(403, 'Utility-linked expenses must be corrected through the utility workflow.');
+        }
+
         if ($expense->receipt_number && PurchaseOrder::where('tenant_id', $expense->tenant_id)
             ->where('po_number', $expense->receipt_number)
             ->where('status', 'PAID')
@@ -393,6 +398,7 @@ class ExpenseTracker extends Component
         return view('livewire.expense-tracker', [
             'expenses' => $expenses,
             'paidPoNumbers' => PurchaseOrder::where('tenant_id', $tenantId)->where('status', 'PAID')->pluck('po_number'),
+            'utilityExpenseIds' => UtilityLog::where('tenant_id', $tenantId)->whereNotNull('expense_id')->pluck('expense_id'),
             'halls' => $halls,
             'totalExpenses' => $totalExpenses,
             'totalRevenue' => $totalRevenue,
