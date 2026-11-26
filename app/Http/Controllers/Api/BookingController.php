@@ -89,8 +89,8 @@ class BookingController extends ApiController
             'event_date' => 'required|date|after:today',
             'slot_type' => 'required|in:AFTERNOON,EVENING,NIGHT,FULL_DAY',
             'guest_count' => 'required|integer|min:1|max:10000',
-            'customer_name' => 'required|string|max:100',
-            'customer_phone' => 'required|string|max:25',
+            'customer_name' => $user->isCustomer() ? 'nullable|string|max:100' : 'required|string|max:100',
+            'customer_phone' => $user->isCustomer() ? 'nullable|string|max:25' : 'required|string|max:25',
             'customer_email' => 'nullable|email|max:100',
             'customer_cnic' => 'nullable|string|max:20',
             'package_id' => 'nullable|uuid|exists:packages,id',
@@ -102,6 +102,12 @@ class BookingController extends ApiController
         }
 
         if ($user->isCustomer()) {
+            if (blank($user->phone)) {
+                return response()->json([
+                    'errors' => ['phone' => ['Add a contact phone number to your customer profile before booking.']],
+                ], 422);
+            }
+
             // Customers may only reserve halls that are currently listed on
             // the public marketplace; knowing a hidden hall UUID is not access.
             $hall = Hall::query()
