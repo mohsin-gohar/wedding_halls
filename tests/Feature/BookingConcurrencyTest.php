@@ -7,7 +7,9 @@ use App\Models\Booking;
 use App\Models\GuestRsvp;
 use App\Models\Hall;
 use App\Models\User;
+use App\Models\User;
 use App\Services\BookingService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -168,6 +170,62 @@ class BookingConcurrencyTest extends TestCase
             'event_date' => $individualShiftDate,
             'customer_name' => 'Conflicting Full Day Client',
             'customer_phone' => '+92 300 6666666',
+        ]);
+    }
+
+    public function test_floor_staff_cannot_create_bookings_by_calling_the_service_directly(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $floorStaff = User::factory()->create([
+            'tenant_id' => $hall->tenant_id,
+            'role' => 'ROLE_FLOOR_STAFF',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($floorStaff);
+
+        $this->expectException(AuthorizationException::class);
+
+        app(BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(250)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Unauthorized Floor Staff',
+            'customer_phone' => '+92 300 7774001',
+            'guest_count' => 150,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'CONFIRMED',
+        ]);
+    }
+
+    public function test_customer_cannot_create_a_confirmed_booking_directly(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $customer = User::factory()->create([
+            'role' => 'ROLE_CUSTOMER',
+            'status' => 'ACTIVE',
+            'phone' => '+92 300 7774002',
+        ]);
+
+        $this->actingAs($customer);
+
+        $this->expectException(AuthorizationException::class);
+
+        app(BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(251)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'API Customer',
+            'customer_phone' => '+92 300 7774002',
+            'guest_count' => 150,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'CONFIRMED',
         ]);
     }
 
