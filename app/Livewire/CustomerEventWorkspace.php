@@ -75,7 +75,7 @@ class CustomerEventWorkspace extends Component
     {
         $user = Auth::user();
 
-        if (! $user || ! $user->isCustomer()) {
+        if ($user === null || $user->isCustomer() === false) {
             abort(403, 'Unauthorized. The event workspace is available to customer accounts only.');
         }
 
@@ -97,7 +97,7 @@ class CustomerEventWorkspace extends Component
 
     public function getSelectedEventProperty(): ?CustomerEvent
     {
-        if (! $this->selectedEventId) {
+        if ($this->selectedEventId === null || $this->selectedEventId === '') {
             return null;
         }
 
@@ -108,7 +108,7 @@ class CustomerEventWorkspace extends Component
     {
         $event = $this->ownedSelectedEvent();
 
-        if (! $event) {
+        if ($event === null) {
             return collect();
         }
 
@@ -124,7 +124,7 @@ class CustomerEventWorkspace extends Component
     {
         $event = $this->ownedSelectedEvent();
 
-        if (! $event) {
+        if ($event === null) {
             return collect();
         }
 
@@ -139,7 +139,7 @@ class CustomerEventWorkspace extends Component
     {
         $event = $this->ownedSelectedEvent();
 
-        if (! $event) {
+        if ($event === null) {
             return collect();
         }
 
@@ -237,7 +237,7 @@ class CustomerEventWorkspace extends Component
     {
         $event = $this->ownedEvent($eventId);
 
-        if (! $event) {
+        if ($event === null) {
             abort(404, 'Event not found.');
         }
 
@@ -294,7 +294,7 @@ class CustomerEventWorkspace extends Component
         if ($this->isEditingEvent) {
             $event = $this->ownedEvent((string) $this->selectedEventId);
 
-            if (! $event) {
+            if ($event === null) {
                 abort(404, 'Event not found.');
             }
 
@@ -313,7 +313,7 @@ class CustomerEventWorkspace extends Component
     {
         $event = $this->ownedEvent($eventId);
 
-        if (! $event) {
+        if ($event === null) {
             abort(404, 'Event not found.');
         }
 
@@ -369,7 +369,7 @@ class CustomerEventWorkspace extends Component
             ->where('id', $taskId)
             ->first();
 
-        if (! $task) {
+        if ($task === null) {
             abort(404, 'Task not found.');
         }
 
@@ -403,7 +403,7 @@ class CustomerEventWorkspace extends Component
             ->where('marketplace_visible', true)
             ->first();
 
-        if (! $tenant || app(SubscriptionService::class)->isLocked($tenant)) {
+        if ($tenant === null || app(SubscriptionService::class)->isLocked($tenant)) {
             $this->errorMessage = 'That vendor is not available for shortlisting.';
 
             return;
@@ -432,7 +432,7 @@ class CustomerEventWorkspace extends Component
             ->where('id', $vendorRowId)
             ->first();
 
-        if (! $row) {
+        if ($row === null) {
             abort(404, 'Vendor entry not found.');
         }
 
@@ -456,7 +456,7 @@ class CustomerEventWorkspace extends Component
             ->where('id', $vendorRowId)
             ->first();
 
-        if (! $row) {
+        if ($row === null) {
             abort(404, 'Vendor entry not found.');
         }
 
@@ -476,7 +476,7 @@ class CustomerEventWorkspace extends Component
             ->where('customer_id', Auth::id())
             ->first();
 
-        if (! $booking) {
+        if ($booking === null) {
             abort(404, 'Booking not found.');
         }
 
@@ -511,7 +511,7 @@ class CustomerEventWorkspace extends Component
             ->where('customer_event_id', $event->id)
             ->first();
 
-        if (! $booking) {
+        if ($booking === null) {
             abort(404, 'Booking not found.');
         }
 
@@ -532,13 +532,13 @@ class CustomerEventWorkspace extends Component
     private function currentEvent(): CustomerEvent
     {
         $this->assertCustomer();
-        if (! $this->selectedEventId) {
+        if ($this->selectedEventId === null || $this->selectedEventId === '') {
             abort(400, 'Select an event first.');
         }
 
         $event = $this->ownedEvent($this->selectedEventId);
 
-        if (! $event) {
+        if ($event === null) {
             abort(404, 'Event not found.');
         }
 
@@ -557,7 +557,7 @@ class CustomerEventWorkspace extends Component
     /** Ownership resolver for computed properties: no data leaks on a tampered id. */
     private function ownedSelectedEvent(): ?CustomerEvent
     {
-        if (! $this->selectedEventId) {
+        if ($this->selectedEventId === null || $this->selectedEventId === '') {
             return null;
         }
 
