@@ -177,14 +177,7 @@
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
                                                 <span>Archive</span>
                                             </button>
-                                            @if(auth()->user()->isTenantOwner())
-                                                <button type="button" wire:click="purgeStaffMember({{ $member->id }})"
-                                                        wire:confirm="Permanently purge {{ $member->name }} from the database? This deletes this user to save server space and cannot be undone."
-                                                        class="tbtn tbtn-red" title="Permanently Delete">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                    <span>Purge</span>
-                                                </button>
-                                            @endif
+                                            
                                         @else
                                             <span class="text-stone-400 dark:text-stone-500 font-mono text-[10px] uppercase px-2 py-1 rounded bg-stone-100 dark:bg-white/5 border border-stone-200 dark:border-white/10">Protected</span>
                                         @endif
@@ -194,10 +187,7 @@
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                                                 <span>Restore</span>
                                             </button>
-                                            <button type="button" wire:click="purgeStaffMember({{ $member->id }})" wire:confirm="Permanently purge {{ $member->name }} from the database completely?" class="tbtn tbtn-red">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                <span>Purge</span>
-                                            </button>
+                                            
                                         @else
                                             <span class="text-stone-400 text-[10px] uppercase font-mono px-2 py-1 rounded bg-stone-100 dark:bg-white/5 border border-stone-200 dark:border-white/10">Archived</span>
                                         @endif
@@ -466,14 +456,7 @@
                                     <span>Archive</span>
                                 </button>
 
-                                @if(auth()->user()->isTenantOwner())
-                                    <button type="button" wire:click="purgeStaffMember({{ $profileUser->id }})" 
-                                            wire:confirm="PERMANENTLY PURGE {{ $profileUser->name }} from the server? All records for this user will be deleted to free up server database storage. This action cannot be undone."
-                                            class="tbtn tbtn-red" title="Purge Record">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                        <span>Purge From Server</span>
-                                    </button>
-                                @endif
+                                
                             @endif
                         
                         @else
@@ -482,11 +465,7 @@
                                         class="border border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-2 text-xs font-mono font-bold uppercase hover:bg-emerald-500/20 transition cursor-pointer">
                                     ♻️ Restore Access
                                 </button>
-                                <button type="button" wire:click="purgeStaffMember({{ $profileUser->id }})" 
-                                        wire:confirm="Permanently purge {{ $profileUser->name }} from the server database completely?"
-                                        class="border border-red-500/40 bg-red-500/10 text-red-600 dark:text-red-400 px-3 py-2 text-xs font-mono font-bold uppercase hover:bg-red-500/20 transition cursor-pointer">
-                                    🗑️ Purge From Server
-                                </button>
+                                
                             @endif
                         @endif
                     </div>
