@@ -356,4 +356,38 @@ class VendorErpBoardsTest extends TestCase
         ]);
     }
 
+
+    public function test_vendor_quotes_board_never_exposes_competitor_bids_or_prefills_them(): void
+    {
+        $caterer = $this->cateringVendor();
+        $photographer = $this->photographyVendor();
+        $customer = $this->customer();
+        $catererOwner = $this->vendorOwner($caterer);
+        $photographerOwner = $this->vendorOwner($photographer);
+        $rfq = $this->openRfq($caterer, $customer);
+
+        RfqTarget::create([
+            'rfq_id' => $rfq->id,
+            'tenant_id' => $photographer->id,
+        ]);
+
+        RfqBid::create([
+            'rfq_id' => $rfq->id,
+            'vendor_id' => $catererOwner->id,
+            'bid_amount' => 2345678,
+            'proposal' => 'Confidential competitor quotation that must not be visible.',
+            'status' => 'PENDING',
+        ]);
+
+        $component = Livewire::actingAs($photographerOwner)
+            ->test(VendorQuotesBoard::class)
+            ->assertSee($rfq->title)
+            ->assertDontSee('2,345,678')
+            ->assertDontSee($catererOwner->name);
+
+        $component->call('openBidModal', $rfq->id)
+            ->assertSet('bidAmount', 0.0)
+            ->assertSet('bidProposal', '');
+    }
+
 }
