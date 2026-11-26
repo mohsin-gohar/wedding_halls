@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\Package;
 use App\Services\BookingService;
+use App\Support\PermissionMatrix;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -35,8 +36,12 @@ class BookingController extends ApiController
             $this->assertPermission($user, 'bookings.view');
         }
 
-        $query = Booking::with(['hall.venue', 'package', 'payments']);
+        $relations = ['hall.venue', 'package'];
+        if ($user->isCustomer() || PermissionMatrix::userCan($user, 'payments.view')) {
+            $relations[] = 'payments';
+        }
 
+        $query = Booking::with($relations);
         $query = $this->scopeToPrincipal($query, $user);
 
         if ($request->filled('status')) {
@@ -66,12 +71,18 @@ class BookingController extends ApiController
             $this->assertPermission($user, 'bookings.view');
         }
 
-        $relations = ['hall.venue', 'package', 'payments', 'rsvps', 'floorPlan'];
+        $relations = ['hall.venue', 'package'];
 
-        // Kitchen production tickets are internal operational records. They
-        // are never serialized to customer principals, even for their own
-        // booking (the document endpoint applies the same restriction).
-        if (! $user->isCustomer()) {
+        if ($user->isCustomer() || PermissionMatrix::userCan($user, 'payments.view')) {
+            $relations[] = 'payments';
+        }
+        if ($user->isCustomer() || PermissionMatrix::userCan($user, 'rsvps.view')) {
+            $relations[] = 'rsvps';
+        }
+        if (PermissionMatrix::userCan($user, 'floor-plans.view')) {
+            $relations[] = 'floorPlan';
+        }
+        if (PermissionMatrix::userCan($user, 'kitchen.view')) {
             $relations[] = 'kitchenKot';
         }
 
