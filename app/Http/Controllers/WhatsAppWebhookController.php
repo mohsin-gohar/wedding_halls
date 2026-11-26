@@ -152,11 +152,11 @@ class WhatsAppWebhookController extends Controller
             $status = 'DECLINED';
             $count = 0;
             $replyText = "Thank you {$rsvp->guest_name}. We have noted your decline for the wedding event.";
-        } elseif (preg_match('/(?:\\battending\\b|\\byes\\b|\\baunga\\b|\\bhaan\\b|\\bpersons?\\b|\\bpeople\\b|\\bguests?\\b|\\bhead\\b)[\\s:]*(\\d+)?/i', $messageBody, $matches)
+        } elseif (preg_match('/(?:\\b(?:attending|yes|aunga|haan)\\b(?:[\\s:]*(\\d+))?|\\b(?:persons?|people|guests?|head)\\b[\\s:]*(\\d+))/i', $messageBody, $matches)
             || preg_match('/^(\\d+)$/', $messageBody, $matches)) {
             $status = 'ATTENDING';
-            $count = isset($matches[1]) && $matches[1] !== ''
-                ? max(1, min(20, (int) $matches[1]))
+            $count = isset($matches[1]) && $matches[1] !== '' || isset($matches[2]) && $matches[2] !== ''
+                ? max(1, min(20, (int) ($matches[1] !== '' ? $matches[1] : $matches[2]))
                 : 1;
             $replyText = "Thank you {$rsvp->guest_name}! Your attendance with {$count} guest(s) has been confirmed on the hall guest list.";
         } else {
