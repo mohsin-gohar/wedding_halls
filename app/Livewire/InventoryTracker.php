@@ -102,13 +102,13 @@ class InventoryTracker extends Component
             'po.paid' => 'expenses.manage',
             default => 'inventory.manage',
         };
-        abort_unless(
-            PermissionMatrix::userCan($user, $permission),
-            403,
-            $permission === 'inventory.view'
-                ? 'Inventory view permission is required.'
-                : 'Inventory management permission is required for this action.'
-        );
+        $message = match ($permission) {
+            'inventory.view' => 'Inventory view permission is required.',
+            'expenses.manage' => 'Expense management permission is required to settle a purchase order.',
+            default => 'Inventory management permission is required for this action.',
+        };
+
+        abort_unless(PermissionMatrix::userCan($user, $permission), 403, $message);
     }
 
     public function setTab(string $tab)
