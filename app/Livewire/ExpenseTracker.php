@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\Expense;
 use App\Models\Hall;
+use App\Models\PurchaseOrder;
 use App\Support\CashOnlyPayments;
 use App\Support\PermissionMatrix;
 use Carbon\Carbon;
@@ -263,10 +264,25 @@ class ExpenseTracker extends Component
         $this->closeEditModal();
     }
 
+    private function assertExpenseCanBeVoided(Expense $expense): void
+    {
+        if ($expense->payroll_id) {
+            abort(403, 'Payroll-linked expenses must be reversed through the payroll workflow.');
+        }
+
+        if ($expense->receipt_number && PurchaseOrder::where('tenant_id', $expense->tenant_id)
+            ->where('po_number', $expense->receipt_number)
+            ->where('status', 'PAID')
+            ->exists()) {
+            abort(403, 'Purchase-order expenses must be reversed through the procurement workflow.');
+        }
+    }
+
     public function openVoidModal(string $expenseId): void
     {
         $this->authorizeExpenseManager();
-        Expense::where('tenant_id', Auth::user()->tenant_id)->findOrFail($expenseId);
+        $expense = Expense::where('tenant_id', Auth::user()->tenant_id)->findOrFail($expenseId);
+        $this->assertExpenseCanBeVoided($expense);
         $this->voidingExpenseId = $expenseId;
         $this->voidReason = '';
         $this->errorMessage = null;
@@ -298,6 +314,8 @@ class ExpenseTracker extends Component
             if ($expense->is_voided) {
                 return;
             }
+
+            $this->assertExpenseCanBeVoided($expense);
 
             $expense->forceFill([
                 'is_voided' => true,
