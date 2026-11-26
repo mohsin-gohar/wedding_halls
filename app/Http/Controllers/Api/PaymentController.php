@@ -135,7 +135,11 @@ class PaymentController extends ApiController
     {
         $user = $this->apiUser($request);
 
-        $this->assertPermission($user, 'payments.view');
+        // Customers may read only their own receipts below; vendor and
+        // platform staff must hold the explicit financial-read permission.
+        if (! $user->isCustomer()) {
+            $this->assertPermission($user, 'payments.view');
+        }
 
         $query = Payment::with('booking', 'receivedByUser');
 
