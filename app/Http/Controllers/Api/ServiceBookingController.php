@@ -21,6 +21,7 @@ class ServiceBookingController extends ApiController
     public function index(Request $request)
     {
         $user = $this->apiUser($request);
+        $this->assertPermission($user, 'service-bookings.view');
 
         $query = ServiceBooking::with(['tenant:id,name,slug', 'vendorCategory:id,name', 'customer:id,name,email']);
 
@@ -44,6 +45,7 @@ class ServiceBookingController extends ApiController
     public function show(Request $request, string $id)
     {
         $user = $this->apiUser($request);
+        $this->assertPermission($user, 'service-bookings.view');
 
         $query = ServiceBooking::with([
             'tenant:id,name,slug',
