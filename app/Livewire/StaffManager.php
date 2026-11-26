@@ -408,66 +408,6 @@ class StaffManager extends Component
         }
     }
 
-    public function purgeStaffMember(int $userId): void
-    {
-        $this->authorizeStaffManager();
-        $currentUser = Auth::user();
-        if ($currentUser->id === $userId) {
-            $this->errorMessage = 'You cannot delete your own user account.';
-
-            return;
-        }
-
-        $staff = User::where('tenant_id', $currentUser->tenant_id)
-            ->withTrashed()
-            ->findOrFail($userId);
-
-        if ($staff->isTenantOwner()) {
-            $this->errorMessage = 'The primary venue business owner account cannot be permanently deleted.';
-
-            return;
-        }
-
-        if (! $currentUser->isTenantOwner() && $staff->isManager()) {
-            abort(403, 'Only the venue owner can permanently purge a manager account.');
-        }
-
-        $staffName = $staff->name;
-
-        // Clean up linked HR history strictly scoped to the current tenant.
-        // Corrections and leave applications would otherwise point at a user
-        // that no longer exists after a permanent purge.
-        $tenantId = $currentUser->tenant_id;
-        $attendanceIds = StaffAttendance::where('tenant_id', $tenantId)
-            ->where('user_id', $userId)
-            ->pluck('id');
-
-        AttendanceCorrection::where('tenant_id', $tenantId)
-            ->where(function ($query) use ($userId, $attendanceIds) {
-                $query->where('user_id', $userId)
-                    ->orWhereIn('attendance_id', $attendanceIds);
-            })
-            ->delete();
-        StaffAttendance::where('tenant_id', $tenantId)->where('user_id', $userId)->delete();
-        StaffPayroll::where('tenant_id', $tenantId)->where('user_id', $userId)->delete();
-        StaffLeave::where('tenant_id', $tenantId)->where('user_id', $userId)->delete();
-
-        $staff->forceDelete();
-
-        AuditLog::log(
-            'STAFF_PERMANENTLY_PURGED',
-            "Staff user [{$staffName}] permanently purged by [{$currentUser->name}] to free server storage.",
-            $currentUser->tenant_id,
-            'User',
-            (string) $userId
-        );
-
-        $this->showProfileModal = false;
-        $this->profileStaffId = null;
-        $this->profileStats = null;
-        $this->feedbackMessage = "Staff member [{$staffName}] and records permanently deleted from server.";
-    }
-
     public function render()
     {
         $this->authorizeStaffManager();
