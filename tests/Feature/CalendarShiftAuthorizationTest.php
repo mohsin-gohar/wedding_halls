@@ -72,4 +72,18 @@ class CalendarShiftAuthorizationTest extends TestCase
             ->assertSet('isStaff', true);
     }
 
+    public function test_service_staff_without_booking_visibility_cannot_open_tenant_calendar(): void
+    {
+        $tenant = Tenant::query()->where('slug', 'riwaj-grand')->firstOrFail();
+        $serviceStaff = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_SERVICE_STAFF',
+            'status' => 'ACTIVE',
+        ]);
+
+        Livewire::actingAs($serviceStaff)
+            ->test(CalendarShiftGrid::class)
+            ->assertStatus(403);
+    }
+
 }
