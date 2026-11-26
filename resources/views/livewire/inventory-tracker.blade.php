@@ -180,8 +180,8 @@
                                             Edit
                                         </button>
                                         <button wire:click="deleteItem('{{ $i->id }}')" 
-                                                onclick="return confirm('Delete this inventory item?') || event.stopImmediatePropagation()"
-                                                class="tbtn tbtn-red" title="Delete Item">
+                                                onclick="return confirm('Archive this inventory item? It will be hidden from active stock lists while its history is retained.') || event.stopImmediatePropagation()"
+                                                class="tbtn tbtn-red" title="Archive Item">
                                             Del
                                         </button>
                                     </div>
