@@ -173,6 +173,56 @@ class BookingConcurrencyTest extends TestCase
         ]);
     }
 
+    public function test_expired_tenant_cannot_confirm_an_existing_inquiry(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $booking = app(BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(260)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Expired Tenant Inquiry',
+            'customer_phone' => '+92 300 7774003',
+            'guest_count' => 150,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'INQUIRY',
+        ]);
+
+        \App\Models\Tenant::query()->findOrFail($hall->tenant_id)->update([
+            'subscription_status' => 'EXPIRED',
+        ]);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        app(BookingService::class)->transitionStatus($booking, 'CONFIRMED');
+    }
+
+    public function test_past_event_cannot_be_promoted_to_hold_or_confirmed(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $booking = app(BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(261)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Past Event Inquiry',
+            'customer_phone' => '+92 300 7774004',
+            'guest_count' => 150,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'INQUIRY',
+        ]);
+
+        $booking->update(['event_date' => now()->subDay()->toDateString()]);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        app(BookingService::class)->transitionStatus($booking->fresh(), 'HOLD');
+    }
+
     public function test_floor_staff_cannot_create_bookings_by_calling_the_service_directly(): void
     {
         $hall = Hall::query()->firstOrFail();
