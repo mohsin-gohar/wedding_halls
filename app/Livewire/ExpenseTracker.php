@@ -80,12 +80,12 @@ class ExpenseTracker extends Component
     protected $rules = [
         'category' => 'required|in:GENERATOR_DIESEL,WAPDA_ELECTRICITY,RAW_FOOD_MEAT,FRESH_FLORAL_DECOR,STAFF_WAGES,STAFF_DAILY_WAGES,MAINTENANCE_REPAIRS,CATERING_SUPPLIES,MARKETING_ADS,OTHER,CHILLER_AC,CLEANING_HYGIENE,KITCHEN_GAS,MISC_OPERATIONAL',
         'title' => 'required|string|max:150',
-        'amount' => 'required|numeric|min:1',
+        'amount' => 'required|numeric|min:1|max:9999999999.99',
         'expense_date' => 'required|date',
         'payee' => 'nullable|string|max:150',
         'payment_method' => 'required|in:CASH',
         'receipt_number' => 'nullable|string|max:80',
-        'notes' => 'nullable|string',
+        'notes' => 'nullable|string|max:2000',
     ];
 
     public function mount()
@@ -222,12 +222,12 @@ class ExpenseTracker extends Component
             'OTHER', 'CHILLER_AC', 'CLEANING_HYGIENE', 'KITCHEN_GAS', 'MISC_OPERATIONAL',
         ])],
             'edit_title' => 'required|string|max:150',
-            'edit_amount' => 'required|numeric|min:1',
+            'edit_amount' => 'required|numeric|min:1|max:9999999999.99',
             'edit_expense_date' => 'required|date',
             'edit_payee' => 'nullable|string|max:150',
             'edit_payment_method' => ['required', Rule::in($allowedMethods)],
             'edit_receipt_number' => 'nullable|string|max:80',
-            'edit_notes' => 'nullable|string',
+            'edit_notes' => 'nullable|string|max:2000',
         ]);
 
         $update = [
