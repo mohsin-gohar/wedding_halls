@@ -1,7 +1,7 @@
 <?php
 
 $lock = json_decode(file_get_contents(dirname(__DIR__).'/composer.lock'), true, 512, JSON_THROW_ON_ERROR);
-$packages = collect($lock['packages'] ?? []);
+$packages = $lock['packages'] ?? [];
 
 $minimums = [
     'symfony/http-foundation' => '7.4.24',
@@ -12,7 +12,13 @@ $minimums = [
 
 $failures = [];
 foreach ($minimums as $name => $minimum) {
-    $package = $packages->firstWhere('name', $name);
+    $package = null;
+    foreach ($packages as $candidate) {
+        if (($candidate['name'] ?? null) === $name) {
+            $package = $candidate;
+            break;
+        }
+    }
     if ($package === null) {
         $failures[] = "{$name} is missing from composer.lock";
 
