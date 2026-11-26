@@ -120,12 +120,12 @@ class StaffPayroll extends Component
     {
         $this->authorizePayrollManager();
         $this->validate([
-            'policyOvertimeRate' => 'required|numeric|min:0',
-            'policyLateDeduction' => 'required|numeric|min:0',
-            'policyAbsenceDeduction' => 'required|numeric|min:0',
-            'policyHalfDayDeduction' => 'required|numeric|min:0',
-            'policyUnpaidLeaveDeduction' => 'required|numeric|min:0',
-            'policyDefaultSalary' => 'nullable|numeric|min:1',
+            'policyOvertimeRate' => 'required|numeric|min:0|max:99999999.99',
+            'policyLateDeduction' => 'required|numeric|min:0|max:99999999.99',
+            'policyAbsenceDeduction' => 'required|numeric|min:0|max:99999999.99',
+            'policyHalfDayDeduction' => 'required|numeric|min:0|max:99999999.99',
+            'policyUnpaidLeaveDeduction' => 'required|numeric|min:0|max:99999999.99',
+            'policyDefaultSalary' => 'nullable|numeric|min:1|max:9999999999.99',
         ]);
 
         $tenantId = Auth::user()->tenant_id;
@@ -359,12 +359,13 @@ class StaffPayroll extends Component
             : [$originalMethod, CashOnlyPayments::CASH];
 
         $this->validate([
-            'editBasicSalary' => 'required|numeric|min:0',
+            'editBasicSalary' => 'required|numeric|min:0|max:9999999999.99',
             'editOvertimeHours' => 'required|numeric|min:0|max:'.AttendanceComponent::MAX_OVERTIME_HOURS,
-            'editOvertimeRate' => 'required|numeric|min:0',
-            'editAllowances' => 'required|numeric|min:0',
-            'editDeductions' => 'required|numeric|min:0',
+            'editOvertimeRate' => 'required|numeric|min:0|max:99999999.99',
+            'editAllowances' => 'required|numeric|min:0|max:9999999999.99',
+            'editDeductions' => 'required|numeric|min:0|max:9999999999.99',
             'editPaymentMethod' => ['required', Rule::in($allowedMethods)],
+            'editNotes' => 'nullable|string|max:2000',
         ]);
 
         if ($record->status === 'PAID') {
