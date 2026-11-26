@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\Dashboard;
 use App\Models\Booking;
+use App\Models\Expense;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -108,8 +109,13 @@ class DashboardAuthorizationTest extends TestCase
             'payment_method' => 'CASH',
         ]);
 
+        $expense = Expense::where('tenant_id', $tenant->id)
+            ->where('title', 'Dashboard expense atomicity regression')
+            ->firstOrFail();
+
         $this->assertDatabaseHas('utility_logs', [
             'tenant_id' => $tenant->id,
+            'expense_id' => $expense->id,
             'total_utility_cost' => 14250,
         ]);
     }
