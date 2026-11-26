@@ -366,7 +366,20 @@ class PermissionMatrix
         // Stale or manually over-granted Spatie permissions must not silently
         // expand a role beyond its declared least-privilege capabilities.
         if ($role !== null && array_key_exists($role, self::ROLE_GROUPS)) {
-            return in_array($permission, self::permissionsForRole($role), true);
+            $grants = self::permissionsForRole($role);
+
+            if (in_array($permission, $grants, true)) {
+                return true;
+            }
+
+            foreach ($grants as $grant) {
+                if (str_ends_with($grant, '.*')
+                    && str_starts_with($permission, substr($grant, 0, -1))) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         try {
