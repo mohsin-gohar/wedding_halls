@@ -8,6 +8,14 @@ use App\Support\PermissionMatrix;
 
 class ServiceBookingPolicy
 {
+    public function viewAny(User $user): bool
+    {
+        return $user->isSuperAdmin()
+            || $user->isCustomer()
+            || PermissionMatrix::userCan($user, 'service-bookings.view');
+    }
+
+
     public function view(User $user, ServiceBooking $booking): bool
     {
         if ($user->isSuperAdmin()) {
