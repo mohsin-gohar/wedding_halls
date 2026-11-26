@@ -188,10 +188,12 @@
                                 PKR {{ number_format($exp->amount) }}
                             </td>
                             <td class="py-4 px-6 text-right whitespace-nowrap space-x-2 font-mono">
-                                <button wire:click="openEditModal('{{ $exp->id }}')" 
-                                        class="text-[#171513] dark:text-stone-200 hover:text-[#C6A15B] font-semibold text-xs transition border border-[#E7E5E4] dark:border-white/15 hover:border-[#C6A15B] px-2.5 py-1 bg-white dark:bg-[#171513]">
-                                    Edit
-                                </button>
+                                @if(!$exp->is_voided)
+                                    <button wire:click="openEditModal('{{ $exp->id }}')" 
+                                            class="text-[#171513] dark:text-stone-200 hover:text-[#C6A15B] font-semibold text-xs transition border border-[#E7E5E4] dark:border-white/15 hover:border-[#C6A15B] px-2.5 py-1 bg-white dark:bg-[#171513]">
+                                        Edit
+                                    </button>
+                                @endif
                                 @if($exp->is_voided)
                                     <span class="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Voided</span>
                                     <div class="mt-1 max-w-[220px] whitespace-normal text-[10px] text-stone-500">{{ $exp->void_reason }}</div>
