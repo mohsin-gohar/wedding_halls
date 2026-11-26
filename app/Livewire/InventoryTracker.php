@@ -513,6 +513,8 @@ class InventoryTracker extends Component
 
     public function render()
     {
+        $user = Auth::user();
+        abort_unless($user && $user->tenant_id && PermissionMatrix::userCan($user, 'inventory.view'), 403);
         $tenantId = Auth::user()->tenant_id;
 
         $itemsQuery = InventoryItem::where('tenant_id', $tenantId)->latest();
