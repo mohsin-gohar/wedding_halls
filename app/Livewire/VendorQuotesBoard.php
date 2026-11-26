@@ -8,6 +8,7 @@ use App\Models\RFQBid;
 use App\Services\ServiceBookingService;
 use App\Support\PermissionMatrix;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -189,17 +190,39 @@ class VendorQuotesBoard extends Component
             return;
         }
 
-        RFQBid::updateOrCreate(
-            [
-                'rfq_id' => $rfq->id,
-                'vendor_id' => $user->id,
-            ],
-            [
-                'bid_amount' => $bidAmount,
-                'proposal' => $proposal,
-                'status' => 'PENDING',
-            ]
-        );
+        // Serialize competing submissions against the RFQ itself and
+        // re-check OPEN status under lock. A stale Livewire page must not
+        // create or overwrite an offer after the customer closes/awards it.
+        $saved = DB::transaction(function () use ($user, $rfq, $bidAmount, $proposal): bool {
+            $locked = $this->visibleRfqs((string) $user->tenant_id)
+                ->whereKey($rfq->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $locked || $locked->status !== 'OPEN') {
+                return false;
+            }
+
+            RFQBid::updateOrCreate(
+                [
+                    'rfq_id' => $locked->id,
+                    'vendor_id' => $user->id,
+                ],
+                [
+                    'bid_amount' => $bidAmount,
+                    'proposal' => $proposal,
+                    'status' => 'PENDING',
+                ]
+            );
+
+            return true;
+        });
+
+        if (! $saved) {
+            $this->errorMessage = 'This quotation is no longer open for offers.';
+
+            return;
+        }
 
         $this->showBidModal = false;
         $this->errorMessage = null;
