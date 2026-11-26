@@ -107,7 +107,7 @@ vendors.view, vendors.documents.review, messages.view
 | **ROLE_ACCOUNTANT** / **ROLE_VENDOR_ACCOUNTANT** (alias) | Financial: payments (view/record), invoices, payouts.request, wallet, commissions.view, reconciliation.view, expenses, payroll, reports.financial/export |
 | **ROLE_FRONT_DESK** / **ROLE_BOOKING_MANAGER** (alias) | Booking desk: bookings (view/create/update), service-bookings, rfq view/create/bid, quotations.create, customers.view, payments (view/record), messages, availability |
 | **ROLE_CHEF** / **ROLE_CATERING_STAFF** (alias) | kitchen.view/manage, inventory.view, bookings.view, service-bookings.view |
-| **ROLE_FLOOR_STAFF** | bookings.view, kitchen.view, service-bookings.view |
+| **ROLE_FLOOR_STAFF** | bookings.view, bookings.create, kitchen.view, service-bookings.view |
 | **ROLE_SERVICE_STAFF** | dashboard.view, service-bookings.view, rfq.view, availability.view, portfolio.view |
 | **ROLE_STAFF_MEMBER** | dashboard.view, service-bookings.view, bookings.view, events.view, availability.view, portfolio.view |
 | **ROLE_PHOTOGRAPHER** | dashboard.view, service-bookings.view, bookings.view, portfolio.view/manage, availability.view, events.view |
