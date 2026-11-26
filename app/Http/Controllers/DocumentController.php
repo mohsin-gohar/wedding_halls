@@ -7,6 +7,7 @@ use App\Models\KitchenKot;
 use App\Models\Payment;
 use App\Models\ServicePayment;
 use App\Models\StaffPayroll;
+use App\Support\PermissionMatrix;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -29,7 +30,8 @@ class DocumentController extends Controller
         }
 
         // 2. Tenant owner and authorized staff of this specific tenant
-        if ($user->tenant_id && $user->tenant_id === $booking->tenant_id) {
+        if ($user->tenant_id && (string) $user->tenant_id === (string) $booking->tenant_id
+            && PermissionMatrix::userCan($user, $permission)) {
             return;
         }
 
@@ -57,7 +59,8 @@ class DocumentController extends Controller
         }
 
         // 2. Tenant owner and staff of this specific tenant
-        if ($user->tenant_id && $user->tenant_id === $payment->tenant_id) {
+        if ($user->tenant_id && (string) $user->tenant_id === (string) $payment->tenant_id
+            && PermissionMatrix::userCan($user, 'payments.view')) {
             return;
         }
 
@@ -104,7 +107,7 @@ class DocumentController extends Controller
     public function bookingAgreement(string $id, Request $request)
     {
         $booking = Booking::with(['hall.venue', 'tenant', 'package', 'payments'])->findOrFail($id);
-        $this->authorizeBookingAccess($booking);
+        $this->authorizeBookingAccess($booking, 'documents.view');
 
         if ($request->boolean('pdf')) {
             $pdf = Pdf::loadView('documents.agreement', compact('booking'))
@@ -178,7 +181,7 @@ class DocumentController extends Controller
     public function taxInvoice(string $id, Request $request)
     {
         $booking = Booking::with(['hall.venue', 'tenant', 'package', 'payments'])->findOrFail($id);
-        $this->authorizeBookingAccess($booking);
+        $this->authorizeBookingAccess($booking, 'invoices.view');
 
         if ($request->boolean('pdf')) {
             $pdf = Pdf::loadView('documents.invoice', compact('booking'))
