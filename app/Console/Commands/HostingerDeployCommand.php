@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
+use Database\Seeders\PermissionMatrixSeeder;
+use Database\Seeders\VendorCategorySeeder;
 use Illuminate\Support\Facades\File;
 use RuntimeException;
 use Spatie\Permission\Models\Role;
@@ -119,7 +121,7 @@ class HostingerDeployCommand extends Command
         $this->info('Bootstrapping non-demo reference data...');
         try {
             $exitCode = Artisan::call('db:seed', [
-                '--class' => \Database\Seeders\VendorCategorySeeder::class,
+                '--class' => VendorCategorySeeder::class,
                 '--force' => true,
             ]);
             if ($exitCode !== self::SUCCESS) {
@@ -129,7 +131,7 @@ class HostingerDeployCommand extends Command
 
             if (! Role::query()->exists()) {
                 $exitCode = Artisan::call('db:seed', [
-                    '--class' => \Database\Seeders\PermissionMatrixSeeder::class,
+                    '--class' => PermissionMatrixSeeder::class,
                     '--force' => true,
                 ]);
                 if ($exitCode !== self::SUCCESS) {
