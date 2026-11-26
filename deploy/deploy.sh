@@ -18,7 +18,23 @@ set -euo pipefail
 APP_DIR="/var/www/riwaj-grand"
 cd "$APP_DIR"
 
+# Once maintenance mode has been requested, always attempt to bring the app
+# back up on every exit path. A failed deploy must never strand the site in 503.
+maintenance_mode_attempted=0
+restore_application() {
+    local deploy_exit_code=$?
+
+    if [ "$maintenance_mode_attempted" -eq 1 ]; then
+        echo "==> Restoring application availability after deployment attempt"
+        php artisan up || echo "WARNING: automatic recovery failed; run 'php artisan up' manually." >&2
+    fi
+
+    return "$deploy_exit_code"
+}
+trap restore_application EXIT
+
 echo "==> [1/8] Enabling maintenance mode"
+maintenance_mode_attempted=1
 php artisan down --render="errors::503" || true
 
 echo "==> [2/8] Pulling latest code (git)"
@@ -48,5 +64,7 @@ chmod -R ug+rwx storage bootstrap/cache
 echo "==> [8/8] Restarting queue workers + bringing app up"
 php artisan queue:restart
 php artisan up
+maintenance_mode_attempted=0
+trap - EXIT
 
 echo "==> Deploy complete. Verify: curl -I https://YOUR_DOMAIN/up"
