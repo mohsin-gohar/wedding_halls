@@ -214,6 +214,34 @@ class ApiBookingFinancialIntegrityTest extends TestCase
         $this->assertSame(0, Booking::query()->where('customer_name', 'Hidden Hall Customer')->count());
     }
 
+    public function test_booking_api_only_serializes_relations_allowed_by_the_callers_permissions(): void
+    {
+        $booking = Booking::query()->firstOrFail();
+        $floorStaff = User::factory()->create([
+            'tenant_id' => $booking->tenant_id,
+            'role' => 'ROLE_FLOOR_STAFF',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($floorStaff)
+            ->getJson('/api/v1/bookings/'.$booking->id)
+            ->assertOk()
+            ->assertJsonMissingPath('payments')
+            ->assertJsonMissingPath('rsvps');
+
+        $bookingManager = User::factory()->create([
+            'tenant_id' => $booking->tenant_id,
+            'role' => 'ROLE_BOOKING_MANAGER',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($bookingManager)
+            ->getJson('/api/v1/bookings/'.$booking->id)
+            ->assertOk()
+            ->assertJsonMissingPath('kitchen_kot')
+            ->assertJsonMissingPath('floor_plan');
+    }
+
     public function test_customer_can_create_a_public_booking_and_only_update_its_notes(): void
     {
         $hall = Hall::query()->publicVisible()->firstOrFail();
