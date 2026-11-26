@@ -566,6 +566,9 @@ class InventoryTracker extends Component
             'orders' => $orders,
             'totalInventoryValue' => $totalInventoryValue,
             'lowStockCount' => $lowStockCount,
+            'canManageInventory' => PermissionMatrix::userCan($user, 'inventory.manage'),
+            'canCreatePurchaseOrder' => PermissionMatrix::userCan($user, 'inventory.manage') || PermissionMatrix::userCan($user, 'expenses.manage'),
+            'canPayPurchaseOrders' => PermissionMatrix::userCan($user, 'expenses.manage'),
         ]);
     }
 }
