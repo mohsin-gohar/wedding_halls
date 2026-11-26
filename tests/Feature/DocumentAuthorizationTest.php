@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Booking;
 use App\Models\KitchenKot;
 use App\Models\Payment;
+use App\Models\StaffPayroll as PayrollModel;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -132,6 +133,36 @@ class DocumentAuthorizationTest extends TestCase
 
         $this->actingAs($finance)
             ->get(route('documents.receipt', ['id' => $payment->id]))
+            ->assertOk();
+    }
+
+    public function test_salary_slip_requires_payroll_permission_except_for_the_employee(): void
+    {
+        $booking = Booking::query()->firstOrFail();
+        $employee = $this->tenantStaff($booking->tenant_id, 'ROLE_CHEF');
+        $manager = $this->tenantStaff($booking->tenant_id, 'ROLE_MANAGER');
+        $accountant = $this->tenantStaff($booking->tenant_id, 'ROLE_ACCOUNTANT');
+
+        $payroll = PayrollModel::create([
+            'tenant_id' => $booking->tenant_id,
+            'user_id' => $employee->id,
+            'month_year' => now()->format('Y-m'),
+            'basic_salary' => 30000,
+            'net_salary' => 30000,
+            'status' => 'PAID',
+            'payment_method' => 'CASH',
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('documents.salary-slip', ['id' => $payroll->id]))
+            ->assertForbidden();
+
+        $this->actingAs($accountant)
+            ->get(route('documents.salary-slip', ['id' => $payroll->id]))
+            ->assertOk();
+
+        $this->actingAs($employee)
+            ->get(route('documents.salary-slip', ['id' => $payroll->id]))
             ->assertOk();
     }
 
