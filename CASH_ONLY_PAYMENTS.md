@@ -92,3 +92,12 @@ php artisan migrate:fresh --seed   # verifies every migration on a clean DB
 
 CI (`.github/workflows/ci.yml`) runs the full suite on MySQL; deployment remains
 disabled (`if: false`). No deployment is performed by this change.
+
+
+## Expense corrections and audit retention
+
+- Posted expense entries are not hard-deleted from the ERP.
+- An authorized user with `expenses.manage` may void an incorrect entry only with a reason.
+- The original amount, category, date, creator, voiding actor, timestamp and reason remain available in the expense audit register.
+- Voided expenses are excluded from revenue/expense totals and reports by default; the expense register can explicitly show voided entries for audit review.
+- Corrections should be entered as a new expense after the incorrect entry is voided. This preserves the audit trail and avoids silently rewriting financial history.
