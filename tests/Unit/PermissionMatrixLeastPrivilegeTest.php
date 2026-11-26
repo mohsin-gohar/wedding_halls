@@ -17,6 +17,21 @@ class PermissionMatrixLeastPrivilegeTest extends TestCase
         self::assertTrue(PermissionMatrix::userCan($owner, 'service-bookings.update'));
     }
 
+    public function test_accountants_can_view_inventory_and_settle_purchase_orders_without_stock_management(): void
+    {
+        $accountant = new User(['role' => 'ROLE_ACCOUNTANT']);
+        self::assertTrue(PermissionMatrix::userCan($accountant, 'inventory.view'));
+        self::assertTrue(PermissionMatrix::userCan($accountant, 'expenses.manage'));
+        self::assertFalse(PermissionMatrix::userCan($accountant, 'inventory.manage'));
+    }
+
+    public function test_inventory_managers_can_manage_stock_but_cannot_settle_purchase_orders(): void
+    {
+        $inventoryManager = new User(['role' => 'ROLE_INVENTORY_MANAGER']);
+        self::assertTrue(PermissionMatrix::userCan($inventoryManager, 'inventory.manage'));
+        self::assertFalse(PermissionMatrix::userCan($inventoryManager, 'expenses.manage'));
+    }
+
     public function test_hr_manager_keeps_hr_permissions_without_general_manager_privileges(): void
     {
         $hr = new User(['role' => 'ROLE_HR_MANAGER']);
