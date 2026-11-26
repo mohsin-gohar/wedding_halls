@@ -265,8 +265,27 @@ class BookingService
             $packageId = null;
         }
 
-        // Customer identity may only come from the authenticated principal.
+        // Enforce tenant ownership and booking capability at the service
+        // boundary; callers must not be able to bypass controller policies.
         $authenticated = auth()->user();
+
+        if ($authenticated && ! $authenticated->isCustomer() && ! $authenticated->isSuperAdmin()) {
+            if (! $authenticated->tenant_id || (string) $authenticated->tenant_id !== (string) $hall->tenant_id) {
+                throw new \Illuminate\Auth\Access\AuthorizationException('You may only create bookings for your own venue.');
+            }
+
+            if (! PermissionMatrix::userCan($authenticated, 'bookings.create')) {
+                throw new \Illuminate\Auth\Access\AuthorizationException('Booking creation permission is required.');
+            }
+        }
+
+        if ((! $authenticated || $authenticated->isCustomer()) && ! app()->runningInConsole()) {
+            if (! Hall::publicVisible()->whereKey($hall->id)->exists()) {
+                throw new \Illuminate\Auth\Access\AuthorizationException('This venue is not publicly accepting booking inquiries.');
+            }
+        }
+
+        // Customer identity may only come from the authenticated principal.
         $customerId = null;
 
         if ($authenticated && $authenticated->isCustomer()) {
@@ -301,10 +320,6 @@ class BookingService
         if ((! $authenticated && ! app()->runningInConsole()) || $authenticated?->isCustomer()) {
             if ($status !== 'INQUIRY') {
                 throw new \Illuminate\Auth\Access\AuthorizationException('Public customers may only submit booking inquiries.');
-            }
-        } elseif ($authenticated && ! $authenticated->isSuperAdmin()) {
-            if (! PermissionMatrix::userCan($authenticated, 'bookings.create')) {
-                throw new \Illuminate\Auth\Access\AuthorizationException('Booking creation permission is required.');
             }
         }
 
