@@ -123,7 +123,7 @@ class ProvisionFirstSuperAdminCommand extends Command
 
     private function hasSuperAdmin(): bool
     {
-        return User::query()
+        return User::withTrashed()
             ->where(function ($query): void {
                 $query->where('role', 'ROLE_SUPER_ADMIN')
                     ->orWhereHas('roles', function ($roles): void {
