@@ -8,6 +8,7 @@ use App\Models\RFQBid;
 use App\Services\ServiceBookingService;
 use App\Support\PermissionMatrix;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -105,8 +106,12 @@ class VendorQuotesBoard extends Component
             abort(403, 'Forbidden. You do not have an active vendor organization assigned.');
         }
 
+        // Vendor bids are commercially confidential. Each vendor may see
+        // only its own offer, never a competitor's amount or identity.
         return $this->visibleRfqs($tenantId)
-            ->with(['bids' => fn ($q) => $q->with('vendor:id,name,email')])
+            ->with(['bids' => fn ($q) => $q
+                ->where('vendor_id', Auth::id())
+                ->with('vendor:id,name')])
             ->where('status', 'OPEN')
             ->orderByDesc('created_at')
             ->paginate(10);
@@ -135,7 +140,10 @@ class VendorQuotesBoard extends Component
             return;
         }
 
-        $latestBid = $rfq->bids()->latest('created_at')->first();
+        $latestBid = $rfq->bids()
+            ->where('vendor_id', Auth::id())
+            ->latest('created_at')
+            ->first();
 
         $this->selectedRfqId = $rfq->id;
         $this->selectedRfq = $rfq;
@@ -182,17 +190,39 @@ class VendorQuotesBoard extends Component
             return;
         }
 
-        RFQBid::updateOrCreate(
-            [
-                'rfq_id' => $rfq->id,
-                'vendor_id' => $user->id,
-            ],
-            [
-                'bid_amount' => $bidAmount,
-                'proposal' => $proposal,
-                'status' => 'PENDING',
-            ]
-        );
+        // Serialize competing submissions against the RFQ itself and
+        // re-check OPEN status under lock. A stale Livewire page must not
+        // create or overwrite an offer after the customer closes/awards it.
+        $saved = DB::transaction(function () use ($user, $rfq, $bidAmount, $proposal): bool {
+            $locked = $this->visibleRfqs((string) $user->tenant_id)
+                ->whereKey($rfq->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $locked || $locked->status !== 'OPEN') {
+                return false;
+            }
+
+            RFQBid::updateOrCreate(
+                [
+                    'rfq_id' => $locked->id,
+                    'vendor_id' => $user->id,
+                ],
+                [
+                    'bid_amount' => $bidAmount,
+                    'proposal' => $proposal,
+                    'status' => 'PENDING',
+                ]
+            );
+
+            return true;
+        });
+
+        if (! $saved) {
+            $this->errorMessage = 'This quotation is no longer open for offers.';
+
+            return;
+        }
 
         $this->showBidModal = false;
         $this->errorMessage = null;
@@ -252,6 +282,9 @@ class VendorQuotesBoard extends Component
 
     public function render()
     {
+        $user = Auth::user();
+        abort_unless($user && $user->tenant_id && PermissionMatrix::userCan($user, 'rfq.view'), 403);
+
         return view('livewire.vendor-quotes-board')
             ->layout('components.layouts.app', [
                 'title' => 'Quotations & Bids — Vendor ERP',

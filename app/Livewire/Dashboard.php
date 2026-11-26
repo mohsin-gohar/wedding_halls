@@ -2,6 +2,8 @@
 
 namespace App\Livewire;
 
+use App\Exceptions\SlotAlreadyBookedException;
+use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\Expense;
 use App\Models\Hall;
@@ -14,9 +16,12 @@ use App\Models\Payment;
 use App\Models\StaffAttendance;
 use App\Models\User;
 use App\Models\UtilityLog;
+use App\Services\BookingService;
 use App\Support\CashOnlyPayments;
+use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -99,12 +104,89 @@ class Dashboard extends Component
 
     public function mount()
     {
-        $user = Auth::user();
-        if ($user && $user->isCustomer()) {
+        if (Auth::user()?->isCustomer()) {
             return $this->redirect(route('customer.dashboard'));
         }
+
+        $this->authorizeDashboardAccess();
         $this->expenseDate = Carbon::now()->format('Y-m-d');
         $this->operationsMonth = Carbon::now()->format('Y-m');
+    }
+
+    private function authorizeDashboardAccess(): void
+    {
+        $user = Auth::user();
+        abort_unless(
+            $user && ($user->isSuperAdmin()
+                || ($user->tenant_id
+                    && PermissionMatrix::userCan($user, 'dashboard.view')
+                    && PermissionMatrix::userCan($user, 'bookings.view'))),
+            403,
+            'Dashboard access requires dashboard.view and bookings.view within a tenant.'
+        );
+    }
+
+    private function authorizeDashboardPermission(string $permission): void
+    {
+        $user = Auth::user();
+        abort_unless(
+            $user && $user->tenant_id && PermissionMatrix::userCan($user, $permission),
+            403,
+            'Unauthorized. Missing permission: '.$permission
+        );
+    }
+
+    private function renderOperationsDashboard(string $tenantId)
+    {
+        $today = Carbon::today();
+        $halls = Hall::query()
+            ->where('tenant_id', $tenantId)
+            ->where('is_active', true)
+            ->get(['id', 'name']);
+
+        $todayEventsCount = Booking::query()
+            ->where('tenant_id', $tenantId)
+            ->whereDate('event_date', $today->toDateString())
+            ->whereIn('status', ['CONFIRMED', 'HOLD'])
+            ->count();
+
+        $upcomingEventsCount = Booking::query()
+            ->where('tenant_id', $tenantId)
+            ->whereDate('event_date', '>=', $today->toDateString())
+            ->whereIn('status', ['CONFIRMED', 'HOLD'])
+            ->count();
+
+        $pendingInquiriesCount = Booking::query()
+            ->where('tenant_id', $tenantId)
+            ->whereIn('status', ['INQUIRY', 'PENDING'])
+            ->count();
+
+        $monthBookings = Booking::query()
+            ->where('tenant_id', $tenantId)
+            ->whereBetween('event_date', [$today->copy()->startOfMonth()->toDateString(), $today->copy()->endOfMonth()->toDateString()])
+            ->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD'])
+            ->get(['guest_count', 'status', 'slot_type']);
+
+        $upcomingBookings = Booking::query()
+            ->select(['id', 'hall_id', 'event_date', 'slot_type', 'event_type', 'customer_name', 'guest_count', 'status'])
+            ->with('hall:id,name')
+            ->where('tenant_id', $tenantId)
+            ->whereDate('event_date', '>=', $today->toDateString())
+            ->whereIn('status', ['CONFIRMED', 'HOLD'])
+            ->orderBy('event_date')
+            ->orderBy('slot_type')
+            ->limit(8)
+            ->get();
+
+        return view('livewire.dashboard-operations', [
+            'totalHallsCount' => $halls->count(),
+            'todayEventsCount' => $todayEventsCount,
+            'upcomingEventsCount' => $upcomingEventsCount,
+            'pendingInquiriesCount' => $pendingInquiriesCount,
+            'monthProgramsCount' => $monthBookings->count(),
+            'monthGuestsCount' => (int) $monthBookings->sum('guest_count'),
+            'upcomingBookings' => $upcomingBookings,
+        ]);
     }
 
     public function updatedOperationsMonth(): void
@@ -141,6 +223,7 @@ class Dashboard extends Component
 
     public function openDailyExpenseModal(string $category = 'GENERATOR_DIESEL'): void
     {
+        $this->authorizeDashboardPermission('expenses.manage');
         $user = Auth::user();
         $this->expenseDate = Carbon::now()->format('Y-m-d');
         $this->expenseCategory = $category;
@@ -218,6 +301,7 @@ class Dashboard extends Component
 
     public function saveDailyExpense(): void
     {
+        $this->authorizeDashboardPermission('expenses.manage');
         $user = Auth::user();
         $tenantId = $user?->tenant_id;
 
@@ -230,44 +314,67 @@ class Dashboard extends Component
         $this->syncCategoryAmounts();
 
         $this->validate([
-            'expenseCategory' => 'required|string',
-            'expenseTitle' => 'required|string|max:160',
-            'expenseAmount' => 'required|numeric|min:1',
+            'expenseCategory' => ['required', Rule::in([
+                'GENERATOR_DIESEL', 'STAFF_DAILY_WAGES', 'CLEANING_HYGIENE',
+                'WAPDA_ELECTRICITY', 'CHILLER_AC', 'KITCHEN_GAS', 'MISC_OPERATIONAL',
+            ])],
+            'expenseTitle' => 'required|string|max:150',
+            'expenseAmount' => 'required|numeric|min:1|max:9999999999.99',
             'expenseDate' => 'required|date',
+            'expensePayee' => 'nullable|string|max:150',
+            'expenseReceiptNumber' => 'nullable|string|max:80',
+            'expenseNotes' => 'nullable|string|max:2000',
             'expensePaymentMethod' => CashOnlyPayments::validationRule(),
             'expenseHallId' => ['nullable', Rule::exists('halls', 'id')->where('tenant_id', $tenantId)],
+            'fuelBookingId' => ['nullable', Rule::exists('bookings', 'id')->where('tenant_id', $tenantId)],
+            'fuelDieselLiters' => 'required_if:expenseCategory,GENERATOR_DIESEL|numeric|min:1|max:100000',
+            'fuelRatePerLiter' => 'required_if:expenseCategory,GENERATOR_DIESEL|numeric|min:1|max:1000000',
+            'fuelRunHours' => 'required_if:expenseCategory,GENERATOR_DIESEL|numeric|min:0|max:10000',
+            'electricityUnits' => 'required_if:expenseCategory,WAPDA_ELECTRICITY|numeric|min:1|max:1000000',
+            'electricityUnitRate' => 'required_if:expenseCategory,WAPDA_ELECTRICITY|numeric|min:1|max:100000',
         ]);
 
-        // 1. Create Expense record
-        $expense = Expense::create([
-            'tenant_id' => $tenantId,
-            'hall_id' => $this->expenseHallId,
-            'category' => $this->expenseCategory,
-            'title' => trim($this->expenseTitle),
-            'amount' => (float) $this->expenseAmount,
-            'expense_date' => $this->expenseDate,
-            'payee' => ! empty($this->expensePayee) ? trim($this->expensePayee) : 'Cash Drawer / Vendor',
-            'payment_method' => $this->expensePaymentMethod,
-            'receipt_number' => $this->expenseReceiptNumber,
-            'notes' => $this->expenseNotes,
-            'created_by_user_id' => $user->id,
-        ]);
-
-        // 2. If Generator Fuel or Wapda, log into utility_logs for shift tracking
-        if ($this->expenseCategory === 'GENERATOR_DIESEL' || $this->expenseCategory === 'WAPDA_ELECTRICITY') {
-            UtilityLog::create([
+        $expense = DB::transaction(function () use ($tenantId, $user): Expense {
+            $expense = Expense::create([
                 'tenant_id' => $tenantId,
-                'booking_id' => ! empty($this->fuelBookingId) ? $this->fuelBookingId : null,
-                'generator_run_hours' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelRunHours : 0,
-                'diesel_liters_consumed' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelDieselLiters : 0,
-                'diesel_rate_per_liter' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelRatePerLiter : 0,
-                'wapda_units_consumed' => $this->expenseCategory === 'WAPDA_ELECTRICITY' ? $this->electricityUnits : 0,
-                'wapda_unit_rate' => $this->expenseCategory === 'WAPDA_ELECTRICITY' ? $this->electricityUnitRate : 0,
-                'total_utility_cost' => (float) $this->expenseAmount,
-                'logged_by' => $user->name,
-                'notes' => "Logged from Daily Kharcha Desk. Ref: {$expense->title}",
+                'hall_id' => $this->expenseHallId,
+                'category' => $this->expenseCategory,
+                'title' => trim($this->expenseTitle),
+                'amount' => round((float) $this->expenseAmount, 2),
+                'expense_date' => $this->expenseDate,
+                'payee' => ! empty($this->expensePayee) ? trim($this->expensePayee) : 'Cash Drawer / Vendor',
+                'payment_method' => $this->expensePaymentMethod,
+                'receipt_number' => $this->expenseReceiptNumber,
+                'notes' => $this->expenseNotes,
+                'created_by_user_id' => $user->id,
             ]);
-        }
+
+            if (in_array($this->expenseCategory, ['GENERATOR_DIESEL', 'WAPDA_ELECTRICITY'], true)) {
+                UtilityLog::create([
+                    'tenant_id' => $tenantId,
+                    'expense_id' => $expense->id,
+                    'booking_id' => $this->fuelBookingId ?: null,
+                    'generator_run_hours' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelRunHours : 0,
+                    'diesel_liters_consumed' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelDieselLiters : 0,
+                    'diesel_rate_per_liter' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelRatePerLiter : 0,
+                    'wapda_units_consumed' => $this->expenseCategory === 'WAPDA_ELECTRICITY' ? $this->electricityUnits : 0,
+                    'wapda_unit_rate' => $this->expenseCategory === 'WAPDA_ELECTRICITY' ? $this->electricityUnitRate : 0,
+                    'total_utility_cost' => round((float) $this->expenseAmount, 2),
+                    'logged_by' => $user->name,
+                    'notes' => "Logged from Daily Kharcha Desk. Ref: {$expense->title}",
+                ]);
+            }
+
+            AuditLog::log(
+                'EXPENSE_CREATED',
+                'Recorded expense PKR '.number_format((float) $expense->amount, 2).' ['.$expense->title.'].',
+                $tenantId,
+                Expense::class,
+                (string) $expense->id
+            );
+
+            return $expense;
+        });
 
         $this->showDailyExpenseModal = false;
         $this->expenseFeedback = 'Daily Kharcha [Rs '.number_format($this->expenseAmount).'] recorded successfully.';
@@ -277,16 +384,6 @@ class Dashboard extends Component
         $this->expensePayee = '';
         $this->expenseReceiptNumber = '';
         $this->expenseNotes = '';
-    }
-
-    public function deleteDailyExpense(string $expenseId): void
-    {
-        $tenantId = Auth::user()?->tenant_id;
-        $expense = Expense::where('tenant_id', $tenantId)->findOrFail($expenseId);
-        $amount = $expense->amount;
-        $expense->delete();
-
-        $this->expenseFeedback = 'Expense record [Rs '.number_format($amount).'] deleted.';
     }
 
     public function setTimeframe(string $tf): void
@@ -305,6 +402,7 @@ class Dashboard extends Component
 
     public function openCustomerDetails(string $bookingId): void
     {
+        $this->authorizeDashboardPermission('bookings.view');
         $this->selectedBookingId = $bookingId;
         $this->leadNoteText = '';
         $this->showCustomerModal = true;
@@ -319,10 +417,8 @@ class Dashboard extends Component
 
     public function updateLeadStage(string $bookingId, string $newStage): void
     {
-        $actor = Auth::user();
-        abort_unless($actor && \App\Support\PermissionMatrix::userCan($actor, 'bookings.update'), 403);
-
-        $tenantId = $actor->tenant_id;
+        $this->authorizeDashboardPermission('leads.manage');
+        $tenantId = Auth::user()?->tenant_id;
         if (! $tenantId) {
             $this->crmFeedback = 'Session tenant not found. Please log in again.';
 
@@ -338,8 +434,8 @@ class Dashboard extends Component
 
         if (in_array($newStage, ['CONFIRMED', 'CANCELLED'], true) && $booking->status !== $newStage) {
             try {
-                $booking = app(\App\Services\BookingService::class)->transitionStatus($booking, $newStage);
-            } catch (\App\Exceptions\SlotAlreadyBookedException|\InvalidArgumentException $exception) {
+                $booking = app(BookingService::class)->transitionStatus($booking, $newStage);
+            } catch (SlotAlreadyBookedException|\InvalidArgumentException $exception) {
                 $this->crmFeedback = $exception->getMessage();
 
                 return;
@@ -353,6 +449,7 @@ class Dashboard extends Component
 
     public function addLeadNote(): void
     {
+        $this->authorizeDashboardPermission('leads.manage');
         if (empty(trim($this->leadNoteText)) || ! $this->selectedBookingId) {
             return;
         }
@@ -378,6 +475,7 @@ class Dashboard extends Component
 
     public function openChatModal(string $hallId, string $ip, string $session): void
     {
+        $this->authorizeDashboardPermission('messages.view');
         $hall = $this->assertOwnedHall($hallId);
 
         $this->selectedChatHallId = $hall->id;
@@ -401,6 +499,7 @@ class Dashboard extends Component
 
     public function sendChatReply(): void
     {
+        $this->authorizeDashboardPermission('messages.send');
         $reply = trim($this->chatReplyText);
         if (empty($reply) || ! $this->selectedChatHallId) {
             return;
@@ -433,8 +532,8 @@ class Dashboard extends Component
      */
     protected function assertOwnedHall(string $hallId): Hall
     {
+        $this->authorizeDashboardPermission('messages.view');
         $user = Auth::user();
-        abort_unless($user && $user->tenant_id && ! $user->isCustomer(), 403);
 
         return Hall::where('id', $hallId)
             ->where('tenant_id', $user->tenant_id)
@@ -443,9 +542,14 @@ class Dashboard extends Component
 
     public function render()
     {
+        $this->authorizeDashboardAccess();
         $now = Carbon::now();
         $user = Auth::user();
         $tenantId = $user ? $user->tenant_id : null;
+
+        if (! $user->isSuperAdmin() && ! PermissionMatrix::userCan($user, 'reports.financial')) {
+            return $this->renderOperationsDashboard((string) $tenantId);
+        }
 
         // Zero-trust read scope: a session without tenant context must see no
         // platform-wide aggregates, so match nothing instead of skipping the filter.
@@ -869,7 +973,13 @@ class Dashboard extends Component
             ->sum('wapda_units_consumed');
 
         return view('livewire.dashboard', [
-            'kitchenEnabled' => (bool) config('platform.kitchen_module_enabled', false),
+            'kitchenEnabled' => (bool) config('platform.kitchen_module_enabled', false) && PermissionMatrix::userCan($user, 'kitchen.view'),
+            'canViewKitchen' => PermissionMatrix::userCan($user, 'kitchen.view'),
+            'canViewInventory' => PermissionMatrix::userCan($user, 'inventory.view'),
+            'canViewAttendance' => PermissionMatrix::userCan($user, 'staff.attendance'),
+            'canViewLeads' => PermissionMatrix::userCan($user, 'leads.view'),
+            'canManageLeads' => PermissionMatrix::userCan($user, 'leads.manage'),
+            'canViewMessages' => PermissionMatrix::userCan($user, 'messages.view'),
             'todayKitchenKotsCount' => $todayKitchenKotsCount,
             'todayTotalDiners' => $todayTotalDiners,
             'todayMeatNeeded' => $todayMeatNeeded,

@@ -45,6 +45,6 @@ class InventoryLog extends Model
 
     public function logger(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'logged_by');
+        return $this->belongsTo(User::class, 'logged_by')->withTrashed();
     }
 }

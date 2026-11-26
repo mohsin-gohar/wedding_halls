@@ -2,10 +2,8 @@
 
 namespace App\Livewire;
 
-use App\Models\AttendanceCorrection;
 use App\Models\AuditLog;
 use App\Models\StaffAttendance;
-use App\Models\StaffLeave;
 use App\Models\StaffPayroll;
 use App\Models\User;
 use App\Support\PermissionMatrix;
@@ -88,34 +86,45 @@ class StaffManager extends Component
     {
         $user = Auth::user();
         if (! $user || ! $user->tenant_id || ! PermissionMatrix::userCan($user, 'staff.manage')) {
-            abort(403, 'Unauthorized. Staff management permission is required.');
+            abort(403, 'Unauthorized. Staff management requires the staff.manage permission within a tenant.');
         }
     }
 
     private function allowedRoles(): array
     {
-        // HR managers can onboard ordinary staff, but cannot grant financial,
-        // booking-manager, inventory-manager, chef, or elevated HR roles.
-        if (! Auth::user()->isTenantOwner()) {
-            return ['ROLE_STAFF_MEMBER'];
-        }
-
-        return [
-            'ROLE_MANAGER',
-            'ROLE_VENDOR_MANAGER',
-            'ROLE_ACCOUNTANT',
-            'ROLE_VENDOR_ACCOUNTANT',
+        // HR managers may manage operational employees, but cannot provision
+        // finance, inventory, HR-admin or general-manager privileges.
+        $roles = [
             'ROLE_FRONT_DESK',
             'ROLE_CHEF',
             'ROLE_FLOOR_STAFF',
             'ROLE_SERVICE_STAFF',
-            'ROLE_BOOKING_MANAGER',
             'ROLE_STAFF_MEMBER',
             'ROLE_PHOTOGRAPHER',
             'ROLE_CATERING_STAFF',
-            'ROLE_INVENTORY_MANAGER',
-            'ROLE_HR_MANAGER',
         ];
+
+        if (Auth::user()->isTenantOwner()) {
+            $roles = array_merge([
+                'ROLE_MANAGER',
+                'ROLE_VENDOR_MANAGER',
+                'ROLE_ACCOUNTANT',
+                'ROLE_VENDOR_ACCOUNTANT',
+                'ROLE_BOOKING_MANAGER',
+                'ROLE_INVENTORY_MANAGER',
+                'ROLE_HR_MANAGER',
+            ], $roles);
+        }
+
+        return array_values(array_unique($roles));
+    }
+
+    private function authorizeTargetStaffRole(User $staff): void
+    {
+        if (! Auth::user()->isTenantOwner()
+            && ! in_array($staff->role, $this->allowedRoles(), true)) {
+            abort(403, 'HR managers may only manage staff roles within their delegated role scope.');
+        }
     }
 
     public function openCreateModal()
@@ -189,6 +198,7 @@ class StaffManager extends Component
     {
         $this->authorizeStaffManager();
         $staff = User::where('tenant_id', Auth::user()->tenant_id)->findOrFail($userId);
+        $this->authorizeTargetStaffRole($staff);
         if (($staff->isTenantOwner() && $staff->id !== Auth::id())
             || (! Auth::user()->isTenantOwner() && $staff->isManager())) {
             abort(403, 'You do not have permission to edit this staff profile.');
@@ -220,6 +230,7 @@ class StaffManager extends Component
         }
 
         $staff = User::where('tenant_id', Auth::user()->tenant_id)->findOrFail($this->editingStaffId);
+        $this->authorizeTargetStaffRole($staff);
 
         $this->validate([
             'editName' => 'required|string|max:100',
@@ -277,9 +288,7 @@ class StaffManager extends Component
             return;
         }
 
-        if (! $currentUser->isTenantOwner() && $staff->isManager()) {
-            abort(403, 'Only the venue owner can remove a manager account.');
-        }
+        $this->authorizeTargetStaffRole($staff);
 
         $staffName = $staff->name;
         $staff->delete(); // Revoke login while preserving payroll and attendance history.
@@ -404,66 +413,6 @@ class StaffManager extends Component
         if ($this->showProfileModal && $this->profileStaffId === $userId) {
             $this->openProfileModal($userId);
         }
-    }
-
-    public function purgeStaffMember(int $userId): void
-    {
-        $this->authorizeStaffManager();
-        $currentUser = Auth::user();
-        if ($currentUser->id === $userId) {
-            $this->errorMessage = 'You cannot delete your own user account.';
-
-            return;
-        }
-
-        $staff = User::where('tenant_id', $currentUser->tenant_id)
-            ->withTrashed()
-            ->findOrFail($userId);
-
-        if ($staff->isTenantOwner()) {
-            $this->errorMessage = 'The primary venue business owner account cannot be permanently deleted.';
-
-            return;
-        }
-
-        if (! $currentUser->isTenantOwner() && $staff->isManager()) {
-            abort(403, 'Only the venue owner can permanently purge a manager account.');
-        }
-
-        $staffName = $staff->name;
-
-        // Clean up linked HR history strictly scoped to the current tenant.
-        // Corrections and leave applications would otherwise point at a user
-        // that no longer exists after a permanent purge.
-        $tenantId = $currentUser->tenant_id;
-        $attendanceIds = StaffAttendance::where('tenant_id', $tenantId)
-            ->where('user_id', $userId)
-            ->pluck('id');
-
-        AttendanceCorrection::where('tenant_id', $tenantId)
-            ->where(function ($query) use ($userId, $attendanceIds) {
-                $query->where('user_id', $userId)
-                    ->orWhereIn('attendance_id', $attendanceIds);
-            })
-            ->delete();
-        StaffAttendance::where('tenant_id', $tenantId)->where('user_id', $userId)->delete();
-        StaffPayroll::where('tenant_id', $tenantId)->where('user_id', $userId)->delete();
-        StaffLeave::where('tenant_id', $tenantId)->where('user_id', $userId)->delete();
-
-        $staff->forceDelete();
-
-        AuditLog::log(
-            'STAFF_PERMANENTLY_PURGED',
-            "Staff user [{$staffName}] permanently purged by [{$currentUser->name}] to free server storage.",
-            $currentUser->tenant_id,
-            'User',
-            (string) $userId
-        );
-
-        $this->showProfileModal = false;
-        $this->profileStaffId = null;
-        $this->profileStats = null;
-        $this->feedbackMessage = "Staff member [{$staffName}] and records permanently deleted from server.";
     }
 
     public function render()

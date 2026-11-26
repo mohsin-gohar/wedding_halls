@@ -513,13 +513,32 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
         $staff->refresh();
         $this->assertEquals('ACTIVE', $staff->status);
 
-        // 3. Purge Staff Member permanently
-        Livewire::test(StaffManager::class)
-            ->call('purgeStaffMember', $staff->id);
+        // 3. Archive the staff account while retaining financial history.
+        $payroll = PayrollModel::create([
+            'tenant_id' => $tenant->id,
+            'user_id' => $staff->id,
+            'month_year' => Carbon::today()->format('Y-m'),
+            'basic_salary' => 30000,
+            'net_salary' => 30000,
+            'status' => 'PAID',
+            'payment_method' => 'CASH',
+        ]);
 
-        $this->assertDatabaseMissing('users', [
+        Livewire::test(StaffManager::class)
+            ->call('removeStaffMember', $staff->id);
+
+        $this->assertSoftDeleted('users', [
             'id' => $staff->id,
         ]);
+        $this->assertDatabaseHas('staff_payrolls', [
+            'id' => $payroll->id,
+            'user_id' => $staff->id,
+            'status' => 'PAID',
+        ]);
+        $this->assertSame(
+            (string) $staff->id,
+            (string) PayrollModel::with('user')->findOrFail($payroll->id)->user->id
+        );
     }
 
     public function test_one_click_attendance_filtering_and_quick_edit_modal(): void
@@ -653,4 +672,185 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
         $employee->refresh();
         $this->assertEquals(72000, (float) $employee->base_salary);
     }
+    public function test_general_manager_without_staff_manage_permission_cannot_open_staff_manager(): void
+    {
+        $tenant = Tenant::query()->where('slug', 'riwaj-grand')->firstOrFail();
+        $manager = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_MANAGER',
+            'status' => 'ACTIVE',
+        ]);
+
+        Livewire::actingAs($manager)
+            ->test(StaffManager::class)
+            ->assertStatus(403);
+    }
+
+    public function test_inventory_mutations_require_inventory_manage_permission(): void
+    {
+        $tenant = Tenant::query()->where('slug', 'riwaj-grand')->firstOrFail();
+        $manager = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_MANAGER',
+            'status' => 'ACTIVE',
+        ]);
+        $chef = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_CHEF',
+            'status' => 'ACTIVE',
+        ]);
+        $inventoryManager = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_INVENTORY_MANAGER',
+            'status' => 'ACTIVE',
+        ]);
+        $accountant = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_ACCOUNTANT',
+            'status' => 'ACTIVE',
+        ]);
+
+        Livewire::actingAs($manager)
+            ->test(InventoryTracker::class)
+            ->call('saveItem')
+            ->assertStatus(403);
+
+        Livewire::actingAs($chef)
+            ->test(InventoryTracker::class)
+            ->call('saveItem')
+            ->assertStatus(403);
+
+        Livewire::actingAs($inventoryManager)
+            ->test(InventoryTracker::class)
+            ->assertOk();
+
+        Livewire::actingAs($accountant)
+            ->test(InventoryTracker::class)
+            ->assertOk()
+            ->assertDontSee('+ Add Inventory Item')
+            ->call('saveItem')
+            ->assertStatus(403);
+
+        Livewire::actingAs($accountant)
+            ->test(InventoryTracker::class)
+            ->assertOk()
+            ->set('poSupplierName', 'Accountant Approved Supplier')
+            ->set('poTotalAmount', 12500)
+            ->set('poDate', Carbon::today()->toDateString())
+            ->call('createPurchaseOrder')
+            ->assertHasNoErrors();
+
+        $purchaseOrder = PurchaseOrder::query()
+            ->where('tenant_id', $tenant->id)
+            ->where('supplier_name', 'Accountant Approved Supplier')
+            ->firstOrFail();
+
+        Livewire::actingAs($accountant)
+            ->test(InventoryTracker::class)
+            ->call('markPoPaid', $purchaseOrder->id)
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('purchase_orders', [
+            'id' => $purchaseOrder->id,
+            'status' => 'PAID',
+        ]);
+        $this->assertDatabaseHas('expenses', [
+            'tenant_id' => $tenant->id,
+            'receipt_number' => $purchaseOrder->po_number,
+            'payment_method' => 'CASH',
+        ]);
+    }
+
+    public function test_hr_manager_cannot_assign_or_manage_elevated_finance_roles(): void
+    {
+        $tenant = Tenant::query()->where('slug', 'riwaj-grand')->firstOrFail();
+        $hrManager = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_HR_MANAGER',
+            'status' => 'ACTIVE',
+        ]);
+        $accountant = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_ACCOUNTANT',
+            'status' => 'ACTIVE',
+        ]);
+
+        Livewire::actingAs($hrManager)
+            ->test(StaffManager::class)
+            ->set('name', 'Elevated Finance User')
+            ->set('email', 'elevated-finance@example.test')
+            ->set('role', 'ROLE_ACCOUNTANT')
+            ->set('password', 'secure-password-123')
+            ->call('createStaffMember')
+            ->assertHasErrors(['role']);
+
+        Livewire::actingAs($hrManager)
+            ->test(StaffManager::class)
+            ->call('openEditModal', $accountant->id)
+            ->assertStatus(403);
+
+        $this->assertDatabaseMissing('users', [
+            'email' => 'elevated-finance@example.test',
+        ]);
+    }
+
+    public function test_inventory_item_removal_archives_the_record_instead_of_deleting_it(): void
+    {
+        $tenant = Tenant::query()->where('slug', 'riwaj-grand')->firstOrFail();
+        $owner = User::query()
+            ->where('tenant_id', $tenant->id)
+            ->where('role', 'ROLE_TENANT_OWNER')
+            ->firstOrFail();
+
+        $item = InventoryItem::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Archive retention regression item',
+            'category' => 'OTHER',
+            'unit' => 'PIECES',
+            'current_stock' => 0,
+            'min_threshold' => 0,
+            'unit_cost' => 10,
+            'is_active' => true,
+        ]);
+
+        $component = Livewire::actingAs($owner)
+            ->test(InventoryTracker::class)
+            ->call('deleteItem', $item->id)
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('inventory_items', [
+            'id' => $item->id,
+            'tenant_id' => $tenant->id,
+            'is_active' => false,
+        ]);
+        $this->assertNotNull(InventoryItem::find($item->id));
+
+        $component->call('restoreItem', $item->id)->assertHasNoErrors();
+        $this->assertDatabaseHas('inventory_items', [
+            'id' => $item->id,
+            'is_active' => true,
+        ]);
+
+        $stockedItem = InventoryItem::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Stocked item cannot be archived',
+            'category' => 'OTHER',
+            'unit' => 'PIECES',
+            'current_stock' => 5,
+            'min_threshold' => 1,
+            'unit_cost' => 10,
+            'is_active' => true,
+        ]);
+
+        Livewire::actingAs($owner)
+            ->test(InventoryTracker::class)
+            ->call('deleteItem', $stockedItem->id)
+            ->assertStatus(422);
+
+        $this->assertDatabaseHas('inventory_items', [
+            'id' => $stockedItem->id,
+            'is_active' => true,
+        ]);
+    }
+
 }

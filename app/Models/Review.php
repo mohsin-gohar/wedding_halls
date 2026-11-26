@@ -63,7 +63,7 @@ class Review extends Model
 
     public function moderator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'moderated_by');
+        return $this->belongsTo(User::class, 'moderated_by')->withTrashed();
     }
 
     public function scopeApproved($query)

@@ -8,8 +8,8 @@ use App\Models\Hall;
 use App\Models\MenuItem;
 use App\Models\Package;
 use App\Services\BookingService;
-use App\Support\ShiftWindows;
 use App\Support\PermissionMatrix;
+use App\Support\ShiftWindows;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -114,11 +114,10 @@ class WalkInBookingModal extends Component
     {
         $user = Auth::user();
 
-        // Only principals with the explicit booking-create capability receive
-        // the staff terminal. Public/customer users remain inquiry-only.
-        $this->isStaff = $user
-            ? ($user->isSuperAdmin() || PermissionMatrix::userCan($user, 'bookings.create'))
-            : false;
+        // Single source of truth for venue-side users (includes floor staff).
+        $this->isStaff = (bool) ($user?->isVenueOperationsStaff()
+            && (PermissionMatrix::userCan($user, 'bookings.create')
+                || PermissionMatrix::userCan($user, 'bookings.manage')));
     }
 
     protected function initDefaultHall(): void
@@ -239,10 +238,10 @@ class WalkInBookingModal extends Component
 
         if ($exists) {
             $this->isSlotAvailable = false;
-            $this->slotMessage = '⚠️ Shift is already reserved! Choose another date or shift.';
+            $this->slotMessage = 'âš ï¸ Shift is already reserved! Choose another date or shift.';
         } else {
             $this->isSlotAvailable = true;
-            $this->slotMessage = '✅ Slot is 100% available for booking!';
+            $this->slotMessage = 'âœ… Slot is 100% available for booking!';
         }
     }
 
@@ -250,12 +249,17 @@ class WalkInBookingModal extends Component
     {
         $this->clientFound = false;
 
-        // Security: Only authorized staff may perform client lookups
-        if (! $this->isStaff) {
+        // The public Livewire state is user-controlled. Recompute staff mode
+        // from the authenticated account before any tenant customer lookup.
+        $this->determineStaffMode();
+        $user = Auth::user();
+
+        if (! $this->isStaff || ! $user
+            || (! PermissionMatrix::userCan($user, 'bookings.view')
+                && ! PermissionMatrix::userCan($user, 'bookings.create')
+                && ! PermissionMatrix::userCan($user, 'bookings.manage'))) {
             return;
         }
-
-        $user = Auth::user();
         $phone = trim($this->customer_phone);
         $cnic = trim((string) $this->customer_cnic);
 

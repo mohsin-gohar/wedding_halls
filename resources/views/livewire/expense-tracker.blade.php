@@ -127,6 +127,9 @@
             </h3>
             
             <div class="flex items-center gap-3">
+                <button type="button" wire:click="$toggle('showVoided')" class="border border-[#C6A15B]/40 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[#8F7239] dark:text-[#C6A15B]">
+                    {{ $showVoided ? 'Show active' : 'Show voided' }}
+                </button>
                 <select wire:model.live="filterCategory" class="text-xs bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 text-[#171513] dark:text-white py-1.5 px-3 font-mono font-medium outline-none focus:border-[#C6A15B]">
                     <option value="ALL">All Categories</option>
                     <option value="GENERATOR_DIESEL">Generator Diesel</option>
@@ -185,15 +188,18 @@
                                 PKR {{ number_format($exp->amount) }}
                             </td>
                             <td class="py-4 px-6 text-right whitespace-nowrap space-x-2 font-mono">
-                                <button wire:click="openEditModal('{{ $exp->id }}')" 
-                                        class="text-[#171513] dark:text-stone-200 hover:text-[#C6A15B] font-semibold text-xs transition border border-[#E7E5E4] dark:border-white/15 hover:border-[#C6A15B] px-2.5 py-1 bg-white dark:bg-[#171513]">
-                                    Edit
-                                </button>
-                                <button wire:click="deleteExpense('{{ $exp->id }}')" 
-                                        wire:confirm="Are you sure you want to delete this expense record?"
-                                        class="text-[#171513] dark:text-[#F8F5EF] hover:text-[#171513] text-xs font-semibold px-2 py-1 border border-[#C6A15B]/40 dark:border-[#171513]/40 hover:border-[#C6A15B]/60 bg-[#171513]/8 dark:bg-[#171513]/85">
-                                    Delete
-                                </button>
+                                @if($exp->is_voided)
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Voided</span>
+                                    <div class="mt-1 max-w-[220px] whitespace-normal text-[10px] text-stone-500">{{ $exp->void_reason }}</div>
+                                    <div class="mt-1 text-[10px] text-stone-400">
+                                        {{ $exp->voidedBy?->name ?? 'Authorized user' }} · {{ $exp->voided_at?->format('d M Y, h:i A') }}
+                                    </div>
+                                @elseif($exp->payroll_id || $paidPoNumbers->contains($exp->receipt_number) || $utilityExpenseIds->contains($exp->id) || in_array($exp->category, ['GENERATOR_DIESEL', 'WAPDA_ELECTRICITY'], true))
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-stone-500">Source managed</span>
+                                @else
+                                    <button wire:click="openEditModal('{{ $exp->id }}')" class="border border-[#E7E5E4] px-2.5 py-1 text-xs font-semibold text-[#171513] dark:border-white/15 dark:text-stone-200">Edit</button>
+                                    <button wire:click="openVoidModal('{{ $exp->id }}')" class="border border-rose-500/30 bg-rose-500/5 px-2 py-1 text-xs font-semibold text-rose-700 dark:text-rose-300">Void</button>
+                                @endif
                             </td>
                         </tr>
                     @empty
@@ -233,8 +239,6 @@
                         <div>
                             <label class="block text-xs uppercase font-bold text-[#171513] dark:text-[#C6A15B] mb-1">Expense Category *</label>
                             <select wire:model="category" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 font-medium outline-none">
-                                <option value="GENERATOR_DIESEL">Generator Diesel / Fuel</option>
-                                <option value="WAPDA_ELECTRICITY">WAPDA / Commercial Power</option>
                                 <option value="RAW_FOOD_MEAT">Bawarchi Raw Meat &amp; Provisions</option>
                                 <option value="FRESH_FLORAL_DECOR">Fresh Floral &amp; Stage Decor</option>
                                 <option value="STAFF_WAGES">Staff Wages &amp; Daily Labor</option>
@@ -325,8 +329,6 @@
                         <div>
                             <label class="block text-xs uppercase font-bold text-[#171513] dark:text-[#C6A15B] mb-1">Expense Category *</label>
                             <select wire:model="edit_category" class="w-full bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/15 focus:border-[#C6A15B] text-[#171513] dark:text-white py-2.5 px-3.5 font-medium outline-none">
-                                <option value="GENERATOR_DIESEL">Generator Diesel / Fuel</option>
-                                <option value="WAPDA_ELECTRICITY">WAPDA / Commercial Power</option>
                                 <option value="RAW_FOOD_MEAT">Bawarchi Raw Meat &amp; Provisions</option>
                                 <option value="FRESH_FLORAL_DECOR">Fresh Floral &amp; Stage Decor</option>
                                 <option value="STAFF_WAGES">Staff Wages &amp; Daily Labor</option>
@@ -398,6 +400,28 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    @endif
+
+
+    @if($voidingExpenseId)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div class="w-full max-w-lg space-y-5 border border-rose-500/40 bg-white p-6 shadow-2xl dark:bg-[#171513]">
+                <div>
+                    <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">Financial audit control</p>
+                    <h3 class="mt-2 font-serif-luxury text-2xl text-[#171513] dark:text-white">Void expense record</h3>
+                    <p class="mt-2 text-xs leading-relaxed text-stone-500">This does not delete the expense. It excludes the entry from financial totals while preserving its original values and audit history.</p>
+                </div>
+                <div>
+                    <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">Reason for voiding</label>
+                    <textarea wire:model="voidReason" rows="3" maxlength="500" class="w-full border border-[#E7E5E4] bg-[#F8F5EF] p-3 text-sm text-[#171513] outline-none focus:border-[#C6A15B] dark:border-white/15 dark:bg-[#171513] dark:text-white" placeholder="Explain why this expense is incorrect or being reversed..."></textarea>
+                    @error('voidReason') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
+                </div>
+                <div class="flex justify-end gap-3 border-t border-[#E7E5E4] pt-4 dark:border-white/10">
+                    <button type="button" wire:click="cancelVoid" class="border border-[#E7E5E4] px-4 py-2 text-xs font-bold uppercase text-stone-600 dark:border-white/15 dark:text-stone-300">Cancel</button>
+                    <button type="button" wire:click="voidExpense" class="border border-rose-500/50 bg-rose-600 px-4 py-2 text-xs font-bold uppercase text-white">Void and retain history</button>
+                </div>
             </div>
         </div>
     @endif

@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use App\Concerns\GuardsCashOnlyMethod;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Expense extends Model
 {
@@ -30,7 +32,23 @@ class Expense extends Model
     protected $casts = [
         'amount' => 'float',
         'expense_date' => 'date',
+        'is_voided' => 'boolean',
+        'voided_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        // All financial reports and operational totals exclude voided entries
+        // unless an explicit audit-history query opts in.
+        static::addGlobalScope('not_voided', function (Builder $query): void {
+            $query->where('is_voided', false);
+        });
+    }
+
+    public function scopeWithVoided(Builder $query): Builder
+    {
+        return $query->withoutGlobalScope('not_voided');
+    }
 
     protected function cashOnlyMethodField(): string
     {
@@ -49,6 +67,16 @@ class Expense extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by_user_id');
+        return $this->belongsTo(User::class, 'created_by_user_id')->withTrashed();
+    }
+
+    public function voidedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'voided_by_user_id')->withTrashed();
+    }
+
+    public function utilityLog(): HasOne
+    {
+        return $this->hasOne(UtilityLog::class, 'expense_id');
     }
 }

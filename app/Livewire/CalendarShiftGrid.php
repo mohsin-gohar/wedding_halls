@@ -8,8 +8,8 @@ use App\Models\Hall;
 use App\Models\Tenant;
 use App\Models\Venue;
 use App\Services\HallAvailabilityService;
-use App\Support\ShiftWindows;
 use App\Support\PermissionMatrix;
+use App\Support\ShiftWindows;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -58,8 +58,9 @@ class CalendarShiftGrid extends Component
     public function mount()
     {
         $user = Auth::user();
-        if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
-            abort(403, 'Unauthorized. Tenant staff access required.');
+        if (! $user || (! $user->isSuperAdmin()
+            && (! $user->tenant_id || ! PermissionMatrix::userCan($user, 'bookings.view')))) {
+            abort(403, 'Unauthorized. Calendar access requires bookings.view within a tenant.');
         }
         abort_unless(PermissionMatrix::userCan($user, 'bookings.view'), 403, 'Booking view permission is required.');
 
@@ -117,7 +118,10 @@ class CalendarShiftGrid extends Component
     public function saveShiftPolicy(): void
     {
         $user = Auth::user();
-        abort_unless($user && PermissionMatrix::userCan($user, 'availability.manage'), 403, 'Availability management permission is required.');
+        if (! $user || (! $user->isSuperAdmin()
+            && (! $user->tenant_id || ! PermissionMatrix::userCan($user, 'availability.manage')))) {
+            abort(403, 'Only users with availability.manage may change shift policy.');
+        }
 
         $hall = $this->selectedHallId
             ? $this->accessibleHalls()->with('tenant')->whereKey($this->selectedHallId)->first()
@@ -248,7 +252,14 @@ class CalendarShiftGrid extends Component
 
     public function openWalkInModal(?string $date = null, ?string $slot = null)
     {
-        abort_unless(PermissionMatrix::userCan(Auth::user(), 'bookings.create'), 403, 'Booking creation permission is required.');
+        $user = Auth::user();
+        abort_unless(
+            $user && ($user->isSuperAdmin()
+                || PermissionMatrix::userCan($user, 'bookings.create')
+                || PermissionMatrix::userCan($user, 'bookings.manage')),
+            403,
+            'Booking creation permission is required to open the walk-in terminal.'
+        );
 
         if (! $this->selectedHallId || ! $this->accessibleHalls()->whereKey($this->selectedHallId)->exists()) {
             return;
@@ -324,7 +335,7 @@ class CalendarShiftGrid extends Component
     public function render()
     {
         $user = Auth::user();
-        abort_unless($user && PermissionMatrix::userCan($user, 'bookings.view'), 403);
+        abort_unless($user && ($user->isSuperAdmin() || ($user->tenant_id && PermissionMatrix::userCan($user, 'bookings.view'))), 403);
         $hallsQuery = $this->accessibleHalls();
         $venuesQuery = Venue::query()->where('is_active', true);
         if (! $user?->isSuperAdmin()) {
@@ -432,7 +443,7 @@ class CalendarShiftGrid extends Component
             'visibleDays' => $visibleDays,
             'bookings' => $bookings,
             'monthTitle' => $startOfMonth->format('F Y'),
-            'rangeTitle' => $rangeStart->format('d M').' – '.$rangeEnd->format('d M Y'),
+            'rangeTitle' => $rangeStart->format('d M').' â€“ '.$rangeEnd->format('d M Y'),
             'shiftWindows' => ShiftWindows::normalize($selectedHall?->tenant?->shift_windows),
             'shiftBuffer' => (int) ($selectedHall?->tenant?->shift_buffer_minutes ?? 0),
         ]);

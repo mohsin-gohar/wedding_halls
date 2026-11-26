@@ -144,21 +144,32 @@ class WhatsAppWebhookController extends Controller
             ];
         }
 
-        $status = 'ATTENDING';
-        $count = 1;
+        $status = null;
+        $count = null;
+        $replyText = "We could not understand your RSVP. Please reply YES, YES followed by your guest count, or NO to decline.";
 
-        if (preg_match('/(decline|nahi|cannot|cancel|\bno\b)/i', $messageBody)) {
+        if (preg_match('/(?:\\bdecline\\b|\\bnahi\\b|\\bcannot\\b|\\bcancel\\b|\\bno\\b)/i', $messageBody)) {
             $status = 'DECLINED';
             $count = 0;
             $replyText = "Thank you {$rsvp->guest_name}. We have noted your decline for the wedding event.";
-        } elseif (preg_match('/(?:attending|yes|aunga|haan|persons?|people|guests?|head)[\s:]*(\d+)/i', $messageBody, $matches)) {
-            $count = max(0, min(20, (int) $matches[1]));
+        } elseif (preg_match('/(?:\\b(?:attending|yes|aunga|haan)\\b(?:[\\s:]*(\\d+))?|\\b(?:persons?|people|guests?|head)\\b[\\s:]*(\\d+))/i', $messageBody, $matches)
+            || preg_match('/^(\\d+)$/', $messageBody, $matches)) {
+            $status = 'ATTENDING';
+            $guestCount = $matches[1] ?? $matches[2] ?? null;
+            $count = $guestCount !== null && $guestCount !== ''
+                ? max(1, min(20, (int) $guestCount))
+                : 1;
             $replyText = "Thank you {$rsvp->guest_name}! Your attendance with {$count} guest(s) has been confirmed on the hall guest list.";
-        } elseif (preg_match('/^(\d+)$/', $messageBody, $matches)) {
-            $count = max(0, min(20, (int) $matches[1]));
-            $replyText = "Thank you {$rsvp->guest_name}! Confirmed {$count} guest(s). We look forward to welcoming you.";
         } else {
-            $replyText = "Thank you {$rsvp->guest_name}! Your RSVP has been confirmed. We look forward to seeing you!";
+            // An arbitrary message (e.g. "hello" or "what time?") is not an
+            // RSVP decision and must never silently confirm a guest.
+            $this->sendWhatsAppMessage($fromPhone, $replyText);
+
+            return [
+                'status' => 'needs_clarification',
+                'rsvp_id' => $rsvp->id,
+                'reply' => $replyText,
+            ];
         }
 
         $rsvp->update([
@@ -252,12 +263,20 @@ class WhatsAppWebhookController extends Controller
 
         if ($token && $phoneId) {
             try {
-                Http::withToken($token)->post("https://graph.facebook.com/{$apiVersion}/{$phoneId}/messages", [
-                    'messaging_product' => 'whatsapp',
-                    'to' => $toPhone,
-                    'type' => 'text',
-                    'text' => ['body' => $message],
-                ]);
+                $response = Http::withToken($token)
+                    ->timeout(10)
+                    ->post("https://graph.facebook.com/{$apiVersion}/{$phoneId}/messages", [
+                        'messaging_product' => 'whatsapp',
+                        'to' => $toPhone,
+                        'type' => 'text',
+                        'text' => ['body' => $message],
+                    ]);
+
+                if ($response->failed()) {
+                    Log::warning('WhatsApp Cloud API rejected an outbound message.', [
+                        'http_status' => $response->status(),
+                    ]);
+                }
             } catch (\Exception $e) {
                 Log::error('WhatsApp dispatch error: '.$e->getMessage());
             }

@@ -29,6 +29,8 @@ class InventoryTracker extends Component
     // Filter
     public string $selectedCategory = 'ALL';
 
+    public bool $showArchived = false;
+
     // Add / Edit Item Modal
     public bool $showItemModal = false;
 
@@ -84,7 +86,11 @@ class InventoryTracker extends Component
     public function mount()
     {
         $user = Auth::user();
-        abort_unless($user && PermissionMatrix::userCan($user, 'inventory.view'), 403, 'Inventory view permission is required.');
+        abort_unless(
+            $user && $user->tenant_id && PermissionMatrix::userCan($user, 'inventory.view'),
+            403,
+            'Unauthorized. Inventory visibility requires inventory.view within a tenant.'
+        );
 
         $this->poDate = Carbon::today()->format('Y-m-d');
     }
@@ -93,9 +99,10 @@ class InventoryTracker extends Component
     private function authorizeInventoryAction(string $action): void
     {
         $user = Auth::user();
-        if (! $user) {
-            abort(403, 'Unauthorized.');
-        }
+        $canManageInventory = $user && $user->tenant_id
+            && PermissionMatrix::userCan($user, 'inventory.manage');
+        $canManageExpenses = $user && $user->tenant_id
+            && PermissionMatrix::userCan($user, 'expenses.manage');
 
         if ($action === 'po.paid') {
             abort_unless(
@@ -211,34 +218,46 @@ class InventoryTracker extends Component
         $this->authorizeInventoryAction('item.delete');
 
         $tenantId = Auth::user()->tenant_id;
-        $item = InventoryItem::where('tenant_id', $tenantId)->findOrFail($itemId);
+        $item = InventoryItem::where('tenant_id', $tenantId)->where('is_active', true)->findOrFail($itemId);
+        abort_unless((float) $item->current_stock <= 0, 422, 'Record a stock-out or transfer before archiving an item with remaining stock.');
+
         $name = $item->name;
 
-        // Never erase an item that still has stock-ledger history: archive it
-        // instead so past valuations and movement references stay intact.
-        if ($item->logs()->exists()) {
-            $item->update(['is_active' => false]);
-            AuditLog::log(
-                'INVENTORY_ITEM_ARCHIVED',
-                "Inventory item [{$name}] was archived because stock movements reference it.",
-                $tenantId,
-                'InventoryItem',
-                $item->id
-            );
-            $this->feedbackMessage = "Inventory item [{$name}] has movement history and was archived (not deleted).";
+        // Inventory master records are retained for audit continuity even
+        // when they have no movement rows yet.
+        $item->update(['is_active' => false]);
 
-            return;
-        }
-
-        $item->delete();
         AuditLog::log(
-            'INVENTORY_ITEM_DELETED',
-            "Inventory item [{$name}] was deleted (no movement history).",
+            'INVENTORY_ITEM_ARCHIVED',
+            "Inventory item [{$name}] was archived. Historical stock and procurement references are retained.",
             $tenantId,
             'InventoryItem',
-            $itemId
+            $item->id
         );
-        $this->feedbackMessage = "Inventory item [{$name}] deleted.";
+
+        $this->feedbackMessage = "Inventory item [{$name}] archived. Historical records were retained.";
+    }
+
+    public function restoreItem(string $itemId): void
+    {
+        $this->authorizeInventoryAction('item.restore');
+
+        $tenantId = Auth::user()->tenant_id;
+        $item = InventoryItem::where('tenant_id', $tenantId)
+            ->where('is_active', false)
+            ->findOrFail($itemId);
+
+        $item->update(['is_active' => true]);
+
+        AuditLog::log(
+            'INVENTORY_ITEM_RESTORED',
+            "Inventory item [{$item->name}] was restored to active stock.",
+            $tenantId,
+            'InventoryItem',
+            $item->id
+        );
+
+        $this->feedbackMessage = "Inventory item [{$item->name}] restored to active stock.";
     }
 
     // ==========================================
@@ -538,16 +557,21 @@ class InventoryTracker extends Component
 
     public function render()
     {
+        $user = Auth::user();
+        abort_unless($user && $user->tenant_id && PermissionMatrix::userCan($user, 'inventory.view'), 403);
         $tenantId = Auth::user()->tenant_id;
 
-        $itemsQuery = InventoryItem::where('tenant_id', $tenantId)->latest();
+        $itemsQuery = InventoryItem::where('tenant_id', $tenantId)
+            ->where('is_active', ! $this->showArchived)
+            ->latest();
         if ($this->selectedCategory !== 'ALL') {
             $itemsQuery->where('category', $this->selectedCategory);
         }
         $items = $itemsQuery->get();
 
-        $totalInventoryValue = $items->sum(fn ($i) => $i->current_stock * $i->unit_cost);
-        $lowStockCount = $items->filter(fn ($i) => $i->isLowStock())->count();
+        $activeItems = InventoryItem::where('tenant_id', $tenantId)->where('is_active', true)->get();
+        $totalInventoryValue = $activeItems->sum(fn ($i) => $i->current_stock * $i->unit_cost);
+        $lowStockCount = $activeItems->filter(fn ($i) => $i->isLowStock())->count();
 
         $logs = InventoryLog::where('tenant_id', $tenantId)
             ->with(['item', 'logger'])
@@ -564,6 +588,9 @@ class InventoryTracker extends Component
             'orders' => $orders,
             'totalInventoryValue' => $totalInventoryValue,
             'lowStockCount' => $lowStockCount,
+            'canManageInventory' => PermissionMatrix::userCan($user, 'inventory.manage'),
+            'canCreatePurchaseOrder' => PermissionMatrix::userCan($user, 'inventory.manage') || PermissionMatrix::userCan($user, 'expenses.manage'),
+            'canPayPurchaseOrders' => PermissionMatrix::userCan($user, 'expenses.manage'),
         ]);
     }
 }

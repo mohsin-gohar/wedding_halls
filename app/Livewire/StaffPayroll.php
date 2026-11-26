@@ -20,7 +20,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.app', ['title' => 'Staff Payroll & Salary Slips — Riwaj Grand ERP'])]
+#[Layout('components.layouts.app', ['title' => 'Staff Payroll & Salary Slips â€” Riwaj Grand ERP'])]
 class StaffPayroll extends Component
 {
     public string $selectedMonth = '';
@@ -99,7 +99,7 @@ class StaffPayroll extends Component
     {
         $user = Auth::user();
         if (! $user || ! $user->tenant_id || ! PermissionMatrix::userCan($user, 'payroll.manage')) {
-            abort(403, 'Unauthorized. Payroll management permission is required.');
+            abort(403, 'Unauthorized. Payroll management requires the payroll.manage permission within a tenant.');
         }
     }
 
@@ -208,6 +208,7 @@ class StaffPayroll extends Component
             foreach ($derivedAmounts as $amount) {
                 if (! is_finite($amount) || $amount < 0 || $amount > PayrollModel::MAX_MONEY_AMOUNT) {
                     $skipped[] = $m->name.' (calculated payroll component exceeds the supported amount).';
+
                     continue 2;
                 }
             }

@@ -7,7 +7,6 @@ use App\Models\Booking;
 use App\Models\GuestRsvp;
 use App\Models\Hall;
 use App\Models\User;
-use App\Models\User;
 use App\Services\BookingService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;

@@ -8,6 +8,7 @@ use App\Models\Package;
 use App\Models\Payment;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\BookingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -217,7 +218,7 @@ class ApiBookingFinancialIntegrityTest extends TestCase
     public function test_front_desk_cannot_cancel_a_booking_without_bookings_cancel_permission(): void
     {
         $hall = Hall::query()->firstOrFail();
-        $booking = app(\App\Services\BookingService::class)->createReservation([
+        $booking = app(BookingService::class)->createReservation([
             'hall_id' => $hall->id,
             'event_date' => now()->addDays(280)->toDateString(),
             'slot_type' => 'EVENING',
@@ -246,7 +247,7 @@ class ApiBookingFinancialIntegrityTest extends TestCase
     public function test_booking_manager_can_cancel_a_booking_with_explicit_permission(): void
     {
         $hall = Hall::query()->firstOrFail();
-        $booking = app(\App\Services\BookingService::class)->createReservation([
+        $booking = app(BookingService::class)->createReservation([
             'hall_id' => $hall->id,
             'event_date' => now()->addDays(281)->toDateString(),
             'slot_type' => 'EVENING',
@@ -373,7 +374,7 @@ class ApiBookingFinancialIntegrityTest extends TestCase
             ->where('tenant_id', $hall->tenant_id)
             ->where('role', 'ROLE_TENANT_OWNER')
             ->firstOrFail();
-        $service = app(\App\Services\BookingService::class);
+        $service = app(BookingService::class);
         $date = now()->addDays(240)->toDateString();
 
         $base = [
@@ -454,4 +455,46 @@ class ApiBookingFinancialIntegrityTest extends TestCase
             ->assertOk();
     }
 
+    public function test_content_moderator_cannot_read_booking_or_service_booking_api_records(): void
+    {
+        $moderator = User::factory()->create([
+            'role' => 'ROLE_CONTENT_MODERATOR',
+            'status' => 'ACTIVE',
+            'tenant_id' => null,
+        ]);
+        $moderator->assignRole('ROLE_CONTENT_MODERATOR');
+
+        $this->actingAs($moderator)
+            ->getJson('/api/v1/bookings')
+            ->assertForbidden();
+
+        $this->actingAs($moderator)
+            ->getJson('/api/v1/service-bookings')
+            ->assertForbidden();
+    }
+
+    public function test_platform_support_can_read_global_booking_queues_but_finance_cannot(): void
+    {
+        $support = User::factory()->create([
+            'role' => 'ROLE_PLATFORM_SUPPORT',
+            'status' => 'ACTIVE',
+            'tenant_id' => null,
+        ]);
+        $support->assignRole('ROLE_PLATFORM_SUPPORT');
+
+        $finance = User::factory()->create([
+            'role' => 'ROLE_PLATFORM_FINANCE',
+            'status' => 'ACTIVE',
+            'tenant_id' => null,
+        ]);
+        $finance->assignRole('ROLE_PLATFORM_FINANCE');
+
+        $this->actingAs($support)
+            ->getJson('/api/v1/bookings')
+            ->assertOk();
+
+        $this->actingAs($finance)
+            ->getJson('/api/v1/bookings')
+            ->assertForbidden();
+    }
 }

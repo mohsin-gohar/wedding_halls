@@ -6,10 +6,13 @@ use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\Expense;
 use App\Models\Hall;
+use App\Models\PurchaseOrder;
+use App\Models\UtilityLog;
 use App\Support\CashOnlyPayments;
 use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -26,7 +29,7 @@ class ExpenseTracker extends Component
     // Form inputs
     public ?string $hall_id = null;
 
-    public string $category = 'GENERATOR_DIESEL';
+    public string $category = 'OTHER';
 
     public string $title = '';
 
@@ -49,7 +52,7 @@ class ExpenseTracker extends Component
 
     public ?string $edit_hall_id = null;
 
-    public string $edit_category = 'GENERATOR_DIESEL';
+    public string $edit_category = 'OTHER';
 
     public string $edit_title = '';
 
@@ -69,15 +72,21 @@ class ExpenseTracker extends Component
 
     public ?string $errorMessage = null;
 
+    public bool $showVoided = false;
+
+    public ?string $voidingExpenseId = null;
+
+    public string $voidReason = '';
+
     protected $rules = [
-        'category' => 'required|string',
+        'category' => 'required|in:RAW_FOOD_MEAT,FRESH_FLORAL_DECOR,STAFF_WAGES,STAFF_DAILY_WAGES,MAINTENANCE_REPAIRS,CATERING_SUPPLIES,MARKETING_ADS,OTHER,CHILLER_AC,CLEANING_HYGIENE,KITCHEN_GAS,MISC_OPERATIONAL',
         'title' => 'required|string|max:150',
         'amount' => 'required|numeric|min:1|max:9999999999.99',
         'expense_date' => 'required|date',
         'payee' => 'nullable|string|max:150',
         'payment_method' => 'required|in:CASH',
         'receipt_number' => 'nullable|string|max:80',
-        'notes' => 'nullable|string',
+        'notes' => 'nullable|string|max:2000',
     ];
 
     private function authorizeExpenseAction(string $permission): void
@@ -89,13 +98,36 @@ class ExpenseTracker extends Component
 
     public function mount()
     {
-        $this->authorizeExpenseAction('expenses.view');
+        $this->authorizeExpenseViewer();
 
         $this->expense_date = Carbon::now()->format('Y-m-d');
     }
 
+    private function authorizeExpenseViewer(): void
+    {
+        $user = Auth::user();
+
+        abort_unless(
+            $user && $user->tenant_id && PermissionMatrix::userCan($user, 'expenses.view'),
+            403,
+            'Unauthorized. Expense visibility requires expenses.view within a tenant.'
+        );
+    }
+
+    private function authorizeExpenseManager(): void
+    {
+        $user = Auth::user();
+
+        abort_unless(
+            $user && $user->tenant_id && PermissionMatrix::userCan($user, 'expenses.manage'),
+            403,
+            'Unauthorized. Expense changes require expenses.manage within a tenant.'
+        );
+    }
+
     public function openCreateModal()
     {
+        $this->authorizeExpenseManager();
         $this->reset(['title', 'amount', 'payee', 'receipt_number', 'notes', 'errorMessage', 'feedbackMessage']);
         $this->expense_date = Carbon::now()->format('Y-m-d');
         $this->category = 'GENERATOR_DIESEL';
@@ -110,7 +142,7 @@ class ExpenseTracker extends Component
 
     public function createExpense()
     {
-        $this->authorizeExpenseAction('expenses.manage');
+        $this->authorizeExpenseManager();
         $tenantId = Auth::user()->tenant_id;
         $this->validate(array_merge($this->rules, [
             'hall_id' => ['nullable', Rule::exists('halls', 'id')->where('tenant_id', $tenantId)],
@@ -121,7 +153,7 @@ class ExpenseTracker extends Component
             'hall_id' => ! empty($this->hall_id) ? $this->hall_id : null,
             'category' => $this->category,
             'title' => $this->title,
-            'amount' => (float) $this->amount,
+            'amount' => round((float) $this->amount, 2),
             'expense_date' => $this->expense_date,
             'payee' => $this->payee,
             'payment_method' => $this->payment_method,
@@ -145,7 +177,9 @@ class ExpenseTracker extends Component
 
     public function openEditModal(string $expenseId)
     {
+        $this->authorizeExpenseManager();
         $expense = Expense::where('tenant_id', Auth::user()->tenant_id)->findOrFail($expenseId);
+        $this->assertExpenseCanBeManuallyAdjusted($expense);
         $this->editingExpenseId = $expense->id;
         $this->edit_hall_id = $expense->hall_id;
         $this->edit_category = $expense->category;
@@ -169,13 +203,20 @@ class ExpenseTracker extends Component
 
     public function updateExpense()
     {
-        $this->authorizeExpenseAction('expenses.manage');
+        $this->authorizeExpenseManager();
         if (! $this->editingExpenseId) {
             return;
         }
 
         $tenantId = Auth::user()->tenant_id;
         $expense = Expense::where('tenant_id', $tenantId)->findOrFail($this->editingExpenseId);
+        $this->assertExpenseCanBeManuallyAdjusted($expense);
+        $before = [
+            'category' => $expense->category,
+            'title' => $expense->title,
+            'amount' => (string) $expense->amount,
+            'expense_date' => $expense->expense_date?->format('Y-m-d'),
+        ];
         $originalMethod = (string) ($expense->payment_method ?? '');
         $allowedMethods = $originalMethod === CashOnlyPayments::CASH
             ? CashOnlyPayments::METHODS
@@ -183,21 +224,26 @@ class ExpenseTracker extends Component
 
         $this->validate([
             'edit_hall_id' => ['nullable', Rule::exists('halls', 'id')->where('tenant_id', $tenantId)],
-            'edit_category' => 'required|string',
+            'edit_category' => ['required', Rule::in([
+                'RAW_FOOD_MEAT',
+                'FRESH_FLORAL_DECOR', 'STAFF_WAGES', 'STAFF_DAILY_WAGES',
+                'MAINTENANCE_REPAIRS', 'CATERING_SUPPLIES', 'MARKETING_ADS',
+                'OTHER', 'CHILLER_AC', 'CLEANING_HYGIENE', 'KITCHEN_GAS', 'MISC_OPERATIONAL',
+            ])],
             'edit_title' => 'required|string|max:150',
             'edit_amount' => 'required|numeric|min:1|max:9999999999.99',
             'edit_expense_date' => 'required|date',
             'edit_payee' => 'nullable|string|max:150',
             'edit_payment_method' => ['required', Rule::in($allowedMethods)],
             'edit_receipt_number' => 'nullable|string|max:80',
-            'edit_notes' => 'nullable|string',
+            'edit_notes' => 'nullable|string|max:2000',
         ]);
 
         $update = [
             'hall_id' => ! empty($this->edit_hall_id) ? $this->edit_hall_id : null,
             'category' => $this->edit_category,
             'title' => $this->edit_title,
-            'amount' => (float) $this->edit_amount,
+            'amount' => round((float) $this->edit_amount, 2),
             'expense_date' => $this->edit_expense_date,
             'payee' => $this->edit_payee,
             'receipt_number' => $this->edit_receipt_number,
@@ -214,38 +260,102 @@ class ExpenseTracker extends Component
 
         AuditLog::log(
             'EXPENSE_UPDATED',
-            "Updated expense [{$expense->title}] of PKR ".number_format($expense->amount),
-            Auth::user()->tenant_id,
-            'Expense',
-            $expense->id
+            'Updated expense. Before: '.json_encode($before, JSON_UNESCAPED_SLASHES).' After: '.json_encode([
+                'category' => $expense->category,
+                'title' => $expense->title,
+                'amount' => (string) $expense->amount,
+                'expense_date' => $expense->expense_date?->format('Y-m-d'),
+            ], JSON_UNESCAPED_SLASHES),
+            $tenantId,
+            Expense::class,
+            (string) $expense->id
         );
 
         $this->feedbackMessage = "Expense [{$expense->title}] updated successfully!";
         $this->closeEditModal();
     }
 
-    public function deleteExpense(string $expenseId)
+    private function assertExpenseCanBeManuallyAdjusted(Expense $expense): void
     {
-        $this->authorizeExpenseAction('expenses.manage');
+        if ($expense->payroll_id) {
+            abort(403, 'Payroll-linked expenses must be corrected through the payroll workflow.');
+        }
+
+        if (in_array($expense->category, ['GENERATOR_DIESEL', 'WAPDA_ELECTRICITY'], true)
+            || UtilityLog::where('expense_id', $expense->id)->exists()) {
+            abort(403, 'Utility-linked expenses must be corrected through the utility workflow.');
+        }
+
+        if ($expense->receipt_number && PurchaseOrder::where('tenant_id', $expense->tenant_id)
+            ->where('po_number', $expense->receipt_number)
+            ->where('status', 'PAID')
+            ->exists()) {
+            abort(403, 'Purchase-order expenses must be corrected through the procurement workflow.');
+        }
+    }
+
+    public function openVoidModal(string $expenseId): void
+    {
+        $this->authorizeExpenseManager();
         $expense = Expense::where('tenant_id', Auth::user()->tenant_id)->findOrFail($expenseId);
-        $amount = $expense->amount;
-        $title = $expense->title;
-        $expense->delete();
+        $this->assertExpenseCanBeVoided($expense);
+        $this->voidingExpenseId = $expenseId;
+        $this->voidReason = '';
+        $this->errorMessage = null;
+    }
 
-        AuditLog::log(
-            'EXPENSE_DELETED',
-            'Deleted expense of PKR '.number_format($amount)." [{$title}].",
-            Auth::user()->tenant_id,
-            'Expense',
-            $expenseId
-        );
+    public function cancelVoid(): void
+    {
+        $this->voidingExpenseId = null;
+        $this->voidReason = '';
+    }
 
-        $this->feedbackMessage = 'Expense record deleted.';
+    public function voidExpense(): void
+    {
+        $this->authorizeExpenseManager();
+        $this->validate([
+            'voidingExpenseId' => ['required', Rule::exists('expenses', 'id')->where('tenant_id', Auth::user()->tenant_id)],
+            'voidReason' => 'required|string|min:8|max:500',
+        ]);
+
+        $tenantId = Auth::user()->tenant_id;
+        $userId = Auth::id();
+
+        DB::transaction(function () use ($tenantId, $userId): void {
+            $expense = Expense::where('tenant_id', $tenantId)
+                ->whereKey($this->voidingExpenseId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($expense->is_voided) {
+                return;
+            }
+
+            $this->assertExpenseCanBeVoided($expense);
+
+            $expense->forceFill([
+                'is_voided' => true,
+                'voided_at' => now(),
+                'voided_by_user_id' => $userId,
+                'void_reason' => trim($this->voidReason),
+            ])->save();
+
+            AuditLog::log(
+                'EXPENSE_VOIDED',
+                'Voided expense PKR '.number_format((float) $expense->amount, 2).' ['.$expense->title.']. Reason: '.trim($this->voidReason),
+                $tenantId,
+                'Expense',
+                (string) $expense->id
+            );
+        });
+
+        $this->feedbackMessage = 'Expense voided. Its original record is retained for audit history.';
+        $this->cancelVoid();
     }
 
     public function render()
     {
-        $this->authorizeExpenseAction('expenses.view');
+        $this->authorizeExpenseViewer();
         $tenantId = Auth::user()->tenant_id;
         $halls = Hall::where('tenant_id', $tenantId)->get();
 
@@ -263,15 +373,19 @@ class ExpenseTracker extends Component
         }
 
         // Queries
-        $expensesQuery = Expense::where('tenant_id', $tenantId)
+        $expensesQuery = Expense::withVoided()
+            ->where('tenant_id', $tenantId)
+            ->where('is_voided', $this->showVoided)
             ->whereBetween('expense_date', [$startDate, $endDate]);
 
         if ($this->filterCategory !== 'ALL') {
             $expensesQuery->where('category', $this->filterCategory);
         }
 
-        $expenses = $expensesQuery->with(['hall', 'creator'])->latest('expense_date')->get();
-        $totalExpenses = (float) $expenses->sum('amount');
+        $expenses = $expensesQuery->with(['hall', 'creator', 'voidedBy'])->latest('expense_date')->get();
+        $totalExpenses = (float) Expense::where('tenant_id', $tenantId)
+            ->whereBetween('expense_date', [$startDate, $endDate])
+            ->sum('amount');
 
         // Revenue query in same period
         $bookingsQuery = Booking::where('tenant_id', $tenantId)
@@ -292,6 +406,8 @@ class ExpenseTracker extends Component
 
         return view('livewire.expense-tracker', [
             'expenses' => $expenses,
+            'paidPoNumbers' => PurchaseOrder::where('tenant_id', $tenantId)->where('status', 'PAID')->pluck('po_number'),
+            'utilityExpenseIds' => UtilityLog::where('tenant_id', $tenantId)->whereNotNull('expense_id')->pluck('expense_id'),
             'halls' => $halls,
             'totalExpenses' => $totalExpenses,
             'totalRevenue' => $totalRevenue,

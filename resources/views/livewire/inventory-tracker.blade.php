@@ -17,13 +17,16 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-            @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.manage'))
-            <button wire:click="openCreateItemModal" class="btn-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-md">
-                + Add Inventory Item
-            </button>
-            <button wire:click="openPoModal" class="btn-outline-gold !h-9 !px-4 text-xs font-mono uppercase font-bold">
-                + Purchase Order
-            </button>
+            @if($canManageInventory)
+                <button wire:click="openCreateItemModal" class="btn-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-md">
+                    + Add Inventory Item
+                </button>
+            @endif
+            @if($canCreatePurchaseOrder)
+                <button wire:click="openPoModal" class="btn-outline-gold !h-9 !px-4 text-xs font-mono uppercase font-bold">
+                    + Purchase Order
+                </button>
+            @endif
             @endif
         </div>
     </div>
@@ -53,7 +56,7 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-4 space-y-1 shadow-sm dark:shadow-xl relative overflow-hidden group hover:border-[#C6A15B] transition duration-300">
             <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-[#C6A15B] to-transparent absolute top-0 left-0 opacity-0 group-hover:opacity-100 dark:opacity-60 transition duration-300"></div>
-            <span class="text-[10px] uppercase font-mono tracking-widest text-stone-500 dark:text-stone-400 font-bold block">Total Catalog Items</span>
+            <span class="text-[10px] uppercase font-mono tracking-widest text-stone-500 dark:text-stone-400 font-bold block">{{ $showArchived ? 'Archived Catalog Items' : 'Active Catalog Items' }}</span>
             <div class="font-cinzel text-xl text-[#171513] dark:text-white font-bold">{{ $items->count() }} Items</div>
         </div>
 
@@ -100,7 +103,10 @@
     @if($activeTab === 'stock')
         <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-6 shadow-sm dark:shadow-xl">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E7E5E4] pb-4">
-                <div class="flex items-center gap-3">
+                <div class="flex flex-wrap items-center gap-3">
+                    <button type="button" wire:click="$toggle('showArchived')" class="btn-outline-gold !h-8 !px-3 text-[10px] font-bold uppercase font-mono">
+                        {{ $showArchived ? 'Show active items' : 'Show archived items' }}
+                    </button>
                     <label class="text-xs font-mono uppercase text-stone-600 font-bold">Filter Category:</label>
                     <select wire:model.live="selectedCategory" 
                             class="bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono px-3 py-1.5 text-stone-900 dark:text-stone-100 outline-none focus:border-[#C6A15B]">
@@ -115,10 +121,11 @@
                     </select>
                 </div>
 
-                @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.manage'))
-                <button wire:click="openCreateItemModal" class="btn-gold !h-8 !px-3 text-xs font-bold uppercase font-mono">
-                    + New Inventory Item
-                </button>
+                @if($canManageInventory)
+                    <button wire:click="openCreateItemModal" class="btn-gold !h-8 !px-3 text-xs font-bold uppercase font-mono">
+                        + New Inventory Item
+                    </button>
+                @endif
                 @endif
             </div>
 
@@ -151,7 +158,7 @@
                                     <div class="text-sm font-bold {{ $i->isLowStock() ? 'text-[#171513]' : 'text-[#8F7239]' }}">
                                         {{ number_format($i->current_stock, 1) }} {{ $i->unit }}
                                     </div>
-                                    @if($i->isLowStock())
+                                    @if($i->is_active && $i->isLowStock())
                                         <span class="text-[9px] font-bold text-[#171513] bg-[#171513]/8 px-1.5 py-0.5 border border-[#C6A15B]/40 uppercase">
                                             ⚠️ Low Stock
                                         </span>
@@ -171,26 +178,18 @@
                                 </td>
                                 <td class="p-3 text-right whitespace-nowrap">
                                     <div class="inline-flex items-center justify-end gap-1.5 font-sans">
-                                        @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.manage'))
-                                        <button wire:click="openMovementModal('{{ $i->id }}', 'STOCK_IN')" 
-                                                class="tbtn tbtn-green" title="Add Stock In">
-                                            + In
-                                        </button>
-                                        <button wire:click="openMovementModal('{{ $i->id }}', 'STOCK_OUT')" 
-                                                class="tbtn tbtn-amber" title="Record Usage Deduction">
-                                            - Out
-                                        </button>
-                                        <button wire:click="openEditItemModal('{{ $i->id }}')" 
-                                                class="tbtn tbtn-outline" title="Edit Item Details">
-                                            Edit
-                                        </button>
-                                        <button wire:click="deleteItem('{{ $i->id }}')" 
-                                                onclick="return confirm('Delete this inventory item?') || event.stopImmediatePropagation()"
-                                                class="tbtn tbtn-red" title="Delete Item">
-                                            Del
-                                        </button>
+                                        @if($i->is_active && $canManageInventory)
+                                            <button wire:click="openMovementModal('{{ $i->id }}', 'STOCK_IN')" class="tbtn tbtn-green" title="Add Stock In">+ In</button>
+                                            <button wire:click="openMovementModal('{{ $i->id }}', 'STOCK_OUT')" class="tbtn tbtn-amber" title="Record Usage Deduction">- Out</button>
+                                            <button wire:click="openEditItemModal('{{ $i->id }}')" class="tbtn tbtn-outline" title="Edit Item Details">Edit</button>
+                                            <button wire:click="deleteItem('{{ $i->id }}')" onclick="return confirm('Archive this inventory item? Historical records will be retained.') || event.stopImmediatePropagation()" class="tbtn tbtn-red" title="Archive Item">Archive</button>
+                                        @elseif(! $i->is_active)
+                                            <span class="mr-2 text-[10px] font-bold uppercase tracking-wider text-stone-500">Archived</span>
+                                            @if($canManageInventory)
+                                                <button wire:click="restoreItem('{{ $i->id }}')" onclick="return confirm('Restore this inventory item to active stock?') || event.stopImmediatePropagation()" class="tbtn tbtn-green" title="Restore Item">Restore</button>
+                                            @endif
                                         @else
-                                            <span class="text-[10px] font-mono text-stone-400">View only</span>
+                                            <span class="text-[10px] font-semibold uppercase tracking-wider text-stone-400">Read only</span>
                                         @endif
                                     </div>
                                 </td>
@@ -330,12 +329,14 @@
                                     {{ $po->notes ?: 'General stock replenishment' }}
                                 </td>
                                 <td class="p-3 text-right">
-                                    @if($po->status !== 'PAID' && \App\Support\PermissionMatrix::userCan(auth()->user(), 'expenses.manage'))
+                                    @if($po->status !== 'PAID' && $canPayPurchaseOrders)
                                         <button wire:click="markPoPaid('{{ $po->id }}')" 
                                                 class="px-3 py-1 bg-[#C6A15B] hover:bg-[#C6A15B] text-white font-bold text-xs uppercase shadow">
                                             Mark Paid &rarr;
                                         </button>
-                                    @elseif($po->status === 'PAID')
+                                    @elseif($po->status !== 'PAID')
+                                        <span class="text-stone-400 text-[10px]">Awaiting finance</span>
+                                    @else
                                         <span class="text-stone-400 text-[10px]">Settled &amp; Posted</span>
                                     @else
                                         <span class="text-stone-400 text-[10px]">View only</span>

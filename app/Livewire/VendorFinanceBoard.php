@@ -247,6 +247,9 @@ class VendorFinanceBoard extends Component
 
     public function render()
     {
+        $user = Auth::user();
+        abort_unless($user && $user->tenant_id && PermissionMatrix::userCan($user, 'wallet.view'), 403);
+
         return view('livewire.vendor-finance-board')
             ->layout('components.layouts.app', [
                 'title' => 'Finance & Earnings — Vendor ERP',

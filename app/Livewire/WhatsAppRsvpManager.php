@@ -146,24 +146,26 @@ class WhatsAppRsvpManager extends Component
         }
 
         $body = trim($this->simMessage);
-        $status = 'ATTENDING';
-        $count = 1;
-        $reply = '';
+        $status = null;
+        $count = null;
+        $reply = 'Please reply YES, YES followed by your guest count, or NO to decline.';
 
-        if (preg_match('/(decline|no|nahi|cannot|cancel)/i', $body)) {
+        if (preg_match('/(?:\\bdecline\\b|\\bno\\b|\\bnahi\\b|\\bcannot\\b|\\bcancel\\b)/i', $body)) {
             $status = 'DECLINED';
             $count = 0;
             $reply = "Thank you {$rsvp->guest_name}. We have updated your status to Declined.";
-        } elseif (preg_match('/(?:attending|yes|aunga|haan|persons?|people|guests?|head)[\s:]*(\d+)/i', $body, $matches)) {
+        } elseif (preg_match('/(?:\\b(?:attending|yes|aunga|haan)\\b(?:[\\s:]*(\\d+))?|\\b(?:persons?|people|guests?|head)\\b[\\s:]*(\\d+))/i', $body, $matches)
+            || preg_match('/^(\\d+)$/', $body, $matches)) {
             $status = 'ATTENDING';
-            $count = (int) $matches[1];
+            $guestCount = $matches[1] ?? $matches[2] ?? null;
+            $count = $guestCount !== null && $guestCount !== ''
+                ? max(1, min(20, (int) $guestCount))
+                : 1;
             $reply = "Confirmed! Thank you {$rsvp->guest_name}, {$count} attendee(s) registered on the hall door checklist.";
-        } elseif (preg_match('/^(\d+)$/', $body, $matches)) {
-            $status = 'ATTENDING';
-            $count = (int) $matches[1];
-            $reply = "Confirmed! {$count} guest(s) recorded for {$rsvp->guest_name}.";
         } else {
-            $reply = "Thank you {$rsvp->guest_name}! Your response has been noted.";
+            $this->simBotReply = "🤖 Bot Response to {$rsvp->guest_name}: \"{$reply}\" (RSVP unchanged)";
+
+            return;
         }
 
         $rsvp->update([

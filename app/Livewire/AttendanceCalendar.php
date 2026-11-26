@@ -80,7 +80,7 @@ class AttendanceCalendar extends Component
     {
         $user = Auth::user();
         if (! $user || ! $user->tenant_id || ! PermissionMatrix::userCan($user, 'staff.attendance')) {
-            abort(403, 'Unauthorized. Staff attendance permission is required.');
+            abort(403, 'Unauthorized. Attendance calendar requires staff.attendance within a tenant.');
         }
     }
 

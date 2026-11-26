@@ -14,6 +14,7 @@ class UtilityLog extends Model
     protected $fillable = [
         'tenant_id',
         'booking_id',
+        'expense_id',
         'generator_run_hours',
         'diesel_liters_consumed',
         'diesel_rate_per_liter',
@@ -41,6 +42,11 @@ class UtilityLog extends Model
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
+    }
+
+    public function expense(): BelongsTo
+    {
+        return $this->belongsTo(Expense::class);
     }
 
     public function calculateTotalCost(): float

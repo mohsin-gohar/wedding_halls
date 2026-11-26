@@ -17,7 +17,7 @@ class DocumentController extends Controller
     /**
      * Authorize access to customer-facing booking documents (Agreements, Invoices, Quotations).
      */
-    protected function authorizeBookingAccess(Booking $booking, string $permission): void
+    protected function authorizeBookingAccess(Booking $booking, string $permission = 'documents.view'): void
     {
         $user = auth()->user();
         if (! $user) {
@@ -32,13 +32,19 @@ class DocumentController extends Controller
             return;
         }
 
-        if ($user->tenant_id
-            && (string) $user->tenant_id === (string) $booking->tenant_id
+        // Platform finance may access financial documents across tenants,
+        // but only where its role has the specific financial permission.
+        if ($user->isPlatformFinance() && PermissionMatrix::userCan($user, $permission)) {
+            return;
+        }
+
+        // 2. Tenant staff must have both the tenant match and document permission.
+        if ($user->tenant_id && (string) $user->tenant_id === (string) $booking->tenant_id
             && PermissionMatrix::userCan($user, $permission)) {
             return;
         }
 
-        // 3. Verified customer account linked to the booking (never match email alone — IDOR risk)
+        // 3. Verified customer account linked to the booking (never match email alone - IDOR risk)
         if ($user->isCustomer() && $booking->customer_id && (string) $booking->customer_id === (string) $user->id) {
             return;
         }
@@ -61,8 +67,13 @@ class DocumentController extends Controller
             return;
         }
 
-        if ($user->tenant_id
-            && (string) $user->tenant_id === (string) $payment->tenant_id
+        // Platform finance has cross-tenant read scope, limited to payment visibility.
+        if ($user->isPlatformFinance() && PermissionMatrix::userCan($user, 'payments.view')) {
+            return;
+        }
+
+        // 2. Tenant staff must belong to this tenant and hold financial read access.
+        if ($user->tenant_id && (string) $user->tenant_id === (string) $payment->tenant_id
             && PermissionMatrix::userCan($user, 'payments.view')) {
             return;
         }
@@ -92,8 +103,8 @@ class DocumentController extends Controller
             return;
         }
 
-        if ($user->tenant_id
-            && (string) $user->tenant_id === (string) $kot->tenant_id
+        // 2. Tenant operational staff must have the explicit kitchen read permission.
+        if ($user->tenant_id && (string) $user->tenant_id === (string) $kot->tenant_id
             && PermissionMatrix::userCan($user, 'kitchen.view')) {
             return;
         }
@@ -108,7 +119,7 @@ class DocumentController extends Controller
     public function bookingAgreement(string $id, Request $request)
     {
         $booking = Booking::with(['hall.venue', 'tenant', 'package', 'payments'])->findOrFail($id);
-        $this->authorizeBookingAccess($booking, 'contracts.view');
+        $this->authorizeBookingAccess($booking, 'documents.view');
 
         if ($request->boolean('pdf')) {
             $pdf = Pdf::loadView('documents.agreement', compact('booking'))
@@ -206,14 +217,14 @@ class DocumentController extends Controller
             abort(403, 'Unauthorized.');
         }
 
-        // Super Admin, an explicitly payroll-authorized tenant user, or the
-        // employee viewing their own slip within the same tenant.
+        // Tenant payroll viewers need the explicit payroll permission. An
+        // employee may still view their own slip, but only inside their tenant.
         $sameTenant = $user->tenant_id
             && (string) $user->tenant_id === (string) $payroll->tenant_id;
-        $isEmployee = $sameTenant && (string) $user->id === (string) $payroll->user_id;
-        $isPayrollStaff = $sameTenant && PermissionMatrix::userCan($user, 'payroll.view');
+        $canViewTenantPayroll = $sameTenant && PermissionMatrix::userCan($user, 'payroll.view');
+        $isOwnPayslip = $sameTenant && (string) $user->id === (string) $payroll->user_id;
 
-        if (! $user->isSuperAdmin() && ! $isEmployee && ! $isPayrollStaff) {
+        if (! $user->isSuperAdmin() && ! $canViewTenantPayroll && ! $isOwnPayslip) {
             abort(403, 'Forbidden. You do not have permission to view this confidential salary slip.');
         }
 
@@ -232,7 +243,7 @@ class DocumentController extends Controller
      * cash deposit slip) from private storage. Legacy historical uploads with
      * old payment labels remain readable.
      *
-     * The file is NEVER served directly by the web server — it lives outside
+     * The file is NEVER served directly by the web server - it lives outside
      * the public directory and every download is authorised. The stored path
      * is validated against traversal before it is read.
      */
@@ -250,10 +261,12 @@ class DocumentController extends Controller
             // Least privilege: only financial roles of the owning vendor and
             // the paying customer may open a confidential cash proof. General
             // operational staff (chef, floor, front desk, inventory) do not.
-            $isPlatformFinance = $user->isPlatformFinance();
+            $isPlatformFinance = $user->isPlatformFinance()
+                && PermissionMatrix::userCan($user, 'payments.view');
 
             $isVendorFinanceStaff = $user->tenant_id
                 && (string) $user->tenant_id === (string) $payment->tenant_id
+                && ($user->isTenantOwner() || $user->isAccountant())
                 && PermissionMatrix::userCan($user, 'payments.view');
 
             // The customer who made the payment may always see their own proof.
@@ -270,7 +283,7 @@ class DocumentController extends Controller
             abort(404, 'No proof document has been attached to this payment.');
         }
 
-        // Reject traversal attempts outright — the stored path must resolve
+        // Reject traversal attempts outright - the stored path must resolve
         // inside the private proofs directory.
         $relative = ltrim(str_replace('\\', '/', $payment->proof_path), '/');
 

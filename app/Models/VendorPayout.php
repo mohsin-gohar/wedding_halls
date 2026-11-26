@@ -40,7 +40,7 @@ class VendorPayout extends Model
 
     public function processor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'processed_by');
+        return $this->belongsTo(User::class, 'processed_by')->withTrashed();
     }
 
     public function transactions(): HasMany
