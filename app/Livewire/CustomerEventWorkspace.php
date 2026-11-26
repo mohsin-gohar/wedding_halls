@@ -445,7 +445,7 @@ class CustomerEventWorkspace extends Component
     {
         $event = $this->currentEvent();
 
-        if (!in_array($status, CustomerEventVendor::STATUSES, true)) {
+        if (! in_array($status, CustomerEventVendor::STATUSES, true)) {
             $this->errorMessage = 'Invalid vendor status.';
 
             return;
