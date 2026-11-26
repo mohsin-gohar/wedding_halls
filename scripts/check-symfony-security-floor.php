@@ -15,6 +15,7 @@ foreach ($minimums as $name => $minimum) {
     $package = $packages->firstWhere('name', $name);
     if ($package === null) {
         $failures[] = "{$name} is missing from composer.lock";
+
         continue;
     }
 
