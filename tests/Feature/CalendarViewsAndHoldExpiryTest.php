@@ -149,6 +149,7 @@ class CalendarViewsAndHoldExpiryTest extends TestCase
         $this->assertSame('HOLD', $unstamped->status);
         $this->assertTrue(AuditLog::where('action', 'BOOKING_HOLD_EXPIRED')->where('entity_id', $stamped->id)->exists());
     }
+
     public function test_calendar_csv_export_is_available_to_tenant_owner_and_scoped_to_selected_hall(): void
     {
         $hall = $this->hall();
@@ -171,5 +172,4 @@ class CalendarViewsAndHoldExpiryTest extends TestCase
             ->call('exportCalendarCsv')
             ->assertFileDownloaded('riwaj-grand-calendar.csv');
     }
-
 }
