@@ -44,7 +44,7 @@ class TwoFactorAuthComponent extends Component
 
     public function mount(?string $intended = null): void
     {
-        $this->intended = $intended ?? '/';
+        $this->intended = $this->normalizeIntended($intended);
 
         $user = Auth::user();
 
@@ -54,6 +54,23 @@ class TwoFactorAuthComponent extends Component
         }
 
         $this->qrCodeDataUri = $this->buildQrCodeDataUri();
+    }
+
+    /**
+     * Only local relative paths may be used as a post-2FA redirect target.
+     * A crafted `?intended=https://evil.example` must never become an open redirect.
+     */
+    private function normalizeIntended(?string $intended): string
+    {
+        if (! is_string($intended) || $intended === '') {
+            return '/';
+        }
+
+        if (! str_starts_with($intended, '/') || str_starts_with($intended, '//') || str_contains($intended, '\\')) {
+            return '/';
+        }
+
+        return $intended;
     }
 
     public function generateSecret(): void

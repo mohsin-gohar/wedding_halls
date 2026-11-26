@@ -12,6 +12,7 @@ use App\Models\Tenant;
 use App\Support\CashOnlyPayments;
 use App\Support\PermissionMatrix;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Cache;
@@ -271,17 +272,17 @@ class BookingService
 
         if ($authenticated && ! $authenticated->isCustomer() && ! $authenticated->isSuperAdmin()) {
             if (! $authenticated->tenant_id || (string) $authenticated->tenant_id !== (string) $hall->tenant_id) {
-                throw new \Illuminate\Auth\Access\AuthorizationException('You may only create bookings for your own venue.');
+                throw new AuthorizationException('You may only create bookings for your own venue.');
             }
 
             if (! PermissionMatrix::userCan($authenticated, 'bookings.create')) {
-                throw new \Illuminate\Auth\Access\AuthorizationException('Booking creation permission is required.');
+                throw new AuthorizationException('Booking creation permission is required.');
             }
         }
 
         if ((! $authenticated || $authenticated->isCustomer()) && ! app()->runningInConsole()) {
             if (! Hall::publicVisible()->whereKey($hall->id)->exists()) {
-                throw new \Illuminate\Auth\Access\AuthorizationException('This venue is not publicly accepting booking inquiries.');
+                throw new AuthorizationException('This venue is not publicly accepting booking inquiries.');
             }
         }
 
@@ -319,7 +320,7 @@ class BookingService
 
         if ((! $authenticated && ! app()->runningInConsole()) || $authenticated?->isCustomer()) {
             if ($status !== 'INQUIRY') {
-                throw new \Illuminate\Auth\Access\AuthorizationException('Public customers may only submit booking inquiries.');
+                throw new AuthorizationException('Public customers may only submit booking inquiries.');
             }
         }
 
@@ -441,19 +442,19 @@ class BookingService
         $actor = auth()->user();
         if ($actor && ! $actor->isSuperAdmin()) {
             if ($actor->isCustomer()) {
-                throw new \Illuminate\Auth\Access\AuthorizationException('Customers cannot change booking lifecycle status.');
+                throw new AuthorizationException('Customers cannot change booking lifecycle status.');
             }
 
             if (! $actor->tenant_id || (string) $actor->tenant_id !== (string) $snapshot->tenant_id) {
-                throw new \Illuminate\Auth\Access\AuthorizationException('You may only update bookings for your own venue.');
+                throw new AuthorizationException('You may only update bookings for your own venue.');
             }
 
             $requiredPermission = $status === 'CANCELLED' ? 'bookings.cancel' : 'bookings.update';
             if (! PermissionMatrix::userCan($actor, $requiredPermission)) {
-                throw new \Illuminate\Auth\Access\AuthorizationException('Booking lifecycle permission is required.');
+                throw new AuthorizationException('Booking lifecycle permission is required.');
             }
         } elseif (! $actor && ! app()->runningInConsole()) {
-            throw new \Illuminate\Auth\Access\AuthorizationException('Authentication is required to change booking status.');
+            throw new AuthorizationException('Authentication is required to change booking status.');
         }
 
         $hall = Hall::with(['tenant', 'venue'])->findOrFail($snapshot->hall_id);

@@ -205,6 +205,8 @@ class WalkInBookingModal extends Component
             $user = Auth::user();
             if ($this->isStaff && ! $user->isSuperAdmin() && $hall->tenant_id !== $user->tenant_id) {
                 $this->errorMessage = 'Unauthorized venue space.';
+                $this->hall_id = null;
+                $this->hall_rent = 0.0;
 
                 return;
             }
@@ -558,6 +560,9 @@ class WalkInBookingModal extends Component
         $selectedHall = null;
         if ($this->hall_id) {
             $selectedHallQuery = $this->isStaff ? Hall::with('tenant') : Hall::publicVisible()->with('tenant');
+            if ($this->isStaff && ! $user?->isSuperAdmin() && $user?->tenant_id) {
+                $selectedHallQuery->where('tenant_id', $user->tenant_id);
+            }
             $selectedHall = $selectedHallQuery->find($this->hall_id);
         }
 

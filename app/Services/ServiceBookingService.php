@@ -76,6 +76,16 @@ class ServiceBookingService
                 throw ServiceBookingException::notAwardable('This quotation request has already been awarded or closed.');
             }
 
+            // Never let a caller award a bid from a different RFQ or for a
+            // customer other than the one who owns the request.
+            if ((string) $bid->rfq_id !== (string) $rfq->id) {
+                throw ServiceBookingException::notFound('The quotation does not belong to this request.');
+            }
+
+            if ($customerId !== null && (int) $customerId !== (int) $rfq->client_id) {
+                throw ServiceBookingException::invalidState('Only the request owner may award this quotation.');
+            }
+
             if ($bid->status !== 'PENDING') {
                 throw ServiceBookingException::notAwardable('This quotation has already been answered.');
             }
@@ -467,10 +477,23 @@ class ServiceBookingService
         // A refund touches the booking, a refund row and the wallet ledger. If
         // the wallet debit fails, none of those writes may survive.
         return DB::transaction(function () use ($serviceBookingId, $reason, $tenantId): ServiceBooking {
-            $booking = $this->findTenantBooking($serviceBookingId, $tenantId);
+            // Row-lock the booking and re-check state inside the transaction:
+            // two concurrent cancellations must never create two cash refunds.
+            $booking = ServiceBooking::query()
+                ->where('tenant_id', $tenantId)
+                ->whereKey($serviceBookingId)
+                ->lockForUpdate()
+                ->firstOrFail();
 
             if (! $booking->isCancellable()) {
                 throw ServiceBookingException::invalidState('This service booking can no longer be cancelled.');
+            }
+
+            if (ServicePayment::query()
+                ->where('service_booking_id', $booking->id)
+                ->where('kind', 'REFUND')
+                ->exists()) {
+                throw ServiceBookingException::invalidState('A refund has already been recorded for this service booking.');
             }
 
             $booking->update([
@@ -479,22 +502,33 @@ class ServiceBookingService
                 'cancellation_reason' => $reason,
             ]);
 
+            $refundAmount = 0.0;
+
             if ((float) $booking->paid_amount > 0) {
+                $refundAmount = round((float) $booking->paid_amount, 2);
                 $refund = ServicePayment::create([
                     'tenant_id' => $booking->tenant_id,
                     'service_booking_id' => $booking->id,
                     'customer_id' => $booking->customer_id,
-                    'amount' => (float) $booking->paid_amount,
+                    'amount' => $refundAmount,
                     'method' => CashOnlyPayments::CASH,
                     'status' => 'REFUNDED',
                     'kind' => 'REFUND',
                     'notes' => $reason ?? 'Service booking cancelled before completion.',
                 ]);
 
-                $this->reverseBookingPayment($booking, (float) $refund->amount);
+                $this->reverseBookingPayment($booking, (float) $refund->amount, (string) $booking->id);
 
                 $booking->update(['paid_amount' => 0.0, 'payment_status' => 'REFUNDED']);
             }
+
+            AuditLog::log(
+                'SERVICE_BOOKING_CANCELLED',
+                "Service booking [{$booking->booking_reference}] cancelled by user ".((int) auth()->id()).'. Cash refund PKR '.number_format($refundAmount, 2).'.',
+                $booking->tenant_id,
+                'ServiceBooking',
+                (string) $booking->id
+            );
 
             return $booking->fresh();
         });
@@ -914,8 +948,14 @@ class ServiceBookingService
     // Payouts
     // ─────────────────────────────────────────────────────────────
 
-    public function requestVendorPayout(string $tenantId, int $vendorUserId, float $amount, string $method = CashOnlyPayments::CASH, ?array $accountDetails = null): VendorPayout
-    {
+    public function requestVendorPayout(
+        string $tenantId,
+        int $vendorUserId,
+        float $amount,
+        string $method = CashOnlyPayments::CASH,
+        ?array $accountDetails = null,
+        ?string $serviceBookingId = null
+    ): VendorPayout {
         CashOnlyPayments::assert($method, 'payouts');
 
         $amount = round($amount, 2);
@@ -924,7 +964,7 @@ class ServiceBookingService
             throw ServiceBookingException::invalidState('A payout amount must be greater than zero.');
         }
 
-        return DB::transaction(function () use ($tenantId, $amount, $method, $accountDetails): VendorPayout {
+        return DB::transaction(function () use ($tenantId, $amount, $method, $accountDetails, $serviceBookingId): VendorPayout {
             // Lock the wallet while checking available funds: two simultaneous
             // requests must never both pass the balance guard. Outstanding
             // REQUESTED payouts are treated as reserved funds even though the
@@ -953,12 +993,15 @@ class ServiceBookingService
 
             return VendorPayout::create([
                 'tenant_id' => $tenantId,
+                'service_booking_id' => $serviceBookingId,
                 'amount' => $amount,
                 'method' => $method,
                 'account_details' => $accountDetails ?? ['account_name' => 'Vendor Wallet Settlement'],
                 'status' => 'REQUESTED',
                 'reference' => 'PO-'.strtoupper(substr(bin2hex(random_bytes(3)), 0, 6)),
-                'note' => 'Auto-requested after full service payment settlement.',
+                'note' => $serviceBookingId
+                    ? 'Auto-requested after full settlement of service booking '.$serviceBookingId.'.'
+                    : 'Auto-requested after full service payment settlement.',
                 'requested_at' => now(),
             ]);
         });
@@ -1052,18 +1095,64 @@ class ServiceBookingService
         return $end->format('H:i');
     }
 
-    protected function reverseBookingPayment(ServiceBooking $booking, float $amount): void
+    protected function reverseBookingPayment(ServiceBooking $booking, float $amount, ?string $serviceBookingId = null): void
     {
         $booking->update(['paid_amount' => max(0.0, (float) $booking->paid_amount - $amount)]);
 
         $wallet = VendorWallet::query()
             ->where('tenant_id', $booking->tenant_id)
             ->where('is_primary', true)
+            ->lockForUpdate()
             ->first();
 
-        if ($wallet) {
-            $this->debitWallet($booking->tenant_id, (int) $wallet->id, $amount, 'REFUND', null, 'Service booking refund processed via wallet ledger.');
+        if (! $wallet) {
+            // A never-settled booking has no wallet credit to reverse. The
+            // customer's cash refund is still recorded by the caller.
+            return;
         }
+
+        // Reverse only what this booking actually put into the wallet, net of
+        // commission and any earlier reversals. A cash refund to the customer
+        // must never be blocked by an insufficient vendor wallet balance.
+        $credited = (float) WalletTransaction::query()
+            ->where('service_booking_id', $booking->id)
+            ->where('type', 'CREDIT')
+            ->where('source', 'BOOKING_PAYMENT')
+            ->sum('amount');
+        $commission = (float) WalletTransaction::query()
+            ->where('service_booking_id', $booking->id)
+            ->where('type', 'DEBIT')
+            ->where('source', 'COMMISSION')
+            ->sum('amount');
+        $reversed = (float) WalletTransaction::query()
+            ->where('service_booking_id', $booking->id)
+            ->where('type', 'DEBIT')
+            ->where('source', 'REFUND')
+            ->sum('amount');
+
+        $reversible = max(0.0, round($credited - $commission - $reversed, 2));
+        $toDebit = min(round($amount, 2), $reversible, round((float) $wallet->balance, 2));
+
+        if ($toDebit > 0) {
+            $this->debitWallet(
+                $booking->tenant_id,
+                (int) $wallet->id,
+                $toDebit,
+                'REFUND',
+                null,
+                'Service booking cash refund reversed from the vendor wallet.',
+                $serviceBookingId ?? (string) $booking->id
+            );
+        }
+
+        // Release any reservation for this cancelled booking so the vendor is
+        // never paid out for work that was refunded to the customer.
+        $bookingKey = $serviceBookingId ?? (string) $booking->id;
+        VendorPayout::query()
+            ->where('tenant_id', $booking->tenant_id)
+            ->where('status', 'REQUESTED')
+            ->where('service_booking_id', $bookingKey)
+            ->update(['status' => 'CANCELLED', 'updated_at' => now()]);
     }
 
     protected function settleServiceBookingPayment(ServiceBooking $booking): void
@@ -1106,13 +1195,13 @@ class ServiceBookingService
             );
         }
 
-        $this->requestVendorPayout($booking->tenant_id, (int) $wallet->user_id, $net);
+        $this->requestVendorPayout($booking->tenant_id, (int) $wallet->user_id, $net, CashOnlyPayments::CASH, null, (string) $booking->id);
     }
 
     protected function applyVerifiedPayment(ServiceBooking $booking, ServicePayment $payment): void
     {
         if ($payment->kind === 'REFUND') {
-            $this->reverseBookingPayment($booking, (float) $payment->amount);
+            $this->reverseBookingPayment($booking, (float) $payment->amount, (string) $booking->id);
             $booking->update(['payment_status' => 'REFUNDED']);
 
             return;
@@ -1139,8 +1228,10 @@ class ServiceBookingService
         }
 
         // Atomic increment: two concurrent settlements must not lose a credit.
+        // Re-read the row so balance_after reflects the committed balance and
+        // not a stale in-memory model instance.
         $wallet->increment('balance', $amount);
-        $balance = (float) $wallet->balance;
+        $balance = (float) $wallet->fresh()->balance;
 
         WalletTransaction::create([
             'tenant_id' => $booking->tenant_id,

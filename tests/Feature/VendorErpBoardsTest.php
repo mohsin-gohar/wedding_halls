@@ -280,7 +280,7 @@ class VendorErpBoardsTest extends TestCase
 
     public function test_service_prices_above_decimal_column_limit_are_rejected(): void
     {
-        $owner = $this->createVendorOwner();
+        $owner = $this->vendorOwner($this->cateringVendor());
 
         Livewire::actingAs($owner)
             ->test(VendorServicesManager::class)
@@ -298,23 +298,24 @@ class VendorErpBoardsTest extends TestCase
 
     public function test_non_finite_service_prices_are_rejected_before_persistence(): void
     {
-        $owner = $this->createVendorOwner();
+        $owner = $this->vendorOwner($this->cateringVendor());
+        $this->actingAs($owner);
 
-        Livewire::actingAs($owner)
-            ->test(VendorServicesManager::class)
-            ->set('serviceName', 'Infinite Service')
-            ->set('pricingType', 'FIXED')
-            ->set('priceFrom', INF)
-            ->call('saveService')
-            ->assertHasErrors(['priceFrom']);
+        // INF/NAN cannot cross Livewire's JSON transport, so exercise the
+        // server-side guard directly on a component instance.
+        $infinite = new VendorServicesManager;
+        $infinite->serviceName = 'Infinite Service';
+        $infinite->pricingType = 'FIXED';
+        $infinite->priceFrom = INF;
+        $infinite->saveService();
+        $this->assertTrue($infinite->getErrorBag()->has('priceFrom'));
 
-        Livewire::actingAs($owner)
-            ->test(VendorServicesManager::class)
-            ->set('serviceName', 'Not-a-number Service')
-            ->set('pricingType', 'FIXED')
-            ->set('priceTo', NAN)
-            ->call('saveService')
-            ->assertHasErrors(['priceTo']);
+        $notANumber = new VendorServicesManager;
+        $notANumber->serviceName = 'Not-a-number Service';
+        $notANumber->pricingType = 'FIXED';
+        $notANumber->priceTo = NAN;
+        $notANumber->saveService();
+        $this->assertTrue($notANumber->getErrorBag()->has('priceTo'));
 
         $this->assertDatabaseMissing('vendor_services', [
             'tenant_id' => $owner->tenant_id,
@@ -477,7 +478,6 @@ class VendorErpBoardsTest extends TestCase
             ->assertSet('bidProposal', '');
     }
 
-
     public function test_vendor_cannot_submit_or_overwrite_bid_after_rfq_is_closed(): void
     {
         $vendor = $this->cateringVendor();
@@ -492,5 +492,4 @@ class VendorErpBoardsTest extends TestCase
 
         $this->assertSame(0, RfqBid::query()->where('rfq_id', $rfq->id)->count());
     }
-
 }

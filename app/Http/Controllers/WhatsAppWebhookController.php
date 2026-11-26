@@ -146,7 +146,7 @@ class WhatsAppWebhookController extends Controller
 
         $status = null;
         $count = null;
-        $replyText = "We could not understand your RSVP. Please reply YES, YES followed by your guest count, or NO to decline.";
+        $replyText = 'We could not understand your RSVP. Please reply YES, YES followed by your guest count, or NO to decline.';
 
         if (preg_match('/(?:\\bdecline\\b|\\bnahi\\b|\\bcannot\\b|\\bcancel\\b|\\bno\\b)/i', $messageBody)) {
             $status = 'DECLINED';

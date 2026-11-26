@@ -31,7 +31,6 @@ class BookingController extends ApiController
     public function index(Request $request)
     {
         $user = $this->apiUser($request);
-        $this->assertPermission($user, 'bookings.view');
 
         if (! $user->isCustomer()) {
             $this->assertPermission($user, 'bookings.view');
@@ -67,7 +66,6 @@ class BookingController extends ApiController
     public function show(Request $request, string $id)
     {
         $user = $this->apiUser($request);
-        $this->assertPermission($user, 'bookings.view');
 
         if (! $user->isCustomer()) {
             $this->assertPermission($user, 'bookings.view');

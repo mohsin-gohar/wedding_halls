@@ -15,7 +15,6 @@ class ServiceBookingPolicy
             || PermissionMatrix::userCan($user, 'service-bookings.view');
     }
 
-
     public function view(User $user, ServiceBooking $booking): bool
     {
         if ($user->isSuperAdmin()) {

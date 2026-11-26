@@ -48,6 +48,7 @@ class CalendarShiftAuthorizationTest extends TestCase
             ->call('saveShiftPolicy')
             ->assertHasNoErrors();
     }
+
     public function test_walk_in_terminal_requires_booking_create_or_manage_permission(): void
     {
         $tenant = Tenant::query()->where('slug', 'riwaj-grand')->firstOrFail();
@@ -67,9 +68,11 @@ class CalendarShiftAuthorizationTest extends TestCase
             ->call('openWalkInModal')
             ->assertStatus(403);
 
+        // Floor staff are operational viewers only: creating CONFIRMED bookings
+        // and collecting cash advances is reserved for front desk/managers.
         Livewire::actingAs($floorStaff)
             ->test(WalkInBookingModal::class)
-            ->assertSet('isStaff', true);
+            ->assertSet('isStaff', false);
     }
 
     public function test_service_staff_without_booking_visibility_cannot_open_tenant_calendar(): void
@@ -85,5 +88,4 @@ class CalendarShiftAuthorizationTest extends TestCase
             ->test(CalendarShiftGrid::class)
             ->assertStatus(403);
     }
-
 }

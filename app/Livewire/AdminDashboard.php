@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Exceptions\SlotAlreadyBookedException;
 use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\ContactInquiry;
@@ -16,6 +17,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Models\VendorWallet;
 use App\Models\Venue;
+use App\Services\BookingService;
 use App\Services\NotificationService;
 use App\Services\PlatformAnalyticsService;
 use App\Services\SubscriptionService;
@@ -1114,8 +1116,8 @@ class AdminDashboard extends Component
         $previousStatus = $booking->status;
 
         try {
-            $booking = app(\App\Services\BookingService::class)->transitionStatus($booking, $status);
-        } catch (\App\Exceptions\SlotAlreadyBookedException|\InvalidArgumentException $exception) {
+            $booking = app(BookingService::class)->transitionStatus($booking, $status);
+        } catch (SlotAlreadyBookedException|\InvalidArgumentException $exception) {
             $this->errorMessage = $exception->getMessage();
 
             return;

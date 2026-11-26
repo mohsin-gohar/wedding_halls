@@ -67,7 +67,9 @@ class ResetPassword extends Component
                     'remember_token' => Str::random(60),
                 ])->save();
 
-                Auth::login($user);
+                if ($user->status === 'ACTIVE') {
+                    Auth::login($user);
+                }
             }
         );
 

@@ -9,9 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('utility_logs', function (Blueprint $table): void {
-            $table->foreignUuid('expense_id')->nullable()->after('booking_id')
-                ->constrained('expenses')->nullOnDelete();
-            $table->unique('expense_id', 'utility_logs_expense_unique');
+            if (! Schema::hasColumn('utility_logs', 'expense_id')) {
+                $table->foreignUuid('expense_id')->nullable()->after('booking_id')
+                    ->constrained('expenses')->nullOnDelete();
+            }
+            if (! Schema::hasIndex('utility_logs', 'utility_logs_expense_unique')) {
+                $table->unique('expense_id', 'utility_logs_expense_unique');
+            }
         });
     }
 

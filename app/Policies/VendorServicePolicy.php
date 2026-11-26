@@ -13,7 +13,6 @@ class VendorServicePolicy
         return true; // Public marketplace visibility
     }
 
-
     public function view(User $user, VendorService $service): bool
     {
         return true; // Public marketplace visibility

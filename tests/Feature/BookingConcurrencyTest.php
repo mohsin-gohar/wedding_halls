@@ -6,6 +6,7 @@ use App\Exceptions\SlotAlreadyBookedException;
 use App\Models\Booking;
 use App\Models\GuestRsvp;
 use App\Models\Hall;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\BookingService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -314,7 +315,7 @@ class BookingConcurrencyTest extends TestCase
             'status' => 'INQUIRY',
         ]);
 
-        \App\Models\Tenant::query()->findOrFail($hall->tenant_id)->update([
+        Tenant::query()->findOrFail($hall->tenant_id)->update([
             'subscription_status' => 'EXPIRED',
         ]);
 

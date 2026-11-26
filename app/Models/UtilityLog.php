@@ -46,7 +46,9 @@ class UtilityLog extends Model
 
     public function expense(): BelongsTo
     {
-        return $this->belongsTo(Expense::class);
+        // Voided expenses are retained for reconciliation; the relation must
+        // still resolve them (as creator()/voidedBy() already do).
+        return $this->belongsTo(Expense::class)->withoutGlobalScope('not_voided');
     }
 
     public function calculateTotalCost(): float

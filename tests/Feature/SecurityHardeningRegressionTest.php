@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\WhatsAppRsvpManager;
 use App\Models\ApiToken;
 use App\Models\Booking;
 use App\Models\GuestRsvp;
@@ -282,7 +283,7 @@ class SecurityHardeningRegressionTest extends TestCase
         ]);
 
         Livewire::actingAs($this->ownerFor($booking))
-            ->test(\App\Livewire\WhatsAppRsvpManager::class)
+            ->test(WhatsAppRsvpManager::class)
             ->set('selectedBookingId', $booking->id)
             ->set('simPhone', $phone)
             ->set('simMessage', 'Can I bring children?')
@@ -292,5 +293,4 @@ class SecurityHardeningRegressionTest extends TestCase
         $this->assertSame('TENTATIVE', $rsvp->fresh()->rsvp_status);
         $this->assertSame(3, $rsvp->fresh()->attending_count);
     }
-
 }

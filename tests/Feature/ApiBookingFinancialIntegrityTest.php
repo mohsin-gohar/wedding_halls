@@ -193,6 +193,7 @@ class ApiBookingFinancialIntegrityTest extends TestCase
         $customer = User::factory()->create([
             'role' => 'ROLE_CUSTOMER',
             'status' => 'ACTIVE',
+            'phone' => '+92 300 4445588',
         ]);
         $customer->assignRole('ROLE_CUSTOMER');
 
@@ -210,7 +211,9 @@ class ApiBookingFinancialIntegrityTest extends TestCase
             'guest_count' => 150,
             'customer_name' => 'Hidden Hall Customer',
             'customer_phone' => '+92 300 4445588',
-        ])->assertForbidden();
+            // Hidden halls are non-disclosed: the API answers 404, matching
+            // the availability endpoint above.
+        ])->assertNotFound();
 
         $this->assertSame(0, Booking::query()->where('customer_name', 'Hidden Hall Customer')->count());
     }
@@ -238,7 +241,7 @@ class ApiBookingFinancialIntegrityTest extends TestCase
         ]);
 
         $this->actingAs($frontDesk)
-            ->putJson('/api/v1/bookings/'.$booking->id, ['status' => 'CANCELLED'])
+            ->patchJson('/api/v1/bookings/'.$booking->id, ['status' => 'CANCELLED'])
             ->assertForbidden();
 
         self::assertNotSame('CANCELLED', $booking->fresh()->status);
@@ -267,7 +270,7 @@ class ApiBookingFinancialIntegrityTest extends TestCase
         ]);
 
         $this->actingAs($bookingManager)
-            ->putJson('/api/v1/bookings/'.$booking->id, ['status' => 'CANCELLED'])
+            ->patchJson('/api/v1/bookings/'.$booking->id, ['status' => 'CANCELLED'])
             ->assertOk();
 
         self::assertSame('CANCELLED', $booking->fresh()->status);

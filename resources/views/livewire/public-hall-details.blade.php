@@ -32,7 +32,7 @@
         ];
     @endphp
 
-    <script type="application/ld+json">{!! json_encode($venueJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+    <script type="application/ld+json">{!! json_encode($venueJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
 
     @if(($settings['show_announcement'] ?? false) && !empty($settings['announcement_banner']))
         <div class="bg-[#C6A15B] text-[#171513] py-2 px-4 text-center font-sans text-xs font-semibold tracking-wider uppercase flex items-center justify-center gap-2 shadow-sm">

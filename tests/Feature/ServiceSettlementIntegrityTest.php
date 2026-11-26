@@ -117,27 +117,29 @@ class ServiceSettlementIntegrityTest extends TestCase
         $this->assertSame(0, WalletTransaction::query()->where('type', 'DEBIT')->where('source', 'PAYOUT')->count());
     }
 
-    public function test_failed_refund_debit_rolls_back_booking_and_refund_row(): void
+    public function test_cash_refund_is_recorded_even_when_the_vendor_wallet_has_no_credit(): void
     {
         [$tenant, $customer] = $this->makeFixtures(10.0);
         $wallet = $this->makeWallet($tenant, 0);
         $booking = $this->makeBooking($tenant, $customer, 1000, 100, 900);
         $booking->update(['paid_amount' => 500, 'payment_status' => 'PARTIAL']);
 
-        try {
-            app(ServiceBookingService::class)->cancelServiceBooking($booking->id, null, $tenant->id);
-            $this->fail('A refund whose wallet debit fails must not be recorded.');
-        } catch (ServiceBookingException $e) {
-            $this->assertStringContainsString('insufficient balance', $e->getMessage());
-        }
+        // The customer's cash refund is an obligation independent of the
+        // vendor wallet balance. A never-settled partial payment must still be
+        // refundable; only the (zero) wallet reversal is skipped.
+        $cancelled = app(ServiceBookingService::class)->cancelServiceBooking($booking->id, null, $tenant->id);
 
-        $booking->refresh();
-        $this->assertSame('CONFIRMED', $booking->status);
-        $this->assertSame('500.00', (string) $booking->paid_amount);
-        $this->assertSame('PARTIAL', $booking->payment_status);
+        $this->assertSame('CANCELLED', $cancelled->status);
+        $this->assertSame('0.00', (string) $cancelled->paid_amount);
+        $this->assertSame('REFUNDED', $cancelled->payment_status);
         $this->assertSame('0.00', (string) $wallet->fresh()->balance);
-        $this->assertSame(0, ServicePayment::query()->where('kind', 'REFUND')->count());
+        $this->assertSame(1, ServicePayment::query()->where('kind', 'REFUND')->count());
         $this->assertSame(0, WalletTransaction::query()->where('source', 'REFUND')->count());
+        $this->assertDatabaseHas('audit_logs', [
+            'tenant_id' => $tenant->id,
+            'action' => 'SERVICE_BOOKING_CANCELLED',
+            'entity_id' => (string) $booking->id,
+        ]);
     }
 
     public function test_failed_commission_debit_rolls_back_wallet_credit_and_booking_payment(): void

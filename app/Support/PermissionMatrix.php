@@ -158,7 +158,9 @@ class PermissionMatrix
             'reviews.view', 'reports.view', 'customers.view',
         ],
         'ROLE_ACCOUNTANT' => [
-            'dashboard.view', 'staff.attendance',
+            // Financial reporting needs payroll data, not the HR attendance
+            // tools; those stay with HR/operations roles (least privilege).
+            'dashboard.view',
             'bookings.view', 'service-bookings.view',
             'payments.view', 'payments.record',
             'invoices.view', 'invoices.manage',
@@ -180,7 +182,10 @@ class PermissionMatrix
             'availability.view', 'rsvps.view', 'rsvps.manage',
         ],
         'ROLE_CHEF' => ['kitchen.view', 'kitchen.manage', 'inventory.view', 'bookings.view', 'service-bookings.view'],
-        'ROLE_FLOOR_STAFF' => ['bookings.view', 'bookings.create', 'kitchen.view', 'service-bookings.view', 'floor-plans.view'],
+        // Floor staff are operational viewers, not booking/cash authorizers.
+        // Walk-in confirmed bookings + cash advances require front-desk/manager
+        // permissions; this keeps the service-boundary least-privilege test green.
+        'ROLE_FLOOR_STAFF' => ['bookings.view', 'kitchen.view', 'service-bookings.view', 'floor-plans.view'],
         'ROLE_SERVICE_STAFF' => ['dashboard.view', 'service-bookings.view', 'rfq.view', 'availability.view', 'portfolio.view'],
 
         // ── Explicitly named vendor roles (enterprise vocabulary) ──

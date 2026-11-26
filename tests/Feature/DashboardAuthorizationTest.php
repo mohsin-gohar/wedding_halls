@@ -86,6 +86,7 @@ class DashboardAuthorizationTest extends TestCase
             ->test(Dashboard::class)
             ->assertStatus(403);
     }
+
     public function test_accountant_can_record_daily_expense_and_utility_log_atomically(): void
     {
         $tenant = Tenant::query()->where('slug', 'riwaj-grand')->firstOrFail();
@@ -150,5 +151,4 @@ class DashboardAuthorizationTest extends TestCase
             'title' => 'Dashboard expense atomicity regression',
         ]);
     }
-
 }

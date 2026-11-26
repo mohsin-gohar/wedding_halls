@@ -65,9 +65,14 @@ class ExpenseVoidIntegrityTest extends TestCase
 
         $this->assertNull(Expense::query()->find($voided->id));
         $this->assertNotNull(Expense::withVoided()->find($voided->id));
+        // Scope the assertion to this test's own fixtures: the demo seeder
+        // already contains other expenses for the same tenant.
         $this->assertSame(
             2000.0,
-            (float) Expense::query()->where('tenant_id', $tenant->id)->sum('amount')
+            (float) Expense::query()
+                ->where('tenant_id', $tenant->id)
+                ->whereIn('title', ['Duplicate supplier receipt', 'Valid cleaning supplies'])
+                ->sum('amount')
         );
     }
 
@@ -101,6 +106,7 @@ class ExpenseVoidIntegrityTest extends TestCase
             'is_voided' => false,
         ]);
     }
+
     public function test_utility_linked_expense_must_be_corrected_through_utility_workflow(): void
     {
         $tenant = Tenant::query()->where('slug', 'riwaj-grand')->firstOrFail();
@@ -141,5 +147,4 @@ class ExpenseVoidIntegrityTest extends TestCase
             'is_voided' => false,
         ]);
     }
-
 }

@@ -45,9 +45,9 @@ class Login extends Component
             session()->regenerate();
             $user = Auth::user();
 
-            if ($user->status === 'SUSPENDED') {
+            if (! in_array($user->status, ['ACTIVE'], true)) {
                 Auth::logout();
-                $this->addError('email', 'Your account has been suspended by the platform administrator.');
+                $this->addError('email', 'Your account is not active. Please contact the platform administrator.');
 
                 return;
             }

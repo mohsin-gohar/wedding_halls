@@ -392,6 +392,7 @@ class StaffManager extends Component
         }
 
         $staff = User::where('tenant_id', $currentUser->tenant_id)->findOrFail($userId);
+        $this->authorizeTargetStaffRole($staff);
         if ($staff->isTenantOwner()) {
             $this->errorMessage = 'Cannot alter status of the primary venue owner.';
 

@@ -19,7 +19,7 @@ class ForgotPassword extends Component
     public bool $resetLinkSent = false;
 
     protected $rules = [
-        'email' => 'required|email|exists:users,email',
+        'email' => 'required|email',
     ];
 
     public function sendResetLink(): void
@@ -41,9 +41,10 @@ class ForgotPassword extends Component
         // request fields. Pass the validated component state explicitly.
         $status = Password::sendResetLink(['email' => $this->email]);
 
-        if ($status === Password::RESET_LINK_SENT) {
+        if ($status === Password::RESET_LINK_SENT || $status === Password::INVALID_USER) {
+            // Never reveal whether the address exists (account enumeration).
             $this->resetLinkSent = true;
-            $this->feedbackMessage = 'We have sent a password reset link to your email address. Please check your inbox.';
+            $this->feedbackMessage = 'If an account exists for that email address, we have sent a password reset link. Please check your inbox.';
             $this->email = '';
         } else {
             $this->errorMessage = __($status);

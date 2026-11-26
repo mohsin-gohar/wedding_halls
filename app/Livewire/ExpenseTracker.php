@@ -130,7 +130,9 @@ class ExpenseTracker extends Component
         $this->authorizeExpenseManager();
         $this->reset(['title', 'amount', 'payee', 'receipt_number', 'notes', 'errorMessage', 'feedbackMessage']);
         $this->expense_date = Carbon::now()->format('Y-m-d');
-        $this->category = 'GENERATOR_DIESEL';
+        // Utility/fuel categories are created by the utility workflow and are
+        // protected from generic edits/voids; default to a generically valid one.
+        $this->category = 'OTHER';
         $this->payment_method = 'CASH';
         $this->isCreating = true;
     }
@@ -294,6 +296,16 @@ class ExpenseTracker extends Component
         }
     }
 
+    /**
+     * Source-linked expenses must be corrected in their originating workflow.
+     * This guard is shared by the edit and void actions so neither can bypass
+     * the other workflow's audit trail.
+     */
+    private function assertExpenseCanBeVoided(Expense $expense): void
+    {
+        $this->assertExpenseCanBeManuallyAdjusted($expense);
+    }
+
     public function openVoidModal(string $expenseId): void
     {
         $this->authorizeExpenseManager();
@@ -322,7 +334,10 @@ class ExpenseTracker extends Component
         $userId = Auth::id();
 
         DB::transaction(function () use ($tenantId, $userId): void {
-            $expense = Expense::where('tenant_id', $tenantId)
+            // The not_voided global scope would hide an already-voided row,
+            // making the idempotency re-check below unreachable.
+            $expense = Expense::withoutGlobalScope('not_voided')
+                ->where('tenant_id', $tenantId)
                 ->whereKey($this->voidingExpenseId)
                 ->lockForUpdate()
                 ->firstOrFail();
