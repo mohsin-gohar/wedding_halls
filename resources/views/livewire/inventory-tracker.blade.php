@@ -17,12 +17,16 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-            <button wire:click="openCreateItemModal" class="btn-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-md">
-                + Add Inventory Item
-            </button>
-            <button wire:click="openPoModal" class="btn-outline-gold !h-9 !px-4 text-xs font-mono uppercase font-bold">
-                + Purchase Order
-            </button>
+            @if($canManageInventory)
+                <button wire:click="openCreateItemModal" class="btn-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-md">
+                    + Add Inventory Item
+                </button>
+            @endif
+            @if($canCreatePurchaseOrder)
+                <button wire:click="openPoModal" class="btn-outline-gold !h-9 !px-4 text-xs font-mono uppercase font-bold">
+                    + Purchase Order
+                </button>
+            @endif
         </div>
     </div>
 
@@ -116,9 +120,11 @@
                     </select>
                 </div>
 
-                <button wire:click="openCreateItemModal" class="btn-gold !h-8 !px-3 text-xs font-bold uppercase font-mono">
-                    + New Inventory Item
-                </button>
+                @if($canManageInventory)
+                    <button wire:click="openCreateItemModal" class="btn-gold !h-8 !px-3 text-xs font-bold uppercase font-mono">
+                        + New Inventory Item
+                    </button>
+                @endif
             </div>
 
             <div class="table-wrapper-enterprise" tabindex="0" role="region"><table class="table-enterprise">
@@ -170,14 +176,18 @@
                                 </td>
                                 <td class="p-3 text-right whitespace-nowrap">
                                     <div class="inline-flex items-center justify-end gap-1.5 font-sans">
-                                        @if($i->is_active)
+                                        @if($i->is_active && $canManageInventory)
                                             <button wire:click="openMovementModal('{{ $i->id }}', 'STOCK_IN')" class="tbtn tbtn-green" title="Add Stock In">+ In</button>
                                             <button wire:click="openMovementModal('{{ $i->id }}', 'STOCK_OUT')" class="tbtn tbtn-amber" title="Record Usage Deduction">- Out</button>
                                             <button wire:click="openEditItemModal('{{ $i->id }}')" class="tbtn tbtn-outline" title="Edit Item Details">Edit</button>
                                             <button wire:click="deleteItem('{{ $i->id }}')" onclick="return confirm('Archive this inventory item? Historical records will be retained.') || event.stopImmediatePropagation()" class="tbtn tbtn-red" title="Archive Item">Archive</button>
-                                        @else
+                                        @elseif(! $i->is_active)
                                             <span class="mr-2 text-[10px] font-bold uppercase tracking-wider text-stone-500">Archived</span>
-                                            <button wire:click="restoreItem('{{ $i->id }}')" onclick="return confirm('Restore this inventory item to active stock?') || event.stopImmediatePropagation()" class="tbtn tbtn-green" title="Restore Item">Restore</button>
+                                            @if($canManageInventory)
+                                                <button wire:click="restoreItem('{{ $i->id }}')" onclick="return confirm('Restore this inventory item to active stock?') || event.stopImmediatePropagation()" class="tbtn tbtn-green" title="Restore Item">Restore</button>
+                                            @endif
+                                        @else
+                                            <span class="text-[10px] font-semibold uppercase tracking-wider text-stone-400">Read only</span>
                                         @endif
                                     </div>
                                 </td>
@@ -315,11 +325,13 @@
                                     {{ $po->notes ?: 'General stock replenishment' }}
                                 </td>
                                 <td class="p-3 text-right">
-                                    @if($po->status !== 'PAID')
+                                    @if($po->status !== 'PAID' && $canPayPurchaseOrders)
                                         <button wire:click="markPoPaid('{{ $po->id }}')" 
                                                 class="px-3 py-1 bg-[#C6A15B] hover:bg-[#C6A15B] text-white font-bold text-xs uppercase shadow">
                                             Mark Paid &rarr;
                                         </button>
+                                    @elseif($po->status !== 'PAID')
+                                        <span class="text-stone-400 text-[10px]">Awaiting finance</span>
                                     @else
                                         <span class="text-stone-400 text-[10px]">Settled &amp; Posted</span>
                                     @endif
