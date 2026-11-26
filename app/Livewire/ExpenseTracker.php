@@ -170,6 +170,7 @@ class ExpenseTracker extends Component
     {
         $this->authorizeExpenseManager();
         $expense = Expense::where('tenant_id', Auth::user()->tenant_id)->findOrFail($expenseId);
+        $this->assertExpenseCanBeManuallyAdjusted($expense);
         $this->editingExpenseId = $expense->id;
         $this->edit_hall_id = $expense->hall_id;
         $this->edit_category = $expense->category;
@@ -200,6 +201,7 @@ class ExpenseTracker extends Component
 
         $tenantId = Auth::user()->tenant_id;
         $expense = Expense::where('tenant_id', $tenantId)->findOrFail($this->editingExpenseId);
+        $this->assertExpenseCanBeManuallyAdjusted($expense);
         $before = [
             'category' => $expense->category,
             'title' => $expense->title,
@@ -264,17 +266,17 @@ class ExpenseTracker extends Component
         $this->closeEditModal();
     }
 
-    private function assertExpenseCanBeVoided(Expense $expense): void
+    private function assertExpenseCanBeManuallyAdjusted(Expense $expense): void
     {
         if ($expense->payroll_id) {
-            abort(403, 'Payroll-linked expenses must be reversed through the payroll workflow.');
+            abort(403, 'Payroll-linked expenses must be corrected through the payroll workflow.');
         }
 
         if ($expense->receipt_number && PurchaseOrder::where('tenant_id', $expense->tenant_id)
             ->where('po_number', $expense->receipt_number)
             ->where('status', 'PAID')
             ->exists()) {
-            abort(403, 'Purchase-order expenses must be reversed through the procurement workflow.');
+            abort(403, 'Purchase-order expenses must be corrected through the procurement workflow.');
         }
     }
 
