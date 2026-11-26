@@ -25,10 +25,6 @@ class Expense extends Model
         'receipt_number',
         'notes',
         'created_by_user_id',
-        'is_voided',
-        'voided_at',
-        'voided_by_user_id',
-        'void_reason',
     ];
 
     protected $casts = [
