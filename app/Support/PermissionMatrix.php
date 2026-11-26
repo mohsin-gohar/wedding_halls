@@ -47,6 +47,9 @@ class PermissionMatrix
         'packages' => ['view', 'manage'],
         'portfolio' => ['view', 'manage'],
         'availability' => ['view', 'manage'],
+        'floor-plans' => ['view', 'manage'],
+        'utilities' => ['view', 'manage'],
+        'rsvps' => ['view', 'manage'],
         'documents' => ['view', 'manage'],
         'staff' => ['view', 'manage', 'attendance'],
         'inventory' => ['view', 'manage'],
@@ -128,6 +131,9 @@ class PermissionMatrix
             'services.view', 'services.create', 'services.update', 'services.delete', 'services.manage',
             'portfolio.view', 'portfolio.manage',
             'availability.view', 'availability.manage',
+            'floor-plans.view', 'floor-plans.manage',
+            'utilities.view', 'utilities.manage',
+            'rsvps.view', 'rsvps.manage',
             'documents.view', 'documents.manage',
             'events.view', 'events-planning.view', 'events-planning.manage',
             'leads.view', 'leads.manage',
@@ -144,13 +150,15 @@ class PermissionMatrix
             'quotations.view', 'quotations.create', 'quotations.revise',
             'staff.view', 'staff.attendance',
             'kitchen.view', 'inventory.view', 'packages.view', 'services.view',
-            'availability.view', 'documents.view', 'locations.view', 'locations.manage',
+            'availability.view', 'floor-plans.view', 'floor-plans.manage',
+            'utilities.view', 'utilities.manage', 'rsvps.view', 'rsvps.manage',
+            'documents.view', 'locations.view', 'locations.manage',
             'events.view', 'events-planning.view',
             'leads.view', 'messages.view', 'messages.send',
             'reviews.view', 'reports.view', 'customers.view',
         ],
         'ROLE_ACCOUNTANT' => [
-            'dashboard.view',
+            'dashboard.view', 'staff.attendance',
             'bookings.view', 'service-bookings.view',
             'payments.view', 'payments.record',
             'invoices.view', 'invoices.manage',
@@ -168,10 +176,10 @@ class PermissionMatrix
             'quotations.view', 'quotations.create',
             'payments.view', 'payments.record',
             'events.view', 'messages.view', 'messages.send',
-            'availability.view',
+            'availability.view', 'rsvps.view', 'rsvps.manage',
         ],
         'ROLE_CHEF' => ['kitchen.view', 'kitchen.manage', 'inventory.view', 'bookings.view', 'service-bookings.view'],
-        'ROLE_FLOOR_STAFF' => ['bookings.view', 'kitchen.view', 'service-bookings.view'],
+        'ROLE_FLOOR_STAFF' => ['bookings.view', 'kitchen.view', 'service-bookings.view', 'floor-plans.view'],
         'ROLE_SERVICE_STAFF' => ['dashboard.view', 'service-bookings.view', 'rfq.view', 'availability.view', 'portfolio.view'],
 
         // ── Explicitly named vendor roles (enterprise vocabulary) ──
@@ -232,6 +240,7 @@ class PermissionMatrix
             'service-bookings.view', 'service-bookings.create', 'service-bookings.update',
             'service-bookings.confirm', 'service-bookings.complete', 'service-bookings.cancel',
             'rfq.view', 'rfq.create', 'rfq.bid',
+            'rsvps.view', 'rsvps.manage',
             'quotations.view', 'quotations.create', 'quotations.revise',
             'customers.view', 'contracts.view', 'events.view',
             'payments.view', 'payments.record',
@@ -350,8 +359,11 @@ class PermissionMatrix
 
         $role = self::canonicalRole($user->role ?? null);
 
-        if ($role !== null && in_array($permission, self::permissionsForRole($role), true)) {
-            return true;
+        // A recognized string role is governed exclusively by this matrix.
+        // Stale or manually over-granted Spatie permissions must not silently
+        // expand a role beyond its declared least-privilege capabilities.
+        if ($role !== null && array_key_exists($role, self::ROLE_GROUPS)) {
+            return in_array($permission, self::permissionsForRole($role), true);
         }
 
         try {
@@ -372,7 +384,12 @@ class PermissionMatrix
             return null;
         }
 
-        return self::ROLE_ALIASES[$role] ?? $role;
+        // Prefer an explicitly declared role group. Aliases remain useful
+        // for legacy route-family checks, but must not replace a distinct
+        // enterprise role's own permission set.
+        return array_key_exists($role, self::ROLE_GROUPS)
+            ? $role
+            : (self::ROLE_ALIASES[$role] ?? $role);
     }
 
     /**
