@@ -36,7 +36,7 @@ class HallView extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public static function record(string $hallId, string $tenantId, ?string $userId, string $ipAddress, string $userAgent): self
