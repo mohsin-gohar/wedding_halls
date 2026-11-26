@@ -336,7 +336,11 @@ class StaffPayroll extends Component
     {
         $this->authorizePayrollManager();
         $this->validate([
+            'editBasicSalary' => 'required|numeric|min:0|max:9999999999.99',
             'editOvertimeHours' => 'required|numeric|min:0|max:'.AttendanceComponent::MAX_OVERTIME_HOURS,
+            'editOvertimeRate' => 'required|numeric|min:0|max:9999999999.99',
+            'editAllowances' => 'required|numeric|min:0|max:9999999999.99',
+            'editDeductions' => 'required|numeric|min:0|max:9999999999.99',
         ]);
         $this->editNetSalary = PayrollModel::calculateNet(
             $this->editBasicSalary,
@@ -358,11 +362,11 @@ class StaffPayroll extends Component
             : [$originalMethod, CashOnlyPayments::CASH];
 
         $this->validate([
-            'editBasicSalary' => 'required|numeric|min:0',
+            'editBasicSalary' => 'required|numeric|min:0|max:9999999999.99',
             'editOvertimeHours' => 'required|numeric|min:0|max:'.AttendanceComponent::MAX_OVERTIME_HOURS,
-            'editOvertimeRate' => 'required|numeric|min:0',
-            'editAllowances' => 'required|numeric|min:0',
-            'editDeductions' => 'required|numeric|min:0',
+            'editOvertimeRate' => 'required|numeric|min:0|max:9999999999.99',
+            'editAllowances' => 'required|numeric|min:0|max:9999999999.99',
+            'editDeductions' => 'required|numeric|min:0|max:9999999999.99',
             'editPaymentMethod' => ['required', Rule::in($allowedMethods)],
         ]);
 
