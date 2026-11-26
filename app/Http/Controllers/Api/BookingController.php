@@ -31,6 +31,10 @@ class BookingController extends ApiController
     {
         $user = $this->apiUser($request);
 
+        if (! $user->isCustomer()) {
+            $this->assertPermission($user, 'bookings.view');
+        }
+
         $query = Booking::with(['hall.venue', 'package', 'payments']);
 
         $query = $this->scopeToPrincipal($query, $user);
@@ -58,6 +62,10 @@ class BookingController extends ApiController
     {
         $user = $this->apiUser($request);
 
+        if (! $user->isCustomer()) {
+            $this->assertPermission($user, 'bookings.view');
+        }
+
         $query = Booking::with(['hall.venue', 'package', 'payments', 'rsvps', 'kitchenKot', 'floorPlan']);
 
         $query = $this->scopeToPrincipal($query, $user);
@@ -71,7 +79,9 @@ class BookingController extends ApiController
     {
         $user = $this->apiUser($request);
 
-        $this->assertPermission($user, 'bookings.create');
+        if (! $user->isCustomer()) {
+            $this->assertPermission($user, 'bookings.create');
+        }
 
         $validator = Validator::make($request->all(), [
             'hall_id' => 'required|uuid|exists:halls,id',
@@ -184,7 +194,9 @@ class BookingController extends ApiController
     {
         $user = $this->apiUser($request);
 
-        $this->assertPermission($user, 'bookings.update');
+        if (! $user->isCustomer()) {
+            $this->assertPermission($user, 'bookings.update');
+        }
 
         $booking = Booking::where('id', $id)
             ->where(function ($query) use ($user) {
@@ -218,10 +230,38 @@ class BookingController extends ApiController
         // Customers may only annotate their own booking; they can never move
         // financial or lifecycle state through the API.
         if ($user->isCustomer()) {
-            abort_unless($request->hasOnly(['notes']), 403, 'Customers may only update booking notes.');
+            abort_unless(
+                array_diff(array_keys($request->all()), ['notes']) === [],
+                403,
+                'Customers may only update booking notes.'
+            );
         }
 
-        $booking->update($request->only(['status', 'notes']));
+        $updates = $user->isCustomer()
+            ? $request->only(['notes'])
+            : $request->only(['status', 'notes']);
+
+        if (array_key_exists('status', $updates)) {
+            try {
+                $booking = $this->bookingService->transitionStatus($booking, (string) $updates['status']);
+            } catch (SlotAlreadyBookedException $exception) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $exception->getMessage(),
+                ], 409);
+            } catch (\\InvalidArgumentException $exception) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $exception->getMessage(),
+                ], 422);
+            }
+
+            unset($updates['status']);
+        }
+
+        if ($updates !== []) {
+            $booking->update($updates);
+        }
 
         return response()->json([
             'success' => true,
@@ -279,6 +319,10 @@ class BookingController extends ApiController
     public function availability(Request $request)
     {
         $user = $this->apiUser($request);
+
+        if (! $user->isCustomer()) {
+            $this->assertPermission($user, 'bookings.view');
+        }
 
         $validator = Validator::make($request->all(), [
             'hall_id' => 'required|uuid|exists:halls,id',
