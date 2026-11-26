@@ -211,31 +211,19 @@ class InventoryTracker extends Component
         $item = InventoryItem::where('tenant_id', $tenantId)->findOrFail($itemId);
         $name = $item->name;
 
-        // Never erase an item that still has stock-ledger history: archive it
-        // instead so past valuations and movement references stay intact.
-        if ($item->logs()->exists()) {
-            $item->update(['is_active' => false]);
-            AuditLog::log(
-                'INVENTORY_ITEM_ARCHIVED',
-                "Inventory item [{$name}] was archived because stock movements reference it.",
-                $tenantId,
-                'InventoryItem',
-                $item->id
-            );
-            $this->feedbackMessage = "Inventory item [{$name}] has movement history and was archived (not deleted).";
+        // Inventory master records are retained for audit continuity even
+        // when they have no movement rows yet.
+        $item->update(['is_active' => false]);
 
-            return;
-        }
-
-        $item->delete();
         AuditLog::log(
-            'INVENTORY_ITEM_DELETED',
-            "Inventory item [{$name}] was deleted (no movement history).",
+            'INVENTORY_ITEM_ARCHIVED',
+            "Inventory item [{$name}] was archived. Historical stock and procurement references are retained.",
             $tenantId,
             'InventoryItem',
-            $itemId
+            $item->id
         );
-        $this->feedbackMessage = "Inventory item [{$name}] deleted.";
+
+        $this->feedbackMessage = "Inventory item [{$name}] archived. Historical records were retained.";
     }
 
     // ==========================================
