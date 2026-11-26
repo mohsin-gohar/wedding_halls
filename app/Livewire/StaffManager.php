@@ -94,16 +94,21 @@ class StaffManager extends Component
 
     private function allowedRoles(): array
     {
-        // Vendor-operational roles only. Platform staff roles (support,
-        // finance, moderation) are provisioned by the Super Admin and must
-        // never be assignable from a tenant's staff screen.
-        $roles = [
+        // HR managers can onboard ordinary staff, but cannot grant financial,
+        // booking-manager, inventory-manager, chef, or elevated HR roles.
+        if (! Auth::user()->isTenantOwner()) {
+            return ['ROLE_STAFF_MEMBER'];
+        }
+
+        return [
+            'ROLE_MANAGER',
+            'ROLE_VENDOR_MANAGER',
             'ROLE_ACCOUNTANT',
+            'ROLE_VENDOR_ACCOUNTANT',
             'ROLE_FRONT_DESK',
             'ROLE_CHEF',
             'ROLE_FLOOR_STAFF',
             'ROLE_SERVICE_STAFF',
-            'ROLE_VENDOR_ACCOUNTANT',
             'ROLE_BOOKING_MANAGER',
             'ROLE_STAFF_MEMBER',
             'ROLE_PHOTOGRAPHER',
@@ -111,13 +116,6 @@ class StaffManager extends Component
             'ROLE_INVENTORY_MANAGER',
             'ROLE_HR_MANAGER',
         ];
-
-        if (Auth::user()->isTenantOwner()) {
-            array_unshift($roles, 'ROLE_MANAGER');
-            array_unshift($roles, 'ROLE_VENDOR_MANAGER');
-        }
-
-        return array_values(array_unique($roles));
     }
 
     public function openCreateModal()
