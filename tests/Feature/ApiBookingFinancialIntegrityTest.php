@@ -241,6 +241,11 @@ class ApiBookingFinancialIntegrityTest extends TestCase
         $this->assertSame('+92 300 7772001', $booking->customer_phone);
 
         $this->actingAs($customer)
+            ->getJson('/api/v1/bookings/'.$booking->id)
+            ->assertOk()
+            ->assertJsonMissingPath('kitchen_kot');
+
+        $this->actingAs($customer)
             ->patchJson('/api/v1/bookings/'.$booking->id, ['notes' => 'Please call before confirming.'])
             ->assertOk()
             ->assertJsonPath('booking.notes', 'Please call before confirming.');
