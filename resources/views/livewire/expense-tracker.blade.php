@@ -188,23 +188,17 @@
                                 PKR {{ number_format($exp->amount) }}
                             </td>
                             <td class="py-4 px-6 text-right whitespace-nowrap space-x-2 font-mono">
-                                @if(!$exp->is_voided)
-                                    <button wire:click="openEditModal('{{ $exp->id }}')" 
-                                            class="text-[#171513] dark:text-stone-200 hover:text-[#C6A15B] font-semibold text-xs transition border border-[#E7E5E4] dark:border-white/15 hover:border-[#C6A15B] px-2.5 py-1 bg-white dark:bg-[#171513]">
-                                        Edit
-                                    </button>
-                                @endif
                                 @if($exp->is_voided)
                                     <span class="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Voided</span>
                                     <div class="mt-1 max-w-[220px] whitespace-normal text-[10px] text-stone-500">{{ $exp->void_reason }}</div>
                                     <div class="mt-1 text-[10px] text-stone-400">
                                         {{ $exp->voidedBy?->name ?? 'Authorized user' }} · {{ $exp->voided_at?->format('d M Y, h:i A') }}
                                     </div>
+                                @elseif($exp->payroll_id || $paidPoNumbers->contains($exp->receipt_number))
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-stone-500">Source managed</span>
                                 @else
-                                    <button wire:click="openVoidModal('{{ $exp->id }}')" 
-                                            class="text-rose-700 dark:text-rose-300 hover:text-rose-500 text-xs font-semibold px-2 py-1 border border-rose-500/30 hover:border-rose-500/60 bg-rose-500/5">
-                                        Void
-                                    </button>
+                                    <button wire:click="openEditModal('{{ $exp->id }}')" class="border border-[#E7E5E4] px-2.5 py-1 text-xs font-semibold text-[#171513] dark:border-white/15 dark:text-stone-200">Edit</button>
+                                    <button wire:click="openVoidModal('{{ $exp->id }}')" class="border border-rose-500/30 bg-rose-500/5 px-2 py-1 text-xs font-semibold text-rose-700 dark:text-rose-300">Void</button>
                                 @endif
                             </td>
                         </tr>
