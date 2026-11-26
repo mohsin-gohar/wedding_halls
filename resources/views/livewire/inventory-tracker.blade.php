@@ -51,7 +51,7 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-[#C6A15B]/30 p-4 space-y-1 shadow-sm dark:shadow-xl relative overflow-hidden group hover:border-[#C6A15B] transition duration-300">
             <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-[#C6A15B] to-transparent absolute top-0 left-0 opacity-0 group-hover:opacity-100 dark:opacity-60 transition duration-300"></div>
-            <span class="text-[10px] uppercase font-mono tracking-widest text-stone-500 dark:text-stone-400 font-bold block">Total Catalog Items</span>
+            <span class="text-[10px] uppercase font-mono tracking-widest text-stone-500 dark:text-stone-400 font-bold block">{{ $showArchived ? 'Archived Catalog Items' : 'Active Catalog Items' }}</span>
             <div class="font-cinzel text-xl text-[#171513] dark:text-white font-bold">{{ $items->count() }} Items</div>
         </div>
 
@@ -98,7 +98,10 @@
     @if($activeTab === 'stock')
         <div class="bg-white dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/10 p-6 space-y-6 shadow-sm dark:shadow-xl">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E7E5E4] pb-4">
-                <div class="flex items-center gap-3">
+                <div class="flex flex-wrap items-center gap-3">
+                    <button type="button" wire:click="$toggle('showArchived')" class="btn-outline-gold !h-8 !px-3 text-[10px] font-bold uppercase font-mono">
+                        {{ $showArchived ? 'Show active items' : 'Show archived items' }}
+                    </button>
                     <label class="text-xs font-mono uppercase text-stone-600 font-bold">Filter Category:</label>
                     <select wire:model.live="selectedCategory" 
                             class="bg-[#F8F5EF] dark:bg-[#171513] border border-[#E7E5E4] dark:border-white/20 text-xs font-mono px-3 py-1.5 text-stone-900 dark:text-stone-100 outline-none focus:border-[#C6A15B]">
@@ -167,23 +170,15 @@
                                 </td>
                                 <td class="p-3 text-right whitespace-nowrap">
                                     <div class="inline-flex items-center justify-end gap-1.5 font-sans">
-                                        <button wire:click="openMovementModal('{{ $i->id }}', 'STOCK_IN')" 
-                                                class="tbtn tbtn-green" title="Add Stock In">
-                                            + In
-                                        </button>
-                                        <button wire:click="openMovementModal('{{ $i->id }}', 'STOCK_OUT')" 
-                                                class="tbtn tbtn-amber" title="Record Usage Deduction">
-                                            - Out
-                                        </button>
-                                        <button wire:click="openEditItemModal('{{ $i->id }}')" 
-                                                class="tbtn tbtn-outline" title="Edit Item Details">
-                                            Edit
-                                        </button>
-                                        <button wire:click="deleteItem('{{ $i->id }}')" 
-                                                onclick="return confirm('Archive this inventory item? It will be hidden from active stock lists while its history is retained.') || event.stopImmediatePropagation()"
-                                                class="tbtn tbtn-red" title="Archive Item">
-                                            Del
-                                        </button>
+                                        @if($i->is_active)
+                                            <button wire:click="openMovementModal('{{ $i->id }}', 'STOCK_IN')" class="tbtn tbtn-green" title="Add Stock In">+ In</button>
+                                            <button wire:click="openMovementModal('{{ $i->id }}', 'STOCK_OUT')" class="tbtn tbtn-amber" title="Record Usage Deduction">- Out</button>
+                                            <button wire:click="openEditItemModal('{{ $i->id }}')" class="tbtn tbtn-outline" title="Edit Item Details">Edit</button>
+                                            <button wire:click="deleteItem('{{ $i->id }}')" onclick="return confirm('Archive this inventory item? Historical records will be retained.') || event.stopImmediatePropagation()" class="tbtn tbtn-red" title="Archive Item">Archive</button>
+                                        @else
+                                            <span class="mr-2 text-[10px] font-bold uppercase tracking-wider text-stone-500">Archived</span>
+                                            <button wire:click="restoreItem('{{ $i->id }}')" onclick="return confirm('Restore this inventory item to active stock?') || event.stopImmediatePropagation()" class="tbtn tbtn-green" title="Restore Item">Restore</button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
