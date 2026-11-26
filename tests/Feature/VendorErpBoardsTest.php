@@ -265,6 +265,24 @@ class VendorErpBoardsTest extends TestCase
         $this->assertDatabaseMissing('vendor_services', ['name' => 'Unpriced Hourly Service']);
     }
 
+    public function test_service_prices_above_decimal_column_limit_are_rejected(): void
+    {
+        $owner = $this->createVendorOwner();
+
+        Livewire::actingAs($owner)
+            ->test(VendorServicesManager::class)
+            ->set('serviceName', 'Overflow Service')
+            ->set('pricingType', 'FIXED')
+            ->set('priceFrom', 10_000_000_000.00)
+            ->call('saveService')
+            ->assertHasErrors(['priceFrom']);
+
+        $this->assertDatabaseMissing('vendor_services', [
+            'tenant_id' => $owner->tenant_id,
+            'name' => 'Overflow Service',
+        ]);
+    }
+
     public function test_non_finite_service_prices_are_rejected_before_persistence(): void
     {
         $owner = $this->createVendorOwner();
