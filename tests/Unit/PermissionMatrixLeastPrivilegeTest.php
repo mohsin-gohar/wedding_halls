@@ -44,6 +44,7 @@ class PermissionMatrixLeastPrivilegeTest extends TestCase
     {
         $manager = new User(['role' => 'ROLE_MANAGER']);
 
+        self::assertTrue(PermissionMatrix::userCan($manager, 'bookings.create'));
         self::assertTrue(PermissionMatrix::userCan($manager, 'floor-plans.manage'));
         self::assertTrue(PermissionMatrix::userCan($manager, 'utilities.manage'));
         self::assertTrue(PermissionMatrix::userCan($manager, 'rsvps.manage'));
