@@ -101,11 +101,10 @@ class DocumentController extends Controller
             return;
         }
 
-        // 2. Operational staff of this specific tenant (Chefs, Managers, Owners, Operations)
-        if ($user->tenant_id && $user->tenant_id === $kot->tenant_id) {
-            if ($user->isTenantOwner() || $user->isManager() || $user->isChef() || $user->role === 'ROLE_FLOOR_STAFF' || $user->role === 'ROLE_ACCOUNTANT') {
-                return;
-            }
+        // 2. Tenant operational staff must have the explicit kitchen read permission.
+        if ($user->tenant_id && (string) $user->tenant_id === (string) $kot->tenant_id
+            && PermissionMatrix::userCan($user, 'kitchen.view')) {
+            return;
         }
 
         // Customers are strictly forbidden from viewing internal kitchen production tickets
@@ -216,9 +215,14 @@ class DocumentController extends Controller
             abort(403, 'Unauthorized.');
         }
 
-        // Super Admin or Tenant Admin/Accountant/Manager or the employee themselves
-        $isTenantStaff = ($user->tenant_id === $payroll->tenant_id && ($user->isTenantOwner() || $user->isManager() || $user->isAccountant() || $user->id === $payroll->user_id));
-        if (! $user->isSuperAdmin() && ! $isTenantStaff) {
+        // Tenant payroll viewers need the explicit payroll permission. An
+        // employee may still view their own slip, but only inside their tenant.
+        $sameTenant = $user->tenant_id
+            && (string) $user->tenant_id === (string) $payroll->tenant_id;
+        $canViewTenantPayroll = $sameTenant && PermissionMatrix::userCan($user, 'payroll.view');
+        $isOwnPayslip = $sameTenant && (string) $user->id === (string) $payroll->user_id;
+
+        if (! $user->isSuperAdmin() && ! $canViewTenantPayroll && ! $isOwnPayslip) {
             abort(403, 'Forbidden. You do not have permission to view this confidential salary slip.');
         }
 
