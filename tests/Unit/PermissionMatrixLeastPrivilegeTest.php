@@ -8,6 +8,15 @@ use PHPUnit\Framework\TestCase;
 
 class PermissionMatrixLeastPrivilegeTest extends TestCase
 {
+    public function test_tenant_owner_wildcard_permissions_remain_effective(): void
+    {
+        $owner = new User(['role' => 'ROLE_TENANT_OWNER']);
+
+        self::assertTrue(PermissionMatrix::userCan($owner, 'bookings.view'));
+        self::assertTrue(PermissionMatrix::userCan($owner, 'bookings.create'));
+        self::assertTrue(PermissionMatrix::userCan($owner, 'service-bookings.update'));
+    }
+
     public function test_hr_manager_keeps_hr_permissions_without_general_manager_privileges(): void
     {
         $hr = new User(['role' => 'ROLE_HR_MANAGER']);
