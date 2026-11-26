@@ -197,7 +197,7 @@ class StaffPayroll extends Component
                 });
 
             $otRate = (float) $policy->overtime_rate_per_hour;
-            $otPay = round($otHours * $otRate, 2);
+            $otPay = PayrollModel::calculateOvertimePay($otHours, $otRate);
             $lateDeduction = round($counts['LATE'] * (float) $policy->late_deduction_per_day, 2);
             $absenceDeduction = round($counts['ABSENT'] * (float) $policy->absence_deduction_per_day, 2);
             $halfDayDeduction = round($counts['HALF_DAY'] * (float) $policy->half_day_deduction, 2);
@@ -391,6 +391,7 @@ class StaffPayroll extends Component
             'basic_salary' => $this->editBasicSalary,
             'overtime_hours' => $this->editOvertimeHours,
             'overtime_rate' => $this->editOvertimeRate,
+            'overtime_pay' => PayrollModel::calculateOvertimePay($this->editOvertimeHours, $this->editOvertimeRate),
             'allowances' => $this->editAllowances,
             'deductions' => $this->editDeductions,
             'net_salary' => $net,
