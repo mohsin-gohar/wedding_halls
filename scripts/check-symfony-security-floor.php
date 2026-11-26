@@ -28,5 +28,6 @@ foreach ($minimums as $name => $minimum) {
 
 if ($failures !== []) {
     fwrite(STDERR, implode(PHP_EOL, $failures).PHP_EOL);
+
     exit(1);
 }
