@@ -559,11 +559,6 @@
                                     Rs {{ number_format($exp->amount) }}
                                 </td>
                                 <td class="p-3 text-right">
-                                    <button wire:click="deleteDailyExpense('{{ $exp->id }}')"
-                                            onclick="return confirm('Delete this expense record?')"
-                                            class="tbtn tbtn-red">
-                                        Delete
-                                    </button>
                                 </td>
                             </tr>
                         @empty
