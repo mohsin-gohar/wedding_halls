@@ -332,7 +332,7 @@ class ExpenseTracker extends Component
             $expensesQuery->where('category', $this->filterCategory);
         }
 
-        $expenses = $expensesQuery->with(['hall', 'creator'])->latest('expense_date')->get();
+        $expenses = $expensesQuery->with(['hall', 'creator', 'voidedBy'])->latest('expense_date')->get();
         $totalExpenses = (float) Expense::where('tenant_id', $tenantId)
             ->whereBetween('expense_date', [$startDate, $endDate])
             ->sum('amount');
