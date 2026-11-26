@@ -97,16 +97,21 @@ class InventoryTracker extends Component
             abort(403, 'Unauthorized.');
         }
 
-        $permission = match ($action) {
-            'inventory.view' => 'inventory.view',
-            'po.paid' => 'expenses.manage',
-            default => 'inventory.manage',
-        };
-        $message = match ($permission) {
-            'inventory.view' => 'Inventory view permission is required.',
-            'expenses.manage' => 'Expense management permission is required to settle a purchase order.',
-            default => 'Inventory management permission is required for this action.',
-        };
+        if ($action === 'po.paid') {
+            abort_unless(
+                PermissionMatrix::userCan($user, 'inventory.view')
+                    && PermissionMatrix::userCan($user, 'expenses.manage'),
+                403,
+                'Inventory view and expense management permissions are required to settle a purchase order.'
+            );
+
+            return;
+        }
+
+        $permission = $action === 'inventory.view' ? 'inventory.view' : 'inventory.manage';
+        $message = $permission === 'inventory.view'
+            ? 'Inventory view permission is required.'
+            : 'Inventory management permission is required for this action.';
 
         abort_unless(PermissionMatrix::userCan($user, $permission), 403, $message);
     }
