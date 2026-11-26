@@ -1786,8 +1786,7 @@
                             Ref: {{ $selectedLead->booking_reference ?? $selectedLead->id }} • {{ $selectedLead->event_type }}
                         </span>
                     </div>
-                        @endif
-                    <button wire:click="closeCustomerDetails" class="text-stone-400 hover:text-white text-2xl font-sans leading-none">&times;</button>
+                        <button wire:click="closeCustomerDetails" class="text-stone-400 hover:text-white text-2xl font-sans leading-none">&times;</button>
                 </div>
 
                 <!-- Quick Action Buttons: WhatsApp & Call -->
