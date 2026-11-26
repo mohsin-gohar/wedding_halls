@@ -153,3 +153,10 @@ The following remediation work has been committed to the audit branch. These ent
 - Additional RBAC review found role/permission drift in attendance, shift policy, procurement, and the walk-in booking modal. These areas now use the central permission matrix; floor staff received the explicit `bookings.create` capability already implied by the calendar workflow. Accountant inventory access is read-only, while procurement settlement requires `expenses.manage`.
 - The public RSVP lookup candidate scan now fails closed when its 50-row candidate cap is reached. **This does not solve the phone-ownership verification gap** tracked in SEC-010.
 - New tests added for attendance permissions, shift-policy permissions, walk-in booking permissions and forged Livewire staff-mode lookup. All remain unverified until the full suite runs.
+
+
+- Dashboard authorization was tightened: tenant dashboard access now requires `dashboard.view` + `bookings.view`; non-finance roles receive a dedicated operations-only dashboard, and expense/CRM/chat actions enforce their own permissions. Accountant dashboard output hides leads, chat, kitchen and workforce modules unless their permissions are present.
+- Daily dashboard expenses now validate category/ranges and tenant-owned hall/booking references, and expense + utility-log + audit-log writes are atomic.
+- Expense hard-deletion has been replaced by a reasoned void workflow with actor/time/reason metadata. A model scope excludes voided rows from totals by default; payroll-linked and paid-PO expenses are locked to their source workflows. Added tests for retained history and financial totals.
+- Inventory item removal now archives instead of deleting; archived items can be restored. Inventory stock mutation, procurement creation and PO settlement have distinct permission checks; accountants have read-only stock access plus procurement/expense permissions.
+- Added regression coverage for dashboard role output/actions, cross-tenant utility booking rejection, expense voiding, inventory archive/restore, and accountant procurement permissions. All tests remain pending execution against a full MySQL environment.
