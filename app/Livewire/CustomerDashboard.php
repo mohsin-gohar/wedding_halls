@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\RFQ;
 use App\Models\RFQBid;
 use App\Models\ServiceBooking;
+use App\Models\User;
 use App\Services\ServiceBookingService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -63,7 +64,7 @@ class CustomerDashboard extends Component
         // register a known customer's address and take over their bookings.
     }
 
-    private function assertCustomer(): \App\Models\User
+    private function assertCustomer(): User
     {
         $user = Auth::user();
 
