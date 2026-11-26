@@ -104,7 +104,7 @@ vendors.view, vendors.documents.review, messages.view
 |---|---|
 | **ROLE_TENANT_OWNER** / **ROLE_VENDOR_OWNER** (alias) | Everything inside the business: dashboard, business, locations, bookings, service-bookings, RFQ (bid/award/close), quotations, contracts, payments (view/record/verify), invoices, payouts.request, wallet, commissions.view, reconciliation.view, expenses, payroll, staff, inventory, kitchen, packages, services, portfolio, availability, documents, events, planning, leads, messages, reviews.reply, reports, customers, subscription, settings |
 | **ROLE_MANAGER** / **ROLE_VENDOR_MANAGER** (alias) | Operational: bookings (view/update/cancel/manage), service-bookings, RFQ bid/award, quotations, staff.view/attendance, kitchen/inventory/packages/services (read), documents/locations (read), events, leads, messages, reports.view |
-| **ROLE_ACCOUNTANT** / **ROLE_VENDOR_ACCOUNTANT** (alias) | Financial: payments (view/record), invoices, payouts.request, wallet, commissions.view, reconciliation.view, expenses, payroll, reports.financial/export |
+| **ROLE_ACCOUNTANT** / **ROLE_VENDOR_ACCOUNTANT** (alias) | Financial: payments (view/record), invoices, payouts.request, wallet, commissions.view, reconciliation.view, expenses, payroll, reports.financial/export; inventory.view (read-only) |
 | **ROLE_FRONT_DESK** / **ROLE_BOOKING_MANAGER** (alias) | Booking desk: bookings (view/create/update), service-bookings, rfq view/create/bid, quotations.create, customers.view, payments (view/record), messages, availability |
 | **ROLE_CHEF** / **ROLE_CATERING_STAFF** (alias) | kitchen.view/manage, inventory.view, bookings.view, service-bookings.view |
 | **ROLE_FLOOR_STAFF** | bookings.view, bookings.create, kitchen.view, service-bookings.view |
