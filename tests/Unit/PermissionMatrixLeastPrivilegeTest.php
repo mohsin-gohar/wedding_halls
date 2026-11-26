@@ -40,6 +40,17 @@ class PermissionMatrixLeastPrivilegeTest extends TestCase
         self::assertFalse(PermissionMatrix::userCan($catering, 'inventory.manage'));
     }
 
+    public function test_distinct_enterprise_roles_do_not_inherit_legacy_manager_or_front_desk_helpers(): void
+    {
+        $hr = new User(['role' => 'ROLE_HR_MANAGER']);
+        $bookingManager = new User(['role' => 'ROLE_BOOKING_MANAGER']);
+
+        self::assertFalse($hr->isManager());
+        self::assertTrue($hr->isHrManager());
+        self::assertTrue($bookingManager->isBookingManager());
+        self::assertFalse($bookingManager->isFrontDesk());
+    }
+
     public function test_manager_operational_permissions_do_not_include_business_or_finance_mutations(): void
     {
         $manager = new User(['role' => 'ROLE_MANAGER']);
