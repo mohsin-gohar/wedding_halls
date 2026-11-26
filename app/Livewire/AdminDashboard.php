@@ -1114,8 +1114,8 @@ class AdminDashboard extends Component
         $previousStatus = $booking->status;
 
         try {
-            $booking = app(\\App\\Services\\BookingService::class)->transitionStatus($booking, $status);
-        } catch (\\App\\Exceptions\\SlotAlreadyBookedException|\\InvalidArgumentException $exception) {
+            $booking = app(\App\Services\BookingService::class)->transitionStatus($booking, $status);
+        } catch (\App\Exceptions\SlotAlreadyBookedException|\InvalidArgumentException $exception) {
             $this->errorMessage = $exception->getMessage();
 
             return;
