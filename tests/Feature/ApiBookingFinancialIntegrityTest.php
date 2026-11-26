@@ -282,7 +282,7 @@ class ApiBookingFinancialIntegrityTest extends TestCase
             ->where('tenant_id', $hall->tenant_id)
             ->where('role', 'ROLE_TENANT_OWNER')
             ->firstOrFail();
-        $service = app(\\App\\Services\\BookingService::class);
+        $service = app(\App\Services\BookingService::class);
         $date = now()->addDays(240)->toDateString();
 
         $base = [
