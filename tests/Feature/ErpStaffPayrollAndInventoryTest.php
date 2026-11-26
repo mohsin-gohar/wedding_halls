@@ -667,4 +667,38 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
             ->assertStatus(403);
     }
 
+    public function test_inventory_mutations_require_inventory_manage_permission(): void
+    {
+        $tenant = Tenant::query()->where('slug', 'riwaj-grand')->firstOrFail();
+        $manager = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_MANAGER',
+            'status' => 'ACTIVE',
+        ]);
+        $chef = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_CHEF',
+            'status' => 'ACTIVE',
+        ]);
+        $inventoryManager = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_INVENTORY_MANAGER',
+            'status' => 'ACTIVE',
+        ]);
+
+        Livewire::actingAs($manager)
+            ->test(InventoryTracker::class)
+            ->call('saveItem')
+            ->assertStatus(403);
+
+        Livewire::actingAs($chef)
+            ->test(InventoryTracker::class)
+            ->call('saveItem')
+            ->assertStatus(403);
+
+        Livewire::actingAs($inventoryManager)
+            ->test(InventoryTracker::class)
+            ->assertOk();
+    }
+
 }
