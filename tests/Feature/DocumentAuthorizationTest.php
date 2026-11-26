@@ -74,13 +74,15 @@ class DocumentAuthorizationTest extends TestCase
     public function test_unrelated_tenant_staff_cannot_read_booking_documents_or_receipts(): void
     {
         $booking = Booking::query()->firstOrFail();
-        $payment = Payment::query()->firstOrFail();
+        $payment = Payment::query()
+            ->where('tenant_id', $booking->tenant_id)
+            ->firstOrFail();
 
         $otherTenant = \App\Models\Tenant::query()
             ->where('id', '!=', $booking->tenant_id)
             ->first();
 
-        if (! $otherTenant || (string) $otherTenant->id === (string) $payment->tenant_id) {
+        if (! $otherTenant) {
             $this->markTestSkipped('A second tenant with independent payment fixtures is required.');
         }
 
@@ -89,6 +91,32 @@ class DocumentAuthorizationTest extends TestCase
         $this->actingAs($manager)
             ->get(route('documents.agreement', ['id' => $booking->id]))
             ->assertForbidden();
+
+        $this->actingAs($manager)
+            ->get(route('documents.receipt', ['id' => $payment->id]))
+            ->assertForbidden();
+    }
+
+    public function test_platform_finance_can_read_financial_documents_across_tenants(): void
+    {
+        $booking = Booking::query()->firstOrFail();
+        $payment = Payment::query()
+            ->where('tenant_id', $booking->tenant_id)
+            ->firstOrFail();
+
+        $finance = User::factory()->create([
+            'role' => 'ROLE_PLATFORM_FINANCE',
+            'tenant_id' => null,
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($finance)
+            ->get(route('documents.invoice', ['id' => $booking->id]))
+            ->assertOk();
+
+        $this->actingAs($finance)
+            ->get(route('documents.receipt', ['id' => $payment->id]))
+            ->assertOk();
     }
 
     private function tenantStaff(string|int $tenantId, string $role): User
