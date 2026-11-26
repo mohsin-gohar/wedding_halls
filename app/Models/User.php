@@ -153,9 +153,7 @@ class User extends Authenticatable
 
     public function isChef(): bool
     {
-        return $this->isRoleFamily('ROLE_CHEF')
-            || $this->role === 'ROLE_CATERING_STAFF'
-            || $this->hasRole('ROLE_CATERING_STAFF');
+        return $this->isRoleFamily('ROLE_CHEF');
     }
 
     public function isManager(): bool
@@ -205,7 +203,7 @@ class User extends Authenticatable
 
     public function isBookingManager(): bool
     {
-        return $this->role === 'ROLE_BOOKING_MANAGER' || $this->hasRole('ROLE_BOOKING_MANAGER');
+        return $this->role === 'ROLE_BOOKING_MANAGER';
     }
 
     public function isStaffMember(): bool
