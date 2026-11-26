@@ -262,12 +262,14 @@ class PublicBookingHardeningRegressionTest extends TestCase
     {
         [$tenant, , $hall] = $this->approvedVenue('floor');
 
+        // Walk-in confirmed bookings are a front-desk capability; floor staff
+        // are operational viewers under the least-privilege permission matrix.
         $staff = User::create([
             'tenant_id' => $tenant->id,
-            'name' => 'Floor Staff Member',
-            'email' => 'floor-'.$tenant->id.'@riwajgrand.pk',
+            'name' => 'Front Desk Member',
+            'email' => 'frontdesk-'.$tenant->id.'@riwajgrand.pk',
             'phone' => '+92 300 8880000',
-            'role' => 'ROLE_FLOOR_STAFF',
+            'role' => 'ROLE_FRONT_DESK',
             'password' => Hash::make('password123'),
         ]);
 

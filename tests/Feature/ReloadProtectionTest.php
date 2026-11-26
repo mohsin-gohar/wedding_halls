@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Livewire\Auth\Login;
 use App\Livewire\CustomerRegister;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -16,6 +17,9 @@ class ReloadProtectionTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // Named limiters are keyed per IP/path; clear the shared cache store so
+        // this class is independent of requests made by earlier test classes.
+        Cache::flush();
         RateLimiter::clear('reload-protection');
     }
 

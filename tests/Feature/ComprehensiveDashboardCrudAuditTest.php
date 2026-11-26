@@ -182,16 +182,27 @@ class ComprehensiveDashboardCrudAuditTest extends TestCase
         $this->assertNotNull($savedDiesel);
         $this->assertEquals(7500.0, (float) $savedDiesel->amount);
 
-        // Financial entries are voided, never hard-deleted.
+        // Financial entries are voided, never hard-deleted. Utility-linked
+        // expenses are source-protected, so void a generic expense here.
+        $genericExpense = Expense::create([
+            'tenant_id' => $tenantId,
+            'category' => 'OTHER',
+            'title' => 'Generic audit adjustment',
+            'amount' => 100,
+            'expense_date' => Carbon::today()->toDateString(),
+            'payment_method' => 'CASH',
+            'created_by_user_id' => $owner->id,
+        ]);
+
         Livewire::actingAs($owner)
             ->test(ExpenseTracker::class)
-            ->call('openVoidModal', (string) $savedDiesel->id)
+            ->call('openVoidModal', (string) $genericExpense->id)
             ->set('voidReason', 'Test reversal for dashboard CRUD audit')
             ->call('voidExpense')
             ->assertHasNoErrors();
 
-        $this->assertNull(Expense::find($savedDiesel->id));
-        $this->assertTrue((bool) Expense::withVoided()->findOrFail($savedDiesel->id)->is_voided);
+        $this->assertNull(Expense::find($genericExpense->id));
+        $this->assertTrue((bool) Expense::withVoided()->findOrFail($genericExpense->id)->is_voided);
 
         // 2. Walk-in Booking Creation
         $eventDate = Carbon::now()->addDays(20)->toDateString();

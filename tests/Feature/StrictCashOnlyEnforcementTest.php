@@ -294,7 +294,7 @@ class StrictCashOnlyEnforcementTest extends TestCase
 
         $expense = Expense::create([
             'tenant_id' => $tenantId,
-            'category' => 'GENERATOR_DIESEL',
+            'category' => 'OTHER',
             'title' => 'Legacy expense',
             'amount' => 1000,
             'expense_date' => now()->toDateString(),

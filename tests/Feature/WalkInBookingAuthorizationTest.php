@@ -37,16 +37,18 @@ class WalkInBookingAuthorizationTest extends TestCase
             ->assertSet('customer_name', '');
     }
 
-    public function test_floor_staff_with_booking_permission_can_lookup_contacts_inside_their_tenant(): void
+    public function test_front_desk_with_booking_permission_can_lookup_contacts_inside_their_tenant(): void
     {
         $booking = Booking::query()->whereNotNull('customer_phone')->firstOrFail();
-        $floorStaff = User::factory()->create([
+        // Floor staff are operational viewers; the walk-in terminal is a
+        // front-desk capability (bookings.create).
+        $frontDesk = User::factory()->create([
             'tenant_id' => $booking->tenant_id,
-            'role' => 'ROLE_FLOOR_STAFF',
+            'role' => 'ROLE_FRONT_DESK',
             'status' => 'ACTIVE',
         ]);
 
-        Livewire::actingAs($floorStaff)
+        Livewire::actingAs($frontDesk)
             ->test(WalkInBookingModal::class)
             ->set('customer_phone', $booking->customer_phone)
             ->call('lookupClient')

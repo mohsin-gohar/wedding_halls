@@ -92,17 +92,10 @@ class StaffManager extends Component
 
     private function allowedRoles(): array
     {
-        // HR managers may manage operational employees, but cannot provision
-        // finance, inventory, HR-admin or general-manager privileges.
-        $roles = [
-            'ROLE_FRONT_DESK',
-            'ROLE_CHEF',
-            'ROLE_FLOOR_STAFF',
-            'ROLE_SERVICE_STAFF',
-            'ROLE_STAFF_MEMBER',
-            'ROLE_PHOTOGRAPHER',
-            'ROLE_CATERING_STAFF',
-        ];
+        // HR managers may provision only the lowest-privilege staff role.
+        // Operational roles (front desk, chef, service staff) carry booking or
+        // financial permissions and must be provisioned by the tenant owner.
+        $roles = ['ROLE_STAFF_MEMBER'];
 
         if (Auth::user()->isTenantOwner()) {
             $roles = array_merge([

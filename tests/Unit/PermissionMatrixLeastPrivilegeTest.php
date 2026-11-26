@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\User;
 use App\Support\PermissionMatrix;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class PermissionMatrixLeastPrivilegeTest extends TestCase
 {

@@ -27,7 +27,6 @@
                     + Purchase Order
                 </button>
             @endif
-            @endif
         </div>
     </div>
 
@@ -125,7 +124,6 @@
                     <button wire:click="openCreateItemModal" class="btn-gold !h-8 !px-3 text-xs font-bold uppercase font-mono">
                         + New Inventory Item
                     </button>
-                @endif
                 @endif
             </div>
 
@@ -338,8 +336,6 @@
                                         <span class="text-stone-400 text-[10px]">Awaiting finance</span>
                                     @else
                                         <span class="text-stone-400 text-[10px]">Settled &amp; Posted</span>
-                                    @else
-                                        <span class="text-stone-400 text-[10px]">View only</span>
                                     @endif
                                 </td>
                             </tr>

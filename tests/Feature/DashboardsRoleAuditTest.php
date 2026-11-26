@@ -107,15 +107,14 @@ class DashboardsRoleAuditTest extends TestCase
         $this->assertEquals(290.0, (float) $utilityLog->diesel_rate_per_liter);
         $this->assertEquals(5.0, (float) $utilityLog->generator_run_hours);
 
-        // Void the expense while retaining its original financial evidence.
+        // Source-linked utility expenses are retained and must be corrected
+        // through the utility workflow, not voided from the generic ledger.
         Livewire::actingAs($owner)
             ->test(ExpenseTracker::class)
             ->call('openVoidModal', $expense->id)
-            ->set('voidReason', 'Reversal for dashboard role audit test')
-            ->call('voidExpense')
-            ->assertHasNoErrors();
+            ->assertStatus(403);
 
-        $this->assertNull(Expense::find($expense->id));
-        $this->assertTrue((bool) Expense::withVoided()->findOrFail($expense->id)->is_voided);
+        $this->assertNotNull(Expense::withVoided()->find($expense->id));
+        $this->assertFalse((bool) Expense::withVoided()->findOrFail($expense->id)->is_voided);
     }
 }

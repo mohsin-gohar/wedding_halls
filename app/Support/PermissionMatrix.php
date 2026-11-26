@@ -119,7 +119,7 @@ class PermissionMatrix
             'rfq.view', 'rfq.bid', 'rfq.award', 'rfq.close',
             'quotations.view', 'quotations.create', 'quotations.approve', 'quotations.revise',
             'contracts.view', 'contracts.create', 'contracts.manage', 'contracts.approve',
-            'payments.view', 'payments.record', 'payments.verify',
+            'payments.view', 'payments.record', 'payments.verify', 'payments.refund',
             'invoices.view', 'invoices.manage',
             'payouts.view', 'payouts.request', 'wallet.view',
             'commissions.view', 'reconciliation.view',

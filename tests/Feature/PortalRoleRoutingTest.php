@@ -54,15 +54,22 @@ class PortalRoleRoutingTest extends TestCase
 
     public function test_staff_only_roles_land_on_an_accessible_surface_instead_of_looping(): void
     {
-        foreach (['ROLE_STAFF_MEMBER', 'ROLE_PHOTOGRAPHER', 'ROLE_INVENTORY_MANAGER'] as $role) {
+        // Staff-only roles must land on a surface they can actually open.
+        // Inventory managers have a dedicated ERP page; the remaining roles
+        // use the shared notification surface.
+        foreach ([
+            'ROLE_STAFF_MEMBER' => 'notifications',
+            'ROLE_PHOTOGRAPHER' => 'notifications',
+            'ROLE_INVENTORY_MANAGER' => 'inventory',
+        ] as $role => $landingRoute) {
             $user = $this->staffUser($role);
 
             $this->actingAs($user)
                 ->get('/dashboard')
-                ->assertRedirect(route('notifications'));
+                ->assertRedirect(route($landingRoute));
 
             $this->actingAs($user)
-                ->get(route('notifications'))
+                ->get(route($landingRoute))
                 ->assertOk();
         }
     }
