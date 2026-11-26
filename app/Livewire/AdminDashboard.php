@@ -1106,9 +1106,23 @@ class AdminDashboard extends Component
     public function deleteBooking(string $bookingId)
     {
         $booking = Booking::findOrFail($bookingId);
+
+        // Financial and audit history is immutable. Never hard-delete a booking
+        // that has payments; archive it by cancelling instead.
+        if ($booking->payments()->exists() || Payment::where('booking_id', $booking->id)->exists()) {
+            $booking->update([
+                'status' => 'CANCELLED',
+                'notes' => ($booking->notes ?: '')."\nArchived by Super Admin (payment history preserved).",
+            ]);
+
+            AuditLog::log('BOOKING_ARCHIVED', "Super Admin archived booking [{$booking->booking_reference}] instead of deleting payment history.", $booking->tenant_id, 'Booking', $bookingId);
+            $this->feedbackMessage = "Booking [{$booking->booking_reference}] has payment history and was archived (cancelled).";
+
+            return;
+        }
+
         $ref = $booking->booking_reference;
         $tenantId = $booking->tenant_id;
-        $booking->payments()->delete();
         $booking->delete();
 
         AuditLog::log('BOOKING_DELETED', "Super Admin deleted booking [{$ref}].", $tenantId, 'Booking', $bookingId);
