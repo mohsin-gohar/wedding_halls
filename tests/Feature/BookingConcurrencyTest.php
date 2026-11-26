@@ -171,6 +171,40 @@ class BookingConcurrencyTest extends TestCase
         ]);
     }
 
+    public function test_cancelled_booking_releases_its_hall_slot_for_a_new_reservation(): void
+    {
+        $hall = Hall::firstOrFail();
+        $service = app(BookingService::class);
+        $eventDate = now()->addDays(240)->toDateString();
+
+        $booking = $service->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => $eventDate,
+            'slot_type' => 'EVENING',
+            'customer_name' => 'First Booking Customer',
+            'customer_phone' => '+92 300 1112233',
+            'guest_count' => 120,
+            'per_head_rate' => 1800,
+        ]);
+
+        $booking->update(['status' => 'CANCELLED']);
+
+        $this->assertTrue($service->checkSlotAvailability($hall->id, $eventDate, 'EVENING'));
+
+        $replacement = $service->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => $eventDate,
+            'slot_type' => 'EVENING',
+            'customer_name' => 'Replacement Booking Customer',
+            'customer_phone' => '+92 300 2223344',
+            'guest_count' => 140,
+            'per_head_rate' => 1900,
+        ]);
+
+        $this->assertSame('CONFIRMED', $replacement->status);
+        $this->assertNotSame($booking->id, $replacement->id);
+    }
+
     public function test_document_routes_return_ok()
     {
         $booking = Booking::with('payments', 'kitchenKot')->first();
