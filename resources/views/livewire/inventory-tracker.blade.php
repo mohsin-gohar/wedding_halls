@@ -156,7 +156,7 @@
                                     <div class="text-sm font-bold {{ $i->isLowStock() ? 'text-[#171513]' : 'text-[#8F7239]' }}">
                                         {{ number_format($i->current_stock, 1) }} {{ $i->unit }}
                                     </div>
-                                    @if($i->isLowStock())
+                                    @if($i->is_active && $i->isLowStock())
                                         <span class="text-[9px] font-bold text-[#171513] bg-[#171513]/8 px-1.5 py-0.5 border border-[#C6A15B]/40 uppercase">
                                             ⚠️ Low Stock
                                         </span>
