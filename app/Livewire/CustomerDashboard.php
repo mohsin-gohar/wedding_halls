@@ -74,6 +74,8 @@ class CustomerDashboard extends Component
 
     public function switchTab(string $tab): void
     {
+        $this->assertCustomer();
+
         $this->activeTab = in_array($tab, ['bookings', 'quotes', 'profile']) ? $tab : 'bookings';
         $this->profileFeedback = null;
         $this->errorMessage = null;
@@ -133,6 +135,8 @@ class CustomerDashboard extends Component
 
     public function closeBookingModal()
     {
+        $this->assertCustomer();
+
         $this->viewingBooking = null;
         $this->selectedBookingId = null;
         $this->feedbackMessage = null;
@@ -189,6 +193,7 @@ class CustomerDashboard extends Component
     public function render()
     {
         $user = Auth::user();
+        abort_unless($user && $user->isCustomer(), 403, 'Customer account required.');
         if (! $user) {
             return view('livewire.customer-dashboard', [
                 'bookings' => collect(),
