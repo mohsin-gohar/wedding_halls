@@ -87,7 +87,7 @@ class BookingConcurrencyTest extends TestCase
         $hall = Hall::first();
         $bookingService = app(BookingService::class);
 
-        $testDate = '2026-11-25';
+        $testDate = now()->addDays(180)->toDateString();
         $testSlot = 'EVENING';
 
         $data = [
@@ -123,7 +123,7 @@ class BookingConcurrencyTest extends TestCase
     {
         $hall = Hall::first();
         $bookingService = app(BookingService::class);
-        $testDate = '2026-11-26';
+        $testDate = now()->addDays(181)->toDateString();
 
         $fullDayReservation = [
             'hall_id' => $hall->id,
@@ -151,7 +151,7 @@ class BookingConcurrencyTest extends TestCase
             $this->assertTrue(true);
         }
 
-        $individualShiftDate = '2026-11-27';
+        $individualShiftDate = now()->addDays(182)->toDateString();
         $bookingService->createReservation([
             ...$fullDayReservation,
             'event_date' => $individualShiftDate,
