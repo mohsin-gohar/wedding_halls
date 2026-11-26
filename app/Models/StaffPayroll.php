@@ -102,10 +102,11 @@ class StaffPayroll extends Model
         }
 
         $ratePaisa = (int) round($roundedRate * 100);
-        $hoursHundredths = (int) round($otHours * 100);
-        if ($hoursHundredths > 1_000_000) {
+        if ($otHours > 10_000) {
             throw new \InvalidArgumentException('Payroll overtime hours exceed the supported limit.');
         }
+
+        $hoursHundredths = (int) round($otHours * 100);
 
         $overtimePaisa = intdiv(($hoursHundredths * $ratePaisa) + 50, 100);
         if ($overtimePaisa > $maximumPaisa) {
