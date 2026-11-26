@@ -64,7 +64,7 @@ class CustomerDashboard extends Component
         // register a known customer's address and take over their bookings.
     }
 
-    private function assertCustomer(): \\App\\Models\\User
+    private function assertCustomer(): \App\Models\User
     {
         $user = Auth::user();
 
