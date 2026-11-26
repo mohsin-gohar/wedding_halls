@@ -274,7 +274,7 @@ Route::get('/sitemap.xml', function () {
 })->middleware('throttle:public-pages')->name('sitemap');
 
 // Vendor Hall Media (defined before /hall/{id} wildcard)
-Route::middleware(['auth', 'tenant.staff', 'portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER'])->get('/hall/media', HallMediaManager::class)->name('hall.media');
+Route::middleware(['auth', 'tenant.staff', RequirePortalPermission::class.':business.view'])->get('/hall/media', HallMediaManager::class)->name('hall.media');
 
 // Venue Exploration & Showcase
 Route::get('/venues', PublicVenues::class)->middleware('throttle:public-pages')->name('public.venues');
