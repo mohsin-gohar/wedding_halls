@@ -275,8 +275,11 @@ class InventoryTracker extends Component
             $this->movementUnitPrice = round((float) $this->movementUnitPrice, 2);
         }
 
+        $tenantId = Auth::user()->tenant_id;
+        $itemRule = Rule::exists('inventory_items', 'id')->where('tenant_id', $tenantId);
+
         $this->validate([
-            'movementItemId' => 'required|string|exists:inventory_items,id',
+            'movementItemId' => ['required', 'string', $itemRule],
             'movementType' => ['required', Rule::in(InventoryLog::TYPES)],
             'movementQuantity' => [
                 'required', 'numeric', 'min:0.1', 'max:99999999.99',
@@ -305,7 +308,6 @@ class InventoryTracker extends Component
             ? $marker
             : $marker.' '.Str::limit($note, max(1, 255 - strlen($marker) - 1), '');
 
-        $tenantId = Auth::user()->tenant_id;
         $itemId = $this->movementItemId;
         $movementType = $this->movementType;
         $qty = (float) $this->movementQuantity;
