@@ -265,6 +265,36 @@ class VendorErpBoardsTest extends TestCase
         $this->assertDatabaseMissing('vendor_services', ['name' => 'Unpriced Hourly Service']);
     }
 
+    public function test_non_finite_service_prices_are_rejected_before_persistence(): void
+    {
+        $owner = $this->createVendorOwner();
+
+        Livewire::actingAs($owner)
+            ->test(VendorServicesManager::class)
+            ->set('serviceName', 'Infinite Service')
+            ->set('pricingType', 'FIXED')
+            ->set('priceFrom', INF)
+            ->call('saveService')
+            ->assertHasErrors(['priceFrom']);
+
+        Livewire::actingAs($owner)
+            ->test(VendorServicesManager::class)
+            ->set('serviceName', 'Not-a-number Service')
+            ->set('pricingType', 'FIXED')
+            ->set('priceTo', NAN)
+            ->call('saveService')
+            ->assertHasErrors(['priceTo']);
+
+        $this->assertDatabaseMissing('vendor_services', [
+            'tenant_id' => $owner->tenant_id,
+            'name' => 'Infinite Service',
+        ]);
+        $this->assertDatabaseMissing('vendor_services', [
+            'tenant_id' => $owner->tenant_id,
+            'name' => 'Not-a-number Service',
+        ]);
+    }
+
     public function test_service_price_ranges_and_negative_values_are_rejected(): void
     {
         $owner = $this->vendorOwner($this->cateringVendor());
