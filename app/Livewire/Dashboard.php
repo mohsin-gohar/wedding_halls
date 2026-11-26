@@ -15,6 +15,7 @@ use App\Models\StaffAttendance;
 use App\Models\User;
 use App\Models\UtilityLog;
 use App\Support\CashOnlyPayments;
+use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -99,12 +100,85 @@ class Dashboard extends Component
 
     public function mount()
     {
-        $user = Auth::user();
-        if ($user && $user->isCustomer()) {
-            return $this->redirect(route('customer.dashboard'));
-        }
+        $this->authorizeDashboardAccess();
         $this->expenseDate = Carbon::now()->format('Y-m-d');
         $this->operationsMonth = Carbon::now()->format('Y-m');
+    }
+
+    private function authorizeDashboardAccess(): void
+    {
+        $user = Auth::user();
+        abort_unless(
+            $user && ($user->isSuperAdmin()
+                || ($user->tenant_id
+                    && PermissionMatrix::userCan($user, 'dashboard.view')
+                    && PermissionMatrix::userCan($user, 'bookings.view'))),
+            403,
+            'Dashboard access requires dashboard.view and bookings.view within a tenant.'
+        );
+    }
+
+    private function authorizeDashboardPermission(string $permission): void
+    {
+        $user = Auth::user();
+        abort_unless(
+            $user && $user->tenant_id && PermissionMatrix::userCan($user, $permission),
+            403,
+            'Unauthorized. Missing permission: '.$permission
+        );
+    }
+
+    private function renderOperationsDashboard(string $tenantId)
+    {
+        $today = Carbon::today();
+        $halls = Hall::query()
+            ->where('tenant_id', $tenantId)
+            ->where('is_active', true)
+            ->get(['id', 'name']);
+
+        $todayEventsCount = Booking::query()
+            ->where('tenant_id', $tenantId)
+            ->whereDate('event_date', $today->toDateString())
+            ->whereIn('status', ['CONFIRMED', 'HOLD'])
+            ->count();
+
+        $upcomingEventsCount = Booking::query()
+            ->where('tenant_id', $tenantId)
+            ->whereDate('event_date', '>=', $today->toDateString())
+            ->whereIn('status', ['CONFIRMED', 'HOLD'])
+            ->count();
+
+        $pendingInquiriesCount = Booking::query()
+            ->where('tenant_id', $tenantId)
+            ->whereIn('status', ['INQUIRY', 'PENDING'])
+            ->count();
+
+        $monthBookings = Booking::query()
+            ->where('tenant_id', $tenantId)
+            ->whereBetween('event_date', [$today->copy()->startOfMonth()->toDateString(), $today->copy()->endOfMonth()->toDateString()])
+            ->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD'])
+            ->get(['guest_count', 'status', 'slot_type']);
+
+        $upcomingBookings = Booking::query()
+            ->select(['id', 'hall_id', 'event_date', 'slot_type', 'event_type', 'customer_name', 'guest_count', 'status'])
+            ->with('hall:id,name')
+            ->where('tenant_id', $tenantId)
+            ->whereDate('event_date', '>=', $today->toDateString())
+            ->whereIn('status', ['CONFIRMED', 'HOLD'])
+            ->orderBy('event_date')
+            ->orderBy('slot_type')
+            ->limit(8)
+            ->get();
+
+        return view('livewire.dashboard-operations', [
+            'totalHallsCount' => $halls->count(),
+            'todayEventsCount' => $todayEventsCount,
+            'upcomingEventsCount' => $upcomingEventsCount,
+            'pendingInquiriesCount' => $pendingInquiriesCount,
+            'monthProgramsCount' => $monthBookings->count(),
+            'monthGuestsCount' => (int) $monthBookings->sum('guest_count'),
+            'upcomingBookings' => $upcomingBookings,
+        ]);
     }
 
     public function updatedOperationsMonth(): void
@@ -141,6 +215,7 @@ class Dashboard extends Component
 
     public function openDailyExpenseModal(string $category = 'GENERATOR_DIESEL'): void
     {
+        $this->authorizeDashboardPermission('expenses.manage');
         $user = Auth::user();
         $this->expenseDate = Carbon::now()->format('Y-m-d');
         $this->expenseCategory = $category;
@@ -218,6 +293,7 @@ class Dashboard extends Component
 
     public function saveDailyExpense(): void
     {
+        $this->authorizeDashboardPermission('expenses.manage');
         $user = Auth::user();
         $tenantId = $user?->tenant_id;
 
@@ -281,6 +357,7 @@ class Dashboard extends Component
 
     public function deleteDailyExpense(string $expenseId): void
     {
+        $this->authorizeDashboardPermission('expenses.manage');
         $tenantId = Auth::user()?->tenant_id;
         $expense = Expense::where('tenant_id', $tenantId)->findOrFail($expenseId);
         $amount = $expense->amount;
@@ -305,6 +382,7 @@ class Dashboard extends Component
 
     public function openCustomerDetails(string $bookingId): void
     {
+        $this->authorizeDashboardPermission('bookings.view');
         $this->selectedBookingId = $bookingId;
         $this->leadNoteText = '';
         $this->showCustomerModal = true;
@@ -319,6 +397,7 @@ class Dashboard extends Component
 
     public function updateLeadStage(string $bookingId, string $newStage): void
     {
+        $this->authorizeDashboardPermission('leads.manage');
         $tenantId = Auth::user()?->tenant_id;
         if (! $tenantId) {
             $this->crmFeedback = 'Session tenant not found. Please log in again.';
@@ -344,6 +423,7 @@ class Dashboard extends Component
 
     public function addLeadNote(): void
     {
+        $this->authorizeDashboardPermission('leads.manage');
         if (empty(trim($this->leadNoteText)) || ! $this->selectedBookingId) {
             return;
         }
@@ -369,6 +449,7 @@ class Dashboard extends Component
 
     public function openChatModal(string $hallId, string $ip, string $session): void
     {
+        $this->authorizeDashboardPermission('messages.view');
         $hall = $this->assertOwnedHall($hallId);
 
         $this->selectedChatHallId = $hall->id;
@@ -392,6 +473,7 @@ class Dashboard extends Component
 
     public function sendChatReply(): void
     {
+        $this->authorizeDashboardPermission('messages.send');
         $reply = trim($this->chatReplyText);
         if (empty($reply) || ! $this->selectedChatHallId) {
             return;
@@ -424,8 +506,8 @@ class Dashboard extends Component
      */
     protected function assertOwnedHall(string $hallId): Hall
     {
+        $this->authorizeDashboardPermission('messages.view');
         $user = Auth::user();
-        abort_unless($user && $user->tenant_id && ! $user->isCustomer(), 403);
 
         return Hall::where('id', $hallId)
             ->where('tenant_id', $user->tenant_id)
@@ -434,9 +516,14 @@ class Dashboard extends Component
 
     public function render()
     {
+        $this->authorizeDashboardAccess();
         $now = Carbon::now();
         $user = Auth::user();
         $tenantId = $user ? $user->tenant_id : null;
+
+        if (! $user->isSuperAdmin() && ! PermissionMatrix::userCan($user, 'reports.financial')) {
+            return $this->renderOperationsDashboard((string) $tenantId);
+        }
 
         // Zero-trust read scope: a session without tenant context must see no
         // platform-wide aggregates, so match nothing instead of skipping the filter.
