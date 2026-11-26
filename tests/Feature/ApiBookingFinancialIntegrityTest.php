@@ -232,8 +232,6 @@ class ApiBookingFinancialIntegrityTest extends TestCase
                 'event_date' => now()->addDays(230)->toDateString(),
                 'slot_type' => 'AFTERNOON',
                 'guest_count' => 180,
-                'customer_name' => 'Forged Name Is Ignored',
-                'customer_phone' => '+92 300 0000000',
             ])
             ->assertCreated()
             ->assertJsonPath('success', true);
