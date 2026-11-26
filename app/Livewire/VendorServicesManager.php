@@ -187,6 +187,38 @@ class VendorServicesManager extends Component
             return;
         }
 
+        $from = $this->priceFrom === null ? null : round((float) $this->priceFrom, 2);
+        $to = $this->priceTo === null ? null : round((float) $this->priceTo, 2);
+
+        if ($from !== null && $to !== null && $to < $from - 0.009) {
+            $this->addError('priceTo', 'End price cannot be lower than the start price.');
+
+            return;
+        }
+
+        // PER_HEAD and HOURLY services are bookable only with a positive base
+        // price; quote-first pricing types may omit a price until negotiation.
+        if (in_array($this->pricingType, ['PER_HEAD', 'HOURLY'], true) && ($from ?? 0) <= 0) {
+            $this->addError('priceFrom', 'A positive price is required for this pricing type.');
+
+            return;
+        }
+
+        if ($from !== null && $from < 0) {
+            $this->addError('priceFrom', 'Price cannot be negative.');
+
+            return;
+        }
+
+        if ($to !== null && $to < 0) {
+            $this->addError('priceTo', 'Price cannot be negative.');
+
+            return;
+        }
+
+        $this->priceFrom = $from;
+        $this->priceTo = $to;
+
         DB::transaction(function () use ($tenantId) {
             if ($this->isEditing) {
                 $service = VendorService::query()->where('tenant_id', $tenantId)->find($this->editingServiceId);
