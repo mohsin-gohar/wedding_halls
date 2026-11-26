@@ -213,7 +213,7 @@ class CustomerEventWorkspace extends Component
 
     public function selectEvent(string $eventId): void
     {
-        if (! $this->ownedEvent($eventId)) {
+        if ($this->ownedEvent($eventId) === null) {
             abort(404, 'Event not found.');
         }
 
