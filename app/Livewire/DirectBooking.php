@@ -68,6 +68,8 @@ class DirectBooking extends Component
             return;
         }
 
+        abort_unless(auth()->user()->isCustomer(), 403, 'Only customer accounts can create marketplace bookings.');
+
         $this->vendor = Tenant::query()
             ->where('slug', $slug)
             ->where('marketplace_visible', true)
@@ -196,6 +198,8 @@ class DirectBooking extends Component
 
             return;
         }
+
+        abort_unless(auth()->user()->isCustomer(), 403, 'Only customer accounts can create marketplace bookings.');
 
         $this->errorMessage = null;
 
