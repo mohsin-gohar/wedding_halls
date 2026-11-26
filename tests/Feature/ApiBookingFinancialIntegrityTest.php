@@ -237,6 +237,8 @@ class ApiBookingFinancialIntegrityTest extends TestCase
             ->assertJsonPath('success', true);
 
         $booking = Booking::query()->where('customer_id', $customer->id)->firstOrFail();
+        $this->assertSame('API Customer', $booking->customer_name);
+        $this->assertSame('+92 300 7772001', $booking->customer_phone);
 
         $this->actingAs($customer)
             ->patchJson('/api/v1/bookings/'.$booking->id, ['notes' => 'Please call before confirming.'])
@@ -287,6 +289,7 @@ class ApiBookingFinancialIntegrityTest extends TestCase
             'hall_id' => $hall->id,
             'event_date' => $date,
             'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
             'guest_count' => 200,
             'per_head_rate' => 1500,
             'hall_rent' => 100000,
