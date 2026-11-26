@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Booking;
 use App\Models\UtilityLog;
+use App\Support\PermissionMatrix;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -25,8 +26,17 @@ class UtilityFuelTracker extends Component
 
     public ?string $successMessage = null;
 
+    private function authorizeUtilityAction(string $permission): void
+    {
+        $user = Auth::user();
+        abort_unless($user && ! $user->isCustomer(), 403);
+        abort_unless($user->isSuperAdmin() || $user->tenant_id, 403);
+        abort_unless(PermissionMatrix::userCan($user, $permission), 403, 'Missing utility tracking permission.');
+    }
+
     public function mount()
     {
+        $this->authorizeUtilityAction('utilities.view');
         $user = Auth::user();
         if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized. Tenant staff access required.');
@@ -45,6 +55,7 @@ class UtilityFuelTracker extends Component
 
     public function selectBooking(string $bookingId)
     {
+        $this->authorizeUtilityAction('utilities.view');
         $user = Auth::user();
         if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized.');
@@ -81,6 +92,7 @@ class UtilityFuelTracker extends Component
 
     public function saveUtilityLog()
     {
+        $this->authorizeUtilityAction('utilities.manage');
         $this->validate([
             'selectedBookingId' => 'required|exists:bookings,id',
             'generator_run_hours' => 'required|numeric|min:0',
@@ -124,6 +136,7 @@ class UtilityFuelTracker extends Component
 
     public function render()
     {
+        $this->authorizeUtilityAction('utilities.view');
         $user = Auth::user();
         $query = Booking::with(['hall', 'utilityLog'])
             ->whereIn('status', ['CONFIRMED', 'COMPLETED']);
