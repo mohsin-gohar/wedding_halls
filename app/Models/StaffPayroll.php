@@ -91,7 +91,7 @@ class StaffPayroll extends Model
 
         foreach ($values as $field => $value) {
             if (! is_finite($value) || $value < 0) {
-                throw new \\InvalidArgumentException("Payroll {$field} must be a finite, non-negative number.");
+                throw new \InvalidArgumentException("Payroll {$field} must be a finite, non-negative number.");
             }
         }
 
@@ -99,7 +99,7 @@ class StaffPayroll extends Model
         $toPaisa = static function (float $amount, string $field) use ($maximumPaisa): int {
             $rounded = round($amount, 2);
             if ($rounded > ($maximumPaisa / 100)) {
-                throw new \\InvalidArgumentException("Payroll {$field} exceeds the supported storage limit.");
+                throw new \InvalidArgumentException("Payroll {$field} exceeds the supported storage limit.");
             }
 
             return (int) round($rounded * 100);
@@ -112,14 +112,14 @@ class StaffPayroll extends Model
 
         $otHoursHundredths = (int) round($otHours * 100);
         if ($otHoursHundredths > 1_000_000) {
-            throw new \\InvalidArgumentException('Payroll overtime hours exceed the supported limit.');
+            throw new \InvalidArgumentException('Payroll overtime hours exceed the supported limit.');
         }
 
-        $overtimePaisa = intdiv(($otHoursHundredths * $ratePaisa) + 5000, 10000);
+        $overtimePaisa = intdiv(($otHoursHundredths * $ratePaisa) + 50, 100);
         $netPaisa = $basicPaisa + $overtimePaisa + $allowancesPaisa - $deductionsPaisa;
 
         if ($netPaisa > $maximumPaisa) {
-            throw new \\InvalidArgumentException('Payroll net salary exceeds the supported storage limit.');
+            throw new \InvalidArgumentException('Payroll net salary exceeds the supported storage limit.');
         }
 
         return max(0, $netPaisa) / 100;
