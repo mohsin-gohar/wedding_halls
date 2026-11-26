@@ -16,6 +16,7 @@ context, but they are **not** the current source of truth.
 | Public API contract | `API_DOCUMENTATION.md` |
 | Project overview and local setup | `README.md` |
 | Deployment notes | `HOSTINGER_DEPLOYMENT_GUIDE.md`, `deploy/*.md` |
+| Full audit / security / business / QA / readiness / acceptance (2026-11-26 pass) | `COMPLETE_REPOSITORY_AUDIT.md`, `SECURITY_AND_TENANT_ISOLATION_REPORT.md`, `BUSINESS_MODULE_COMPLETION_REPORT.md`, `TESTING_AND_BROWSER_QA_REPORT.md`, `PRODUCTION_DEPLOYMENT_READINESS.md`, `FINAL_ACCEPTANCE_REPORT.md` |
 
 ## Superseded historical documents
 

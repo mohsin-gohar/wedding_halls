@@ -1,34 +1,44 @@
-﻿> [!WARNING]
-> **Historical / superseded document.** This file predates the current cash-only audit and verification pass. Do not rely on its claims about payment methods, test counts, browser proof, or production readiness. See `DOCS_STATUS.md` and the authoritative final reports.
+﻿# Production Deployment Readiness — Riwaj Grand
 
-# PRODUCTION DEPLOYMENT READINESS — Riwaj Grand
+**Branch:** `audit/riwaj-grand-repair-20261126` · **Base:** `df8de437` · **Date:** 2026-11-26  
+**No deployment was performed and no production data was touched.**
 
-**Date:** 2026-11-16 · **Repair cycle update: 17 Nov 2026**
+## 1. Readiness classification
 
-## Gates
-| Gate | Result |
-|---|---|
-| Full test suite (SQLite) | See `FINAL_ENTERPRISE_DELIVERY_REPORT.md` (authoritative final run after 17 Nov repair) |
-| **Full test suite on MySQL/MariaDB** | ✅ **17 Nov**: first real MySQL run (MariaDB 10.4.32, disposable datadir, port 3307). Migrations: **0 pending** after fixing 3 real portability bugs (FK order ×2, drifted `halls` listing columns). Suite result in repair report §3. |
-| Schema parity (fresh MySQL vs dev SQLite) | ✅ 80/80 tables, **0 column differences** (`schema_diff.php`) |
-| Targeted new suites | 11 + 7 + 6 passed (calendar, attendance, payroll) + 4 payroll-integrity + 3 hall-listing-contract |
-| `npm run build` | ✅ Vite 7.3.7 (latest run 3.07s) |
-| `composer audit` | ✅ clean |
-| `npm audit` | ✅ 0 vulnerabilities |
-| Pint v1.24.0 (official phar; local vendor phar remains stale) | ✅ PASS 293 files |
-| `php artisan migrate:status` | ✅ all Ran (incl. new repair migrations) |
-| Browser QA | ✅ **17 Nov**: 5 personas (owner, front desk, chef, customer, super admin) + 4 calendar views + 360px overflow audit on 6 pages — 0 console errors |
+| Gate | Status | Evidence |
+|---|---|---|
+| PHP syntax / Pint / `git diff --check` | Verified locally | 386 files linted; Pint `--test` exit 0; diff check exit 0 |
+| Full MySQL 8 test suite | Verified locally | See `FINAL_ACCEPTANCE_REPORT.md` for final numbers; isolated `wedding_hall_mysql_test` only |
+| Frontend production build | Verified locally (earlier round) | `npm run build` produced versioned CSS/JS assets |
+| Route/view cacheability | Verified locally | Stale route cache cleared; `route:list` and `/ready` tests pass |
+| Browser QA | Partially verified locally | Playwright public/RBAC/login/responsive rounds passed when rate-limit windows clear; see testing report |
+| CI workflow | Configured, **not verified locally** | `.github/workflows/ci.yml` runs lint, Pint, audits, build, MySQL suite, Docker validation, browser suite; deploy job `if: false` |
+| Docker container runtime | **Not verified** — no daemon on this workstation | `Dockerfile`, `docker-compose.yml`, `deploy/*` reviewed only |
+| Composer/NPM advisories | Composer **blocked** (no network); NPM audit not run this pass | External-infrastructure blocker |
+| Staging migration rehearsal | **Not run** | Requires owner-approved isolated MySQL 8 staging copy |
+| Production deploy / secrets / HTTPS / mail / queue / scheduler / backups | **Not verified** | Owner/host-level responsibilities |
 
-## Blockers before commercial go-live
-1. Live gateway sandbox round-trips (credentials required) — no false claim.
-2. Backup + tested restore drill, rotation, encryption.
-3. Error monitoring, queue/scheduler health checks, log rotation.
-4. ~~Authenticated browser QA for remaining personas + mobile widths~~ — **done 17 Nov** (5 personas; 360px verified; tablet/desktop covered in prior cycles).
-5. Pint tooling repair in CI (official phar works locally).
-6. ~~Visual attendance/leave calendar, holidays/weekly offs, payroll-aware deductions~~ — **implemented** (see inventory).
-7. ~~Hold expiry + scheduler~~ — **implemented** (`ExpireBookingHoldsCommand`, hourly).
-8. **MySQL version policy**: verified on MariaDB 10.4.32 (below Laravel 12's supported minimum of MariaDB 10.6+/MySQL 8.0+); passing on 10.4 is stronger than required, but production should target MySQL 8.0+/MariaDB 10.6+.
-9. **XAMPP local datadir corrupted** (unrelated project's InnoDB corruption, 15 Nov crash) — not ours, left untouched; use the disposable datadir or a fresh XAMPP reinstall for local MySQL work.
+## 2. Required production settings (from templates, values not reproduced)
 
-## Security posture
-No secrets in reports; seeded demo credentials only in local reports (no production accounts exposed). `.env` local/dev SQLite; production must use hardened env, HTTPS, private storage for confidential documents.
+- `APP_ENV=production`, `APP_DEBUG=false`, generated `APP_KEY`, `FORCE_HTTPS=true`, secure/encrypted cookies.
+- MySQL 8 with least-privilege DB user; `DB_ROOT_PASSWORD` only in Docker Compose context.
+- `CACHE_STORE`, `SESSION_DRIVER`, `QUEUE_CONNECTION`, `BOOKING_LOCK_STORE` backed by a shared service (Redis recommended on multi-instance).
+- Mail/SMTP, WhatsApp Cloud API credentials, trusted proxies, upload limits aligned across Nginx/PHP/Livewire.
+- Queue worker + scheduler running under supervisor/Cron; `/up` liveness and `/ready` dependency probe monitored.
+
+## 3. Outstanding go-live blockers
+
+1. Run CI on the repair branch and confirm every required check is green; no workflow run exists for this head yet.
+2. Fix deployment upload-limit mismatch (standalone Nginx 32m vs PHP 70m vs Livewire 50MB).
+3. Decide the platform-support / wildcard-token / Livewire-throttle policy (see security report).
+4. Rehearse all migrations on an isolated MySQL 8 staging copy and verify backup/restore drill.
+5. Configure host-level queue worker, scheduler, HTTPS termination, secrets rotation, mail and monitoring.
+6. Complete the documented financial-product decisions (hall refund UI, complimentary onboarding duration, utility `expense_id` backfill).
+
+## 4. Verified rollback posture
+
+- No destructive migration or data rewrite was introduced; new migration `2026_12_22_000001_add_service_booking_to_vendor_payouts.php` is additive with a guarded `down()`.
+- New expense/utility migrations are guarded with `Schema::hasColumn` / `hasIndex`.
+- Deployment scripts in `deploy/` include backup and restore drills that refuse production targets; not executed here.
+
+**Status:** Code-level gates are substantially green; **production go-live is NOT approved** until the owner completes the external gates above. This is a truthful "not verified" statement, not a claim of readiness.
