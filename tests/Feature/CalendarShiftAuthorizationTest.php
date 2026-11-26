@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\CalendarShiftGrid;
+use App\Livewire\WalkInBookingModal;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -47,4 +48,28 @@ class CalendarShiftAuthorizationTest extends TestCase
             ->call('saveShiftPolicy')
             ->assertHasNoErrors();
     }
+    public function test_walk_in_terminal_requires_booking_create_or_manage_permission(): void
+    {
+        $tenant = Tenant::query()->where('slug', 'riwaj-grand')->firstOrFail();
+        $chef = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_CHEF',
+            'status' => 'ACTIVE',
+        ]);
+        $floorStaff = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_FLOOR_STAFF',
+            'status' => 'ACTIVE',
+        ]);
+
+        Livewire::actingAs($chef)
+            ->test(CalendarShiftGrid::class)
+            ->call('openWalkInModal')
+            ->assertStatus(403);
+
+        Livewire::actingAs($floorStaff)
+            ->test(WalkInBookingModal::class)
+            ->assertSet('isStaff', true);
+    }
+
 }
