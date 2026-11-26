@@ -288,12 +288,12 @@ class ExpenseTracker extends Component
                 return;
             }
 
-            $expense->update([
+            $expense->forceFill([
                 'is_voided' => true,
                 'voided_at' => now(),
                 'voided_by_user_id' => $userId,
                 'void_reason' => trim($this->voidReason),
-            ]);
+            ])->save();
 
             AuditLog::log(
                 'EXPENSE_VOIDED',
