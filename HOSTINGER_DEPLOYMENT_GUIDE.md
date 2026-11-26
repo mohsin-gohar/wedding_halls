@@ -126,6 +126,15 @@ FILESYSTEM_DISK=public
    The command refuses to run outside `APP_ENV=production` and refuses to add
    a second Super Admin.
 
+7. Configure the Hostinger cron job so subscription and booking-hold expiry
+   tasks actually run. In hPanel, open **Advanced → Cron Jobs**, choose every
+   minute, and use the command below (adjust the project path to your account):
+   ```bash
+   cd /home/ACCOUNT/public_html && /usr/bin/php artisan schedule:run >> /dev/null 2>&1
+   ```
+   Confirm `php artisan schedule:list` includes the daily
+   `subscriptions:check-expiry` and hourly `bookings:expire-holds` tasks.
+
 ---
 
 ## Step 6: Verify Domain & SSL
