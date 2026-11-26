@@ -653,4 +653,18 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
         $employee->refresh();
         $this->assertEquals(72000, (float) $employee->base_salary);
     }
+    public function test_general_manager_without_staff_manage_permission_cannot_open_staff_manager(): void
+    {
+        $tenant = Tenant::query()->where('slug', 'riwaj-grand')->firstOrFail();
+        $manager = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_MANAGER',
+            'status' => 'ACTIVE',
+        ]);
+
+        Livewire::actingAs($manager)
+            ->test(StaffManager::class)
+            ->assertStatus(403);
+    }
+
 }
