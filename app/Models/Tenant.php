@@ -58,6 +58,7 @@ class Tenant extends Model
         'billing_cycle',
         'subscription_starts_at',
         'subscription_expires_at',
+        'trial_ends_at',
         'currency',
         'billing_enabled',
         'timezone',
@@ -99,6 +100,7 @@ class Tenant extends Model
         'service_areas' => 'array',
         'subscription_starts_at' => 'datetime',
         'subscription_expires_at' => 'datetime',
+        'trial_ends_at' => 'datetime',
         'verified_at' => 'datetime',
         'onboarding_completed_at' => 'datetime',
         'featured_until' => 'date:Y-m-d',
@@ -373,12 +375,30 @@ class Tenant extends Model
 
     // ─── PUBLIC VISIBILITY SCOPES ───────────────────────────────
 
-    /** Active, approved tenants are eligible for hall-level public visibility. */
+    /**
+     * Only approved, active tenants with an unexpired entitlement may appear
+     * in public listings. A paid subscription retains access through the
+     * configured grace period; an ended trial without a paid expiry does not.
+     */
     public function scopePublicVisible($query)
     {
+        $now = now();
+        $graceBoundary = $now->copy()->subDays(SubscriptionService::GRACE_PERIOD_DAYS);
+
         return $query
             ->where('tenants.is_active', true)
-            ->where('tenants.verification_status', self::VERIFICATION_STATUS_APPROVED);
+            ->where('tenants.verification_status', self::VERIFICATION_STATUS_APPROVED)
+            ->whereIn('tenants.subscription_status', ['ACTIVE', 'TRIAL', 'GRACE_PERIOD'])
+            ->where(function ($entitlement) use ($graceBoundary): void {
+                $entitlement->whereNull('tenants.subscription_expires_at')
+                    ->orWhere('tenants.subscription_expires_at', '>=', $graceBoundary);
+            })
+            ->where(function ($trial) use ($now): void {
+                $trial->whereNotNull('tenants.subscription_expires_at')
+                    ->orWhere('tenants.subscription_status', '!=', 'TRIAL')
+                    ->orWhereNull('tenants.trial_ends_at')
+                    ->orWhere('tenants.trial_ends_at', '>=', $now);
+            });
     }
 
     /** Vendor-facing marketplace visibility additionally requires the opt-in flag. */
@@ -401,15 +421,13 @@ class Tenant extends Model
 
     public function isSubscriptionActive(): bool
     {
-        if (in_array($this->subscription_status, ['ACTIVE', 'TRIAL'])) {
-            if ($this->subscription_expires_at && $this->subscription_expires_at->isPast()) {
-                return false;
-            }
-
-            return true;
+        if (! in_array(strtoupper((string) $this->subscription_status), ['ACTIVE', 'TRIAL', 'GRACE_PERIOD'], true)) {
+            return false;
         }
 
-        return false;
+        // Use the same entitlement boundary as write access and marketplace
+        // visibility, including the three-day paid grace period and trial end.
+        return ! $this->isLocked();
     }
 
     public function isLocked(): bool
@@ -450,7 +468,10 @@ class Tenant extends Model
     /** * Check if tenant can accept bookings */
     public function canAcceptBookings(): bool
     {
-        return $this->is_active && $this->verification_status === 'APPROVED';
+        return $this->is_active
+            && $this->verification_status === 'APPROVED'
+            && in_array(strtoupper((string) $this->subscription_status), ['ACTIVE', 'TRIAL', 'GRACE_PERIOD'], true)
+            && ! $this->isLocked();
     }
 
     /** * Check if free access is still active */

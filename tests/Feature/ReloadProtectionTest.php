@@ -19,23 +19,31 @@ class ReloadProtectionTest extends TestCase
         RateLimiter::clear('reload-protection');
     }
 
-    public function test_rapid_reloads_blocked_after_5_attempts_with_custom_429_page(): void
+    public function test_repeated_safe_login_page_views_do_not_block_the_login_page(): void
     {
-        // Simulate rapid reloads of a page with the test rate limit header active
+        // GET requests render the login page; credential attempts are throttled
+        // by the dedicated login limiter tested below.
+        for ($i = 1; $i <= 6; $i++) {
+            $this->withHeaders(['X-Test-Rate-Limit' => 'true'])
+                ->get('/login')
+                ->assertOk();
+        }
+    }
+
+    public function test_customer_login_reloads_are_throttled_after_5_attempts(): void
+    {
         for ($i = 1; $i <= 5; $i++) {
-            $response = $this->withHeaders(['X-Test-Rate-Limit' => 'true'])
-                ->get('/login');
-            $response->assertStatus(200);
+            $this->withHeaders(['X-Test-Rate-Limit' => 'true'])
+                ->get(route('customer.login'))
+                ->assertOk();
         }
 
-        // 6th reload request must be throttled with HTTP 429
-        $sixthResponse = $this->withHeaders(['X-Test-Rate-Limit' => 'true'])
-            ->get('/login');
-
-        $sixthResponse->assertStatus(429);
-        $sixthResponse->assertSee('Aap website ko bar bar reload nahi kar saktay');
-        $sixthResponse->assertSee('Server Protection');
-        $sixthResponse->assertSee('countdown');
+        $this->withHeaders(['X-Test-Rate-Limit' => 'true'])
+            ->get(route('customer.login'))
+            ->assertStatus(429)
+            ->assertSee('Aap website ko bar bar reload nahi kar saktay')
+            ->assertSee('Server Protection')
+            ->assertSee('countdown');
     }
 
     public function test_login_throttling_after_5_attempts_displays_warning(): void

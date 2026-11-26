@@ -608,66 +608,68 @@ class AdminDashboard extends Component
 
     public function deleteVendor(string $tenantId)
     {
-        $tenant = Tenant::findOrFail($tenantId);
-        $name = $tenant->name;
+        $result = DB::transaction(function () use ($tenantId): array {
+            // BookingService and ServiceBookingService lock the tenant before
+            // creating reservations. Use the same lock so no new business or
+            // payment history can appear between the audit check and archive.
+            $tenant = Tenant::query()->whereKey($tenantId)->lockForUpdate()->firstOrFail();
+            $name = $tenant->name;
 
-        // Financial and audit history is immutable. Never hard-delete a tenant
-        // that has ANY bookings, payments, subscriptions, wallets or audit
-        // trail — suspend it instead so nothing is lost.
-        $hasHistory = $tenant->bookings()->exists()
-            || Payment::where('tenant_id', $tenantId)->exists()
-            || ServiceBooking::where('tenant_id', $tenantId)->exists()
-            || SubscriptionPayment::where('tenant_id', $tenantId)->exists()
-            || VendorWallet::where('tenant_id', $tenantId)->exists()
-            || AuditLog::where('tenant_id', $tenantId)->exists();
+            $hasHistory = $tenant->bookings()->exists()
+                || Payment::where('tenant_id', $tenantId)->exists()
+                || ServiceBooking::where('tenant_id', $tenantId)->exists()
+                || SubscriptionPayment::where('tenant_id', $tenantId)->exists()
+                || VendorWallet::where('tenant_id', $tenantId)->exists()
+                || AuditLog::where('tenant_id', $tenantId)->exists();
 
-        if ($hasHistory) {
-            $tenant->update(['is_active' => false, 'verification_status' => 'SUSPENDED']);
-            // Keep the subscription lock predicate in sync with the suspension.
-            $tenant->forceFill(['subscription_status' => 'SUSPENDED'])->save();
+            if (! $hasHistory) {
+                // Keep the tenant and user records as an archive; never hard-delete
+                // account data even when the business has no financial history.
+                $tenant->halls()->update(['is_active' => false]);
+                $tenant->users()->update(['status' => 'INACTIVE']);
+            }
+
+            $tenant->update([
+                'is_active' => false,
+                'verification_status' => 'SUSPENDED',
+                'subscription_status' => 'SUSPENDED',
+            ]);
+
             AuditLog::log(
-                'VENDOR_SUSPENDED',
-                "Vendor [{$name}] has booking/payment/audit history; suspended instead of deleted to preserve records.",
+                $hasHistory ? 'VENDOR_SUSPENDED' : 'VENDOR_ARCHIVED',
+                $hasHistory
+                    ? "Vendor [{$name}] has booking/payment/audit history; suspended instead of deleted to preserve records."
+                    : "Super Admin archived vendor [{$name}] (no financial history).",
                 null,
                 'Tenant',
                 $tenantId
             );
-            $this->feedbackMessage = "Vendor [{$name}] has financial or audit history. To protect contracts and payment records, the vendor was deactivated and suspended instead of permanently deleted.";
 
-            return;
-        }
+            return ['name' => $name, 'has_history' => $hasHistory];
+        });
 
-        // No financial history: deactivate associated records and archive the
-        // tenant rather than destroying them. No user data is hard-deleted.
-        $tenant->halls()->update(['is_active' => false]);
-        $tenant->users()->update(['status' => 'INACTIVE']);
-        $tenant->update(['is_active' => false, 'verification_status' => 'SUSPENDED']);
-        $tenant->forceFill(['subscription_status' => 'SUSPENDED'])->save();
-
-        AuditLog::log('VENDOR_ARCHIVED', "Super Admin archived vendor [{$name}] (no financial history).", null, 'Tenant', $tenantId);
-        $this->feedbackMessage = "Vendor [{$name}] has been archived and deactivated.";
+        $this->feedbackMessage = $result['has_history']
+            ? "Vendor [{$result['name']}] has financial or audit history. To protect contracts and payment records, the vendor was deactivated and suspended instead of permanently deleted."
+            : "Vendor [{$result['name']}] has been archived and deactivated.";
     }
 
     public function approveVendor(string $tenantId)
     {
         $tenant = Tenant::findOrFail($tenantId);
-        $wasSuspended = $tenant->subscription_status === 'SUSPENDED';
-        $tenant->update([
-            'verification_status' => 'APPROVED',
-            'is_active' => true,
-        ]);
 
-        if ($wasSuspended) {
-            // Only lift an admin-imposed suspension; never rewrite an actual
-            // EXPIRED or CANCELLED subscription.
-            $tenant->forceFill(['subscription_status' => 'ACTIVE'])->save();
+        // KYC approval must never reverse an account suspension or subscription
+        // expiry. Billing/reactivation is a separate, explicit admin workflow.
+        $tenant->update(['verification_status' => 'APPROVED']);
+
+        if ($tenant->canAcceptBookings()) {
+            $tenant->venues()->update(['is_active' => true]);
+            $tenant->halls()->update(['is_active' => true]);
         }
 
-        $tenant->venues()->update(['is_active' => true]);
-        $tenant->halls()->update(['is_active' => true]);
-
-        AuditLog::log('VENDOR_APPROVED', "Super Admin approved and activated vendor [{$tenant->name}].", $tenant->id, 'Tenant', $tenant->id);
-        $this->feedbackMessage = "Vendor [{$tenant->name}] has been approved and is now live on the public website.";
+        AuditLog::log('VENDOR_APPROVED', "Super Admin approved vendor [{$tenant->name}] for KYC.", $tenant->id, 'Tenant', $tenant->id);
+        $this->feedbackMessage = $tenant->canAcceptBookings()
+            ? "Vendor [{$tenant->name}] has been approved and is now live on the public website."
+            : "Vendor [{$tenant->name}] has passed KYC, but subscription or account restrictions still prevent public activation.";
     }
 
     public function approveTenant(string $tenantId)
@@ -927,22 +929,39 @@ class AdminDashboard extends Component
 
     public function deleteHall(string $hallId)
     {
-        $hall = Hall::findOrFail($hallId);
+        // Lock the hall row so a concurrent reservation cannot be inserted
+        // between the history check and deletion.
+        $result = DB::transaction(function () use ($hallId): array {
+            $hall = Hall::query()->whereKey($hallId)->lockForUpdate()->firstOrFail();
+            $hall->loadCount(['bookings', 'inquiries', 'floorPlans', 'hallViews', 'hallWishlists', 'reviews']);
 
-        if ($hall->bookings()->whereIn('status', ['HOLD', 'CONFIRMED'])->exists()) {
-            $this->errorMessage = "Hall [{$hall->name}] has active or confirmed bookings. Cancel or complete those reservations before deleting the hall.";
+            if (
+                $hall->bookings_count > 0
+                || $hall->inquiries_count > 0
+                || $hall->floor_plans_count > 0
+                || $hall->hall_views_count > 0
+                || $hall->hall_wishlists_count > 0
+                || $hall->reviews_count > 0
+            ) {
+                return ['error' => "Hall [{$hall->name}] has booking or marketplace history. Keep the hall record and disable its visibility instead of deleting historical records."];
+            }
+
+            $name = $hall->name;
+            $tenantId = $hall->tenant_id;
+            $hall->delete();
+
+            AuditLog::log('HALL_DELETED', "Super Admin deleted hall [{$name}].", $tenantId, 'Hall', $hallId);
+
+            return ['name' => $name];
+        });
+
+        if (isset($result['error'])) {
+            $this->errorMessage = $result['error'];
 
             return;
         }
 
-        $name = $hall->name;
-        $tenantId = $hall->tenant_id;
-        $hall->bookings()->delete();
-        $hall->delete();
-
-        AuditLog::log('HALL_DELETED', "Super Admin deleted hall [{$name}].", $tenantId, 'Hall', $hallId);
-
-        $this->feedbackMessage = "Hall [{$name}] deleted successfully.";
+        $this->feedbackMessage = "Hall [{$result['name']}] deleted successfully.";
     }
 
     public function toggleHallStatus(string $hallId)
@@ -998,7 +1017,10 @@ class AdminDashboard extends Component
 
             $tenant->update([
                 'subscription_plan_id' => $payment->subscription_plan_id,
+                'subscription_plan' => $payment->plan?->name,
+                'billing_cycle' => strtoupper($payment->billing_cycle),
                 'subscription_status' => 'ACTIVE',
+                'subscription_starts_at' => Carbon::now(),
                 'subscription_expires_at' => $newExpiry,
                 'is_active' => true,
             ]);
@@ -1105,29 +1127,39 @@ class AdminDashboard extends Component
 
     public function deleteBooking(string $bookingId)
     {
-        $booking = Booking::findOrFail($bookingId);
+        // PaymentService locks this same booking row before writing a receipt.
+        // Sharing the lock closes the check-then-delete race with new payments.
+        $result = DB::transaction(function () use ($bookingId): array {
+            $booking = Booking::query()->whereKey($bookingId)->lockForUpdate()->firstOrFail();
+            $booking->loadCount(['payments', 'rsvps', 'floorPlan', 'kitchenKot', 'utilityLog']);
 
-        // Financial and audit history is immutable. Never hard-delete a booking
-        // that has payments; archive it by cancelling instead.
-        if ($booking->payments()->exists() || Payment::where('booking_id', $booking->id)->exists()) {
-            $booking->update([
-                'status' => 'CANCELLED',
-                'notes' => ($booking->notes ?: '')."\nArchived by Super Admin (payment history preserved).",
-            ]);
+            $hasOperationalHistory = $booking->payments_count > 0
+                || $booking->rsvps_count > 0
+                || $booking->floor_plan_count > 0
+                || $booking->kitchen_kot_count > 0
+                || $booking->utility_log_count > 0;
 
-            AuditLog::log('BOOKING_ARCHIVED', "Super Admin archived booking [{$booking->booking_reference}] instead of deleting payment history.", $booking->tenant_id, 'Booking', $bookingId);
-            $this->feedbackMessage = "Booking [{$booking->booking_reference}] has payment history and was archived (cancelled).";
+            if ($hasOperationalHistory || ! in_array($booking->status, ['INQUIRY', 'CANCELLED'], true)) {
+                return ['error' => "Booking [{$booking->booking_reference}] cannot be deleted because it contains financial or operational history. Change its status through the booking workflow instead."];
+            }
+
+            $reference = $booking->booking_reference;
+            $tenantId = $booking->tenant_id;
+            $status = $booking->status;
+
+            AuditLog::log('BOOKING_DELETED', "Super Admin deleted unfinancialized {$status} booking [{$reference}].", $tenantId, 'Booking', $bookingId);
+            $booking->delete();
+
+            return ['reference' => $reference];
+        });
+
+        if (isset($result['error'])) {
+            $this->errorMessage = $result['error'];
 
             return;
         }
 
-        $ref = $booking->booking_reference;
-        $tenantId = $booking->tenant_id;
-        $booking->delete();
-
-        AuditLog::log('BOOKING_DELETED', "Super Admin deleted booking [{$ref}].", $tenantId, 'Booking', $bookingId);
-
-        $this->feedbackMessage = "Booking [{$ref}] deleted.";
+        $this->feedbackMessage = "Unfinancialized booking [{$result['reference']}] deleted.";
     }
 
     // ==========================================

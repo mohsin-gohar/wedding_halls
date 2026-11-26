@@ -3,7 +3,7 @@
 ################################################################
 # Stage 1 — build production frontend assets
 ################################################################
-FROM node:20-alpine AS assets
+FROM node:20-bookworm-slim AS assets
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ RUN npm run build
 ################################################################
 # Stage 2 — production PHP runtime
 ################################################################
-FROM php:8.2-fpm
+FROM php:8.2-fpm AS app
 
 # $PHPIZE_DEPS is provided by the official PHP image and is removed again after
 # compiling the Redis extension so it does not bloat the runtime image.
@@ -37,6 +37,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && docker-php-ext-enable redis \
     && apt-get purge -y --auto-remove $PHPIZE_DEPS \
     && rm -rf /var/lib/apt/lists/*
+
+# Align PHP upload/runtime limits with the validated media upload contract.
+COPY deploy/php-production.ini /usr/local/etc/php/conf.d/zz-production.ini
 
 # Install Composer (pinned major so builds stay reproducible)
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -69,3 +72,12 @@ EXPOSE 9000
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisor.conf"]
+
+################################################################
+# Stage 3 — static web edge (shares only public uploads volume)
+################################################################
+FROM nginx:alpine AS web
+
+COPY public/ /var/www/public/
+COPY --from=assets /app/public/build /var/www/public/build
+COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf

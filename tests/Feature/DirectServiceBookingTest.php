@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Exceptions\ServiceBookingException;
 use App\Livewire\CustomerDashboard;
 use App\Livewire\DirectBooking;
 use App\Livewire\VendorBookingsBoard;
@@ -132,6 +133,99 @@ class DirectServiceBookingTest extends TestCase
         $this->actingAs($this->customer())
             ->get(route('public.vendor-book', ['slug' => $vendor->slug]))
             ->assertNotFound();
+    }
+
+    public function test_expired_vendor_cannot_receive_direct_service_bookings(): void
+    {
+        $vendor = $this->vendor('nawab-caterers');
+        $customer = $this->customer();
+        $service = $this->makeService($vendor);
+
+        $vendor->update([
+            'subscription_status' => 'EXPIRED',
+            'subscription_expires_at' => now()->addYear(),
+        ]);
+
+        try {
+            app(ServiceBookingService::class)->createDirectBooking(
+                $vendor,
+                (int) $customer->id,
+                $service,
+                [
+                    'event_name' => 'Expired Vendor Test Event',
+                    'event_date' => now()->addDays(60)->toDateString(),
+                    'guest_count' => 200,
+                ]
+            );
+            $this->fail('An expired vendor must not receive a new service booking.');
+        } catch (ServiceBookingException $exception) {
+            $this->assertSame(409, $exception->getCode());
+        }
+
+        $this->assertDatabaseMissing('service_bookings', [
+            'tenant_id' => $vendor->id,
+            'event_name' => 'Expired Vendor Test Event',
+        ]);
+    }
+
+    public function test_booking_service_rejects_a_bookable_owned_by_another_vendor(): void
+    {
+        $vendor = $this->vendor('nawab-caterers');
+        $otherVendor = $this->vendor('lens-and-lantern-studio');
+        $customer = $this->customer();
+        $foreignService = $this->makeService($otherVendor);
+
+        try {
+            app(ServiceBookingService::class)->createDirectBooking(
+                $vendor,
+                (int) $customer->id,
+                $foreignService,
+                [
+                    'event_name' => 'Cross Tenant Service Attempt',
+                    'event_date' => now()->addDays(60)->toDateString(),
+                    'guest_count' => 200,
+                ]
+            );
+            $this->fail('A vendor must not book another tenant\'s service.');
+        } catch (ServiceBookingException $exception) {
+            $this->assertSame(404, $exception->getCode());
+            $this->assertStringContainsString('no longer available for this vendor', $exception->getMessage());
+        }
+
+        $this->assertDatabaseMissing('service_bookings', [
+            'tenant_id' => $vendor->id,
+            'event_name' => 'Cross Tenant Service Attempt',
+        ]);
+    }
+
+    public function test_booking_service_rejects_a_stale_inactive_bookable_model(): void
+    {
+        $vendor = $this->vendor('nawab-caterers');
+        $customer = $this->customer();
+        $service = $this->makeService($vendor);
+        VendorService::query()->whereKey($service->id)->update(['is_active' => false]);
+
+        try {
+            app(ServiceBookingService::class)->createDirectBooking(
+                $vendor,
+                (int) $customer->id,
+                $service,
+                [
+                    'event_name' => 'Inactive Service Attempt',
+                    'event_date' => now()->addDays(60)->toDateString(),
+                    'guest_count' => 200,
+                ]
+            );
+            $this->fail('An inactive service must not be bookable through a stale model.');
+        } catch (ServiceBookingException $exception) {
+            $this->assertSame(404, $exception->getCode());
+            $this->assertStringContainsString('no longer available for this vendor', $exception->getMessage());
+        }
+
+        $this->assertDatabaseMissing('service_bookings', [
+            'tenant_id' => $vendor->id,
+            'event_name' => 'Inactive Service Attempt',
+        ]);
     }
 
     public function test_opening_the_page_without_an_item_asks_you_to_pick_one(): void

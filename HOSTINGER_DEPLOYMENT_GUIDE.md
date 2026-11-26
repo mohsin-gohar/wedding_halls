@@ -22,6 +22,23 @@ A step-by-step guide to deploying this Laravel + Livewire project on **Hostinger
 
 ---
 
+
+## Production operations correction (current)
+
+This section supersedes older snippets in this guide where they differ.
+- Do not use `--seed` with `hostinger:setup`; production demo seeding is
+  disabled.
+- On Hostinger Shared/Cloud without Redis and persistent workers, use the
+  database cache/lock/session/queue drivers, not file cache or sync queues.
+- Configure both Laravel cron entries for `schedule:run` and
+  `queue:work database --stop-when-empty` as documented in
+  [deploy/PRODUCTION_OPERATIONS.md](deploy/PRODUCTION_OPERATIONS.md).
+- Use hPanel SSL for shared hosting. The Caddy automatic TLS stack is only for
+  a VPS where Docker can bind public ports 80 and 443.
+- The production go-live checks, encrypted VPS backup scripts, staging restore
+  drill, Uptime Kuma setup, SMTP and WhatsApp live verification are documented
+  in [deploy/PRODUCTION_OPERATIONS.md](deploy/PRODUCTION_OPERATIONS.md).
+
 ## Step 1: Set PHP Version in Hostinger hPanel
 
 1. Log into your **Hostinger hPanel**.
@@ -29,7 +46,12 @@ A step-by-step guide to deploying this Laravel + Livewire project on **Hostinger
 3. In the search bar or left menu, find **PHP Configuration** (under *Advanced*).
 4. Select **PHP 8.2** or **PHP 8.3** (Recommended).
 5. Click **Save**.
-6. Under the **PHP Extensions** tab, ensure the following are enabled (they are enabled by default on Hostinger):
+6. In PHP Options, set `upload_max_filesize=64M`, `post_max_size=70M`,
+   `max_execution_time=120`, `max_input_time=120`, and `memory_limit=256M`
+   where the selected plan permits. Livewire and vendor media validation allow
+   files up to 50 MB; if Hostinger enforces a lower limit, large media uploads
+   will not work and the plan limit must be resolved before go-live.
+7. Under the **PHP Extensions** tab, ensure the following are enabled (they are enabled by default on Hostinger):
    - `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `curl`, `fileinfo`, `bcmath`, `intl`, `gd`.
 
 ---
@@ -83,12 +105,14 @@ DB_PASSWORD="your_database_password"
 
 SESSION_DRIVER=database
 SESSION_SECURE_COOKIE=true
-CACHE_STORE=file
+CACHE_STORE=database
 # Shared reservation mutex. `database` uses the cache_locks table and is safe
 # on a single host; use `redis` when multiple app servers share Redis.
 BOOKING_LOCK_STORE=database
-QUEUE_CONNECTION=sync
+QUEUE_CONNECTION=database
 FILESYSTEM_DISK=public
+PROOFS_FILESYSTEM_DISK=local
+LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK=local
 ```
 
 ---
@@ -111,9 +135,12 @@ FILESYSTEM_DISK=public
    ```
 5. Run the automated Hostinger deployment command:
    ```bash
-   php artisan hostinger:setup --seed
+   php artisan hostinger:setup
    ```
-   *(Add `--seed` if you want initial luxury halls and demo catalog data loaded).*
+
+   Demo seeders are intentionally disabled in production. Create the first
+   Super Admin through the documented secure provisioning workflow; never use
+   known demo credentials on a public site.
 
 ---
 

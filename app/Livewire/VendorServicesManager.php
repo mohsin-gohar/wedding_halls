@@ -197,7 +197,7 @@ class VendorServicesManager extends Component
         }
 
         // PER_HEAD and HOURLY services are bookable only with a positive base
-        // price; FIXED/DAY/PROJECT/CONSULT may have no price until quoting.
+        // price; quote-first pricing types may omit a price until negotiation.
         if (in_array($this->pricingType, ['PER_HEAD', 'HOURLY'], true) && ($from ?? 0) <= 0) {
             $this->addError('priceFrom', 'A positive price is required for this pricing type.');
 
@@ -215,6 +215,9 @@ class VendorServicesManager extends Component
 
             return;
         }
+
+        $this->priceFrom = $from;
+        $this->priceTo = $to;
 
         DB::transaction(function () use ($tenantId) {
             if ($this->isEditing) {

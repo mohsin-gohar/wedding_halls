@@ -69,10 +69,8 @@ class DirectBooking extends Component
         }
 
         $this->vendor = Tenant::query()
+            ->marketplaceVisible()
             ->where('slug', $slug)
-            ->where('marketplace_visible', true)
-            ->where('is_active', true)
-            ->where('verification_status', 'APPROVED')
             ->with('vendorCategory')
             ->firstOrFail();
 

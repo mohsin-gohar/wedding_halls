@@ -16,8 +16,9 @@ class SubscriptionService
     public const GRACE_PERIOD_DAYS = 3;
 
     /**
-     * Inspect all active/trial tenants and expire any accounts whose subscription + grace period has lapsed.
-     * Crucial Guarantee: Data is NEVER deleted on expiry; historical records remain strictly intact.
+     * Apply subscription lifecycle transitions once per tenant, even when
+     * scheduler workers overlap. State changes and audit entries commit
+     * atomically while the tenant row is locked.
      */
     public function checkAndExpireSubscriptions(): array
     {
@@ -26,59 +27,108 @@ class SubscriptionService
         $warningCount = 0;
         $processedTenants = [];
 
-        $tenants = Tenant::whereIn('subscription_status', ['ACTIVE', 'TRIAL', 'GRACE_PERIOD'])
-            ->whereNotNull('subscription_expires_at')
-            ->get();
+        Tenant::query()
+            ->whereIn('subscription_status', ['ACTIVE', 'TRIAL', 'GRACE_PERIOD'])
+            ->where(function ($query): void {
+                $query->whereNotNull('subscription_expires_at')
+                    ->orWhere(function ($trialQuery): void {
+                        $trialQuery->where('subscription_status', 'TRIAL')
+                            ->whereNotNull('trial_ends_at');
+                    });
+            })
+            ->select('id')
+            ->chunkById(100, function ($candidates) use ($now, &$expiredCount, &$warningCount, &$processedTenants): void {
+                foreach ($candidates as $candidate) {
+                    $transition = DB::transaction(function () use ($candidate, $now): ?array {
+                        $tenant = Tenant::query()
+                            ->whereKey($candidate->getKey())
+                            ->lockForUpdate()
+                            ->first();
 
-        foreach ($tenants as $tenant) {
-            $expiresAt = $tenant->subscription_expires_at;
-            $graceEndsAt = $expiresAt->copy()->addDays(self::GRACE_PERIOD_DAYS);
+                        if (! $tenant || ! in_array($tenant->subscription_status, ['ACTIVE', 'TRIAL', 'GRACE_PERIOD'], true)) {
+                            return null;
+                        }
 
-            if ($now->greaterThan($graceEndsAt)) {
-                // Subscription has fully expired past grace period
-                $previousStatus = $tenant->subscription_status;
-                $tenant->update([
-                    'subscription_status' => 'EXPIRED',
-                ]);
+                        // Trial-only tenants may have no paid subscription expiry.
+                        // Their explicit trial_ends_at date is the entitlement boundary.
+                        if (! $tenant->subscription_expires_at) {
+                            if ($tenant->subscription_status !== 'TRIAL' || ! $tenant->trial_ends_at || ! $now->greaterThan($tenant->trial_ends_at)) {
+                                return null;
+                            }
 
-                AuditLog::log(
-                    'SUBSCRIPTION_EXPIRED',
-                    "Tenant [{$tenant->name}] transitioned from [{$previousStatus}] to [EXPIRED]. Access restricted to renewal portal. All historical hall and booking data preserved.",
-                    $tenant->id,
-                    'Tenant',
-                    (string) $tenant->id
-                );
+                            $tenant->update(['subscription_status' => 'EXPIRED']);
+                            AuditLog::log(
+                                'SUBSCRIPTION_EXPIRED',
+                                "Tenant [{$tenant->name}] trial ended on [{$tenant->trial_ends_at->toDateTimeString()}] and transitioned to [EXPIRED].",
+                                $tenant->id,
+                                'Tenant',
+                                (string) $tenant->id
+                            );
 
-                $expiredCount++;
-                $processedTenants[] = [
-                    'tenant_id' => $tenant->id,
-                    'name' => $tenant->name,
-                    'action' => 'EXPIRED',
-                    'expired_at' => $expiresAt->toIso8601String(),
-                ];
-            } elseif ($now->greaterThan($expiresAt) && $tenant->subscription_status !== 'GRACE_PERIOD') {
-                // Within grace period (0 - 3 days past expiry)
-                $tenant->update([
-                    'subscription_status' => 'GRACE_PERIOD',
-                ]);
+                            return [
+                                'tenant_id' => $tenant->id,
+                                'name' => $tenant->name,
+                                'action' => 'EXPIRED',
+                                'expired_at' => $tenant->trial_ends_at->toIso8601String(),
+                            ];
+                        }
 
-                AuditLog::log(
-                    'SUBSCRIPTION_GRACE_PERIOD',
-                    "Tenant [{$tenant->name}] entered 3-day grace period. Final expiry will occur on [{$graceEndsAt->format('Y-m-d')}].",
-                    $tenant->id,
-                    'Tenant',
-                    (string) $tenant->id
-                );
+                        $expiresAt = $tenant->subscription_expires_at;
+                        $graceEndsAt = $expiresAt->copy()->addDays(self::GRACE_PERIOD_DAYS);
+                        $previousStatus = $tenant->subscription_status;
 
-                $warningCount++;
-                $processedTenants[] = [
-                    'tenant_id' => $tenant->id,
-                    'name' => $tenant->name,
-                    'action' => 'GRACE_PERIOD',
-                    'grace_ends_at' => $graceEndsAt->toIso8601String(),
-                ];
-            }
-        }
+                        if ($now->greaterThan($graceEndsAt)) {
+                            $tenant->update(['subscription_status' => 'EXPIRED']);
+                            AuditLog::log(
+                                'SUBSCRIPTION_EXPIRED',
+                                "Tenant [{$tenant->name}] transitioned from [{$previousStatus}] to [EXPIRED]. Access restricted to renewal portal. All historical hall and booking data preserved.",
+                                $tenant->id,
+                                'Tenant',
+                                (string) $tenant->id
+                            );
+
+                            return [
+                                'tenant_id' => $tenant->id,
+                                'name' => $tenant->name,
+                                'action' => 'EXPIRED',
+                                'expired_at' => $expiresAt->toIso8601String(),
+                            ];
+                        }
+
+                        if ($now->greaterThan($expiresAt) && $previousStatus !== 'GRACE_PERIOD') {
+                            $tenant->update(['subscription_status' => 'GRACE_PERIOD']);
+                            AuditLog::log(
+                                'SUBSCRIPTION_GRACE_PERIOD',
+                                "Tenant [{$tenant->name}] entered 3-day grace period. Final expiry will occur on [{$graceEndsAt->format('Y-m-d')}].",
+                                $tenant->id,
+                                'Tenant',
+                                (string) $tenant->id
+                            );
+
+                            return [
+                                'tenant_id' => $tenant->id,
+                                'name' => $tenant->name,
+                                'action' => 'GRACE_PERIOD',
+                                'grace_ends_at' => $graceEndsAt->toIso8601String(),
+                            ];
+                        }
+
+                        return null;
+                    });
+
+                    if ($transition === null) {
+                        continue;
+                    }
+
+                    if ($transition['action'] === 'EXPIRED') {
+                        $expiredCount++;
+                    } else {
+                        $warningCount++;
+                    }
+
+                    $processedTenants[] = $transition;
+                }
+            }, 'id');
 
         return [
             'expired_count' => $expiredCount,
@@ -87,9 +137,6 @@ class SubscriptionService
         ];
     }
 
-    /**
-     * Renew or activate a tenant subscription with the specified plan and cycle.
-     */
     public function renewSubscription(
         Tenant $tenant,
         SubscriptionPlan $plan,
@@ -107,8 +154,6 @@ class SubscriptionService
             throw new \InvalidArgumentException('Unsupported subscription billing cycle.');
         }
 
-        // The plan is the only price authority. A caller may omit the amount, but
-        // supplying a different one must never activate a subscription cheaply.
         $planAmount = round((float) match ($billingCycle) {
             'WEEKLY' => $plan->price_weekly ?? 0,
             'YEARLY' => $plan->price_yearly ?? 0,
@@ -125,32 +170,27 @@ class SubscriptionService
 
         $amount = $planAmount;
 
-        // Instant activation is a privileged act. It requires an authenticated
-        // Super Admin identity at the service boundary, not merely a boolean flag.
         if ($autoApprove) {
             if (! $approvedByUserId) {
                 throw new \InvalidArgumentException('Instant subscription approval requires an approving Super Admin.');
             }
 
             $approver = User::query()->findOrFail($approvedByUserId);
-
             if (! $approver->isSuperAdmin()) {
                 throw new \InvalidArgumentException('Only a Super Admin may instantly approve a subscription.');
             }
         }
 
-        return DB::transaction(function () use (
-            $tenant,
-            $plan,
-            $billingCycle,
-            $amount,
-            $paymentMethod,
-            $transactionReference,
-            $autoApprove,
-            $approvedByUserId
-        ): SubscriptionPayment {
+        return DB::transaction(function () use ($tenant, $plan, $billingCycle, $amount, $paymentMethod, $transactionReference, $autoApprove, $approvedByUserId): SubscriptionPayment {
+            // Serialize renewals for the same tenant. A stale caller model must
+            // never overwrite a more recent expiry when two approvals overlap.
+            $lockedTenant = Tenant::query()
+                ->whereKey($tenant->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
             $payment = SubscriptionPayment::create([
-                'tenant_id' => $tenant->id,
+                'tenant_id' => $lockedTenant->id,
                 'subscription_plan_id' => $plan->id,
                 'billing_cycle' => $billingCycle,
                 'amount' => $amount,
@@ -159,26 +199,20 @@ class SubscriptionService
                 'status' => $autoApprove ? 'APPROVED' : 'PENDING',
                 'approved_by_user_id' => $autoApprove ? $approvedByUserId : null,
                 'approved_at' => $autoApprove ? Carbon::now() : null,
-                'notes' => $autoApprove
-                    ? 'Instant renewal activated by Super Admin.'
-                    : 'Manual cash payment submitted; pending Super Admin verification.',
+                'notes' => $autoApprove ? 'Instant renewal activated by Super Admin.' : 'Manual cash payment submitted; pending Super Admin verification.',
             ]);
 
             if ($autoApprove) {
-                $this->applyApprovedSubscription($tenant->fresh(), $plan, $billingCycle);
+                $this->applyApprovedSubscription($lockedTenant, $plan, $billingCycle);
             }
 
             return $payment;
         });
     }
 
-    /**
-     * Apply active subscription dates to tenant upon payment verification.
-     */
     public function applyApprovedSubscription(Tenant $tenant, SubscriptionPlan $plan, string $billingCycle): void
     {
         $now = Carbon::now();
-        // If current subscription is still active and not expired, extend from existing expiry date
         $baseDate = ($tenant->subscription_expires_at && $tenant->subscription_expires_at->isFuture())
             ? $tenant->subscription_expires_at
             : $now;
@@ -208,29 +242,19 @@ class SubscriptionService
         );
     }
 
-    /**
-     * Determine if a tenant is locked out due to subscription expiration.
-     */
     public function isLocked(Tenant $tenant): bool
     {
         $status = strtoupper((string) $tenant->subscription_status);
 
-        // A platform/vendor suspension is a lock regardless of dates, and an
-        // expired or cancelled subscription is never entitled to access.
-        if (in_array($status, ['SUSPENDED', 'EXPIRED', 'CANCELLED'], true)) {
+        if (in_array($status, ['SUSPENDED', 'EXPIRED', 'CANCELLED', 'PAST_DUE'], true)) {
             return true;
         }
 
         $expiresAt = $tenant->subscription_expires_at;
-
         if ($expiresAt && $expiresAt->isPast()) {
-            $graceEnds = $expiresAt->copy()->addDays(self::GRACE_PERIOD_DAYS);
-
-            return Carbon::now()->greaterThan($graceEnds);
+            return Carbon::now()->greaterThan($expiresAt->copy()->addDays(self::GRACE_PERIOD_DAYS));
         }
 
-        // Trial tenants have no subscription_expires_at. Their free-access
-        // window is recorded in trial_ends_at (added by the additive migration).
         if (! $expiresAt && $status === 'TRIAL' && $tenant->trial_ends_at) {
             $trialEnds = $tenant->trial_ends_at instanceof Carbon
                 ? $tenant->trial_ends_at

@@ -290,22 +290,33 @@ class PlatformHardeningTest extends TestCase
             ->test(AdminDashboard::class)
             ->call('deleteHall', $this->hall->id);
 
-        $this->assertStringContainsString('active or confirmed bookings', $component->get('errorMessage'));
+        $this->assertStringContainsString('booking or marketplace history', $component->get('errorMessage'));
         $this->assertDatabaseHas('halls', ['id' => $this->hall->id]);
         $this->assertDatabaseHas('bookings', ['id' => $booking->id]);
         $this->assertDatabaseMissing('audit_logs', ['action' => 'HALL_DELETED']);
     }
 
-    public function test_deleting_a_hall_without_active_bookings_is_audited(): void
+    public function test_deleting_a_hall_with_cancelled_booking_history_is_blocked(): void
     {
         $booking = $this->createBooking('CANCELLED');
 
+        $component = Livewire::actingAs($this->superAdmin)
+            ->test(AdminDashboard::class)
+            ->call('deleteHall', $this->hall->id);
+
+        $this->assertStringContainsString('booking or marketplace history', $component->get('errorMessage'));
+        $this->assertDatabaseHas('halls', ['id' => $this->hall->id]);
+        $this->assertDatabaseHas('bookings', ['id' => $booking->id]);
+        $this->assertDatabaseMissing('audit_logs', ['action' => 'HALL_DELETED']);
+    }
+
+    public function test_deleting_a_hall_without_any_history_is_audited(): void
+    {
         Livewire::actingAs($this->superAdmin)
             ->test(AdminDashboard::class)
             ->call('deleteHall', $this->hall->id);
 
         $this->assertDatabaseMissing('halls', ['id' => $this->hall->id]);
-        $this->assertDatabaseMissing('bookings', ['id' => $booking->id]);
         $this->assertDatabaseHas('audit_logs', ['action' => 'HALL_DELETED']);
     }
 

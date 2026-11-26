@@ -47,13 +47,10 @@ class PaymentController extends ApiController
                 $validated['notes'] ?? null
             );
         } catch (\PDOException $e) {
-            // Never leak SQL/driver details to an API caller.
             report($e);
 
             return response()->json(['message' => 'The cash payment could not be recorded. Please try again.'], 500);
         } catch (\InvalidArgumentException|\RuntimeException $e) {
-            // Domain-level validation messages are authored server-side and safe
-            // to surface (overpayment, reference conflicts, unsupported type).
             return response()->json(['message' => $e->getMessage()], 422);
         } catch (\Throwable $e) {
             report($e);
@@ -117,6 +114,7 @@ class PaymentController extends ApiController
         $user = $this->apiUser($request);
 
         abort_if($user->isCustomer(), 403, 'Customers cannot view financial summaries.');
+        $this->assertPermission($user, 'payments.view');
         abort_if(! $user->tenant_id && ! $user->isSuperAdmin(), 403, 'No tenant assigned.');
 
         $tenantId = $user->isSuperAdmin()
@@ -136,6 +134,8 @@ class PaymentController extends ApiController
     public function list(Request $request)
     {
         $user = $this->apiUser($request);
+
+        $this->assertPermission($user, 'payments.view');
 
         $query = Payment::with('booking', 'receivedByUser');
 

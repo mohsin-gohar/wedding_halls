@@ -23,6 +23,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Honor forwarded HTTPS/client information only from explicitly
+        // trusted reverse proxies. Docker Compose trusts only the fixed Nginx address on its private bridge;
+        // shared hosting should list only its actual trusted proxy CIDRs.
+        $trustedProxies = array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('TRUSTED_PROXIES', ''))
+        )));
+        $middleware->trustProxies(at: $trustedProxies ?: null);
+
         // Stateless API surface is rate limited (60 req/min per token/IP).
         $middleware->throttleApi();
 
