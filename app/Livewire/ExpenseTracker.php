@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Expense;
 use App\Models\Hall;
 use App\Support\CashOnlyPayments;
+use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -81,16 +82,35 @@ class ExpenseTracker extends Component
 
     public function mount()
     {
-        $user = Auth::user();
-        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isAccountant() && ! $user->isSuperAdmin())) {
-            abort(403, 'Unauthorized. Only Venue Owners, Managers, or Accountants can access Financial Expenses.');
-        }
-
+        $this->authorizeExpenseViewer();
         $this->expense_date = Carbon::now()->format('Y-m-d');
+    }
+
+    private function authorizeExpenseViewer(): void
+    {
+        $user = Auth::user();
+
+        abort_unless(
+            $user && $user->tenant_id && PermissionMatrix::userCan($user, 'expenses.view'),
+            403,
+            'Unauthorized. Expense visibility requires expenses.view within a tenant.'
+        );
+    }
+
+    private function authorizeExpenseManager(): void
+    {
+        $user = Auth::user();
+
+        abort_unless(
+            $user && $user->tenant_id && PermissionMatrix::userCan($user, 'expenses.manage'),
+            403,
+            'Unauthorized. Expense changes require expenses.manage within a tenant.'
+        );
     }
 
     public function openCreateModal()
     {
+        $this->authorizeExpenseManager();
         $this->reset(['title', 'amount', 'payee', 'receipt_number', 'notes', 'errorMessage', 'feedbackMessage']);
         $this->expense_date = Carbon::now()->format('Y-m-d');
         $this->category = 'GENERATOR_DIESEL';
@@ -105,6 +125,7 @@ class ExpenseTracker extends Component
 
     public function createExpense()
     {
+        $this->authorizeExpenseManager();
         $tenantId = Auth::user()->tenant_id;
         $this->validate(array_merge($this->rules, [
             'hall_id' => ['nullable', Rule::exists('halls', 'id')->where('tenant_id', $tenantId)],
@@ -139,6 +160,7 @@ class ExpenseTracker extends Component
 
     public function openEditModal(string $expenseId)
     {
+        $this->authorizeExpenseManager();
         $expense = Expense::where('tenant_id', Auth::user()->tenant_id)->findOrFail($expenseId);
         $this->editingExpenseId = $expense->id;
         $this->edit_hall_id = $expense->hall_id;
@@ -163,6 +185,7 @@ class ExpenseTracker extends Component
 
     public function updateExpense()
     {
+        $this->authorizeExpenseManager();
         if (! $this->editingExpenseId) {
             return;
         }
@@ -219,6 +242,7 @@ class ExpenseTracker extends Component
 
     public function deleteExpense(string $expenseId)
     {
+        $this->authorizeExpenseManager();
         $expense = Expense::where('tenant_id', Auth::user()->tenant_id)->findOrFail($expenseId);
         $amount = $expense->amount;
         $title = $expense->title;
@@ -237,6 +261,7 @@ class ExpenseTracker extends Component
 
     public function render()
     {
+        $this->authorizeExpenseViewer();
         $tenantId = Auth::user()->tenant_id;
         $halls = Hall::where('tenant_id', $tenantId)->get();
 
