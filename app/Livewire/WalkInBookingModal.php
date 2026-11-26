@@ -249,12 +249,17 @@ class WalkInBookingModal extends Component
     {
         $this->clientFound = false;
 
-        // Security: Only authorized staff may perform client lookups
-        if (! $this->isStaff) {
+        // The public Livewire state is user-controlled. Recompute staff mode
+        // from the authenticated account before any tenant customer lookup.
+        $this->determineStaffMode();
+        $user = Auth::user();
+
+        if (! $this->isStaff || ! $user
+            || (! PermissionMatrix::userCan($user, 'bookings.view')
+                && ! PermissionMatrix::userCan($user, 'bookings.create')
+                && ! PermissionMatrix::userCan($user, 'bookings.manage'))) {
             return;
         }
-
-        $user = Auth::user();
         $phone = trim($this->customer_phone);
         $cnic = trim((string) $this->customer_cnic);
 
