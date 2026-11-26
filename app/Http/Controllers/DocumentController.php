@@ -7,6 +7,7 @@ use App\Models\KitchenKot;
 use App\Models\Payment;
 use App\Models\ServicePayment;
 use App\Models\StaffPayroll;
+use App\Support\PermissionMatrix;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
