@@ -219,7 +219,7 @@ class BookingController extends ApiController
     {
         $user = $this->apiUser($request);
 
-        if (! $user->isCustomer()) {
+        if (! $user->isCustomer() && ! $request->has('status')) {
             $this->assertPermission($user, 'bookings.update');
         }
 
@@ -250,6 +250,13 @@ class BookingController extends ApiController
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        if (! $user->isCustomer() && $request->has('status')) {
+            $requiredPermission = strtoupper((string) $request->input('status')) === 'CANCELLED'
+                ? 'bookings.cancel'
+                : 'bookings.update';
+            $this->assertPermission($user, $requiredPermission);
         }
 
         // Customers may only annotate their own booking; they can never move
