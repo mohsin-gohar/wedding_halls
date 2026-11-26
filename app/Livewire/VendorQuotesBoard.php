@@ -282,6 +282,9 @@ class VendorQuotesBoard extends Component
 
     public function render()
     {
+        $user = Auth::user();
+        abort_unless($user && $user->tenant_id && PermissionMatrix::userCan($user, 'rfq.view'), 403);
+
         return view('livewire.vendor-quotes-board')
             ->layout('components.layouts.app', [
                 'title' => 'Quotations & Bids — Vendor ERP',
