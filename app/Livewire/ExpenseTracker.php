@@ -10,6 +10,7 @@ use App\Support\CashOnlyPayments;
 use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -68,6 +69,12 @@ class ExpenseTracker extends Component
     public ?string $feedbackMessage = null;
 
     public ?string $errorMessage = null;
+
+    public bool $showVoided = false;
+
+    public ?string $voidingExpenseId = null;
+
+    public string $voidReason = '';
 
     protected $rules = [
         'category' => 'required|string',
@@ -240,23 +247,60 @@ class ExpenseTracker extends Component
         $this->closeEditModal();
     }
 
-    public function deleteExpense(string $expenseId)
+    public function openVoidModal(string $expenseId): void
     {
         $this->authorizeExpenseManager();
-        $expense = Expense::where('tenant_id', Auth::user()->tenant_id)->findOrFail($expenseId);
-        $amount = $expense->amount;
-        $title = $expense->title;
-        $expense->delete();
+        Expense::where('tenant_id', Auth::user()->tenant_id)->findOrFail($expenseId);
+        $this->voidingExpenseId = $expenseId;
+        $this->voidReason = '';
+        $this->errorMessage = null;
+    }
 
-        AuditLog::log(
-            'EXPENSE_DELETED',
-            'Deleted expense of PKR '.number_format($amount)." [{$title}].",
-            Auth::user()->tenant_id,
-            'Expense',
-            $expenseId
-        );
+    public function cancelVoid(): void
+    {
+        $this->voidingExpenseId = null;
+        $this->voidReason = '';
+    }
 
-        $this->feedbackMessage = 'Expense record deleted.';
+    public function voidExpense(): void
+    {
+        $this->authorizeExpenseManager();
+        $this->validate([
+            'voidingExpenseId' => ['required', Rule::exists('expenses', 'id')->where('tenant_id', Auth::user()->tenant_id)],
+            'voidReason' => 'required|string|min:8|max:500',
+        ]);
+
+        $tenantId = Auth::user()->tenant_id;
+        $userId = Auth::id();
+
+        DB::transaction(function () use ($tenantId, $userId): void {
+            $expense = Expense::where('tenant_id', $tenantId)
+                ->whereKey($this->voidingExpenseId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($expense->is_voided) {
+                return;
+            }
+
+            $expense->update([
+                'is_voided' => true,
+                'voided_at' => now(),
+                'voided_by_user_id' => $userId,
+                'void_reason' => trim($this->voidReason),
+            ]);
+
+            AuditLog::log(
+                'EXPENSE_VOIDED',
+                'Voided expense PKR '.number_format((float) $expense->amount, 2).' ['.$expense->title.']. Reason: '.trim($this->voidReason),
+                $tenantId,
+                'Expense',
+                (string) $expense->id
+            );
+        });
+
+        $this->feedbackMessage = 'Expense voided. Its original record is retained for audit history.';
+        $this->cancelVoid();
     }
 
     public function render()
@@ -279,7 +323,9 @@ class ExpenseTracker extends Component
         }
 
         // Queries
-        $expensesQuery = Expense::where('tenant_id', $tenantId)
+        $expensesQuery = Expense::withVoided()
+            ->where('tenant_id', $tenantId)
+            ->where('is_voided', $this->showVoided)
             ->whereBetween('expense_date', [$startDate, $endDate]);
 
         if ($this->filterCategory !== 'ALL') {
