@@ -30,6 +30,7 @@ class BookingController extends ApiController
     public function index(Request $request)
     {
         $user = $this->apiUser($request);
+        $this->assertPermission($user, 'bookings.view');
 
         $query = Booking::with(['hall.venue', 'package', 'payments']);
 
@@ -57,6 +58,7 @@ class BookingController extends ApiController
     public function show(Request $request, string $id)
     {
         $user = $this->apiUser($request);
+        $this->assertPermission($user, 'bookings.view');
 
         $query = Booking::with(['hall.venue', 'package', 'payments', 'rsvps', 'kitchenKot', 'floorPlan']);
 
