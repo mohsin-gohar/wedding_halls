@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\ServiceBooking;
 use App\Models\User;
+use App\Support\PermissionMatrix;
 
 class ServiceBookingPolicy
 {
@@ -12,19 +13,21 @@ class ServiceBookingPolicy
         if ($user->isSuperAdmin()) {
             return true;
         }
+
         if ($user->isCustomer()) {
-            return $booking->customer_id === $user->id;
-        }
-        if ($user->tenant_id && $booking->tenant_id === $user->tenant_id) {
-            return true;
+            return (string) $booking->customer_id === (string) $user->id;
         }
 
-        return false;
+        return $user->tenant_id
+            && (string) $booking->tenant_id === (string) $user->tenant_id
+            && PermissionMatrix::userCan($user, 'service-bookings.view');
     }
 
     public function create(User $user): bool
     {
-        return $user->isCustomer() || $user->isFrontDesk() || $user->isManager();
+        return $user->isCustomer()
+            || $user->isSuperAdmin()
+            || PermissionMatrix::userCan($user, 'service-bookings.create');
     }
 
     public function update(User $user, ServiceBooking $booking): bool
@@ -32,11 +35,11 @@ class ServiceBookingPolicy
         if ($user->isSuperAdmin()) {
             return true;
         }
-        if ($user->isFrontDesk() || $user->isManager() || $user->isTenantOwner()) {
-            return $booking->tenant_id === $user->tenant_id;
-        }
 
-        return false;
+        return ! $user->isCustomer()
+            && $user->tenant_id
+            && (string) $booking->tenant_id === (string) $user->tenant_id
+            && PermissionMatrix::userCan($user, 'service-bookings.update');
     }
 
     public function cancel(User $user, ServiceBooking $booking): bool
@@ -44,30 +47,29 @@ class ServiceBookingPolicy
         if ($user->isSuperAdmin()) {
             return true;
         }
+
         if ($user->isCustomer()) {
-            return $booking->customer_id === $user->id;
-        }
-        if ($user->isTenantOwner() || $user->isManager()) {
-            return $booking->tenant_id === $user->tenant_id;
+            return (string) $booking->customer_id === (string) $user->id;
         }
 
-        return false;
+        return $user->tenant_id
+            && (string) $booking->tenant_id === (string) $user->tenant_id
+            && PermissionMatrix::userCan($user, 'service-bookings.cancel');
     }
 
     public function confirm(User $user, ServiceBooking $booking): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-        if ($user->isTenantOwner() || $user->isManager()) {
-            return $booking->tenant_id === $user->tenant_id;
-        }
-
-        return false;
+        return $user->isSuperAdmin()
+            || ($user->tenant_id
+                && (string) $booking->tenant_id === (string) $user->tenant_id
+                && PermissionMatrix::userCan($user, 'service-bookings.confirm'));
     }
 
     public function complete(User $user, ServiceBooking $booking): bool
     {
-        return $this->confirm($user, $booking);
+        return $user->isSuperAdmin()
+            || ($user->tenant_id
+                && (string) $booking->tenant_id === (string) $user->tenant_id
+                && PermissionMatrix::userCan($user, 'service-bookings.complete'));
     }
 }
