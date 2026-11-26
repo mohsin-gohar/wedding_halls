@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\AdminDashboard;
 use App\Livewire\Dashboard;
+use App\Livewire\ExpenseTracker;
 use App\Livewire\FloorPlanDesigner;
 use App\Livewire\HallChat;
 use App\Livewire\HallMediaManager;
@@ -180,10 +181,16 @@ class ComprehensiveDashboardCrudAuditTest extends TestCase
         $this->assertNotNull($savedDiesel);
         $this->assertEquals(7500.0, (float) $savedDiesel->amount);
 
-        // Delete Daily Expense
-        $dashboardComponent->call('deleteDailyExpense', (string) $savedDiesel->id)
+        // Financial entries are voided, never hard-deleted.
+        Livewire::actingAs($owner)
+            ->test(ExpenseTracker::class)
+            ->call('openVoidModal', (string) $savedDiesel->id)
+            ->set('voidReason', 'Test reversal for dashboard CRUD audit')
+            ->call('voidExpense')
             ->assertHasNoErrors();
+
         $this->assertNull(Expense::find($savedDiesel->id));
+        $this->assertTrue((bool) Expense::withVoided()->findOrFail($savedDiesel->id)->is_voided);
 
         // 2. Walk-in Booking Creation
         $eventDate = Carbon::now()->addDays(20)->toDateString();
