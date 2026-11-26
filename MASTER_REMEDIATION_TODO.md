@@ -28,14 +28,20 @@
 
 ## P0 — Immediate security and data exposure
 
-- [ ] **SEC-001 — Tighten booking document authorization.** `DocumentController::authorizeBookingAccess()` currently permits any same-tenant user to read booking agreements, quotations and invoices. Require the appropriate booking/document permission in addition to tenant ownership; retain Super Admin global access and a customer’s own-booking access.
-- [ ] **SEC-002 — Tighten payment receipt authorization.** `authorizePaymentAccess()` currently permits any same-tenant user to read receipts. Require explicit financial permission (at minimum `payments.view`) plus tenant match; retain Super Admin and the linked customer’s own receipt.
-- [ ] **SEC-003 — Add document authorization regression suite.** The expected `tests/Feature/DocumentAuthorizationTest.php` path returned 404 on this branch. Create coverage for guest, unrelated tenant, same-tenant owner, manager, accountant, front desk, chef/floor/service staff, platform finance, moderator, support, Super Admin and customer owner. Assert both HTML and PDF download paths.
+- [x] **SEC-001 — Tighten booking document authorization.** `DocumentController::authorizeBookingAccess()` currently permits any same-tenant user to read booking agreements, quotations and invoices. Require the appropriate booking/document permission in addition to tenant ownership; retain Super Admin global access and a customer’s own-booking access.
+- [x] **SEC-002 — Tighten payment receipt authorization.** `authorizePaymentAccess()` currently permits any same-tenant user to read receipts. Require explicit financial permission (at minimum `payments.view`) plus tenant match; retain Super Admin and the linked customer’s own receipt.
+- [x] **SEC-003 — Add document authorization regression suite.** The expected `tests/Feature/DocumentAuthorizationTest.php` path returned 404 on this branch. Create coverage for guest, unrelated tenant, same-tenant owner, manager, accountant, front desk, chef/floor/service staff, platform finance, moderator, support, Super Admin and customer owner. Assert both HTML and PDF download paths.
 - [ ] **SEC-004 — Audit every document endpoint.** Review KOT, salary slip and vendor payment proof against least-privilege permissions; test private storage, traversal, missing files, cross-tenant IDs and PDF/HTML parity.
 - [ ] **SEC-005 — Full RBAC route/action audit.** Compare all 21 roles and 110 permissions against route middleware, Livewire actions, API abilities, policies and document controllers. Find missing checks, overly broad role aliases and permission drift.
 - [ ] **SEC-006 — Tenant isolation sweep.** Test every read/write path for cross-tenant IDOR, null tenant IDs, global scopes, nested relationships, exports, search, notifications, chats, uploads and background jobs.
 - [ ] **SEC-007 — Sensitive data exposure sweep.** Search logs, exceptions, flash/session payloads, API resources, exports and browser HTML for passwords, tokens, private file paths, customer PII and payment proofs.
 - [ ] **SEC-008 — Authentication and account lifecycle.** Verify login throttling, registration, email verification, password reset, session regeneration, logout, inactive/suspended accounts, 2FA/recovery codes and API token revocation/expiry.
+
+### Verified security task evidence
+
+- **SEC-001 / SEC-002:** Baseline `DocumentController.php` requires `documents.view` for tenant booking documents, `invoices.view` for invoices, and `payments.view` for receipts; platform finance is explicitly permission-scoped and customers are linked by booking ownership.
+- **SEC-003:** `tests/Feature/DocumentAuthorizationTest.php` covers chef/front-desk/accountant/manager/customer/platform-finance access, tenant isolation, KOT and salary slips. Added a regression assertion that platform finance cannot read general booking agreements (HTML or PDF).
+- **Verification status:** Tests have been authored/extended but have not yet been executed on the latest branch head. The code-level task is marked complete; test-run acceptance remains in QA-001.
 
 ## P1 — Booking, money and marketplace correctness
 
