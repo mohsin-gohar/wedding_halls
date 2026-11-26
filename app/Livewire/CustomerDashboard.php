@@ -63,6 +63,15 @@ class CustomerDashboard extends Component
         // register a known customer's address and take over their bookings.
     }
 
+    private function assertCustomer(): \\App\\Models\\User
+    {
+        $user = Auth::user();
+
+        abort_unless($user && $user->isCustomer(), 403, 'Customer account required.');
+
+        return $user;
+    }
+
     public function switchTab(string $tab): void
     {
         $this->activeTab = in_array($tab, ['bookings', 'quotes', 'profile']) ? $tab : 'bookings';
@@ -72,12 +81,13 @@ class CustomerDashboard extends Component
 
     public function updateProfile(): void
     {
+        $user = $this->assertCustomer();
+
         $this->validate([
             'profileName' => 'required|string|min:3|max:100',
             'profilePhone' => 'required|string|min:10|max:25',
         ]);
 
-        $user = Auth::user();
         $user->update([
             'name' => $this->profileName,
             'phone' => $this->profilePhone,
@@ -88,12 +98,12 @@ class CustomerDashboard extends Component
 
     public function updatePassword(): void
     {
+        $user = $this->assertCustomer();
+
         $this->validate([
             'currentPassword' => 'required|string',
             'newPassword' => 'required|string|min:6|confirmed',
         ]);
-
-        $user = Auth::user();
 
         if (! Hash::check($this->currentPassword, $user->password)) {
             $this->addError('currentPassword', 'The provided current password does not match.');
@@ -113,7 +123,7 @@ class CustomerDashboard extends Component
 
     public function viewBooking(string $bookingId)
     {
-        $user = Auth::user();
+        $user = $this->assertCustomer();
         $this->viewingBooking = Booking::where('customer_id', $user->id)
             ->with(['hall.venue', 'package', 'payments', 'rsvps'])
             ->findOrFail($bookingId);
@@ -130,7 +140,11 @@ class CustomerDashboard extends Component
 
     public function requestCancellation(string $bookingId)
     {
-        $user = Auth::user();
+        $user = $this->assertCustomer();
+
+        $this->validate([
+            'cancellationReason' => ['nullable', 'string', 'max:1000'],
+        ]);
         $booking = Booking::where('customer_id', $user->id)
             ->findOrFail($bookingId);
 
@@ -153,11 +167,7 @@ class CustomerDashboard extends Component
      */
     public function acceptQuote(int $rfqBidId): void
     {
-        $user = Auth::user();
-
-        if (! $user) {
-            abort(403, 'Unauthorized.');
-        }
+        $user = $this->assertCustomer();
 
         $bid = RFQBid::query()->with('rfq')->find($rfqBidId);
 
