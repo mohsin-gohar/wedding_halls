@@ -69,6 +69,8 @@ class HallMediaManagerPermissionTest extends TestCase
             'status' => 'ACTIVE',
         ]);
 
+        $originalServices = $hall->services;
+
         Livewire::actingAs($manager)
             ->test(HallMediaManager::class)
             ->set('newServiceTitle', 'Unauthorized Service')
@@ -77,9 +79,6 @@ class HallMediaManagerPermissionTest extends TestCase
             ->call('addService')
             ->assertForbidden();
 
-        $this->assertDatabaseMissing('halls', [
-            'id' => $hall->id,
-            'name' => 'Unauthorized Service',
-        ]);
+        $this->assertSame($originalServices, $hall->fresh()->services);
     }
 }
