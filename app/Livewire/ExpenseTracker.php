@@ -273,7 +273,8 @@ class ExpenseTracker extends Component
             abort(403, 'Payroll-linked expenses must be corrected through the payroll workflow.');
         }
 
-        if (UtilityLog::where('expense_id', $expense->id)->exists()) {
+        if (in_array($expense->category, ['GENERATOR_DIESEL', 'WAPDA_ELECTRICITY'], true)
+            || UtilityLog::where('expense_id', $expense->id)->exists()) {
             abort(403, 'Utility-linked expenses must be corrected through the utility workflow.');
         }
 
