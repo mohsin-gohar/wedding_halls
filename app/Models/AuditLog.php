@@ -48,7 +48,7 @@ class AuditLog extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class->withTrashed();
     }
 
     public static function log(string $action, string $description, ?string $tenantId = null, ?string $entityType = null, ?string $entityId = null): self
