@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\Dashboard;
+use App\Models\Booking;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -80,4 +81,62 @@ class DashboardAuthorizationTest extends TestCase
             ->test(Dashboard::class)
             ->assertStatus(403);
     }
+    public function test_accountant_can_record_daily_expense_and_utility_log_atomically(): void
+    {
+        $tenant = Tenant::query()->where('slug', 'riwaj-grand')->firstOrFail();
+        $accountant = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_ACCOUNTANT',
+            'status' => 'ACTIVE',
+        ]);
+
+        Livewire::actingAs($accountant)
+            ->test(Dashboard::class)
+            ->set('expenseTitle', 'Generator diesel refill')
+            ->call('saveDailyExpense')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('expenses', [
+            'tenant_id' => $tenant->id,
+            'title' => 'Generator diesel refill',
+            'amount' => 14250,
+            'payment_method' => 'CASH',
+        ]);
+
+        $this->assertDatabaseHas('utility_logs', [
+            'tenant_id' => $tenant->id,
+            'total_utility_cost' => 14250,
+        ]);
+    }
+
+    public function test_daily_expense_cannot_link_a_booking_from_another_tenant(): void
+    {
+        $tenant = Tenant::query()->where('slug', 'riwaj-grand')->firstOrFail();
+        $foreignBooking = Booking::query()
+            ->where('tenant_id', '!=', $tenant->id)
+            ->first();
+
+        if (! $foreignBooking) {
+            $this->markTestSkipped('A second tenant booking fixture is required.');
+        }
+
+        $accountant = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_ACCOUNTANT',
+            'status' => 'ACTIVE',
+        ]);
+
+        Livewire::actingAs($accountant)
+            ->test(Dashboard::class)
+            ->set('expenseTitle', 'Generator diesel refill')
+            ->set('fuelBookingId', $foreignBooking->id)
+            ->call('saveDailyExpense')
+            ->assertHasErrors(['fuelBookingId']);
+
+        $this->assertDatabaseMissing('expenses', [
+            'tenant_id' => $tenant->id,
+            'title' => 'Generator diesel refill',
+        ]);
+    }
+
 }
