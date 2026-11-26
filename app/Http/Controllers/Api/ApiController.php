@@ -40,7 +40,7 @@ abstract class ApiController extends Controller
      */
     protected function scopeToPrincipal(Builder $query, User $user, string $tenantColumn = 'tenant_id', string $customerColumn = 'customer_id'): Builder
     {
-        if ($user->isSuperAdmin() || $user->isPlatformFinance() || $user->isContentModerator()) {
+        if ($user->isSuperAdmin() || $user->isPlatformSupport() || $user->isPlatformFinance() || $user->isContentModerator()) {
             return $query;
         }
 
@@ -58,7 +58,7 @@ abstract class ApiController extends Controller
      */
     protected function assertTenantAccess(?string $tenantId, User $user): void
     {
-        if ($user->isSuperAdmin() || $user->isPlatformFinance()) {
+        if ($user->isSuperAdmin() || $user->isPlatformSupport() || $user->isPlatformFinance()) {
             return;
         }
 
