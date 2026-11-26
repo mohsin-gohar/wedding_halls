@@ -1,6 +1,6 @@
 <?php
 
-$lock = json_decode(file_get_contents(__DIR__.'/composer.lock'), true, 512, JSON_THROW_ON_ERROR);
+$lock = json_decode(file_get_contents(dirname(__DIR__).'/composer.lock'), true, 512, JSON_THROW_ON_ERROR);
 $packages = collect($lock['packages'] ?? []);
 
 $minimums = [
