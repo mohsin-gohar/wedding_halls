@@ -336,9 +336,9 @@ class Dashboard extends Component
 
         $booking = Booking::where('tenant_id', $tenantId)->findOrFail($bookingId);
 
-        if ($newStage === 'CONFIRMED' && $booking->status !== 'CONFIRMED') {
+        if (in_array($newStage, ['CONFIRMED', 'CANCELLED'], true) && $booking->status !== $newStage) {
             try {
-                $booking = app(\App\Services\BookingService::class)->transitionStatus($booking, 'CONFIRMED');
+                $booking = app(\App\Services\BookingService::class)->transitionStatus($booking, $newStage);
             } catch (\App\Exceptions\SlotAlreadyBookedException|\InvalidArgumentException $exception) {
                 $this->crmFeedback = $exception->getMessage();
 
