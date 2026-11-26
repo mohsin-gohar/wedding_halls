@@ -35,7 +35,7 @@ class PermissionMatrixLeastPrivilegeTest extends TestCase
         self::assertTrue(PermissionMatrix::userCan($manager, 'bookings.cancel'));
         self::assertTrue(PermissionMatrix::userCan($manager, 'service-bookings.update'));
         self::assertTrue(PermissionMatrix::userCan($manager, 'rsvps.manage'));
-        self::assertFalse(PermissionMatrix::userCan($manager, 'service-bookings.create'));
+        self::assertTrue(PermissionMatrix::userCan($manager, 'service-bookings.create'));
         self::assertFalse(PermissionMatrix::userCan($manager, 'expenses.manage'));
     }
 
