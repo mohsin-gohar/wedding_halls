@@ -134,6 +134,41 @@ class DirectServiceBookingTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_vendor_staff_cannot_create_customer_direct_bookings(): void
+    {
+        $vendor = $this->vendor('nawab-caterers');
+        $owner = $this->vendorOwner($vendor);
+
+        $this->actingAs($owner)
+            ->get(route('public.vendor-book', ['slug' => $vendor->slug]))
+            ->assertForbidden();
+
+        $service = $this->makeService($vendor, ['price_from' => 2000]);
+
+        Livewire::actingAs($owner)
+            ->test(DirectBooking::class, ['slug' => $vendor->slug, 'service' => $service->id])
+            ->assertForbidden();
+
+        $this->assertSame(0, ServiceBooking::query()->count());
+    }
+
+    public function test_platform_admin_cannot_create_customer_direct_bookings(): void
+    {
+        $vendor = $this->vendor('nawab-caterers');
+        $admin = User::factory()->create([
+            'role' => 'ROLE_SUPER_ADMIN',
+            'tenant_id' => null,
+            'status' => 'ACTIVE',
+        ]);
+        $admin->assignRole('ROLE_SUPER_ADMIN');
+
+        $this->actingAs($admin)
+            ->get(route('public.vendor-book', ['slug' => $vendor->slug]))
+            ->assertForbidden();
+
+        $this->assertSame(0, ServiceBooking::query()->count());
+    }
+
     public function test_opening_the_page_without_an_item_asks_you_to_pick_one(): void
     {
         $vendor = $this->vendor('nawab-caterers');
