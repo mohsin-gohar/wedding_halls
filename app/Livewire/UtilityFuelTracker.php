@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\UtilityLog;
 use App\Support\PermissionMatrix;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class UtilityFuelTracker extends Component
@@ -93,13 +94,20 @@ class UtilityFuelTracker extends Component
     public function saveUtilityLog()
     {
         $this->authorizeUtilityAction('utilities.manage');
+        $user = Auth::user();
+        $bookingRule = Rule::exists('bookings', 'id')->whereIn('status', ['CONFIRMED', 'COMPLETED']);
+        if (! $user->isSuperAdmin()) {
+            $bookingRule->where('tenant_id', $user->tenant_id);
+        }
+
         $this->validate([
-            'selectedBookingId' => 'required|exists:bookings,id',
-            'generator_run_hours' => 'required|numeric|min:0',
-            'diesel_liters_consumed' => 'required|numeric|min:0',
-            'diesel_rate_per_liter' => 'required|numeric|min:0',
-            'wapda_units_consumed' => 'required|numeric|min:0',
-            'wapda_unit_rate' => 'required|numeric|min:0',
+            'selectedBookingId' => ['required', $bookingRule],
+            'generator_run_hours' => 'required|numeric|min:0|max:99999.99',
+            'diesel_liters_consumed' => 'required|numeric|min:0|max:999999.99',
+            'diesel_rate_per_liter' => 'required|numeric|min:0|max:999999.99',
+            'wapda_units_consumed' => 'required|numeric|min:0|max:999999.99',
+            'wapda_unit_rate' => 'required|numeric|min:0|max:999999.99',
+            'notes' => 'nullable|string|max:2000',
         ]);
 
         $user = Auth::user();
@@ -113,8 +121,23 @@ class UtilityFuelTracker extends Component
         }
         $booking = $bQuery->findOrFail($this->selectedBookingId);
 
-        $totalCost = ($this->diesel_liters_consumed * $this->diesel_rate_per_liter) +
-                     ($this->wapda_units_consumed * $this->wapda_unit_rate);
+        $totalCost = round(
+            ($this->diesel_liters_consumed * $this->diesel_rate_per_liter)
+            + ($this->wapda_units_consumed * $this->wapda_unit_rate),
+            2
+        );
+
+        if (! is_finite($totalCost) || $totalCost > 99999999.99) {
+            $this->addError('diesel_liters_consumed', 'Combined utility cost exceeds the supported maximum for this event.');
+
+            return;
+        }
+
+        if (! in_array($booking->status, ['CONFIRMED', 'COMPLETED'], true)) {
+            $this->addError('selectedBookingId', 'Utility logs can only be attached to confirmed or completed events.');
+
+            return;
+        }
 
         UtilityLog::updateOrCreate(
             ['booking_id' => $booking->id],
@@ -125,7 +148,7 @@ class UtilityFuelTracker extends Component
                 'diesel_rate_per_liter' => $this->diesel_rate_per_liter,
                 'wapda_units_consumed' => $this->wapda_units_consumed,
                 'wapda_unit_rate' => $this->wapda_unit_rate,
-                'total_utility_cost' => round($totalCost, 2),
+                'total_utility_cost' => $totalCost,
                 'logged_by' => auth()->user()->name ?? 'Banquet Manager',
                 'notes' => $this->notes,
             ]
