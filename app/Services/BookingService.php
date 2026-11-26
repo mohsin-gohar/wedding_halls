@@ -388,6 +388,102 @@ class BookingService
     }
 
     /**
+     * Change a booking lifecycle state under the same hall/date mutex used by
+     * reservation creation. HOLD and CONFIRMED transitions must re-check every
+     * overlapping active reservation before the status can become blocking.
+     *
+     * @throws SlotAlreadyBookedException
+     */
+    public function transitionStatus(Booking $booking, string $status): Booking
+    {
+        $status = strtoupper(trim($status));
+
+        if (! in_array($status, ['INQUIRY', 'HOLD', 'CONFIRMED', 'COMPLETED', 'CANCELLED'], true)) {
+            throw new \\InvalidArgumentException('Unsupported booking lifecycle state.');
+        }
+
+        $snapshot = $booking->fresh();
+        if (! $snapshot) {
+            throw new \\InvalidArgumentException('Booking no longer exists.');
+        }
+
+        $hall = Hall::with('tenant')->findOrFail($snapshot->hall_id);
+        $eventDate = Carbon::parse($snapshot->event_date)->format('Y-m-d');
+        $slotType = strtoupper((string) $snapshot->slot_type);
+        $lockKey = "lock:hall:{$hall->id}:date:{$eventDate}";
+        $lock = Cache::store(config('booking.lock_store'))->lock($lockKey, 600);
+
+        try {
+            $lock->block(5);
+        } catch (LockTimeoutException $e) {
+            throw new SlotAlreadyBookedException(
+                'A concurrent reservation is currently being updated for this hall and date. Please try again momentarily.',
+                423,
+                (string) $hall->id,
+                $eventDate,
+                $slotType,
+                $e
+            );
+        }
+
+        try {
+            return DB::transaction(function () use ($snapshot, $hall, $eventDate, $slotType, $status): Booking {
+                $lockedBooking = Booking::query()
+                    ->whereKey($snapshot->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if (in_array($status, ['HOLD', 'CONFIRMED'], true)) {
+                    $conflict = $this->slotConflictQuery((string) $hall->id, $eventDate, $slotType)
+                        ->where('id', '!=', $lockedBooking->id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($conflict) {
+                        throw new SlotAlreadyBookedException(
+                            "The slot [{$slotType}] on [{$eventDate}] for this hall is already booked (#{$conflict->id}).",
+                            409,
+                            (string) $hall->id,
+                            $eventDate,
+                            $slotType
+                        );
+                    }
+                }
+
+                $previousStatus = strtoupper((string) $lockedBooking->status);
+                $updates = ['status' => $status];
+
+                if ($status === 'HOLD') {
+                    $updates['hold_expires_at'] = $this->resolveHoldExpiry($hall, [
+                        'status' => 'HOLD',
+                        'hold_expires_at' => $lockedBooking->hold_expires_at,
+                    ]);
+                } else {
+                    $updates['hold_expires_at'] = null;
+                }
+
+                if ($status === 'CONFIRMED') {
+                    $updates['pipeline_stage'] = 'CONFIRMED';
+                } elseif ($status === 'INQUIRY') {
+                    $updates['pipeline_stage'] = 'NEW_INQUIRY';
+                }
+
+                $lockedBooking->update($updates);
+
+                if ($status === 'CONFIRMED' && $previousStatus !== 'CONFIRMED') {
+                    $confirmed = $lockedBooking->fresh();
+                    $this->kitchenOrderService->generateKotForConfirmedBooking($confirmed);
+                    event(new BookingCreatedEvent($confirmed));
+                }
+
+                return $lockedBooking->fresh();
+            });
+        } finally {
+            optional($lock)->release();
+        }
+    }
+
+    /**
      * Record a milestone payment (Second Installment, Final Settlement, Security Deposit).
      *
      * This is a thin compatibility wrapper around PaymentService so there is a
