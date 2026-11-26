@@ -8,6 +8,14 @@ use App\Support\PermissionMatrix;
 
 class BookingPolicy
 {
+    public function viewAny(User $user): bool
+    {
+        return $user->isSuperAdmin()
+            || $user->isCustomer()
+            || PermissionMatrix::userCan($user, 'bookings.view');
+    }
+
+
     public function view(User $user, Booking $booking): bool
     {
         if ($user->isSuperAdmin()) {
