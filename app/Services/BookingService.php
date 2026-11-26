@@ -399,12 +399,12 @@ class BookingService
         $status = strtoupper(trim($status));
 
         if (! in_array($status, ['INQUIRY', 'HOLD', 'CONFIRMED', 'COMPLETED', 'CANCELLED'], true)) {
-            throw new \\InvalidArgumentException('Unsupported booking lifecycle state.');
+            throw new \InvalidArgumentException('Unsupported booking lifecycle state.');
         }
 
         $snapshot = $booking->fresh();
         if (! $snapshot) {
-            throw new \\InvalidArgumentException('Booking no longer exists.');
+            throw new \InvalidArgumentException('Booking no longer exists.');
         }
 
         $hall = Hall::with('tenant')->findOrFail($snapshot->hall_id);
