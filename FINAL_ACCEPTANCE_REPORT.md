@@ -1,11 +1,11 @@
 # Final Acceptance Report — Riwaj Grand (Independent Re-Audit)
 
-**Branch:** `audit/riwaj-grand-repair-20261126`  
-**Base / merge-base with `main`:** `df8de43717415f3c7f47d50845f114502f437037`  
-**GitHub `main` baseline:** `07bc5fe397fbb0fd7de05678d68830fc027a8872`  
-**Final SHA:** `f83728308a0717380e6c55f13cd471de894b7c3e`  
-**Audit date:** 2026-11-27  
-**Tracked files:** 617 (review coverage: `FILE_BY_FILE_REVIEW_MATRIX.md`)  
+**Branch:** `audit/riwaj-grand-repair-20261126`
+**Base / merge-base with `main`:** `df8de43717415f3c7f47d50845f114502f437037`
+**GitHub `main` baseline:** `07bc5fe397fbb0fd7de05678d68830fc027a8872`
+**Final SHA:** `f83728308a0717380e6c55f13cd471de894b7c3e`
+**Audit date:** 2026-11-27
+**Tracked files:** 617 (review coverage: `FILE_BY_FILE_REVIEW_MATRIX.md`)
 **No changes to `main`; no force-push, reset, deployment or production-data change.**
 
 ## 1. CI evidence (authoritative, GitHub-confirmed)
