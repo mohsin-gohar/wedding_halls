@@ -98,18 +98,19 @@ class StaffManager extends Component
         $roles = ['ROLE_STAFF_MEMBER'];
 
         if (Auth::user()->isTenantOwner()) {
-            $roles = array_merge([
-                'ROLE_MANAGER',
-                'ROLE_VENDOR_MANAGER',
-                'ROLE_ACCOUNTANT',
-                'ROLE_VENDOR_ACCOUNTANT',
-                'ROLE_BOOKING_MANAGER',
-                'ROLE_INVENTORY_MANAGER',
-                'ROLE_HR_MANAGER',
-            ], $roles);
+            // Owners may provision every operational and privileged staff role.
+            return array_values(array_unique(array_merge([
+                'ROLE_MANAGER', 'ROLE_VENDOR_MANAGER', 'ROLE_ACCOUNTANT',
+                'ROLE_VENDOR_ACCOUNTANT', 'ROLE_BOOKING_MANAGER',
+                'ROLE_INVENTORY_MANAGER', 'ROLE_HR_MANAGER',
+            ], [
+                'ROLE_FRONT_DESK', 'ROLE_CHEF', 'ROLE_FLOOR_STAFF',
+                'ROLE_SERVICE_STAFF', 'ROLE_STAFF_MEMBER',
+                'ROLE_PHOTOGRAPHER', 'ROLE_CATERING_STAFF',
+            ])));
         }
 
-        return array_values(array_unique($roles));
+        return ['ROLE_STAFF_MEMBER'];
     }
 
     private function authorizeTargetStaffRole(User $staff): void

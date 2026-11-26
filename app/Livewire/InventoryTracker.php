@@ -115,6 +115,16 @@ class InventoryTracker extends Component
             return;
         }
 
+        if ($action === 'po.create') {
+            // Purchase orders create a financial commitment: inventory managers
+            // and finance staff may raise them, matching the UI action gate.
+            abort_unless($canManageInventory || $canManageExpenses, 403,
+                'Inventory management or expense management permission is required to raise a purchase order.'
+            );
+
+            return;
+        }
+
         $permission = $action === 'inventory.view' ? 'inventory.view' : 'inventory.manage';
         $message = $permission === 'inventory.view'
             ? 'Inventory view permission is required.'

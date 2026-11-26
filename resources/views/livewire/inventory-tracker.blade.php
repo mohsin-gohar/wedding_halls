@@ -195,7 +195,7 @@
                         @empty
                             <tr>
                                 <td colspan="8" class="p-8 text-center text-stone-400 font-sans">
-                                    No inventory items found. Click "+ Add Inventory Item" to register your stock.
+                                    No inventory items found. Use the inventory controls to register your stock.
                                 </td>
                             </tr>
                         @endforelse

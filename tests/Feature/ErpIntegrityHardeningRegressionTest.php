@@ -74,9 +74,9 @@ class ErpIntegrityHardeningRegressionTest extends TestCase
     public function test_invalid_inventory_movement_type_is_rejected(): void
     {
         $tenant = $this->tenant('movement-enum');
-        $chef = $this->user($tenant, 'ROLE_CHEF', 'chef@movement-enum.test');
+        $inventoryManager = $this->user($tenant, 'ROLE_INVENTORY_MANAGER', 'manager@movement-enum.test');
 
-        Livewire::actingAs($chef)
+        Livewire::actingAs($inventoryManager)
             ->test(InventoryTracker::class)
             ->set('movementType', 'TELEPORT_STOCK')
             ->call('recordStockMovement')
@@ -104,7 +104,7 @@ class ErpIntegrityHardeningRegressionTest extends TestCase
     public function test_stock_movement_cannot_drive_inventory_below_zero(): void
     {
         $tenant = $this->tenant('negative-stock');
-        $chef = $this->user($tenant, 'ROLE_CHEF', 'chef@negative-stock.test');
+        $inventoryManager = $this->user($tenant, 'ROLE_INVENTORY_MANAGER', 'manager@negative-stock.test');
         $item = InventoryItem::create([
             'tenant_id' => $tenant->id,
             'name' => 'Mutton Cut',
@@ -115,7 +115,7 @@ class ErpIntegrityHardeningRegressionTest extends TestCase
             'unit_cost' => 1000,
         ]);
 
-        Livewire::actingAs($chef)
+        Livewire::actingAs($inventoryManager)
             ->test(InventoryTracker::class)
             ->set('movementItemId', $item->id)
             ->set('movementType', 'STOCK_OUT')

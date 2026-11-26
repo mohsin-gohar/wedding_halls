@@ -296,9 +296,12 @@ class ComprehensiveDashboardCrudAuditTest extends TestCase
         $this->assertEquals(500, (int) $item->current_stock);
 
         // Delete inventory item
+        // Archiving requires zero stock; clear the test fixture's balance first.
+        $item->update(['current_stock' => 0]);
         $inventoryComponent->call('deleteItem', $item->id)
             ->assertHasNoErrors();
-        $this->assertNull(InventoryItem::find($item->id));
+        // Financial inventory history is retained; removal archives the item.
+        $this->assertFalse((bool) $item->fresh()->is_active);
 
         // 7. Catering Packages CRUD (PackageManager)
         $packageComponent = Livewire::test(PackageManager::class)

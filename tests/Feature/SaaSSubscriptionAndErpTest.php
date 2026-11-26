@@ -202,9 +202,9 @@ class SaaSSubscriptionAndErpTest extends TestCase
         $chef = User::where('role', 'ROLE_CHEF')->first();
         $this->assertNotNull($chef);
 
-        // Chef is returned to the dashboard they are allowed to use.
+        // Chef lacks staff.manage and is denied the HR surface outright.
         $this->actingAs($chef);
-        $this->get(route('staff'))->assertRedirect(route($chef->portalHomeRoute()));
+        $this->get(route('staff'))->assertForbidden();
 
         // Owner accesses StaffManager -> 200 OK
         $owner = User::where('tenant_id', $chef->tenant_id)->where('role', 'ROLE_TENANT_OWNER')->firstOrFail();
@@ -212,7 +212,9 @@ class SaaSSubscriptionAndErpTest extends TestCase
         $this->get(route('staff'))->assertStatus(200);
 
         $superAdmin = User::where('role', 'ROLE_SUPER_ADMIN')->firstOrFail();
-        $this->actingAs($superAdmin)->get(route('staff'))->assertRedirect(route('admin.dashboard'));
+        // A super admin has no tenant workspace; the tenant-only staff route
+        // is not available to them (they use the admin console instead).
+        $this->actingAs($superAdmin)->get(route('staff'))->assertForbidden();
     }
 
     public function test_quotation_and_invoice_routes_render_authorized(): void
