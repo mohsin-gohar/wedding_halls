@@ -46,13 +46,13 @@ class PaymentController extends ApiController
                 $validated['transaction_reference'] ?? null,
                 $validated['notes'] ?? null
             );
-        } catch (\\PDOException $e) {
+        } catch (\PDOException $e) {
             report($e);
 
             return response()->json(['message' => 'The cash payment could not be recorded. Please try again.'], 500);
-        } catch (\\InvalidArgumentException|\\RuntimeException $e) {
+        } catch (\InvalidArgumentException|\RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             report($e);
 
             return response()->json(['message' => 'The cash payment could not be recorded. Please try again.'], 500);
@@ -90,13 +90,13 @@ class PaymentController extends ApiController
                 $validated['transaction_reference'] ?? null,
                 $validated['notes'] ?? null
             );
-        } catch (\\PDOException $e) {
+        } catch (\PDOException $e) {
             report($e);
 
             return response()->json(['message' => 'The cash refund could not be recorded. Please try again.'], 500);
-        } catch (\\InvalidArgumentException|\\RuntimeException $e) {
+        } catch (\InvalidArgumentException|\RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             report($e);
 
             return response()->json(['message' => 'The cash refund could not be recorded. Please try again.'], 500);
