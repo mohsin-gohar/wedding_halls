@@ -16,7 +16,7 @@ class DocumentController extends Controller
     /**
      * Authorize access to customer-facing booking documents (Agreements, Invoices, Quotations).
      */
-    protected function authorizeBookingAccess(Booking $booking): void
+    protected function authorizeBookingAccess(Booking $booking, string $permission = 'documents.view'): void
     {
         $user = auth()->user();
         if (! $user) {
