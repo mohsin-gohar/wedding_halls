@@ -169,6 +169,7 @@ class ComprehensiveDashboardCrudAuditTest extends TestCase
             ->set('fuelDieselLiters', 25.0)
             ->set('fuelRatePerLiter', 300.0)
             ->set('expenseDate', Carbon::today()->toDateString())
+            ->set('expenseTitle', 'Generator diesel refill audit test')
             ->set('expenseNotes', 'Diesel refill for backup generator')
             ->call('saveDailyExpense')
             ->assertHasNoErrors()
