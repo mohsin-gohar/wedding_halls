@@ -412,7 +412,7 @@ class BookingService
         $slotType = strtoupper((string) $snapshot->slot_type);
 
         if (in_array($status, ['HOLD', 'CONFIRMED'], true) && Carbon::parse($eventDate)->isBefore(Carbon::today())) {
-            throw new \\InvalidArgumentException('The event date cannot be in the past.');
+            throw new \InvalidArgumentException('The event date cannot be in the past.');
         }
 
         $lockKey = "lock:hall:{$hall->id}:date:{$eventDate}";
@@ -453,7 +453,7 @@ class BookingService
                     || ! $lockedHall->venue?->is_active
                     || ! $tenant->canAcceptBookings()
                 )) {
-                    throw new \\InvalidArgumentException('Venue is not accepting bookings.');
+                    throw new \InvalidArgumentException('Venue is not accepting bookings.');
                 }
 
                 $lockedBooking = Booking::query()
