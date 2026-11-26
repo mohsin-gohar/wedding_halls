@@ -202,6 +202,17 @@ class VendorServicesManager extends Component
             return;
         }
 
+        // The vendor_services price columns are DECIMAL(12,2).
+        $maximumPrice = 9_999_999_999.99;
+        if ($from !== null && $from > $maximumPrice) {
+            $this->addError('priceFrom', 'Price exceeds the supported maximum.');
+            return;
+        }
+        if ($to !== null && $to > $maximumPrice) {
+            $this->addError('priceTo', 'Price exceeds the supported maximum.');
+            return;
+        }
+
         if ($from !== null && $to !== null && $to < $from - 0.009) {
             $this->addError('priceTo', 'End price cannot be lower than the start price.');
 
