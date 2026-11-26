@@ -119,12 +119,12 @@ class StaffPayroll extends Component
     {
         $this->authorizePayrollManager();
         $this->validate([
-            'policyOvertimeRate' => 'required|numeric|min:0',
-            'policyLateDeduction' => 'required|numeric|min:0',
-            'policyAbsenceDeduction' => 'required|numeric|min:0',
-            'policyHalfDayDeduction' => 'required|numeric|min:0',
-            'policyUnpaidLeaveDeduction' => 'required|numeric|min:0',
-            'policyDefaultSalary' => 'nullable|numeric|min:1',
+            'policyOvertimeRate' => 'required|numeric|min:0|max:99999999.99',
+            'policyLateDeduction' => 'required|numeric|min:0|max:99999999.99',
+            'policyAbsenceDeduction' => 'required|numeric|min:0|max:99999999.99',
+            'policyHalfDayDeduction' => 'required|numeric|min:0|max:99999999.99',
+            'policyUnpaidLeaveDeduction' => 'required|numeric|min:0|max:99999999.99',
+            'policyDefaultSalary' => 'nullable|numeric|min:1|max:9999999999.99',
         ]);
 
         $tenantId = Auth::user()->tenant_id;
@@ -584,7 +584,7 @@ class StaffPayroll extends Component
             ->get();
 
         $totalBasic = $payrolls->sum('basic_salary');
-        $totalOvertime = $payrolls->sum(fn ($p) => $p->overtime_hours * $p->overtime_rate);
+        $totalOvertime = $payrolls->sum('overtime_pay');
         $totalAllowances = $payrolls->sum('allowances');
         $totalDeductions = $payrolls->sum('deductions');
         $totalNetPayroll = $payrolls->sum('net_salary');
