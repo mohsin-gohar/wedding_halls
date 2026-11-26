@@ -175,7 +175,7 @@ class VendorServicesManager extends Component
             abort(403);
         }
 
-        if ($this->serviceName === '') {
+        if (trim($this->serviceName) === '') {
             $this->addError('serviceName', 'Service name is required.');
 
             return;
@@ -187,7 +187,29 @@ class VendorServicesManager extends Component
             return;
         }
 
-        DB::transaction(function () use ($tenantId) {
+        $from = $this->priceFrom === null ? null : round((float) $this->priceFrom, 2);
+        $to = $this->priceTo === null ? null : round((float) $this->priceTo, 2);
+
+        if (($from !== null && (! is_finite($from) || $from < 0))
+            || ($to !== null && (! is_finite($to) || $to < 0))) {
+            $this->addError('priceFrom', 'Prices must be finite, non-negative amounts.');
+
+            return;
+        }
+
+        if ($from !== null && $to !== null && $to < $from) {
+            $this->addError('priceTo', 'End price cannot be lower than the start price.');
+
+            return;
+        }
+
+        if (in_array($this->pricingType, ['PER_HEAD', 'HOURLY'], true) && ($from ?? 0) <= 0) {
+            $this->addError('priceFrom', 'A positive base price is required for this pricing type.');
+
+            return;
+        }
+
+        DB::transaction(function () use ($tenantId, $from, $to) {
             if ($this->isEditing) {
                 $service = VendorService::query()->where('tenant_id', $tenantId)->find($this->editingServiceId);
 
@@ -200,8 +222,8 @@ class VendorServicesManager extends Component
                     'name' => $this->serviceName,
                     'description' => $this->serviceDescription ?: null,
                     'pricing_type' => $this->pricingType,
-                    'price_from' => $this->priceFrom,
-                    'price_to' => $this->priceTo,
+                    'price_from' => $from,
+                    'price_to' => $to,
                     'unit' => $this->serviceUnit,
                 ]);
 
@@ -213,8 +235,8 @@ class VendorServicesManager extends Component
                     'name' => $this->serviceName,
                     'description' => $this->serviceDescription ?: null,
                     'pricing_type' => $this->pricingType,
-                    'price_from' => $this->priceFrom,
-                    'price_to' => $this->priceTo,
+                    'price_from' => $from,
+                    'price_to' => $to,
                     'unit' => $this->serviceUnit,
                     'is_active' => true,
                 ]);
