@@ -330,7 +330,7 @@
                                     {{ $po->notes ?: 'General stock replenishment' }}
                                 </td>
                                 <td class="p-3 text-right">
-                                    @if($po->status !== 'PAID' && \App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.manage'))
+                                    @if($po->status !== 'PAID' && \App\Support\PermissionMatrix::userCan(auth()->user(), 'expenses.manage'))
                                         <button wire:click="markPoPaid('{{ $po->id }}')" 
                                                 class="px-3 py-1 bg-[#C6A15B] hover:bg-[#C6A15B] text-white font-bold text-xs uppercase shadow">
                                             Mark Paid &rarr;
