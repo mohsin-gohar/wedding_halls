@@ -8,6 +8,7 @@ use App\Models\StaffAttendance as AttendanceRecord;
 use App\Models\StaffLeave;
 use App\Models\StaffPayroll;
 use App\Models\User;
+use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
@@ -98,8 +99,8 @@ class StaffAttendance extends Component
     private function authorizeAttendanceManager(): void
     {
         $user = Auth::user();
-        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isAccountant()) || ! $user->tenant_id) {
-            abort(403, 'Unauthorized. Only Venue Owners or Managers have access to Attendance ERP.');
+        if (! $user || ! $user->tenant_id || ! PermissionMatrix::userCan($user, 'staff.attendance')) {
+            abort(403, 'Unauthorized. Attendance management requires staff.attendance within a tenant.');
         }
     }
 
