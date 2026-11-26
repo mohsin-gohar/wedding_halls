@@ -362,16 +362,18 @@ class Dashboard extends Component
                 ]);
             }
 
+            AuditLog::log(
+                'EXPENSE_CREATED',
+                'Recorded expense PKR '.number_format((float) $expense->amount, 2).' ['.$expense->title.'].',
+                $tenantId,
+                Expense::class,
+                (string) $expense->id
+            );
+
             return $expense;
         });
 
-        AuditLog::log(
-            'EXPENSE_CREATED',
-            'Recorded expense PKR '.number_format((float) $expense->amount, 2).' ['.$expense->title.'].',
-            $tenantId,
-            Expense::class,
-            (string) $expense->id
-        );
+
 
         $this->showDailyExpenseModal = false;
         $this->expenseFeedback = 'Daily Kharcha [Rs '.number_format($this->expenseAmount).'] recorded successfully.';
