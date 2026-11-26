@@ -43,7 +43,7 @@ jobs:
           bash -n deploy-hostinger.sh
 
       - name: Pint style check
-        run: vendor/bin/pint --test
+        run: vendor/bin/pint --test -v
 
       - name: Composer security audit
         run: composer audit --locked --no-interaction
