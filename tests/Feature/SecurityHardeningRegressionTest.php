@@ -14,6 +14,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class SecurityHardeningRegressionTest extends TestCase
@@ -239,4 +240,57 @@ class SecurityHardeningRegressionTest extends TestCase
     {
         return $this->ownerForHall(Hall::query()->findOrFail($booking->hall_id));
     }
+
+    public function test_unrecognized_whatsapp_message_does_not_confirm_rsvp(): void
+    {
+        $phone = '+92 300 8887766';
+        $hall = Hall::query()->firstOrFail();
+        $booking = $this->createBooking($hall, now()->addDays(220)->toDateString(), $phone);
+        $rsvp = GuestRsvp::create([
+            'tenant_id' => $booking->tenant_id,
+            'booking_id' => $booking->id,
+            'guest_name' => 'Unclear Reply Guest',
+            'phone' => $phone,
+            'attending_count' => 2,
+            'rsvp_status' => 'TENTATIVE',
+        ]);
+
+        $this->postWebhook($this->webhookPayload($phone, 'Hello, what time is the event?', 'msg-unclear'))
+            ->assertOk()
+            ->assertJsonPath('status', 'needs_clarification');
+
+        $this->assertSame('TENTATIVE', $rsvp->fresh()->rsvp_status);
+        $this->assertSame(2, $rsvp->fresh()->attending_count);
+        $this->assertDatabaseMissing('audit_logs', [
+            'action' => 'WHATSAPP_RSVP_UPDATED',
+            'entity_id' => $rsvp->id,
+        ]);
+    }
+
+    public function test_whatsapp_rsvp_simulator_does_not_mutate_on_unrecognized_message(): void
+    {
+        $phone = '+92 300 8887767';
+        $hall = Hall::query()->firstOrFail();
+        $booking = $this->createBooking($hall, now()->addDays(221)->toDateString(), $phone);
+        $rsvp = GuestRsvp::create([
+            'tenant_id' => $booking->tenant_id,
+            'booking_id' => $booking->id,
+            'guest_name' => 'Simulator Unclear Guest',
+            'phone' => $phone,
+            'attending_count' => 3,
+            'rsvp_status' => 'TENTATIVE',
+        ]);
+
+        Livewire::actingAs($this->ownerFor($booking))
+            ->test(\\App\\Livewire\\WhatsAppRsvpManager::class)
+            ->set('selectedBookingId', $booking->id)
+            ->set('simPhone', $phone)
+            ->set('simMessage', 'Can I bring children?')
+            ->call('simulateWhatsAppReply')
+            ->assertSee('RSVP unchanged');
+
+        $this->assertSame('TENTATIVE', $rsvp->fresh()->rsvp_status);
+        $this->assertSame(3, $rsvp->fresh()->attending_count);
+    }
+
 }
