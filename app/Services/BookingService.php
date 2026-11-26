@@ -438,6 +438,24 @@ class BookingService
             throw new \InvalidArgumentException('Booking no longer exists.');
         }
 
+        $actor = auth()->user();
+        if ($actor && ! $actor->isSuperAdmin()) {
+            if ($actor->isCustomer()) {
+                throw new \Illuminate\Auth\Access\AuthorizationException('Customers cannot change booking lifecycle status.');
+            }
+
+            if (! $actor->tenant_id || (string) $actor->tenant_id !== (string) $snapshot->tenant_id) {
+                throw new \Illuminate\Auth\Access\AuthorizationException('You may only update bookings for your own venue.');
+            }
+
+            $requiredPermission = $status === 'CANCELLED' ? 'bookings.cancel' : 'bookings.update';
+            if (! PermissionMatrix::userCan($actor, $requiredPermission)) {
+                throw new \Illuminate\Auth\Access\AuthorizationException('Booking lifecycle permission is required.');
+            }
+        } elseif (! $actor && ! app()->runningInConsole()) {
+            throw new \Illuminate\Auth\Access\AuthorizationException('Authentication is required to change booking status.');
+        }
+
         $hall = Hall::with(['tenant', 'venue'])->findOrFail($snapshot->hall_id);
         $eventDate = Carbon::parse($snapshot->event_date)->format('Y-m-d');
         $slotType = strtoupper((string) $snapshot->slot_type);
@@ -510,6 +528,26 @@ class BookingService
                 }
 
                 $previousStatus = strtoupper((string) $lockedBooking->status);
+                $allowedTransitions = [
+                    'INQUIRY' => ['HOLD', 'CONFIRMED', 'CANCELLED'],
+                    'HOLD' => ['INQUIRY', 'CONFIRMED', 'CANCELLED'],
+                    'CONFIRMED' => ['COMPLETED', 'CANCELLED'],
+                    'COMPLETED' => [],
+                    'CANCELLED' => [],
+                ];
+
+                if ($previousStatus !== $status
+                    && ! in_array($status, $allowedTransitions[$previousStatus] ?? [], true)) {
+                    throw new \InvalidArgumentException("Booking cannot transition from {$previousStatus} to {$status}.");
+                }
+
+                if ($previousStatus === 'HOLD'
+                    && $lockedBooking->hold_expires_at
+                    && Carbon::parse($lockedBooking->hold_expires_at)->isPast()
+                    && in_array($status, ['HOLD', 'CONFIRMED'], true)) {
+                    throw new \InvalidArgumentException('This booking hold has expired and cannot be confirmed or renewed.');
+                }
+
                 $updates = ['status' => $status];
 
                 if ($status === 'HOLD') {
