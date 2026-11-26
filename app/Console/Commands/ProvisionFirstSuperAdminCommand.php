@@ -1,13 +1,13 @@
 <?php
 
-namespace App\\Console\\Commands;
+namespace App\Console\Commands;
 
-use App\\Models\\AuditLog;
-use App\\Models\\User;
-use Illuminate\\Console\\Command;
-use Illuminate\\Support\\Facades\\DB;
-use Illuminate\\Support\\Facades\\Validator;
-use Spatie\\Permission\\Models\\Role;
+use App\Models\AuditLog;
+use App\Models\User;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Spatie\Permission\Models\Role;
 
 class ProvisionFirstSuperAdminCommand extends Command
 {
@@ -74,7 +74,7 @@ class ProvisionFirstSuperAdminCommand extends Command
 
             $user = DB::transaction(function () use ($name, $email, $phone, $password): User {
                 if ($this->hasSuperAdmin()) {
-                    throw new \\RuntimeException('A Super Admin was created by another process. No account was added.');
+                    throw new \RuntimeException('A Super Admin was created by another process. No account was added.');
                 }
 
                 $role = Role::firstOrCreate([
@@ -111,7 +111,7 @@ class ProvisionFirstSuperAdminCommand extends Command
             $this->warn('Store the credentials in your approved password manager and enable two-factor authentication after the first sign-in.');
 
             return self::SUCCESS;
-        } catch (\\Throwable $exception) {
+        } catch (\Throwable $exception) {
             report($exception);
             $this->error('Super Admin provisioning failed: '.$exception->getMessage());
 
