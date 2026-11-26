@@ -214,6 +214,197 @@ class ApiBookingFinancialIntegrityTest extends TestCase
         $this->assertSame(0, Booking::query()->where('customer_name', 'Hidden Hall Customer')->count());
     }
 
+    public function test_front_desk_cannot_cancel_a_booking_without_bookings_cancel_permission(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $booking = app(\App\Services\BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(280)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Front Desk Cancellation Guard',
+            'customer_phone' => '+92 300 7774020',
+            'guest_count' => 120,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'CONFIRMED',
+        ]);
+        $frontDesk = User::factory()->create([
+            'tenant_id' => $booking->tenant_id,
+            'role' => 'ROLE_FRONT_DESK',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($frontDesk)
+            ->putJson('/api/v1/bookings/'.$booking->id, ['status' => 'CANCELLED'])
+            ->assertForbidden();
+
+        self::assertNotSame('CANCELLED', $booking->fresh()->status);
+    }
+
+    public function test_booking_manager_can_cancel_a_booking_with_explicit_permission(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $booking = app(\App\Services\BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(281)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Booking Manager Cancellation',
+            'customer_phone' => '+92 300 7774021',
+            'guest_count' => 120,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'CONFIRMED',
+        ]);
+        $bookingManager = User::factory()->create([
+            'tenant_id' => $booking->tenant_id,
+            'role' => 'ROLE_BOOKING_MANAGER',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($bookingManager)
+            ->putJson('/api/v1/bookings/'.$booking->id, ['status' => 'CANCELLED'])
+            ->assertOk();
+
+        self::assertSame('CANCELLED', $booking->fresh()->status);
+    }
+
+    public function test_booking_api_only_serializes_relations_allowed_by_the_callers_permissions(): void
+    {
+        $booking = Booking::query()->firstOrFail();
+        $floorStaff = User::factory()->create([
+            'tenant_id' => $booking->tenant_id,
+            'role' => 'ROLE_FLOOR_STAFF',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($floorStaff)
+            ->getJson('/api/v1/bookings/'.$booking->id)
+            ->assertOk()
+            ->assertJsonMissingPath('payments')
+            ->assertJsonMissingPath('rsvps');
+
+        $bookingManager = User::factory()->create([
+            'tenant_id' => $booking->tenant_id,
+            'role' => 'ROLE_BOOKING_MANAGER',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($bookingManager)
+            ->getJson('/api/v1/bookings/'.$booking->id)
+            ->assertOk()
+            ->assertJsonMissingPath('kitchen_kot')
+            ->assertJsonMissingPath('floor_plan');
+    }
+
+    public function test_customer_can_create_a_public_booking_and_only_update_its_notes(): void
+    {
+        $hall = Hall::query()->publicVisible()->firstOrFail();
+        $customer = User::factory()->create([
+            'name' => 'API Customer',
+            'email' => 'api-customer@example.test',
+            'phone' => '+92 300 7772001',
+            'role' => 'ROLE_CUSTOMER',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($customer)
+            ->postJson('/api/v1/bookings', [
+                'hall_id' => $hall->id,
+                'event_type' => 'Walima',
+                'event_date' => now()->addDays(230)->toDateString(),
+                'slot_type' => 'AFTERNOON',
+                'guest_count' => 180,
+            ])
+            ->assertCreated()
+            ->assertJsonPath('success', true);
+
+        $booking = Booking::query()->where('customer_id', $customer->id)->firstOrFail();
+        $this->assertSame('API Customer', $booking->customer_name);
+        $this->assertSame('+92 300 7772001', $booking->customer_phone);
+
+        $this->actingAs($customer)
+            ->getJson('/api/v1/bookings/'.$booking->id)
+            ->assertOk()
+            ->assertJsonMissingPath('kitchen_kot');
+
+        $this->actingAs($customer)
+            ->patchJson('/api/v1/bookings/'.$booking->id, ['notes' => 'Please call before confirming.'])
+            ->assertOk()
+            ->assertJsonPath('booking.notes', 'Please call before confirming.');
+
+        $this->actingAs($customer)
+            ->patchJson('/api/v1/bookings/'.$booking->id, ['status' => 'CONFIRMED'])
+            ->assertForbidden();
+
+        $this->assertSame('INQUIRY', $booking->fresh()->status);
+    }
+
+    public function test_staff_without_booking_view_permission_cannot_read_booking_api(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $booking = Booking::query()->firstOrFail();
+        $serviceStaff = User::factory()->create([
+            'tenant_id' => $hall->tenant_id,
+            'role' => 'ROLE_SERVICE_STAFF',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($serviceStaff)
+            ->getJson('/api/v1/bookings')
+            ->assertForbidden();
+
+        $this->actingAs($serviceStaff)
+            ->getJson('/api/v1/bookings/'.$booking->id)
+            ->assertForbidden();
+
+        $this->actingAs($serviceStaff)
+            ->getJson('/api/v1/bookings/availability?hall_id='.$hall->id.'&date='.now()->addDays(90)->toDateString())
+            ->assertForbidden();
+    }
+
+    public function test_api_cannot_confirm_an_inquiry_over_an_existing_booking(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $owner = User::query()
+            ->where('tenant_id', $hall->tenant_id)
+            ->where('role', 'ROLE_TENANT_OWNER')
+            ->firstOrFail();
+        $service = app(\App\Services\BookingService::class);
+        $date = now()->addDays(240)->toDateString();
+
+        $base = [
+            'hall_id' => $hall->id,
+            'event_date' => $date,
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'guest_count' => 200,
+            'per_head_rate' => 1500,
+            'hall_rent' => 100000,
+            'advance_paid' => 0,
+        ];
+
+        $inquiry = $service->createReservation(array_merge($base, [
+            'customer_name' => 'API Inquiry',
+            'customer_phone' => '+92 300 7773001',
+            'status' => 'INQUIRY',
+        ]));
+        $service->createReservation(array_merge($base, [
+            'customer_name' => 'API Confirmed',
+            'customer_phone' => '+92 300 7773002',
+            'status' => 'CONFIRMED',
+        ]));
+
+        $this->actingAs($owner)
+            ->patchJson('/api/v1/bookings/'.$inquiry->id, ['status' => 'CONFIRMED'])
+            ->assertStatus(409);
+
+        $this->assertSame('INQUIRY', $inquiry->fresh()->status);
+    }
+
     public function test_staff_without_payment_view_permission_cannot_list_or_summarize_payments(): void
     {
         $hall = Hall::query()->firstOrFail();
@@ -230,6 +421,19 @@ class ApiBookingFinancialIntegrityTest extends TestCase
         $this->actingAs($chef)
             ->getJson('/api/v1/payments/summary')
             ->assertForbidden();
+    }
+
+    public function test_platform_finance_can_request_a_specific_tenant_payment_summary(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $finance = User::factory()->create([
+            'role' => 'ROLE_PLATFORM_FINANCE',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($finance)
+            ->getJson('/api/v1/payments/summary?tenant_id='.$hall->tenant_id)
+            ->assertOk();
     }
 
     public function test_staff_with_payment_view_permission_can_read_own_tenant_financials(): void

@@ -8,6 +8,7 @@ use App\Models\InventoryItem;
 use App\Models\InventoryLog;
 use App\Models\PurchaseOrder;
 use App\Support\CashOnlyPayments;
+use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -83,9 +84,7 @@ class InventoryTracker extends Component
     public function mount()
     {
         $user = Auth::user();
-        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isChef() && ! $user->isAccountant() && ! $user->isInventoryManager() && ! $user->isSuperAdmin())) {
-            abort(403, 'Unauthorized. Access to Inventory ERP is restricted to Owners, Chefs, and Managers.');
-        }
+        abort_unless($user && PermissionMatrix::userCan($user, 'inventory.view'), 403, 'Inventory view permission is required.');
 
         $this->poDate = Carbon::today()->format('Y-m-d');
     }
@@ -98,17 +97,23 @@ class InventoryTracker extends Component
             abort(403, 'Unauthorized.');
         }
 
-        $isPrivileged = $user->isSuperAdmin() || $user->isTenantOwner() || $user->isManager();
+        if ($action === 'po.paid') {
+            abort_unless(
+                PermissionMatrix::userCan($user, 'inventory.view')
+                    && PermissionMatrix::userCan($user, 'expenses.manage'),
+                403,
+                'Inventory view and expense management permissions are required to settle a purchase order.'
+            );
 
-        if (in_array($action, ['item.create', 'item.update', 'item.delete', 'stock.movement'], true)
-            && ! ($isPrivileged || $user->isChef() || $user->isInventoryManager())) {
-            abort(403, 'Unauthorized to modify inventory stock.');
+            return;
         }
 
-        if (in_array($action, ['po.create', 'po.paid'], true)
-            && ! ($isPrivileged || $user->isAccountant())) {
-            abort(403, 'Unauthorized to modify procurement records.');
-        }
+        $permission = $action === 'inventory.view' ? 'inventory.view' : 'inventory.manage';
+        $message = $permission === 'inventory.view'
+            ? 'Inventory view permission is required.'
+            : 'Inventory management permission is required for this action.';
+
+        abort_unless(PermissionMatrix::userCan($user, $permission), 403, $message);
     }
 
     public function setTab(string $tab)
@@ -123,6 +128,7 @@ class InventoryTracker extends Component
     // ==========================================
     public function openCreateItemModal()
     {
+        $this->authorizeInventoryAction('item.create');
         $this->isEditingItem = false;
         $this->editingItemId = null;
         $this->itemName = '';
@@ -138,6 +144,7 @@ class InventoryTracker extends Component
 
     public function openEditItemModal(string $itemId)
     {
+        $this->authorizeInventoryAction('item.update');
         $item = InventoryItem::where('tenant_id', Auth::user()->tenant_id)->findOrFail($itemId);
         $this->isEditingItem = true;
         $this->editingItemId = $item->id;
@@ -160,9 +167,9 @@ class InventoryTracker extends Component
             'itemName' => 'required|string|min:2|max:120',
             'itemCategory' => 'required|string|max:60',
             'itemUnit' => 'required|string|max:30',
-            'itemCurrentStock' => 'required|numeric|min:0',
-            'itemMinThreshold' => 'required|numeric|min:0',
-            'itemUnitCost' => 'required|numeric|min:0',
+            'itemCurrentStock' => 'required|numeric|min:0|max:99999999.99',
+            'itemMinThreshold' => 'required|numeric|min:0|max:99999999.99',
+            'itemUnitCost' => 'required|numeric|min:0|max:9999999999.99',
         ]);
 
         $tenantId = Auth::user()->tenant_id;
@@ -273,8 +280,11 @@ class InventoryTracker extends Component
             $this->movementUnitPrice = round((float) $this->movementUnitPrice, 2);
         }
 
+        $tenantId = Auth::user()->tenant_id;
+        $itemRule = Rule::exists('inventory_items', 'id')->where('tenant_id', $tenantId);
+
         $this->validate([
-            'movementItemId' => 'required|string|exists:inventory_items,id',
+            'movementItemId' => ['required', 'string', $itemRule],
             'movementType' => ['required', Rule::in(InventoryLog::TYPES)],
             'movementQuantity' => [
                 'required', 'numeric', 'min:0.1', 'max:99999999.99',
@@ -303,12 +313,16 @@ class InventoryTracker extends Component
             ? $marker
             : $marker.' '.Str::limit($note, max(1, 255 - strlen($marker) - 1), '');
 
-        $tenantId = Auth::user()->tenant_id;
         $itemId = $this->movementItemId;
         $movementType = $this->movementType;
         $qty = (float) $this->movementQuantity;
         $unitPrice = (float) $this->movementUnitPrice;
         $totalCost = round($qty * $unitPrice, 2);
+        if (! is_finite($totalCost) || $totalCost > 9999999999.99) {
+            $this->addError('movementQuantity', 'Movement total exceeds the supported inventory ledger amount.');
+
+            return;
+        }
 
         $result = DB::transaction(function () use ($tenantId, $itemId, $movementType, $qty, $unitPrice, $totalCost, $marker, $referenceNote) {
             // Lock the stock row so concurrent movements cannot oversell or
@@ -339,6 +353,10 @@ class InventoryTracker extends Component
             } else {
                 // ADJUSTMENT is an absolute physical count.
                 $newStock = $qty;
+            }
+
+            if (! is_finite($newStock) || $newStock > 99999999.99) {
+                return ['error' => 'Resulting stock exceeds the supported inventory quantity range.'];
             }
 
             $item->update(['current_stock' => round($newStock, 2)]);
@@ -409,6 +427,7 @@ class InventoryTracker extends Component
     // ==========================================
     public function openPoModal()
     {
+        $this->authorizeInventoryAction('po.create');
         $this->poSupplierName = '';
         $this->poDate = Carbon::today()->format('Y-m-d');
         $this->poTotalAmount = 25000.0;
@@ -422,7 +441,7 @@ class InventoryTracker extends Component
 
         $this->validate([
             'poSupplierName' => 'required|string|min:3|max:120',
-            'poTotalAmount' => 'required|numeric|min:100',
+            'poTotalAmount' => 'required|numeric|min:100|max:9999999999.99',
             'poDate' => 'required|date',
         ]);
 

@@ -33,11 +33,13 @@
                 </select>
             </div>
 
+            @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'bookings.create'))
             <div class="self-end">
                 <button wire:click="openWalkInModal" class="lux-btn lux-btn--gold lux-btn--sm">
                     + Walk-In Reservation
                 </button>
             </div>
+            @endif
         </div>
     </div>
 
@@ -118,6 +120,7 @@
                 </div>
             @endforeach
         </div>
+        @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'availability.manage'))
         <div class="flex flex-wrap items-end gap-3">
             <label class="text-[10px] uppercase font-mono text-stone-500">Buffer minutes
                 <input type="number" min="0" max="720" wire:model="bufferMinutes" class="mt-1 block w-28 bg-[#F8F5EF] dark:bg-[#24211E] border border-[#E7E5E4] dark:border-white/15 px-2 py-1 text-xs">
@@ -128,6 +131,9 @@
             <button type="button" wire:click="saveShiftPolicy" class="lux-btn lux-btn--gold lux-btn--sm">Save shift policy</button>
             <span class="text-[11px] font-mono text-stone-500">Active buffer: {{ $shiftBuffer }} min</span>
         </div>
+        @else
+        <p class="text-[11px] font-mono text-stone-500">Active buffer: {{ $shiftBuffer }} min · Shift policy is read-only for your role.</p>
+        @endif
         @error('bufferMinutes') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
         @error('holdExpiryHours') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
     </div>
@@ -144,10 +150,22 @@
                                 $booking = $bookings[$key] ?? null;
                                 $window = $shiftWindows[$slot] ?? null;
                             @endphp
-                            <button type="button" wire:click="{{ $booking ? "viewBookingDetails('{$booking->id}')" : "openWalkInModal('{$day->format('Y-m-d')}', '{$slot}')" }}" class="w-full text-left border px-2 py-1.5 text-[11px] {{ $booking ? 'border-[#C6A15B] bg-[#C6A15B]/10' : 'border-[#E7E5E4] dark:border-white/10' }}">
-                                <div class="font-mono uppercase text-[#8F7239]">{{ $slot }} {{ $window['start'] ?? '' }}–{{ $window['end'] ?? '' }}</div>
-                                <div class="truncate text-[#171513] dark:text-stone-200">{{ $booking->customer_name ?? 'Open' }}</div>
-                            </button>
+                            @if($booking)
+                                <button type="button" wire:click="viewBookingDetails('{{ $booking->id }}')" class="w-full text-left border px-2 py-1.5 text-[11px] border-[#C6A15B] bg-[#C6A15B]/10">
+                                    <div class="font-mono uppercase text-[#8F7239]">{{ $slot }} {{ $window['start'] ?? '' }}–{{ $window['end'] ?? '' }}</div>
+                                    <div class="truncate text-[#171513] dark:text-stone-200">{{ $booking->customer_name }}</div>
+                                </button>
+                            @elseif(\App\Support\PermissionMatrix::userCan(auth()->user(), 'bookings.create'))
+                                <button type="button" wire:click="openWalkInModal('{{ $day->format('Y-m-d') }}', '{{ $slot }}')" class="w-full text-left border px-2 py-1.5 text-[11px] border-[#E7E5E4] dark:border-white/10">
+                                    <div class="font-mono uppercase text-[#8F7239]">{{ $slot }} {{ $window['start'] ?? '' }}–{{ $window['end'] ?? '' }}</div>
+                                    <div class="truncate text-[#171513] dark:text-stone-200">Open · Add booking</div>
+                                </button>
+                            @else
+                                <div class="w-full text-left border border-[#E7E5E4] dark:border-white/10 px-2 py-1.5 text-[11px] opacity-70">
+                                    <div class="font-mono uppercase text-[#8F7239]">{{ $slot }} {{ $window['start'] ?? '' }}–{{ $window['end'] ?? '' }}</div>
+                                    <div class="truncate text-[#171513] dark:text-stone-200">Open</div>
+                                </div>
+                            @endif
                         @endforeach
                     </div>
                 @endforeach
@@ -264,12 +282,17 @@
                                     @endif
                                 </div>
                             @else
-                                <!-- Available Slot Button -->
-                                <button wire:click="openWalkInModal('{{ $dateStr }}', '{{ $slot }}')" 
-                                        class="w-full text-left px-2 py-1 border border-dashed border-stone-200 dark:border-white/10 hover:border-[#C6A15B] hover:bg-[#C6A15B]/18 dark:hover:bg-white/5 text-stone-400 dark:text-stone-500 hover:text-[#171513] dark:hover:text-[#C6A15B] transition text-[10px] font-mono flex items-center justify-between group">
-                                    <span class="text-stone-500 dark:text-stone-400 group-hover:text-[#171513] dark:group-hover:text-white">{{ $slotFull }}</span>
-                                    <span class="opacity-0 group-hover:opacity-100 font-bold text-[#C6A15B] transition">+ Book</span>
-                                </button>
+                                @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'bookings.create'))
+                                    <button wire:click="openWalkInModal('{{ $dateStr }}', '{{ $slot }}')" 
+                                            class="w-full text-left px-2 py-1 border border-dashed border-stone-200 dark:border-white/10 hover:border-[#C6A15B] hover:bg-[#C6A15B]/18 dark:hover:bg-white/5 text-stone-400 dark:text-stone-500 hover:text-[#171513] dark:hover:text-[#C6A15B] transition text-[10px] font-mono flex items-center justify-between group">
+                                        <span class="text-stone-500 dark:text-stone-400 group-hover:text-[#171513] dark:group-hover:text-white">{{ $slotFull }}</span>
+                                        <span class="opacity-0 group-hover:opacity-100 font-bold text-[#C6A15B] transition">+ Book</span>
+                                    </button>
+                                @else
+                                    <div class="w-full text-left px-2 py-1 border border-dashed border-stone-200 dark:border-white/10 text-stone-400 dark:text-stone-500 text-[10px] font-mono">
+                                        {{ $slotFull }} · Open
+                                    </div>
+                                @endif
                             @endif
                         @endforeach
                     </div>

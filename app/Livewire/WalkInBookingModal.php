@@ -9,6 +9,7 @@ use App\Models\MenuItem;
 use App\Models\Package;
 use App\Services\BookingService;
 use App\Support\ShiftWindows;
+use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -113,8 +114,11 @@ class WalkInBookingModal extends Component
     {
         $user = Auth::user();
 
-        // Single source of truth for venue-side users (includes floor staff).
-        $this->isStaff = $user?->isVenueOperationsStaff() ?? false;
+        // Only principals with the explicit booking-create capability receive
+        // the staff terminal. Public/customer users remain inquiry-only.
+        $this->isStaff = $user
+            ? ($user->isSuperAdmin() || PermissionMatrix::userCan($user, 'bookings.create'))
+            : false;
     }
 
     protected function initDefaultHall(): void

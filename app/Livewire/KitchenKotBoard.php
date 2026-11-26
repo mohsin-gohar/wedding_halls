@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\AuditLog;
 use App\Models\KitchenKot;
+use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,8 @@ class KitchenKotBoard extends Component
             abort(403, 'Unauthorized. Culinary and operations staff access required.');
         }
 
+        abort_unless(PermissionMatrix::userCan($user, 'kitchen.view'), 403, 'Missing kitchen view permission.');
+
         $this->filterDate = Carbon::today()->format('Y-m-d');
 
         if (! config('platform.kitchen_module_enabled')) {
@@ -35,6 +38,8 @@ class KitchenKotBoard extends Component
         if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized.');
         }
+
+        abort_unless(PermissionMatrix::userCan($user, 'kitchen.manage'), 403, 'Missing kitchen management permission.');
 
         // Never trust a client-supplied status string: validate against the
         // same enum as the database column, then enforce forward transitions.
@@ -73,7 +78,8 @@ class KitchenKotBoard extends Component
     public function render()
     {
         $user = Auth::user();
-        $tenantId = $user ? $user->tenant_id : null;
+        abort_unless($user && PermissionMatrix::userCan($user, 'kitchen.view'), 403);
+        $tenantId = $user->tenant_id;
         $isSuperAdmin = $user && $user->isSuperAdmin();
 
         $kotsQuery = KitchenKot::with(['booking.hall'])

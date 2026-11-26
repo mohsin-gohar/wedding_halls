@@ -14,10 +14,8 @@ class EnsurePortalRole
         abort_unless($user, 403);
 
         foreach ($roles as $role) {
-            // isRoleFamily() resolves enterprise aliases (ROLE_VENDOR_OWNER →
-            // ROLE_TENANT_OWNER, ROLE_BOOKING_MANAGER → ROLE_FRONT_DESK, …)
-            // and Spatie-assigned roles, so alias accounts are not bounced
-            // between their guarded routes and an inaccessible portal home.
+            // isRoleFamily() resolves only declared legacy-equivalent aliases.
+            // Distinct enterprise roles keep their own permission matrix.
             if ($user->isRoleFamily($role)) {
                 return $next($request);
             }

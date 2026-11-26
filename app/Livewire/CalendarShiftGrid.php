@@ -9,6 +9,7 @@ use App\Models\Tenant;
 use App\Models\Venue;
 use App\Services\HallAvailabilityService;
 use App\Support\ShiftWindows;
+use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -60,6 +61,7 @@ class CalendarShiftGrid extends Component
         if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
             abort(403, 'Unauthorized. Tenant staff access required.');
         }
+        abort_unless(PermissionMatrix::userCan($user, 'bookings.view'), 403, 'Booking view permission is required.');
 
         $this->currentMonth = Carbon::now()->format('Y-m');
         $this->anchorDate = Carbon::now()->toDateString();
@@ -115,9 +117,7 @@ class CalendarShiftGrid extends Component
     public function saveShiftPolicy(): void
     {
         $user = Auth::user();
-        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isSuperAdmin())) {
-            abort(403);
-        }
+        abort_unless($user && PermissionMatrix::userCan($user, 'availability.manage'), 403, 'Availability management permission is required.');
 
         $hall = $this->selectedHallId
             ? $this->accessibleHalls()->with('tenant')->whereKey($this->selectedHallId)->first()
@@ -248,6 +248,8 @@ class CalendarShiftGrid extends Component
 
     public function openWalkInModal(?string $date = null, ?string $slot = null)
     {
+        abort_unless(PermissionMatrix::userCan(Auth::user(), 'bookings.create'), 403, 'Booking creation permission is required.');
+
         if (! $this->selectedHallId || ! $this->accessibleHalls()->whereKey($this->selectedHallId)->exists()) {
             return;
         }
@@ -261,13 +263,23 @@ class CalendarShiftGrid extends Component
 
     public function viewBookingDetails(string $bookingId)
     {
+        $user = Auth::user();
+        abort_unless($user && PermissionMatrix::userCan($user, 'bookings.view'), 403);
+
         $hall = $this->selectedHallId
             ? $this->accessibleHalls()->whereKey($this->selectedHallId)->first()
             : null;
+
+        $relations = ['hall.venue', 'package'];
+        if (PermissionMatrix::userCan($user, 'payments.view')) {
+            $relations[] = 'payments';
+        }
+        if (PermissionMatrix::userCan($user, 'kitchen.view')) {
+            $relations[] = 'kitchenKot';
+        }
+
         $this->viewingBooking = $hall
-            ? Booking::with(['hall.venue', 'package', 'payments', 'kitchenKot'])
-                ->where('hall_id', $hall->id)
-                ->find($bookingId)
+            ? Booking::with($relations)->where('hall_id', $hall->id)->find($bookingId)
             : null;
         $this->showDetailsModal = (bool) $this->viewingBooking;
     }
@@ -284,6 +296,7 @@ class CalendarShiftGrid extends Component
      */
     public function viewSlotConflicts(string $date, string $slot): void
     {
+        abort_unless(PermissionMatrix::userCan(Auth::user(), 'bookings.view'), 403);
         $hall = $this->selectedHallId
             ? $this->accessibleHalls()->whereKey($this->selectedHallId)->first()
             : null;
@@ -311,6 +324,7 @@ class CalendarShiftGrid extends Component
     public function render()
     {
         $user = Auth::user();
+        abort_unless($user && PermissionMatrix::userCan($user, 'bookings.view'), 403);
         $hallsQuery = $this->accessibleHalls();
         $venuesQuery = Venue::query()->where('is_active', true);
         if (! $user?->isSuperAdmin()) {

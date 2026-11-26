@@ -22,6 +22,10 @@ class ServiceBookingController extends ApiController
     {
         $user = $this->apiUser($request);
 
+        if (! $user->isCustomer()) {
+            $this->assertPermission($user, 'service-bookings.view');
+        }
+
         $query = ServiceBooking::with(['tenant:id,name,slug', 'vendorCategory:id,name', 'customer:id,name,email']);
 
         $query = $this->scopeToPrincipal($query, $user);
@@ -44,6 +48,10 @@ class ServiceBookingController extends ApiController
     public function show(Request $request, string $id)
     {
         $user = $this->apiUser($request);
+
+        if (! $user->isCustomer()) {
+            $this->assertPermission($user, 'service-bookings.view');
+        }
 
         $query = ServiceBooking::with([
             'tenant:id,name,slug',

@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\AuditLog;
 use App\Models\Package;
 use App\Models\Tenant;
+use App\Support\PermissionMatrix;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -59,20 +60,18 @@ class PackageManager extends Component
 
     public function mount()
     {
-        $this->authorizePackageAction('package.view');
+        $this->authorizePackageAction('packages.view');
     }
 
     private function authorizePackageAction(string $action): void
     {
         $user = Auth::user();
-        if (! $user || (! $user->isSuperAdmin() && ! $user->isTenantOwner() && ! $user->isManager() && ! $user->isChef())) {
-            abort(403, 'Unauthorized. Access to Catering Packages is restricted to Venue Owners, Chefs, and Managers.');
+        if (! $user) {
+            abort(403, 'Unauthorized.');
         }
 
-        if (in_array($action, ['package.status', 'package.delete'], true)
-            && ! ($user->isSuperAdmin() || $user->isTenantOwner() || $user->isManager())) {
-            abort(403, 'Unauthorized to change package availability.');
-        }
+        $permission = $action === 'packages.view' ? 'packages.view' : 'packages.manage';
+        abort_unless(PermissionMatrix::userCan($user, $permission), 403, 'Missing catering package permission.');
     }
 
     /** The tenant context for reads: null means "nothing visible" for a platform admin. */
@@ -126,7 +125,7 @@ class PackageManager extends Component
     // ==========================================
     public function openCreateModal()
     {
-        $this->authorizePackageAction('package.create');
+        $this->authorizePackageAction('packages.manage');
         $this->targetTenantId();
 
         $this->isEditing = false;
@@ -151,7 +150,7 @@ class PackageManager extends Component
 
     public function openEditModal(string $packageId)
     {
-        $this->authorizePackageAction('package.update');
+        $this->authorizePackageAction('packages.manage');
         $package = Package::where('tenant_id', $this->targetTenantId())->findOrFail($packageId);
 
         $this->isEditing = true;
@@ -179,7 +178,7 @@ class PackageManager extends Component
     // ==========================================
     public function addMenuItem()
     {
-        $this->authorizePackageAction('package.create');
+        $this->authorizePackageAction('packages.manage');
 
         $item = trim($this->newMenuItemName);
         if ($item === '') {
@@ -198,6 +197,8 @@ class PackageManager extends Component
 
     public function removeMenuItem(int $index)
     {
+        $this->authorizePackageAction('packages.manage');
+
         if (isset($this->menuItems[$index])) {
             unset($this->menuItems[$index]);
             $this->menuItems = array_values($this->menuItems);
@@ -206,7 +207,7 @@ class PackageManager extends Component
 
     public function addPresetDish(string $dish)
     {
-        $this->authorizePackageAction('package.create');
+        $this->authorizePackageAction('packages.manage');
 
         // The argument comes from Livewire's request payload, not from the
         // rendered button, so it must be checked against a server allow-list.
@@ -224,13 +225,13 @@ class PackageManager extends Component
     // ==========================================
     public function savePackage()
     {
-        $this->authorizePackageAction($this->isEditing ? 'package.update' : 'package.create');
+        $this->authorizePackageAction($this->isEditing ? 'packages.manage' : 'packages.manage');
         $tenantId = $this->targetTenantId();
 
         $this->validate([
             'packageName' => 'required|string|min:3|max:120',
-            'perHeadPrice' => 'required|numeric|min:500',
-            'minGuests' => 'required|integer|min:20',
+            'perHeadPrice' => 'required|numeric|min:500|max:99999999.99',
+            'minGuests' => 'required|integer|min:20|max:1000000',
             'packageDescription' => 'nullable|string|max:1000',
             'menuItems' => 'required|array|min:1|max:100',
             'menuItems.*' => 'required|string|max:120',
@@ -314,7 +315,7 @@ class PackageManager extends Component
 
     public function deletePackage(string $packageId)
     {
-        $this->authorizePackageAction('package.delete');
+        $this->authorizePackageAction('packages.manage');
         $tenantId = $this->targetTenantId();
 
         $user = Auth::user();
@@ -343,7 +344,7 @@ class PackageManager extends Component
 
     public function render()
     {
-        $this->authorizePackageAction('package.view');
+        $this->authorizePackageAction('packages.view');
         $user = Auth::user();
         $tenantId = $this->resolvedTenantId();
 

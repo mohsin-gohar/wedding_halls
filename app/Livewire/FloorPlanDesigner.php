@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\FloorPlan;
 use App\Models\Hall;
 use App\Models\Tenant;
+use App\Support\PermissionMatrix;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -52,13 +53,23 @@ class FloorPlanDesigner extends Component
     private function authorizeDesignAction(string $action): void
     {
         $user = Auth::user();
-        if (! $user || (! $user->isSuperAdmin() && (! $user->tenant_id || $user->isCustomer()))) {
+        if (! $user || $user->isCustomer() || (! $user->isSuperAdmin() && ! $user->tenant_id)) {
             abort(403, 'Unauthorized. Tenant staff access required.');
         }
 
-        if ($action === 'plan.select-tenant' && ! $user->isSuperAdmin()) {
-            abort(403, 'Only platform admins may switch tenant context.');
+        if ($action === 'plan.select-tenant') {
+            abort_unless($user->isSuperAdmin(), 403, 'Only platform admins may switch tenant context.');
+
+            return;
         }
+
+        $permission = match ($action) {
+            'plan.view' => 'floor-plans.view',
+            'plan.edit', 'plan.save' => 'floor-plans.manage',
+            default => null,
+        };
+
+        abort_unless($permission && PermissionMatrix::userCan($user, $permission), 403, 'Missing floor-plan permission.');
     }
 
     /** Read context: null for a platform admin until a tenant is chosen. */

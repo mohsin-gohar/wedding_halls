@@ -17,12 +17,14 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
+            @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.manage'))
             <button wire:click="openCreateItemModal" class="btn-gold !h-9 !px-4 text-xs font-bold uppercase font-mono shadow-md">
                 + Add Inventory Item
             </button>
             <button wire:click="openPoModal" class="btn-outline-gold !h-9 !px-4 text-xs font-mono uppercase font-bold">
                 + Purchase Order
             </button>
+            @endif
         </div>
     </div>
 
@@ -113,9 +115,11 @@
                     </select>
                 </div>
 
+                @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.manage'))
                 <button wire:click="openCreateItemModal" class="btn-gold !h-8 !px-3 text-xs font-bold uppercase font-mono">
                     + New Inventory Item
                 </button>
+                @endif
             </div>
 
             <div class="table-wrapper-enterprise" tabindex="0" role="region"><table class="table-enterprise">
@@ -167,6 +171,7 @@
                                 </td>
                                 <td class="p-3 text-right whitespace-nowrap">
                                     <div class="inline-flex items-center justify-end gap-1.5 font-sans">
+                                        @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.manage'))
                                         <button wire:click="openMovementModal('{{ $i->id }}', 'STOCK_IN')" 
                                                 class="tbtn tbtn-green" title="Add Stock In">
                                             + In
@@ -184,6 +189,9 @@
                                                 class="tbtn tbtn-red" title="Delete Item">
                                             Del
                                         </button>
+                                        @else
+                                            <span class="text-[10px] font-mono text-stone-400">View only</span>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -281,9 +289,11 @@
                     <h3 class="font-serif text-2xl text-[#171513] font-normal">Supplier Purchase Orders</h3>
                     <p class="text-xs text-stone-500">Track vendor orders. Marking an order as PAID automatically posts it to the ERP Expense Ledger.</p>
                 </div>
+                @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.manage'))
                 <button wire:click="openPoModal" class="btn-gold !h-9 !px-4 text-xs font-bold uppercase font-mono">
                     + New Purchase Order
                 </button>
+                @endif
             </div>
 
             <div class="table-wrapper-enterprise" tabindex="0" role="region"><table class="table-enterprise">
@@ -320,13 +330,15 @@
                                     {{ $po->notes ?: 'General stock replenishment' }}
                                 </td>
                                 <td class="p-3 text-right">
-                                    @if($po->status !== 'PAID')
+                                    @if($po->status !== 'PAID' && \App\Support\PermissionMatrix::userCan(auth()->user(), 'expenses.manage'))
                                         <button wire:click="markPoPaid('{{ $po->id }}')" 
                                                 class="px-3 py-1 bg-[#C6A15B] hover:bg-[#C6A15B] text-white font-bold text-xs uppercase shadow">
                                             Mark Paid &rarr;
                                         </button>
-                                    @else
+                                    @elseif($po->status === 'PAID')
                                         <span class="text-stone-400 text-[10px]">Settled &amp; Posted</span>
+                                    @else
+                                        <span class="text-stone-400 text-[10px]">View only</span>
                                     @endif
                                 </td>
                             </tr>
@@ -349,7 +361,7 @@
     <!-- ===================================================================
          MODAL 1: ADD / EDIT INVENTORY ITEM
          =================================================================== -->
-    @if($showItemModal)
+    @if($showItemModal && \App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.manage'))
         <div class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
             <div class="bg-[#171513] border-2 border-[#C6A15B] max-w-lg w-full p-6 space-y-5 text-white shadow-2xl">
                 <div class="border-b border-white/10 pb-3 flex items-center justify-between">
@@ -439,7 +451,7 @@
     <!-- ===================================================================
          MODAL 2: STOCK MOVEMENT (STOCK IN / OUT)
          =================================================================== -->
-    @if($showMovementModal)
+    @if($showMovementModal && \App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.manage'))
         <div class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
             <div class="bg-[#171513] border-2 border-[#C6A15B] max-w-md w-full p-6 space-y-5 text-white shadow-2xl">
                 <div class="border-b border-white/10 pb-3 flex items-center justify-between">
@@ -492,7 +504,7 @@
     <!-- ===================================================================
          MODAL 3: CREATE PURCHASE ORDER
          =================================================================== -->
-    @if($showPoModal)
+    @if($showPoModal && \App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.manage'))
         <div class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
             <div class="bg-[#171513] border-2 border-[#C6A15B] max-w-md w-full p-6 space-y-5 text-white shadow-2xl">
                 <div class="border-b border-white/10 pb-3 flex items-center justify-between">

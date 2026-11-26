@@ -190,6 +190,29 @@ class VendorServicesManager extends Component
         $from = $this->priceFrom === null ? null : round((float) $this->priceFrom, 2);
         $to = $this->priceTo === null ? null : round((float) $this->priceTo, 2);
 
+        if ($from !== null && ! is_finite($from)) {
+            $this->addError('priceFrom', 'Price must be a finite number.');
+
+            return;
+        }
+
+        if ($to !== null && ! is_finite($to)) {
+            $this->addError('priceTo', 'Price must be a finite number.');
+
+            return;
+        }
+
+        // The vendor_services price columns are DECIMAL(12,2).
+        $maximumPrice = 9_999_999_999.99;
+        if ($from !== null && $from > $maximumPrice) {
+            $this->addError('priceFrom', 'Price exceeds the supported maximum.');
+            return;
+        }
+        if ($to !== null && $to > $maximumPrice) {
+            $this->addError('priceTo', 'Price exceeds the supported maximum.');
+            return;
+        }
+
         if ($from !== null && $to !== null && $to < $from - 0.009) {
             $this->addError('priceTo', 'End price cannot be lower than the start price.');
 

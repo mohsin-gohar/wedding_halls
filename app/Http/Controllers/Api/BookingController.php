@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\Hall;
 use App\Models\Package;
 use App\Services\BookingService;
+use App\Support\PermissionMatrix;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -31,8 +32,16 @@ class BookingController extends ApiController
     {
         $user = $this->apiUser($request);
 
-        $query = Booking::with(['hall.venue', 'package', 'payments']);
+        if (! $user->isCustomer()) {
+            $this->assertPermission($user, 'bookings.view');
+        }
 
+        $relations = ['hall.venue', 'package'];
+        if ($user->isCustomer() || PermissionMatrix::userCan($user, 'payments.view')) {
+            $relations[] = 'payments';
+        }
+
+        $query = Booking::with($relations);
         $query = $this->scopeToPrincipal($query, $user);
 
         if ($request->filled('status')) {
@@ -58,8 +67,26 @@ class BookingController extends ApiController
     {
         $user = $this->apiUser($request);
 
-        $query = Booking::with(['hall.venue', 'package', 'payments', 'rsvps', 'kitchenKot', 'floorPlan']);
+        if (! $user->isCustomer()) {
+            $this->assertPermission($user, 'bookings.view');
+        }
 
+        $relations = ['hall.venue', 'package'];
+
+        if ($user->isCustomer() || PermissionMatrix::userCan($user, 'payments.view')) {
+            $relations[] = 'payments';
+        }
+        if ($user->isCustomer() || PermissionMatrix::userCan($user, 'rsvps.view')) {
+            $relations[] = 'rsvps';
+        }
+        if (PermissionMatrix::userCan($user, 'floor-plans.view')) {
+            $relations[] = 'floorPlan';
+        }
+        if (PermissionMatrix::userCan($user, 'kitchen.view')) {
+            $relations[] = 'kitchenKot';
+        }
+
+        $query = Booking::with($relations);
         $query = $this->scopeToPrincipal($query, $user);
 
         $booking = $query->findOrFail($id);
@@ -71,7 +98,9 @@ class BookingController extends ApiController
     {
         $user = $this->apiUser($request);
 
-        $this->assertPermission($user, 'bookings.create');
+        if (! $user->isCustomer()) {
+            $this->assertPermission($user, 'bookings.create');
+        }
 
         $validator = Validator::make($request->all(), [
             'hall_id' => 'required|uuid|exists:halls,id',
@@ -79,8 +108,8 @@ class BookingController extends ApiController
             'event_date' => 'required|date|after:today',
             'slot_type' => 'required|in:AFTERNOON,EVENING,NIGHT,FULL_DAY',
             'guest_count' => 'required|integer|min:1|max:10000',
-            'customer_name' => 'required|string|max:100',
-            'customer_phone' => 'required|string|max:25',
+            'customer_name' => $user->isCustomer() ? 'nullable|string|max:100' : 'required|string|max:100',
+            'customer_phone' => $user->isCustomer() ? 'nullable|string|max:25' : 'required|string|max:25',
             'customer_email' => 'nullable|email|max:100',
             'customer_cnic' => 'nullable|string|max:20',
             'package_id' => 'nullable|uuid|exists:packages,id',
@@ -92,6 +121,12 @@ class BookingController extends ApiController
         }
 
         if ($user->isCustomer()) {
+            if (blank($user->phone)) {
+                return response()->json([
+                    'errors' => ['phone' => ['Add a contact phone number to your customer profile before booking.']],
+                ], 422);
+            }
+
             // Customers may only reserve halls that are currently listed on
             // the public marketplace; knowing a hidden hall UUID is not access.
             $hall = Hall::query()
@@ -184,7 +219,9 @@ class BookingController extends ApiController
     {
         $user = $this->apiUser($request);
 
-        $this->assertPermission($user, 'bookings.update');
+        if (! $user->isCustomer() && ! $request->has('status')) {
+            $this->assertPermission($user, 'bookings.update');
+        }
 
         $booking = Booking::where('id', $id)
             ->where(function ($query) use ($user) {
@@ -215,13 +252,48 @@ class BookingController extends ApiController
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        if (! $user->isCustomer() && $request->has('status')) {
+            $requiredPermission = strtoupper((string) $request->input('status')) === 'CANCELLED'
+                ? 'bookings.cancel'
+                : 'bookings.update';
+            $this->assertPermission($user, $requiredPermission);
+        }
+
         // Customers may only annotate their own booking; they can never move
         // financial or lifecycle state through the API.
         if ($user->isCustomer()) {
-            abort_unless($request->hasOnly(['notes']), 403, 'Customers may only update booking notes.');
+            abort_unless(
+                array_diff(array_keys($request->all()), ['notes']) === [],
+                403,
+                'Customers may only update booking notes.'
+            );
         }
 
-        $booking->update($request->only(['status', 'notes']));
+        $updates = $user->isCustomer()
+            ? $request->only(['notes'])
+            : $request->only(['status', 'notes']);
+
+        if (array_key_exists('status', $updates)) {
+            try {
+                $booking = $this->bookingService->transitionStatus($booking, (string) $updates['status']);
+            } catch (SlotAlreadyBookedException $exception) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $exception->getMessage(),
+                ], 409);
+            } catch (\InvalidArgumentException $exception) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $exception->getMessage(),
+                ], 422);
+            }
+
+            unset($updates['status']);
+        }
+
+        if ($updates !== []) {
+            $booking->update($updates);
+        }
 
         return response()->json([
             'success' => true,
@@ -279,6 +351,10 @@ class BookingController extends ApiController
     public function availability(Request $request)
     {
         $user = $this->apiUser($request);
+
+        if (! $user->isCustomer()) {
+            $this->assertPermission($user, 'bookings.view');
+        }
 
         $validator = Validator::make($request->all(), [
             'hall_id' => 'required|uuid|exists:halls,id',

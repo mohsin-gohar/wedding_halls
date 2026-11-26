@@ -274,7 +274,7 @@ Route::get('/sitemap.xml', function () {
 })->middleware('throttle:public-pages')->name('sitemap');
 
 // Vendor Hall Media (defined before /hall/{id} wildcard)
-Route::middleware(['auth', 'tenant.staff', 'portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER'])->get('/hall/media', HallMediaManager::class)->name('hall.media');
+Route::middleware(['auth', 'tenant.staff', RequirePortalPermission::class.':business.view'])->get('/hall/media', HallMediaManager::class)->name('hall.media');
 
 // Venue Exploration & Showcase
 Route::get('/venues', PublicVenues::class)->middleware('throttle:public-pages')->name('public.venues');
@@ -525,18 +525,18 @@ Route::middleware(['auth', 'tenant.staff'])->group(function () {
         Route::get('/vendor/dashboard', Dashboard::class)->name('vendor.dashboard.generic');
     });
 
-    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_FRONT_DESK,ROLE_FLOOR_STAFF')->get('/calendar', CalendarShiftGrid::class)->name('calendar');
-    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_CHEF,ROLE_FLOOR_STAFF')->get('/kitchen-kots', KitchenKotBoard::class)->name('kitchen.board');
-    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER')->get('/utility-fuel', UtilityFuelTracker::class)->name('utility.fuel');
-    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_FLOOR_STAFF')->get('/seating-planner', FloorPlanDesigner::class)->name('seating.planner');
-    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_FRONT_DESK')->get('/whatsapp-rsvps', WhatsAppRsvpManager::class)->name('whatsapp.rsvp');
-    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER')->get('/staff', StaffManager::class)->name('staff');
-    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_ACCOUNTANT')->get('/staff/attendance', StaffAttendance::class)->name('staff.attendance');
-    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_ACCOUNTANT')->get('/staff/attendance/calendar', AttendanceCalendar::class)->name('staff.attendance.calendar');
-    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_ACCOUNTANT')->get('/staff/payroll', StaffPayroll::class)->name('staff.payroll');
-    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_CHEF')->get('/inventory', InventoryTracker::class)->name('inventory');
-    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_CHEF')->get('/catering-packages', PackageManager::class)->name('packages.manager');
-    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_ACCOUNTANT')->get('/expenses', ExpenseTracker::class)->name('expenses');
+    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_ACCOUNTANT,ROLE_FRONT_DESK,ROLE_BOOKING_MANAGER,ROLE_FLOOR_STAFF,ROLE_CHEF')->get('/calendar', CalendarShiftGrid::class)->name('calendar');
+    Route::middleware(RequirePortalPermission::class.':kitchen.view')->get('/kitchen-kots', KitchenKotBoard::class)->name('kitchen.board');
+    Route::middleware(RequirePortalPermission::class.':utilities.view')->get('/utility-fuel', UtilityFuelTracker::class)->name('utility.fuel');
+    Route::middleware(RequirePortalPermission::class.':floor-plans.view')->get('/seating-planner', FloorPlanDesigner::class)->name('seating.planner');
+    Route::middleware(RequirePortalPermission::class.':rsvps.view')->get('/whatsapp-rsvps', WhatsAppRsvpManager::class)->name('whatsapp.rsvp');
+    Route::middleware(RequirePortalPermission::class.':staff.manage')->get('/staff', StaffManager::class)->name('staff');
+    Route::middleware(RequirePortalPermission::class.':staff.attendance')->get('/staff/attendance', StaffAttendance::class)->name('staff.attendance');
+    Route::middleware(RequirePortalPermission::class.':staff.attendance')->get('/staff/attendance/calendar', AttendanceCalendar::class)->name('staff.attendance.calendar');
+    Route::middleware(RequirePortalPermission::class.':payroll.manage')->get('/staff/payroll', StaffPayroll::class)->name('staff.payroll');
+    Route::middleware(RequirePortalPermission::class.':inventory.view')->get('/inventory', InventoryTracker::class)->name('inventory');
+    Route::middleware(RequirePortalPermission::class.':packages.view')->get('/catering-packages', PackageManager::class)->name('packages.manager');
+    Route::middleware(RequirePortalPermission::class.':expenses.view')->get('/expenses', ExpenseTracker::class)->name('expenses');
     Route::middleware(['auth', 'tenant.staff'])->get('/notifications', NotificationCenter::class)->name('notifications');
 });
 

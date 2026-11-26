@@ -115,9 +115,10 @@ class PaymentController extends ApiController
 
         abort_if($user->isCustomer(), 403, 'Customers cannot view financial summaries.');
         $this->assertPermission($user, 'payments.view');
-        abort_if(! $user->tenant_id && ! $user->isSuperAdmin(), 403, 'No tenant assigned.');
+        $canViewAllTenants = $user->isSuperAdmin() || $user->isPlatformFinance();
+        abort_if(! $user->tenant_id && ! $canViewAllTenants, 403, 'No tenant assigned.');
 
-        $tenantId = $user->isSuperAdmin()
+        $tenantId = $canViewAllTenants
             ? $request->query('tenant_id', $user->tenant_id)
             : $user->tenant_id;
 
@@ -135,7 +136,11 @@ class PaymentController extends ApiController
     {
         $user = $this->apiUser($request);
 
-        $this->assertPermission($user, 'payments.view');
+        // Customers may read only their own receipts below; vendor and
+        // platform staff must hold the explicit financial-read permission.
+        if (! $user->isCustomer()) {
+            $this->assertPermission($user, 'payments.view');
+        }
 
         $query = Payment::with('booking', 'receivedByUser');
 

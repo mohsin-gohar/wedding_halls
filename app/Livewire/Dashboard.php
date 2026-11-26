@@ -319,7 +319,10 @@ class Dashboard extends Component
 
     public function updateLeadStage(string $bookingId, string $newStage): void
     {
-        $tenantId = Auth::user()?->tenant_id;
+        $actor = Auth::user();
+        abort_unless($actor && \App\Support\PermissionMatrix::userCan($actor, 'bookings.update'), 403);
+
+        $tenantId = $actor->tenant_id;
         if (! $tenantId) {
             $this->crmFeedback = 'Session tenant not found. Please log in again.';
 
@@ -332,12 +335,18 @@ class Dashboard extends Component
         }
 
         $booking = Booking::where('tenant_id', $tenantId)->findOrFail($bookingId);
-        $updateData = ['crm_stage' => $newStage];
-        if ($newStage === 'CONFIRMED' && $booking->status === 'INQUIRY') {
-            $updateData['status'] = 'CONFIRMED';
+
+        if (in_array($newStage, ['CONFIRMED', 'CANCELLED'], true) && $booking->status !== $newStage) {
+            try {
+                $booking = app(\App\Services\BookingService::class)->transitionStatus($booking, $newStage);
+            } catch (\App\Exceptions\SlotAlreadyBookedException|\InvalidArgumentException $exception) {
+                $this->crmFeedback = $exception->getMessage();
+
+                return;
+            }
         }
 
-        $booking->update($updateData);
+        $booking->update(['crm_stage' => $newStage]);
 
         $this->crmFeedback = "Lead [{$booking->customer_name}] moved to ".str_replace('_', ' ', $newStage).'.';
     }

@@ -11,6 +11,7 @@ use App\Models\StaffLeave;
 use App\Models\StaffPayroll as PayrollModel;
 use App\Models\User;
 use App\Support\CashOnlyPayments;
+use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
@@ -97,8 +98,8 @@ class StaffPayroll extends Component
     private function authorizePayrollManager(): void
     {
         $user = Auth::user();
-        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isAccountant()) || ! $user->tenant_id) {
-            abort(403, 'Unauthorized. Only Venue Owners or Accountants have access to Payroll ERP.');
+        if (! $user || ! $user->tenant_id || ! PermissionMatrix::userCan($user, 'payroll.manage')) {
+            abort(403, 'Unauthorized. Payroll management permission is required.');
         }
     }
 
@@ -119,12 +120,12 @@ class StaffPayroll extends Component
     {
         $this->authorizePayrollManager();
         $this->validate([
-            'policyOvertimeRate' => 'required|numeric|min:0',
-            'policyLateDeduction' => 'required|numeric|min:0',
-            'policyAbsenceDeduction' => 'required|numeric|min:0',
-            'policyHalfDayDeduction' => 'required|numeric|min:0',
-            'policyUnpaidLeaveDeduction' => 'required|numeric|min:0',
-            'policyDefaultSalary' => 'nullable|numeric|min:1',
+            'policyOvertimeRate' => 'required|numeric|min:0|max:99999999.99',
+            'policyLateDeduction' => 'required|numeric|min:0|max:99999999.99',
+            'policyAbsenceDeduction' => 'required|numeric|min:0|max:99999999.99',
+            'policyHalfDayDeduction' => 'required|numeric|min:0|max:99999999.99',
+            'policyUnpaidLeaveDeduction' => 'required|numeric|min:0|max:99999999.99',
+            'policyDefaultSalary' => 'nullable|numeric|min:1|max:9999999999.99',
         ]);
 
         $tenantId = Auth::user()->tenant_id;
@@ -203,6 +204,20 @@ class StaffPayroll extends Component
             $halfDayDeduction = round($counts['HALF_DAY'] * (float) $policy->half_day_deduction, 2);
             $unpaidLeaveDeduction = round($unpaidLeaveDays * (float) $policy->unpaid_leave_deduction_per_day, 2);
 
+            $derivedAmounts = [$otPay, $lateDeduction, $absenceDeduction, $halfDayDeduction, $unpaidLeaveDeduction];
+            foreach ($derivedAmounts as $amount) {
+                if (! is_finite($amount) || $amount < 0 || $amount > PayrollModel::MAX_MONEY_AMOUNT) {
+                    $skipped[] = $m->name.' (calculated payroll component exceeds the supported amount).';
+                    continue 2;
+                }
+            }
+
+            if (! is_finite($otHours) || $otHours < 0 || $otHours > PayrollModel::MAX_HOURS) {
+                $skipped[] = $m->name.' (overtime hours exceed the supported amount).';
+
+                continue;
+            }
+
             $existing = PayrollModel::where('tenant_id', $tenantId)
                 ->where('user_id', $m->id)
                 ->where('month_year', $this->selectedMonth)
@@ -221,7 +236,13 @@ class StaffPayroll extends Component
                 $other = (float) $existing->other_deductions;
                 $allowances = (float) $existing->allowances;
                 $totalDeductions = round($lateDeduction + $absenceDeduction + $halfDayDeduction + $unpaidLeaveDeduction + $advances + $other, 2);
-                $net = PayrollModel::calculateNet((float) $existing->basic_salary, $otHours, $otRate, $allowances + $bonuses, $totalDeductions);
+                try {
+                    $net = PayrollModel::calculateNet((float) $existing->basic_salary, $otHours, $otRate, $allowances + $bonuses, $totalDeductions);
+                } catch (\InvalidArgumentException $exception) {
+                    $skipped[] = $m->name.' ('.$exception->getMessage().')';
+
+                    continue;
+                }
 
                 $existing->update([
                     'overtime_hours' => $otHours,
@@ -247,7 +268,13 @@ class StaffPayroll extends Component
                     continue;
                 }
                 $totalDeductions = round($lateDeduction + $absenceDeduction + $halfDayDeduction + $unpaidLeaveDeduction, 2);
-                $net = PayrollModel::calculateNet($defaultBasic, $otHours, $otRate, 0, $totalDeductions);
+                try {
+                    $net = PayrollModel::calculateNet($defaultBasic, $otHours, $otRate, 0, $totalDeductions);
+                } catch (\InvalidArgumentException $exception) {
+                    $skipped[] = $m->name.' ('.$exception->getMessage().')';
+
+                    continue;
+                }
 
                 PayrollModel::create([
                     'tenant_id' => $tenantId,
@@ -336,15 +363,24 @@ class StaffPayroll extends Component
     {
         $this->authorizePayrollManager();
         $this->validate([
+            'editBasicSalary' => 'required|numeric|min:0|max:'.PayrollModel::MAX_MONEY_AMOUNT,
             'editOvertimeHours' => 'required|numeric|min:0|max:'.AttendanceComponent::MAX_OVERTIME_HOURS,
+            'editOvertimeRate' => 'required|numeric|min:0|max:'.PayrollModel::MAX_RATE_AMOUNT,
+            'editAllowances' => 'required|numeric|min:0|max:'.PayrollModel::MAX_MONEY_AMOUNT,
+            'editDeductions' => 'required|numeric|min:0|max:'.PayrollModel::MAX_MONEY_AMOUNT,
         ]);
-        $this->editNetSalary = PayrollModel::calculateNet(
-            $this->editBasicSalary,
-            $this->editOvertimeHours,
-            $this->editOvertimeRate,
-            $this->editAllowances,
-            $this->editDeductions
-        );
+
+        try {
+            $this->editNetSalary = PayrollModel::calculateNet(
+                $this->editBasicSalary,
+                $this->editOvertimeHours,
+                $this->editOvertimeRate,
+                $this->editAllowances,
+                $this->editDeductions
+            );
+        } catch (\InvalidArgumentException $exception) {
+            $this->addError('editBasicSalary', $exception->getMessage());
+        }
     }
 
     public function updatePayroll()
@@ -358,12 +394,13 @@ class StaffPayroll extends Component
             : [$originalMethod, CashOnlyPayments::CASH];
 
         $this->validate([
-            'editBasicSalary' => 'required|numeric|min:0',
+            'editBasicSalary' => 'required|numeric|min:0|max:9999999999.99',
             'editOvertimeHours' => 'required|numeric|min:0|max:'.AttendanceComponent::MAX_OVERTIME_HOURS,
-            'editOvertimeRate' => 'required|numeric|min:0',
-            'editAllowances' => 'required|numeric|min:0',
-            'editDeductions' => 'required|numeric|min:0',
+            'editOvertimeRate' => 'required|numeric|min:0|max:99999999.99',
+            'editAllowances' => 'required|numeric|min:0|max:9999999999.99',
+            'editDeductions' => 'required|numeric|min:0|max:9999999999.99',
             'editPaymentMethod' => ['required', Rule::in($allowedMethods)],
+            'editNotes' => 'nullable|string|max:2000',
         ]);
 
         if ($record->status === 'PAID') {
@@ -379,13 +416,19 @@ class StaffPayroll extends Component
             return;
         }
 
-        $net = PayrollModel::calculateNet(
-            $this->editBasicSalary,
-            $this->editOvertimeHours,
-            $this->editOvertimeRate,
-            $this->editAllowances,
-            $this->editDeductions
-        );
+        try {
+            $net = PayrollModel::calculateNet(
+                $this->editBasicSalary,
+                $this->editOvertimeHours,
+                $this->editOvertimeRate,
+                $this->editAllowances,
+                $this->editDeductions
+            );
+        } catch (\InvalidArgumentException $exception) {
+            $this->addError('editBasicSalary', $exception->getMessage());
+
+            return;
+        }
 
         $update = [
             'basic_salary' => $this->editBasicSalary,

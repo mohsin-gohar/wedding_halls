@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\PermissionMatrix;
 
 class VendorPolicy
 {
@@ -13,7 +14,9 @@ class VendorPolicy
             return true;
         }
 
-        return $user->tenant_id === $tenant->id;
+        return $user->tenant_id
+            && (string) $user->tenant_id === (string) $tenant->id
+            && PermissionMatrix::userCan($user, 'business.view');
     }
 
     public function update(User $user, Tenant $tenant): bool
@@ -21,11 +24,10 @@ class VendorPolicy
         if ($user->isSuperAdmin()) {
             return true;
         }
-        if ($user->isTenantOwner() || $user->isManager()) {
-            return $user->tenant_id === $tenant->id;
-        }
 
-        return false;
+        return $user->tenant_id
+            && (string) $user->tenant_id === (string) $tenant->id
+            && PermissionMatrix::userCan($user, 'business.update');
     }
 
     public function verify(User $user): bool

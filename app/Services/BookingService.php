@@ -10,6 +10,7 @@ use App\Models\Package;
 use App\Models\Payment;
 use App\Models\Tenant;
 use App\Support\CashOnlyPayments;
+use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -264,8 +265,27 @@ class BookingService
             $packageId = null;
         }
 
-        // Customer identity may only come from the authenticated principal.
+        // Enforce tenant ownership and booking capability at the service
+        // boundary; callers must not be able to bypass controller policies.
         $authenticated = auth()->user();
+
+        if ($authenticated && ! $authenticated->isCustomer() && ! $authenticated->isSuperAdmin()) {
+            if (! $authenticated->tenant_id || (string) $authenticated->tenant_id !== (string) $hall->tenant_id) {
+                throw new \Illuminate\Auth\Access\AuthorizationException('You may only create bookings for your own venue.');
+            }
+
+            if (! PermissionMatrix::userCan($authenticated, 'bookings.create')) {
+                throw new \Illuminate\Auth\Access\AuthorizationException('Booking creation permission is required.');
+            }
+        }
+
+        if ((! $authenticated || $authenticated->isCustomer()) && ! app()->runningInConsole()) {
+            if (! Hall::publicVisible()->whereKey($hall->id)->exists()) {
+                throw new \Illuminate\Auth\Access\AuthorizationException('This venue is not publicly accepting booking inquiries.');
+            }
+        }
+
+        // Customer identity may only come from the authenticated principal.
         $customerId = null;
 
         if ($authenticated && $authenticated->isCustomer()) {
@@ -280,16 +300,27 @@ class BookingService
 
         // When a principal is present it is the only valid creator; console
         // callers and fixtures may still supply an explicit staff ID.
-        $createdBy = $authenticated?->id ?? ($data['created_by_user_id'] ?? null);
+        $createdBy = $authenticated?->id
+            ?? (app()->runningInConsole() ? ($data['created_by_user_id'] ?? null) : null);
 
         if ($createdBy !== null && ! is_numeric($createdBy)) {
             throw new \InvalidArgumentException('Invalid booking creator.');
         }
 
-        $status = strtoupper((string) ($data['status'] ?? 'CONFIRMED'));
+        $defaultStatus = $authenticated?->isCustomer()
+            || (! $authenticated && ! app()->runningInConsole())
+            ? 'INQUIRY'
+            : 'CONFIRMED';
+        $status = strtoupper((string) ($data['status'] ?? $defaultStatus));
 
         if (! in_array($status, ['INQUIRY', 'HOLD', 'CONFIRMED'], true)) {
             throw new \InvalidArgumentException('Unsupported booking lifecycle state at creation.');
+        }
+
+        if ((! $authenticated && ! app()->runningInConsole()) || $authenticated?->isCustomer()) {
+            if ($status !== 'INQUIRY') {
+                throw new \Illuminate\Auth\Access\AuthorizationException('Public customers may only submit booking inquiries.');
+            }
         }
 
         $guestCount = (int) ($data['guest_count'] ?? 100);
@@ -385,6 +416,168 @@ class BookingService
         $hours = (int) ($hall->tenant?->hold_expiry_hours ?? 0);
 
         return $hours > 0 ? now()->addHours($hours) : null;
+    }
+
+    /**
+     * Change a booking lifecycle state under the same hall/date mutex used by
+     * reservation creation. HOLD and CONFIRMED transitions must re-check every
+     * overlapping active reservation before the status can become blocking.
+     *
+     * @throws SlotAlreadyBookedException
+     */
+    public function transitionStatus(Booking $booking, string $status): Booking
+    {
+        $status = strtoupper(trim($status));
+
+        if (! in_array($status, ['INQUIRY', 'HOLD', 'CONFIRMED', 'COMPLETED', 'CANCELLED'], true)) {
+            throw new \InvalidArgumentException('Unsupported booking lifecycle state.');
+        }
+
+        $snapshot = $booking->fresh();
+        if (! $snapshot) {
+            throw new \InvalidArgumentException('Booking no longer exists.');
+        }
+
+        $actor = auth()->user();
+        if ($actor && ! $actor->isSuperAdmin()) {
+            if ($actor->isCustomer()) {
+                throw new \Illuminate\Auth\Access\AuthorizationException('Customers cannot change booking lifecycle status.');
+            }
+
+            if (! $actor->tenant_id || (string) $actor->tenant_id !== (string) $snapshot->tenant_id) {
+                throw new \Illuminate\Auth\Access\AuthorizationException('You may only update bookings for your own venue.');
+            }
+
+            $requiredPermission = $status === 'CANCELLED' ? 'bookings.cancel' : 'bookings.update';
+            if (! PermissionMatrix::userCan($actor, $requiredPermission)) {
+                throw new \Illuminate\Auth\Access\AuthorizationException('Booking lifecycle permission is required.');
+            }
+        } elseif (! $actor && ! app()->runningInConsole()) {
+            throw new \Illuminate\Auth\Access\AuthorizationException('Authentication is required to change booking status.');
+        }
+
+        $hall = Hall::with(['tenant', 'venue'])->findOrFail($snapshot->hall_id);
+        $eventDate = Carbon::parse($snapshot->event_date)->format('Y-m-d');
+        $slotType = strtoupper((string) $snapshot->slot_type);
+
+        if (in_array($status, ['HOLD', 'CONFIRMED'], true) && Carbon::parse($eventDate)->isBefore(Carbon::today())) {
+            throw new \InvalidArgumentException('The event date cannot be in the past.');
+        }
+
+        $lockKey = "lock:hall:{$hall->id}:date:{$eventDate}";
+        $lock = Cache::store(config('booking.lock_store'))->lock($lockKey, 600);
+
+        try {
+            $lock->block(5);
+        } catch (LockTimeoutException $e) {
+            throw new SlotAlreadyBookedException(
+                'A concurrent reservation is currently being updated for this hall and date. Please try again momentarily.',
+                423,
+                (string) $hall->id,
+                $eventDate,
+                $slotType,
+                $e
+            );
+        }
+
+        try {
+            return DB::transaction(function () use ($snapshot, $hall, $eventDate, $slotType, $status): Booking {
+                // Keep the same lock order as createReservation(): tenant,
+                // hall, booking. A concurrent suspension/archive cannot race
+                // a confirmation into a venue that is no longer bookable.
+                $tenant = Tenant::query()
+                    ->whereKey($hall->tenant_id)
+                    ->lockForUpdate()
+                    ->first();
+                $lockedHall = Hall::with(['tenant', 'venue'])
+                    ->whereKey($hall->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (in_array($status, ['HOLD', 'CONFIRMED'], true) && (
+                    ! $tenant
+                    || ! $lockedHall
+                    || (string) $lockedHall->tenant_id !== (string) $tenant->id
+                    || ! $lockedHall->is_active
+                    || ! $lockedHall->venue?->is_active
+                    || ! $tenant->canAcceptBookings()
+                )) {
+                    throw new \InvalidArgumentException('Venue is not accepting bookings.');
+                }
+
+                $lockedBooking = Booking::query()
+                    ->whereKey($snapshot->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if (in_array($status, ['HOLD', 'CONFIRMED'], true)) {
+                    $conflict = $this->slotConflictQuery((string) $lockedHall->id, $eventDate, $slotType)
+                        ->where('id', '!=', $lockedBooking->id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($conflict) {
+                        throw new SlotAlreadyBookedException(
+                            "The slot [{$slotType}] on [{$eventDate}] for this hall is already booked (#{$conflict->id}).",
+                            409,
+                            (string) $hall->id,
+                            $eventDate,
+                            $slotType
+                        );
+                    }
+                }
+
+                $previousStatus = strtoupper((string) $lockedBooking->status);
+                $allowedTransitions = [
+                    'INQUIRY' => ['HOLD', 'CONFIRMED', 'CANCELLED'],
+                    'HOLD' => ['INQUIRY', 'CONFIRMED', 'CANCELLED'],
+                    'CONFIRMED' => ['COMPLETED', 'CANCELLED'],
+                    'COMPLETED' => [],
+                    'CANCELLED' => [],
+                ];
+
+                if ($previousStatus !== $status
+                    && ! in_array($status, $allowedTransitions[$previousStatus] ?? [], true)) {
+                    throw new \InvalidArgumentException("Booking cannot transition from {$previousStatus} to {$status}.");
+                }
+
+                if ($previousStatus === 'HOLD'
+                    && $lockedBooking->hold_expires_at
+                    && Carbon::parse($lockedBooking->hold_expires_at)->isPast()
+                    && in_array($status, ['HOLD', 'CONFIRMED'], true)) {
+                    throw new \InvalidArgumentException('This booking hold has expired and cannot be confirmed or renewed.');
+                }
+
+                $updates = ['status' => $status];
+
+                if ($status === 'HOLD') {
+                    $updates['hold_expires_at'] = $this->resolveHoldExpiry($lockedHall ?? $hall, [
+                        'status' => 'HOLD',
+                        'hold_expires_at' => $lockedBooking->hold_expires_at,
+                    ]);
+                } else {
+                    $updates['hold_expires_at'] = null;
+                }
+
+                if ($status === 'CONFIRMED') {
+                    $updates['pipeline_stage'] = 'CONFIRMED';
+                } elseif ($status === 'INQUIRY') {
+                    $updates['pipeline_stage'] = 'NEW_INQUIRY';
+                }
+
+                $lockedBooking->update($updates);
+
+                if ($status === 'CONFIRMED' && $previousStatus !== 'CONFIRMED') {
+                    $confirmed = $lockedBooking->fresh();
+                    $this->kitchenOrderService->generateKotForConfirmedBooking($confirmed);
+                    event(new BookingCreatedEvent($confirmed));
+                }
+
+                return $lockedBooking->fresh();
+            });
+        } finally {
+            optional($lock)->release();
+        }
     }
 
     /**

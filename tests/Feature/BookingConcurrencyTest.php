@@ -7,7 +7,9 @@ use App\Models\Booking;
 use App\Models\GuestRsvp;
 use App\Models\Hall;
 use App\Models\User;
+use App\Models\User;
 use App\Services\BookingService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -87,7 +89,7 @@ class BookingConcurrencyTest extends TestCase
         $hall = Hall::first();
         $bookingService = app(BookingService::class);
 
-        $testDate = '2026-11-25';
+        $testDate = now()->addDays(180)->toDateString();
         $testSlot = 'EVENING';
 
         $data = [
@@ -123,7 +125,7 @@ class BookingConcurrencyTest extends TestCase
     {
         $hall = Hall::first();
         $bookingService = app(BookingService::class);
-        $testDate = '2026-11-26';
+        $testDate = now()->addDays(181)->toDateString();
 
         $fullDayReservation = [
             'hall_id' => $hall->id,
@@ -151,7 +153,7 @@ class BookingConcurrencyTest extends TestCase
             $this->assertTrue(true);
         }
 
-        $individualShiftDate = '2026-11-27';
+        $individualShiftDate = now()->addDays(182)->toDateString();
         $bookingService->createReservation([
             ...$fullDayReservation,
             'event_date' => $individualShiftDate,
@@ -169,6 +171,275 @@ class BookingConcurrencyTest extends TestCase
             'customer_name' => 'Conflicting Full Day Client',
             'customer_phone' => '+92 300 6666666',
         ]);
+    }
+
+    public function test_completed_booking_cannot_be_reopened(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $booking = app(BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(270)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Completed Booking',
+            'customer_phone' => '+92 300 7774010',
+            'guest_count' => 150,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'CONFIRMED',
+        ]);
+
+        $completed = app(BookingService::class)->transitionStatus($booking, 'COMPLETED');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        app(BookingService::class)->transitionStatus($completed, 'INQUIRY');
+    }
+
+    public function test_expired_hold_cannot_be_confirmed_or_renewed(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $booking = app(BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(271)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Expired Hold',
+            'customer_phone' => '+92 300 7774011',
+            'guest_count' => 150,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'HOLD',
+        ]);
+
+        $booking->update(['hold_expires_at' => now()->subMinute()]);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        app(BookingService::class)->transitionStatus($booking->fresh(), 'CONFIRMED');
+    }
+
+    public function test_cancelled_booking_cannot_be_reopened(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $booking = app(BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(273)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Cancelled Booking',
+            'customer_phone' => '+92 300 7774013',
+            'guest_count' => 120,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'INQUIRY',
+        ]);
+
+        $cancelled = app(BookingService::class)->transitionStatus($booking, 'CANCELLED');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        app(BookingService::class)->transitionStatus($cancelled, 'CONFIRMED');
+    }
+
+    public function test_expired_hold_cannot_be_renewed(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $booking = app(BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(274)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Expired Hold Renewal',
+            'customer_phone' => '+92 300 7774014',
+            'guest_count' => 120,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'HOLD',
+        ]);
+
+        $booking->update(['hold_expires_at' => now()->subMinute()]);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        app(BookingService::class)->transitionStatus($booking->fresh(), 'HOLD');
+    }
+
+    public function test_floor_staff_cannot_cancel_an_existing_booking_through_the_service(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $booking = app(BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(272)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Protected Booking',
+            'customer_phone' => '+92 300 7774012',
+            'guest_count' => 150,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'CONFIRMED',
+        ]);
+        $floorStaff = User::factory()->create([
+            'tenant_id' => $hall->tenant_id,
+            'role' => 'ROLE_FLOOR_STAFF',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($floorStaff);
+
+        $this->expectException(AuthorizationException::class);
+
+        app(BookingService::class)->transitionStatus($booking, 'CANCELLED');
+    }
+
+    public function test_expired_tenant_cannot_confirm_an_existing_inquiry(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $booking = app(BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(260)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Expired Tenant Inquiry',
+            'customer_phone' => '+92 300 7774003',
+            'guest_count' => 150,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'INQUIRY',
+        ]);
+
+        \App\Models\Tenant::query()->findOrFail($hall->tenant_id)->update([
+            'subscription_status' => 'EXPIRED',
+        ]);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        app(BookingService::class)->transitionStatus($booking, 'CONFIRMED');
+    }
+
+    public function test_past_event_cannot_be_promoted_to_hold_or_confirmed(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $booking = app(BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(261)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Past Event Inquiry',
+            'customer_phone' => '+92 300 7774004',
+            'guest_count' => 150,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'INQUIRY',
+        ]);
+
+        $booking->update(['event_date' => now()->subDay()->toDateString()]);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        app(BookingService::class)->transitionStatus($booking->fresh(), 'HOLD');
+    }
+
+    public function test_floor_staff_cannot_create_bookings_by_calling_the_service_directly(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $floorStaff = User::factory()->create([
+            'tenant_id' => $hall->tenant_id,
+            'role' => 'ROLE_FLOOR_STAFF',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($floorStaff);
+
+        $this->expectException(AuthorizationException::class);
+
+        app(BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(250)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'Unauthorized Floor Staff',
+            'customer_phone' => '+92 300 7774001',
+            'guest_count' => 150,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'CONFIRMED',
+        ]);
+    }
+
+    public function test_customer_cannot_create_a_confirmed_booking_directly(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $customer = User::factory()->create([
+            'role' => 'ROLE_CUSTOMER',
+            'status' => 'ACTIVE',
+            'phone' => '+92 300 7774002',
+        ]);
+
+        $this->actingAs($customer);
+
+        $this->expectException(AuthorizationException::class);
+
+        app(BookingService::class)->createReservation([
+            'hall_id' => $hall->id,
+            'event_date' => now()->addDays(251)->toDateString(),
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'customer_name' => 'API Customer',
+            'customer_phone' => '+92 300 7774002',
+            'guest_count' => 150,
+            'per_head_rate' => 1200,
+            'hall_rent' => 90000,
+            'advance_paid' => 0,
+            'status' => 'CONFIRMED',
+        ]);
+    }
+
+    public function test_inquiry_cannot_be_confirmed_when_an_overlapping_booking_exists(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $service = app(BookingService::class);
+        $date = now()->addDays(220)->toDateString();
+
+        $base = [
+            'hall_id' => $hall->id,
+            'event_date' => $date,
+            'slot_type' => 'EVENING',
+            'event_type' => 'Walima',
+            'guest_count' => 200,
+            'per_head_rate' => 1500,
+            'hall_rent' => 100000,
+            'advance_paid' => 0,
+            'payment_method' => 'CASH',
+        ];
+
+        $inquiry = $service->createReservation(array_merge($base, [
+            'customer_name' => 'Pending Inquiry',
+            'customer_phone' => '+92 300 7771001',
+            'status' => 'INQUIRY',
+        ]));
+
+        $service->createReservation(array_merge($base, [
+            'customer_name' => 'Confirmed Reservation',
+            'customer_phone' => '+92 300 7771002',
+            'status' => 'CONFIRMED',
+        ]));
+
+        try {
+            $service->transitionStatus($inquiry, 'CONFIRMED');
+            $this->fail('An inquiry must not be confirmed over an existing active reservation.');
+        } catch (SlotAlreadyBookedException) {
+            $this->assertSame('INQUIRY', $inquiry->fresh()->status);
+        }
     }
 
     public function test_document_routes_return_ok()

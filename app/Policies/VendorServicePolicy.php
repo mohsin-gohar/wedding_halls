@@ -4,9 +4,16 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\VendorService;
+use App\Support\PermissionMatrix;
 
 class VendorServicePolicy
 {
+    public function viewAny(User $user): bool
+    {
+        return true; // Public marketplace visibility
+    }
+
+
     public function view(User $user, VendorService $service): bool
     {
         return true; // Public marketplace visibility
@@ -17,15 +24,14 @@ class VendorServicePolicy
         if ($user->isSuperAdmin()) {
             return true;
         }
-        if ($user->isTenantOwner() || $user->isManager()) {
-            return $service->tenant_id === $user->tenant_id;
-        }
 
-        return false;
+        return $user->tenant_id
+            && (string) $service->tenant_id === (string) $user->tenant_id
+            && PermissionMatrix::userCan($user, 'services.manage');
     }
 
     public function create(User $user): bool
     {
-        return $user->isTenantOwner() || $user->isManager() || $user->isSuperAdmin();
+        return $user->isSuperAdmin() || PermissionMatrix::userCan($user, 'services.manage');
     }
 }

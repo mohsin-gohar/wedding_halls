@@ -15,9 +15,11 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
+            @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'packages.manage'))
             <button wire:click="openCreateModal" class="btn-gold !h-10 !px-5 text-xs font-bold uppercase font-mono shadow-md">
                 + New Catering Package
             </button>
+            @endif
             <a href="{{ route('public.packages') }}" target="_blank" class="btn-outline-gold !h-10 !px-4 text-xs font-mono uppercase transition flex items-center gap-2 font-bold">
                 <span>View Public Menu Page ↗</span>
             </a>
@@ -88,9 +90,11 @@
             </button>
         </div>
 
+        @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'packages.manage'))
         <button wire:click="openCreateModal" class="btn-gold !h-8 !px-3 text-xs font-mono uppercase">
             + Add Package
         </button>
+        @endif
     </div>
 
     <!-- Packages Cards Grid -->
@@ -146,6 +150,7 @@
                 </div>
 
                 <!-- Actions Footer -->
+                @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'packages.manage'))
                 <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 flex items-center justify-between gap-2 font-sans">
                     <button type="button" wire:click="openEditModal('{{ $pkg->id }}')" class="tbtn tbtn-gold" title="Edit Menu & Pricing">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -164,6 +169,9 @@
                         </button>
                     </div>
                 </div>
+                @else
+                    <p class="pt-4 border-t border-[#E7E5E4] dark:border-white/10 text-[10px] font-mono uppercase text-stone-500">Read-only package catalogue</p>
+                @endif
             </div>
         @empty
             <div class="col-span-3 p-12 bg-white dark:bg-[#171513] border border-dashed border-[#E7E5E4] dark:border-white/15 text-center space-y-3">
@@ -172,9 +180,11 @@
                 <p class="text-xs text-stone-500 dark:text-stone-400 max-w-md mx-auto">
                     Create your first custom catering package with biryani, qorma, naan, and sweets to showcase on your hall website.
                 </p>
+                @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'packages.manage'))
                 <button wire:click="openCreateModal" class="btn-gold !h-9 !px-4 text-xs font-mono uppercase mt-2">
                     + Create First Package
                 </button>
+                @endif
             </div>
         @endforelse
     </div>
@@ -182,7 +192,7 @@
     <!-- ===================================================================
          CREATE / EDIT PACKAGE MODAL
          =================================================================== -->
-    @if($showPackageModal)
+    @if($showPackageModal && \App\Support\PermissionMatrix::userCan(auth()->user(), 'packages.manage'))
         <div class="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 overflow-y-auto">
             <div class="bg-[#171513] border-2 border-[#C6A15B] max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl text-white my-8">
                 <div class="border-b border-white/10 pb-4 flex items-center justify-between">
