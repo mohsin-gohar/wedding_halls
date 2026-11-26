@@ -144,7 +144,7 @@ class PermissionMatrix
         ],
         'ROLE_MANAGER' => [
             'dashboard.view', 'business.view',
-            'bookings.view', 'bookings.update', 'bookings.cancel', 'bookings.manage',
+            'bookings.view', 'bookings.create', 'bookings.update', 'bookings.cancel', 'bookings.manage',
             'service-bookings.view', 'service-bookings.update', 'service-bookings.confirm', 'service-bookings.complete', 'service-bookings.cancel',
             'rfq.view', 'rfq.bid', 'rfq.award',
             'quotations.view', 'quotations.create', 'quotations.revise',
@@ -215,7 +215,7 @@ class PermissionMatrix
         ],
         'ROLE_VENDOR_MANAGER' => [
             'dashboard.view', 'business.view',
-            'bookings.view', 'bookings.update', 'bookings.cancel', 'bookings.manage',
+            'bookings.view', 'bookings.create', 'bookings.update', 'bookings.cancel', 'bookings.manage',
             'service-bookings.view', 'service-bookings.update', 'service-bookings.confirm', 'service-bookings.complete', 'service-bookings.cancel',
             'rfq.view', 'rfq.bid', 'rfq.award',
             'quotations.view', 'quotations.create', 'quotations.revise',
