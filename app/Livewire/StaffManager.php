@@ -94,30 +94,39 @@ class StaffManager extends Component
 
     private function allowedRoles(): array
     {
-        // Vendor-operational roles only. Platform staff roles (support,
-        // finance, moderation) are provisioned by the Super Admin and must
-        // never be assignable from a tenant's staff screen.
+        // HR managers may manage operational employees, but cannot provision
+        // finance, inventory, HR-admin or general-manager privileges.
         $roles = [
-            'ROLE_ACCOUNTANT',
             'ROLE_FRONT_DESK',
             'ROLE_CHEF',
             'ROLE_FLOOR_STAFF',
             'ROLE_SERVICE_STAFF',
-            'ROLE_VENDOR_ACCOUNTANT',
-            'ROLE_BOOKING_MANAGER',
             'ROLE_STAFF_MEMBER',
             'ROLE_PHOTOGRAPHER',
             'ROLE_CATERING_STAFF',
-            'ROLE_INVENTORY_MANAGER',
-            'ROLE_HR_MANAGER',
         ];
 
         if (Auth::user()->isTenantOwner()) {
-            array_unshift($roles, 'ROLE_MANAGER');
-            array_unshift($roles, 'ROLE_VENDOR_MANAGER');
+            $roles = array_merge([
+                'ROLE_MANAGER',
+                'ROLE_VENDOR_MANAGER',
+                'ROLE_ACCOUNTANT',
+                'ROLE_VENDOR_ACCOUNTANT',
+                'ROLE_BOOKING_MANAGER',
+                'ROLE_INVENTORY_MANAGER',
+                'ROLE_HR_MANAGER',
+            ], $roles);
         }
 
         return array_values(array_unique($roles));
+    }
+
+    private function authorizeTargetStaffRole(User $staff): void
+    {
+        if (! Auth::user()->isTenantOwner()
+            && ! in_array($staff->role, $this->allowedRoles(), true)) {
+            abort(403, 'HR managers may only manage staff roles within their delegated role scope.');
+        }
     }
 
     public function openCreateModal()
@@ -191,6 +200,7 @@ class StaffManager extends Component
     {
         $this->authorizeStaffManager();
         $staff = User::where('tenant_id', Auth::user()->tenant_id)->findOrFail($userId);
+        $this->authorizeTargetStaffRole($staff);
         if (($staff->isTenantOwner() && $staff->id !== Auth::id())
             || (! Auth::user()->isTenantOwner() && $staff->isManager())) {
             abort(403, 'You do not have permission to edit this staff profile.');
@@ -222,6 +232,7 @@ class StaffManager extends Component
         }
 
         $staff = User::where('tenant_id', Auth::user()->tenant_id)->findOrFail($this->editingStaffId);
+        $this->authorizeTargetStaffRole($staff);
 
         $this->validate([
             'editName' => 'required|string|max:100',
@@ -279,9 +290,7 @@ class StaffManager extends Component
             return;
         }
 
-        if (! $currentUser->isTenantOwner() && $staff->isManager()) {
-            abort(403, 'Only the venue owner can remove a manager account.');
-        }
+        $this->authorizeTargetStaffRole($staff);
 
         $staffName = $staff->name;
         $staff->delete(); // Revoke login while preserving payroll and attendance history.
