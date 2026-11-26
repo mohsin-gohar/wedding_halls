@@ -79,10 +79,49 @@ class StaffPayroll extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Calculate payroll in integer paisa to avoid binary floating-point drift.
+     *
+     * Values are validated against the DECIMAL(12,2) storage range before
+     * conversion; callers cannot persist infinities, NaN, or overflowing totals.
+     */
     public static function calculateNet(float $basic, float $otHours, float $otRate, float $allowances, float $deductions): float
     {
-        $otPay = $otHours * $otRate;
+        $values = compact('basic', 'otHours', 'otRate', 'allowances', 'deductions');
 
-        return max(0, round($basic + $otPay + $allowances - $deductions, 2));
+        foreach ($values as $field => $value) {
+            if (! is_finite($value) || $value < 0) {
+                throw new \\InvalidArgumentException("Payroll {$field} must be a finite, non-negative number.");
+            }
+        }
+
+        $maximumPaisa = 999_999_999_999;
+        $toPaisa = static function (float $amount, string $field) use ($maximumPaisa): int {
+            $rounded = round($amount, 2);
+            if ($rounded > ($maximumPaisa / 100)) {
+                throw new \\InvalidArgumentException("Payroll {$field} exceeds the supported storage limit.");
+            }
+
+            return (int) round($rounded * 100);
+        };
+
+        $basicPaisa = $toPaisa($basic, 'basic salary');
+        $ratePaisa = $toPaisa($otRate, 'overtime rate');
+        $allowancesPaisa = $toPaisa($allowances, 'allowances');
+        $deductionsPaisa = $toPaisa($deductions, 'deductions');
+
+        $otHoursHundredths = (int) round($otHours * 100);
+        if ($otHoursHundredths > 1_000_000) {
+            throw new \\InvalidArgumentException('Payroll overtime hours exceed the supported limit.');
+        }
+
+        $overtimePaisa = intdiv(($otHoursHundredths * $ratePaisa) + 5000, 10000);
+        $netPaisa = $basicPaisa + $overtimePaisa + $allowancesPaisa - $deductionsPaisa;
+
+        if ($netPaisa > $maximumPaisa) {
+            throw new \\InvalidArgumentException('Payroll net salary exceeds the supported storage limit.');
+        }
+
+        return max(0, $netPaisa) / 100;
     }
 }
