@@ -97,7 +97,11 @@ class InventoryTracker extends Component
             abort(403, 'Unauthorized.');
         }
 
-        $permission = $action === 'inventory.view' ? 'inventory.view' : 'inventory.manage';
+        $permission = match ($action) {
+            'inventory.view' => 'inventory.view',
+            'po.paid' => 'expenses.manage',
+            default => 'inventory.manage',
+        };
         abort_unless(
             PermissionMatrix::userCan($user, $permission),
             403,
