@@ -464,7 +464,9 @@ class AdminDashboard extends Component
                 'verification_status' => 'APPROVED',
                 'is_active' => true,
                 'subscription_starts_at' => Carbon::now(),
-                'subscription_expires_at' => Carbon::now()->addYear(),
+                'subscription_expires_at' => Carbon::now()->addDays(
+                    (int) config('platform.free_access_days', 30)
+                ),
                 'currency' => 'PKR',
             ]);
 

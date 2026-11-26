@@ -32,7 +32,7 @@ class PlatformAnalyticsService
                 for ($i = 0; $i < 7; $i++) {
                     $day = $start->copy()->addDays($i);
                     $baseQ = Booking::whereDate('event_date', $day->format('Y-m-d'))
-                        ->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD']);
+                        ->whereIn('status', ['CONFIRMED', 'COMPLETED']);
 
                     $eveningQ = (clone $baseQ)->where('slot_type', 'EVENING');
                     $afternoonQ = (clone $baseQ)->where('slot_type', 'AFTERNOON');
@@ -57,7 +57,7 @@ class PlatformAnalyticsService
                     $baseQ = Booking::whereBetween('event_date', [
                         $mDate->copy()->startOfMonth()->format('Y-m-d'),
                         $mDate->copy()->endOfMonth()->format('Y-m-d'),
-                    ])->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD']);
+                    ])->whereIn('status', ['CONFIRMED', 'COMPLETED']);
 
                     $eveningQ = (clone $baseQ)->where('slot_type', 'EVENING');
                     $afternoonQ = (clone $baseQ)->where('slot_type', 'AFTERNOON');
@@ -83,7 +83,7 @@ class PlatformAnalyticsService
                     $wEnd = ($w === 4) ? $now->copy()->endOfMonth() : $wStart->copy()->addDays(6);
 
                     $baseQ = Booking::whereBetween('event_date', [$wStart->format('Y-m-d'), $wEnd->format('Y-m-d')])
-                        ->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD']);
+                        ->whereIn('status', ['CONFIRMED', 'COMPLETED']);
 
                     $eveningQ = (clone $baseQ)->where('slot_type', 'EVENING');
                     $afternoonQ = (clone $baseQ)->where('slot_type', 'AFTERNOON');
@@ -185,7 +185,7 @@ class PlatformAnalyticsService
 
             foreach ($buckets as $b) {
                 $bQ = Booking::whereBetween('event_date', [$b['start'], $b['end']])
-                    ->whereIn('status', ['CONFIRMED', 'COMPLETED', 'HOLD']);
+                    ->whereIn('status', ['CONFIRMED', 'COMPLETED']);
                 $inflowVals[] = (float) $bQ->sum('grand_total');
 
                 $sQ = SubscriptionPayment::whereBetween('created_at', [$b['start'].' 00:00:00', $b['end'].' 23:59:59'])

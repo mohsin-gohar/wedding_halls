@@ -2,10 +2,13 @@
 
 namespace App\Livewire;
 
+use App\Models\AuditLog;
 use App\Models\Booking;
+use App\Models\Expense;
 use App\Models\UtilityLog;
 use App\Support\PermissionMatrix;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 
@@ -139,20 +142,58 @@ class UtilityFuelTracker extends Component
             return;
         }
 
-        UtilityLog::updateOrCreate(
-            ['booking_id' => $booking->id],
-            [
+        DB::transaction(function () use ($booking, $totalCost): void {
+            $user = auth()->user();
+            $utility = UtilityLog::query()
+                ->where('booking_id', $booking->id)
+                ->lockForUpdate()
+                ->first();
+
+            // The utility expense is source-linked: one expense row per booking
+            // utility log, updated in place on re-save (no duplicates, no rewrites
+            // of unrelated financial history).
+            $expense = $utility?->expense;
+            $category = ($this->diesel_liters_consumed > 0 || $this->generator_run_hours > 0)
+                ? 'GENERATOR_DIESEL'
+                : 'WAPDA_ELECTRICITY';
+
+            $expenseData = [
                 'tenant_id' => $booking->tenant_id,
+                'category' => $category,
+                'title' => 'Utility consumption — '.$booking->booking_reference,
+                'amount' => $totalCost,
+                'expense_date' => $booking->event_date ?? now()->toDateString(),
+                'payment_method' => 'CASH',
+                'notes' => $this->notes,
+                'created_by_user_id' => $user?->id,
+            ];
+
+            if ($expense) {
+                $expense->update($expenseData);
+            } else {
+                $expense = Expense::create($expenseData);
+                AuditLog::log('EXPENSE_CREATED', 'Utility-linked expense PKR '.number_format($totalCost, 2).' created for booking '.$booking->booking_reference.'.', $booking->tenant_id, 'Expense', $expense->id);
+            }
+
+            $utilityData = [
+                'tenant_id' => $booking->tenant_id,
+                'expense_id' => $expense->id,
                 'generator_run_hours' => $this->generator_run_hours,
                 'diesel_liters_consumed' => $this->diesel_liters_consumed,
                 'diesel_rate_per_liter' => $this->diesel_rate_per_liter,
                 'wapda_units_consumed' => $this->wapda_units_consumed,
                 'wapda_unit_rate' => $this->wapda_unit_rate,
                 'total_utility_cost' => $totalCost,
-                'logged_by' => auth()->user()->name ?? 'Banquet Manager',
+                'logged_by' => $user->name ?? 'Banquet Manager',
                 'notes' => $this->notes,
-            ]
-        );
+            ];
+
+            if ($utility) {
+                $utility->update($utilityData);
+            } else {
+                UtilityLog::create(['booking_id' => $booking->id] + $utilityData);
+            }
+        });
 
         $this->successMessage = 'Generator run-hours and fuel consumption logged successfully!';
     }
