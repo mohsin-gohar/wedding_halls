@@ -97,6 +97,21 @@ class DocumentAuthorizationTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_kitchen_documents_require_the_kitchen_view_permission(): void
+    {
+        $kot = KitchenKot::query()->firstOrFail();
+        $chef = $this->tenantStaff($kot->tenant_id, 'ROLE_CHEF');
+        $accountant = $this->tenantStaff($kot->tenant_id, 'ROLE_ACCOUNTANT');
+
+        $this->actingAs($chef)
+            ->get(route('documents.kot', ['id' => $kot->id]))
+            ->assertOk();
+
+        $this->actingAs($accountant)
+            ->get(route('documents.kot', ['id' => $kot->id]))
+            ->assertForbidden();
+    }
+
     public function test_platform_finance_can_read_financial_documents_across_tenants(): void
     {
         $booking = Booking::query()->firstOrFail();
