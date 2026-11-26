@@ -17,7 +17,7 @@ class ProvisionFirstSuperAdminCommand extends Command
 
     public function handle(): int
     {
-        if (! app()->environment('production')) {
+        if (config('app.env') !== 'production') {
             $this->error('This command is reserved for an explicitly configured production installation.');
 
             return self::FAILURE;
