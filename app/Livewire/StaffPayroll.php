@@ -11,6 +11,7 @@ use App\Models\StaffLeave;
 use App\Models\StaffPayroll as PayrollModel;
 use App\Models\User;
 use App\Support\CashOnlyPayments;
+use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
@@ -97,8 +98,8 @@ class StaffPayroll extends Component
     private function authorizePayrollManager(): void
     {
         $user = Auth::user();
-        if (! $user || (! $user->isTenantOwner() && ! $user->isManager() && ! $user->isAccountant()) || ! $user->tenant_id) {
-            abort(403, 'Unauthorized. Only Venue Owners or Accountants have access to Payroll ERP.');
+        if (! $user || ! $user->tenant_id || ! PermissionMatrix::userCan($user, 'payroll.manage')) {
+            abort(403, 'Unauthorized. Payroll management permission is required.');
         }
     }
 
