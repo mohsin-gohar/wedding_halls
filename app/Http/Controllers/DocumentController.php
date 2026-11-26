@@ -16,20 +16,24 @@ class DocumentController extends Controller
     /**
      * Authorize access to customer-facing booking documents (Agreements, Invoices, Quotations).
      */
-    protected function authorizeBookingAccess(Booking $booking): void
+    protected function authorizeBookingAccess(Booking $booking, string $permission): void
     {
         $user = auth()->user();
         if (! $user) {
             abort(403, 'Unauthorized. Please sign in to view confidential documents.');
         }
 
-        // 1. Super Admin has global oversight
-        if ($user->isSuperAdmin()) {
+        // Platform finance may read only the financial document types granted
+        // by the central matrix; vendor staff need the same permission plus
+        // an exact tenant match.
+        if ($user->isSuperAdmin()
+            || ($user->isPlatformFinance() && PermissionMatrix::userCan($user, $permission))) {
             return;
         }
 
-        // 2. Tenant owner and authorized staff of this specific tenant
-        if ($user->tenant_id && $user->tenant_id === $booking->tenant_id) {
+        if ($user->tenant_id
+            && (string) $user->tenant_id === (string) $booking->tenant_id
+            && PermissionMatrix::userCan($user, $permission)) {
             return;
         }
 
@@ -51,13 +55,14 @@ class DocumentController extends Controller
             abort(403, 'Unauthorized. Please sign in to view payment receipts.');
         }
 
-        // 1. Super Admin has platform oversight
-        if ($user->isSuperAdmin()) {
+        if ($user->isSuperAdmin()
+            || ($user->isPlatformFinance() && PermissionMatrix::userCan($user, 'payments.view'))) {
             return;
         }
 
-        // 2. Tenant owner and staff of this specific tenant
-        if ($user->tenant_id && $user->tenant_id === $payment->tenant_id) {
+        if ($user->tenant_id
+            && (string) $user->tenant_id === (string) $payment->tenant_id
+            && PermissionMatrix::userCan($user, 'payments.view')) {
             return;
         }
 
@@ -82,16 +87,14 @@ class DocumentController extends Controller
             abort(403, 'Unauthorized. Please sign in to view operational records.');
         }
 
-        // 1. Super Admin oversight
         if ($user->isSuperAdmin()) {
             return;
         }
 
-        // 2. Operational staff of this specific tenant (Chefs, Managers, Owners, Operations)
-        if ($user->tenant_id && $user->tenant_id === $kot->tenant_id) {
-            if ($user->isTenantOwner() || $user->isManager() || $user->isChef() || $user->role === 'ROLE_FLOOR_STAFF' || $user->role === 'ROLE_ACCOUNTANT') {
-                return;
-            }
+        if ($user->tenant_id
+            && (string) $user->tenant_id === (string) $kot->tenant_id
+            && PermissionMatrix::userCan($user, 'kitchen.view')) {
+            return;
         }
 
         // Customers are strictly forbidden from viewing internal kitchen production tickets
@@ -104,7 +107,7 @@ class DocumentController extends Controller
     public function bookingAgreement(string $id, Request $request)
     {
         $booking = Booking::with(['hall.venue', 'tenant', 'package', 'payments'])->findOrFail($id);
-        $this->authorizeBookingAccess($booking);
+        $this->authorizeBookingAccess($booking, 'contracts.view');
 
         if ($request->boolean('pdf')) {
             $pdf = Pdf::loadView('documents.agreement', compact('booking'))
@@ -160,7 +163,7 @@ class DocumentController extends Controller
     public function bookingQuotation(string $id, Request $request)
     {
         $booking = Booking::with(['hall.venue', 'tenant', 'package'])->findOrFail($id);
-        $this->authorizeBookingAccess($booking);
+        $this->authorizeBookingAccess($booking, 'quotations.view');
 
         if ($request->boolean('pdf')) {
             $pdf = Pdf::loadView('documents.quotation', compact('booking'))
@@ -178,7 +181,7 @@ class DocumentController extends Controller
     public function taxInvoice(string $id, Request $request)
     {
         $booking = Booking::with(['hall.venue', 'tenant', 'package', 'payments'])->findOrFail($id);
-        $this->authorizeBookingAccess($booking);
+        $this->authorizeBookingAccess($booking, 'invoices.view');
 
         if ($request->boolean('pdf')) {
             $pdf = Pdf::loadView('documents.invoice', compact('booking'))
@@ -202,9 +205,14 @@ class DocumentController extends Controller
             abort(403, 'Unauthorized.');
         }
 
-        // Super Admin or Tenant Admin/Accountant/Manager or the employee themselves
-        $isTenantStaff = ($user->tenant_id === $payroll->tenant_id && ($user->isTenantOwner() || $user->isManager() || $user->isAccountant() || $user->id === $payroll->user_id));
-        if (! $user->isSuperAdmin() && ! $isTenantStaff) {
+        // Super Admin, an explicitly payroll-authorized tenant user, or the
+        // employee viewing their own slip within the same tenant.
+        $sameTenant = $user->tenant_id
+            && (string) $user->tenant_id === (string) $payroll->tenant_id;
+        $isEmployee = $sameTenant && (string) $user->id === (string) $payroll->user_id;
+        $isPayrollStaff = $sameTenant && PermissionMatrix::userCan($user, 'payroll.view');
+
+        if (! $user->isSuperAdmin() && ! $isEmployee && ! $isPayrollStaff) {
             abort(403, 'Forbidden. You do not have permission to view this confidential salary slip.');
         }
 
@@ -244,8 +252,8 @@ class DocumentController extends Controller
             $isPlatformFinance = $user->isPlatformFinance();
 
             $isVendorFinanceStaff = $user->tenant_id
-                && $user->tenant_id === $payment->tenant_id
-                && ($user->isTenantOwner() || $user->isManager() || $user->isAccountant());
+                && (string) $user->tenant_id === (string) $payment->tenant_id
+                && PermissionMatrix::userCan($user, 'payments.view');
 
             // The customer who made the payment may always see their own proof.
             $isPayingCustomer = $user->isCustomer()
