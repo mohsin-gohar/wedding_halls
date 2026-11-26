@@ -144,8 +144,9 @@ class WhatsAppRsvpManager extends Component
         } elseif (preg_match('/(?:\\b(?:attending|yes|aunga|haan)\\b(?:[\\s:]*(\\d+))?|\\b(?:persons?|people|guests?|head)\\b[\\s:]*(\\d+))/i', $body, $matches)
             || preg_match('/^(\\d+)$/', $body, $matches)) {
             $status = 'ATTENDING';
-            $count = isset($matches[1]) && $matches[1] !== '' || isset($matches[2]) && $matches[2] !== ''
-                ? max(1, min(20, (int) ($matches[1] !== '' ? $matches[1] : $matches[2]))
+            $guestCount = $matches[1] ?? $matches[2] ?? null;
+            $count = $guestCount !== null && $guestCount !== ''
+                ? max(1, min(20, (int) $guestCount))
                 : 1;
             $reply = "Confirmed! Thank you {$rsvp->guest_name}, {$count} attendee(s) registered on the hall door checklist.";
         } else {
