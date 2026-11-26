@@ -214,6 +214,105 @@ class ApiBookingFinancialIntegrityTest extends TestCase
         $this->assertSame(0, Booking::query()->where('customer_name', 'Hidden Hall Customer')->count());
     }
 
+    public function test_customer_can_create_a_public_booking_and_only_update_its_notes(): void
+    {
+        $hall = Hall::query()->publicVisible()->firstOrFail();
+        $customer = User::factory()->create([
+            'name' => 'API Customer',
+            'email' => 'api-customer@example.test',
+            'phone' => '+92 300 7772001',
+            'role' => 'ROLE_CUSTOMER',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($customer)
+            ->postJson('/api/v1/bookings', [
+                'hall_id' => $hall->id,
+                'event_type' => 'Walima',
+                'event_date' => now()->addDays(230)->toDateString(),
+                'slot_type' => 'AFTERNOON',
+                'guest_count' => 180,
+                'customer_name' => 'Forged Name Is Ignored',
+                'customer_phone' => '+92 300 0000000',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('success', true);
+
+        $booking = Booking::query()->where('customer_id', $customer->id)->firstOrFail();
+
+        $this->actingAs($customer)
+            ->patchJson('/api/v1/bookings/'.$booking->id, ['notes' => 'Please call before confirming.'])
+            ->assertOk()
+            ->assertJsonPath('booking.notes', 'Please call before confirming.');
+
+        $this->actingAs($customer)
+            ->patchJson('/api/v1/bookings/'.$booking->id, ['status' => 'CONFIRMED'])
+            ->assertForbidden();
+
+        $this->assertSame('INQUIRY', $booking->fresh()->status);
+    }
+
+    public function test_staff_without_booking_view_permission_cannot_read_booking_api(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $booking = Booking::query()->firstOrFail();
+        $serviceStaff = User::factory()->create([
+            'tenant_id' => $hall->tenant_id,
+            'role' => 'ROLE_SERVICE_STAFF',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($serviceStaff)
+            ->getJson('/api/v1/bookings')
+            ->assertForbidden();
+
+        $this->actingAs($serviceStaff)
+            ->getJson('/api/v1/bookings/'.$booking->id)
+            ->assertForbidden();
+
+        $this->actingAs($serviceStaff)
+            ->getJson('/api/v1/bookings/availability?hall_id='.$hall->id.'&date='.now()->addDays(90)->toDateString())
+            ->assertForbidden();
+    }
+
+    public function test_api_cannot_confirm_an_inquiry_over_an_existing_booking(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $owner = User::query()
+            ->where('tenant_id', $hall->tenant_id)
+            ->where('role', 'ROLE_TENANT_OWNER')
+            ->firstOrFail();
+        $service = app(\\App\\Services\\BookingService::class);
+        $date = now()->addDays(240)->toDateString();
+
+        $base = [
+            'hall_id' => $hall->id,
+            'event_date' => $date,
+            'slot_type' => 'EVENING',
+            'guest_count' => 200,
+            'per_head_rate' => 1500,
+            'hall_rent' => 100000,
+            'advance_paid' => 0,
+        ];
+
+        $inquiry = $service->createReservation(array_merge($base, [
+            'customer_name' => 'API Inquiry',
+            'customer_phone' => '+92 300 7773001',
+            'status' => 'INQUIRY',
+        ]));
+        $service->createReservation(array_merge($base, [
+            'customer_name' => 'API Confirmed',
+            'customer_phone' => '+92 300 7773002',
+            'status' => 'CONFIRMED',
+        ]));
+
+        $this->actingAs($owner)
+            ->patchJson('/api/v1/bookings/'.$inquiry->id, ['status' => 'CONFIRMED'])
+            ->assertStatus(409);
+
+        $this->assertSame('INQUIRY', $inquiry->fresh()->status);
+    }
+
     public function test_staff_without_payment_view_permission_cannot_list_or_summarize_payments(): void
     {
         $hall = Hall::query()->firstOrFail();
