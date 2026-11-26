@@ -333,7 +333,9 @@ class ExpenseTracker extends Component
         }
 
         $expenses = $expensesQuery->with(['hall', 'creator'])->latest('expense_date')->get();
-        $totalExpenses = (float) $expenses->sum('amount');
+        $totalExpenses = (float) Expense::where('tenant_id', $tenantId)
+            ->whereBetween('expense_date', [$startDate, $endDate])
+            ->sum('amount');
 
         // Revenue query in same period
         $bookingsQuery = Booking::where('tenant_id', $tenantId)
