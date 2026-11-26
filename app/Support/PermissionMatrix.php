@@ -159,6 +159,7 @@ class PermissionMatrix
             'expenses.view', 'expenses.manage',
             'payroll.view', 'payroll.manage',
             'reports.view', 'reports.financial', 'reports.export',
+            'inventory.view',
         ],
         'ROLE_FRONT_DESK' => [
             'dashboard.view',
