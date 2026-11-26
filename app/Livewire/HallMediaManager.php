@@ -6,6 +6,7 @@ use App\Models\Hall;
 use App\Models\Tenant;
 use App\Models\Venue;
 use App\Support\Media;
+use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -153,6 +154,29 @@ class HallMediaManager extends Component
         'cover_image' => 'nullable|url',
     ];
 
+    /**
+     * Central permission guards for the hall website editor. The route allows
+     * managers to view the editor, but only principals granted the specific
+     * management capability may persist changes or write uploaded files.
+     */
+    protected function assertCanManageHall(): void
+    {
+        abort_unless(
+            PermissionMatrix::userCan(Auth::user(), 'business.update'),
+            403,
+            'You do not have permission to edit hall and website settings.'
+        );
+    }
+
+    protected function assertCanManageServices(): void
+    {
+        abort_unless(
+            PermissionMatrix::userCan(Auth::user(), 'services.manage'),
+            403,
+            'You do not have permission to manage the service catalogue.'
+        );
+    }
+
     public function mount()
     {
         $user = Auth::user();
@@ -289,6 +313,9 @@ class HallMediaManager extends Component
 
     public function createNewHall()
     {
+        $this->assertCanManageHall();
+        abort_unless(PermissionMatrix::userCan(Auth::user(), 'locations.manage'), 403);
+
         $tenant = Auth::user()->tenant;
         if ($tenant && ! $tenant->canAddHall()) {
             session()->flash('error', 'Hall limit reached. Please upgrade your SaaS subscription.');
@@ -408,6 +435,8 @@ class HallMediaManager extends Component
 
     public function uploadImages()
     {
+        $this->assertCanManageHall();
+
         $this->validate([
             'imageUploads.*' => 'image|mimes:jpg,jpeg,png,webp|max:5120', // 5MB per image
         ]);
@@ -435,6 +464,8 @@ class HallMediaManager extends Component
 
     public function uploadVideos()
     {
+        $this->assertCanManageHall();
+
         $this->validate([
             'videoUploads.*' => 'mimetypes:video/mp4,video/webm,video/ogg,video/quicktime|max:51200', // 50MB
         ]);
@@ -459,6 +490,7 @@ class HallMediaManager extends Component
 
     public function save()
     {
+        $this->assertCanManageHall();
         $this->validate();
 
         $user = Auth::user();
@@ -525,6 +557,9 @@ class HallMediaManager extends Component
 
     public function deleteHall(string $hallId)
     {
+        $this->assertCanManageHall();
+        abort_unless(PermissionMatrix::userCan(Auth::user(), 'locations.manage'), 403);
+
         $user = Auth::user();
 
         if (! $user?->tenant_id) {
@@ -580,6 +615,8 @@ class HallMediaManager extends Component
 
     public function addService()
     {
+        $this->assertCanManageServices();
+
         $this->validate([
             'newServiceTitle' => 'required|string|min:3|max:100',
             'newServicePrice' => 'required|numeric|min:0',
@@ -621,6 +658,8 @@ class HallMediaManager extends Component
 
     public function removeService(int $index)
     {
+        $this->assertCanManageServices();
+
         if (isset($this->services[$index])) {
             unset($this->services[$index]);
             $this->services = array_values($this->services);
@@ -631,6 +670,8 @@ class HallMediaManager extends Component
 
     public function toggleServiceComplimentary(int $index)
     {
+        $this->assertCanManageServices();
+
         if (isset($this->services[$index])) {
             $this->services[$index]['is_complimentary'] = ! ($this->services[$index]['is_complimentary'] ?? false);
             $this->save();
