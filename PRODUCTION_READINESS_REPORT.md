@@ -3,6 +3,17 @@
 > This is the go/no-go evidence ledger for the current pass. Historical
 > readiness reports are snapshots and are superseded; see `DOCS_STATUS.md`.
 
+
+
+## 26 Nov 2026 follow-up — post-baseline changes not yet CI-verified
+
+The following repository changes were added after the recorded verification baseline:
+- Vendor service pricing now rejects non-finite/negative amounts, reversed ranges, and missing/non-positive PER_HEAD/HOURLY base prices; regression tests were added.
+- API booking/service-booking list and detail endpoints now require explicit read permissions; Finance and Content Moderator no longer inherit global booking visibility. Regression tests were added.
+- WhatsApp webhook and simulator now require explicit RSVP intent; unclear messages receive clarification and leave RSVP state unchanged. Regression tests were added. Outbound WhatsApp requests now have a 10-second timeout and provider HTTP failures are logged; the fallback Graph API version is v26.0.
+
+Latest follow-up commit checked: `bef3966cd582f943165e3c60c4d9f54c8f797b3e`. GitHub currently reports no workflow run or status checks for this head. Therefore the historical test/build/browser results below apply only to their recorded baseline and **must not be represented as verification of these follow-up changes** until CI is run successfully.
+
 ## 1. Decision summary
 
 Local code, test, build and browser gates for the Phase 1–9 / cash-only scope
