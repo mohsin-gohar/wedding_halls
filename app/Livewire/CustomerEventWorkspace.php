@@ -7,8 +7,8 @@ use App\Models\CustomerEventTask;
 use App\Models\CustomerEventVendor;
 use App\Models\ServiceBooking;
 use App\Models\Tenant;
-use App\Models\VendorCategory;
 use App\Models\User;
+use App\Models\VendorCategory;
 use App\Services\SubscriptionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -87,6 +87,7 @@ class CustomerEventWorkspace extends Component
     public function getEventsProperty()
     {
         $this->assertCustomer();
+
         return CustomerEvent::query()
             ->where('user_id', Auth::id())
             ->withCount(['bookings', 'tasks', 'vendors'])
@@ -170,6 +171,7 @@ class CustomerEventWorkspace extends Component
     public function getUnlinkedBookingsProperty()
     {
         $this->assertCustomer();
+
         return ServiceBooking::query()
             ->where('customer_id', Auth::id())
             ->whereNull('customer_event_id')
@@ -206,6 +208,7 @@ class CustomerEventWorkspace extends Component
     public function getCategoriesProperty()
     {
         $this->assertCustomer();
+
         return VendorCategory::query()->where('is_active', true)->orderBy('sort')->get(['id', 'name', 'slug']);
     }
 
@@ -548,6 +551,7 @@ class CustomerEventWorkspace extends Component
     private function ownedEvent(string $eventId): ?CustomerEvent
     {
         $this->assertCustomer();
+
         return CustomerEvent::query()
             ->where('id', $eventId)
             ->where('user_id', Auth::id())
@@ -567,6 +571,7 @@ class CustomerEventWorkspace extends Component
     public function render()
     {
         $this->assertCustomer();
+
         return view('livewire.customer-event-workspace')
             ->layout('components.layouts.public', [
                 'title' => 'My Event Workspace — Riwaj Grand',
