@@ -21,7 +21,7 @@ class HostingerDeployCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Automate production deployment checks, storage symlinking, database migrations, and caching for Hostinger hosting';
+    protected $description = 'Run safe production migrations, reference-data bootstrap, storage checks, and cache optimization for Hostinger hosting';
 
     /**
      * Execute the console command.
@@ -46,7 +46,18 @@ class HostingerDeployCommand extends Command
             File::makeDirectory($storageTarget, 0755, true);
         }
 
-        if (! file_exists($publicLink)) {
+        $publicDiskRequired = config('filesystems.default') === 'public';
+
+        if (! is_link($publicLink) && file_exists($publicLink)) {
+            $message = 'public/storage exists but is not a symbolic link.';
+            if ($publicDiskRequired) {
+                $this->error($message.' Replace it with the correct storage link before continuing.');
+
+                return self::FAILURE;
+            }
+
+            $this->warn($message.' Public disk is not configured, so no link is required.');
+        } elseif (! is_link($publicLink) && $publicDiskRequired) {
             try {
                 $exitCode = Artisan::call('storage:link');
                 $storageOutput = trim(Artisan::output());
@@ -54,16 +65,28 @@ class HostingerDeployCommand extends Command
                     $this->line($storageOutput);
                 }
 
-                if ($exitCode !== self::SUCCESS) {
-                    throw new \RuntimeException('Laravel storage:link command returned a failure status.');
+                if ($exitCode !== self::SUCCESS || ! is_link($publicLink)) {
+                    throw new \RuntimeException('Laravel storage:link did not create the expected symbolic link.');
                 }
-
-                $this->line('<info>✅</info> Public storage symlink created: '.$publicLink);
             } catch (\Throwable $e) {
-                $this->warn('! Symlink creation failed, trying relative link or copy: '.$e->getMessage());
+                $this->error('Public storage link is required but could not be created: '.$e->getMessage());
+                $this->line('Create public/storage -> storage/app/public in the Hostinger File Manager, then rerun setup.');
+
+                return self::FAILURE;
             }
-        } else {
+        } elseif (is_link($publicLink)) {
+            $actualTarget = realpath($publicLink);
+            $expectedTarget = realpath($storageTarget);
+
+            if ($publicDiskRequired && ($actualTarget === false || $actualTarget !== $expectedTarget)) {
+                $this->error('public/storage points to an unexpected target. Correct the symlink before continuing.');
+
+                return self::FAILURE;
+            }
+
             $this->line('<info>✅</info> Public storage symlink already exists');
+        } else {
+            $this->line('Public disk is not configured; storage symlink is not required.');
         }
 
         // 3. Database Migration
