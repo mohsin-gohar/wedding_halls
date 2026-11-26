@@ -535,6 +535,10 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
             'user_id' => $staff->id,
             'status' => 'PAID',
         ]);
+        $this->assertSame(
+            (string) $staff->id,
+            (string) PayrollModel::with('user')->findOrFail($payroll->id)->user->id
+        );
     }
 
     public function test_one_click_attendance_filtering_and_quick_edit_modal(): void
