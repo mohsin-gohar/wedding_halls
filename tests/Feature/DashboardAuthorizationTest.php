@@ -92,13 +92,13 @@ class DashboardAuthorizationTest extends TestCase
 
         Livewire::actingAs($accountant)
             ->test(Dashboard::class)
-            ->set('expenseTitle', 'Generator diesel refill')
+            ->set('expenseTitle', 'Dashboard expense atomicity regression')
             ->call('saveDailyExpense')
             ->assertHasNoErrors();
 
         $this->assertDatabaseHas('expenses', [
             'tenant_id' => $tenant->id,
-            'title' => 'Generator diesel refill',
+            'title' => 'Dashboard expense atomicity regression',
             'amount' => 14250,
             'payment_method' => 'CASH',
         ]);
@@ -128,14 +128,14 @@ class DashboardAuthorizationTest extends TestCase
 
         Livewire::actingAs($accountant)
             ->test(Dashboard::class)
-            ->set('expenseTitle', 'Generator diesel refill')
+            ->set('expenseTitle', 'Dashboard expense atomicity regression')
             ->set('fuelBookingId', $foreignBooking->id)
             ->call('saveDailyExpense')
             ->assertHasErrors(['fuelBookingId']);
 
         $this->assertDatabaseMissing('expenses', [
             'tenant_id' => $tenant->id,
-            'title' => 'Generator diesel refill',
+            'title' => 'Dashboard expense atomicity regression',
         ]);
     }
 
