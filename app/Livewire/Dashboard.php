@@ -100,6 +100,10 @@ class Dashboard extends Component
 
     public function mount()
     {
+        if (Auth::user()?->isCustomer()) {
+            return $this->redirect(route('customer.dashboard'));
+        }
+
         $this->authorizeDashboardAccess();
         $this->expenseDate = Carbon::now()->format('Y-m-d');
         $this->operationsMonth = Carbon::now()->format('Y-m');
