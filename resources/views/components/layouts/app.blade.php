@@ -372,7 +372,7 @@
                     </a>
                     @endif
 
-                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isFrontDesk() || auth()->user()->role === 'ROLE_FLOOR_STAFF')
+                    @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'bookings.view'))
                     <a href="{{ route('calendar') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200 {{ request()->routeIs('calendar') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/50 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/50' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-[#C6A15B]' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -380,7 +380,7 @@
                     </a>
                     @endif
 
-                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager())
+                    @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'business.view'))
                     <a href="{{ route('hall.media') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200 {{ request()->routeIs('hall.media') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/50 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/50' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-[#C6A15B]' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -390,7 +390,7 @@
 
                     <div class="text-[10px] text-[#C6A15B]/80 font-bold px-3 pt-4 pb-2 uppercase tracking-[0.2em] font-sans">Business ERP &amp; Workforce</div>
 
-                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isAccountant())
+                    @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'expenses.view'))
                     <a href="{{ route('expenses') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200 {{ request()->routeIs('expenses') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/50 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/50' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-[#C6A15B]' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -398,7 +398,7 @@
                     </a>
                     @endif
 
-                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager())
+                    @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'staff.manage'))
                     <a href="{{ route('staff') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200 {{ request()->routeIs('staff') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/50 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/50' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-[#C6A15B]' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
@@ -406,25 +406,27 @@
                     </a>
                     @endif
 
-                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isAccountant())
+                    @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'staff.attendance'))
                     <a href="{{ route('staff.attendance') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200 {{ request()->routeIs('staff.attendance') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/50 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/50' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-[#C6A15B]' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                         <span>Staff Attendance Roster</span>
                     </a>
 
+                    @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'payroll.manage'))
                     <a href="{{ route('staff.payroll') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition {{ request()->routeIs('staff.payroll') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/40 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/40' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-white' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                         <span>Payroll &amp; Salary Slips</span>
                     </a>
                     @endif
+                    @endif
 
-                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isChef() || auth()->user()->role === 'ROLE_FLOOR_STAFF')
+                    @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.view') || \App\Support\PermissionMatrix::userCan(auth()->user(), 'kitchen.view'))
                     <div class="text-[10px] text-[#C6A15B]/80 font-bold px-3 pt-4 pb-2 uppercase tracking-[0.2em] font-sans">Kitchen &amp; Logistics</div>
                     @endif
 
-                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isChef())
+                    @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.view'))
                     <a href="{{ route('inventory') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200 {{ request()->routeIs('inventory') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/50 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/50' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-[#C6A15B]' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
@@ -432,7 +434,7 @@
                     </a>
                     @endif
 
-                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isChef())
+                    @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'packages.view'))
                     <a href="{{ route('packages.manager') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition {{ request()->routeIs('packages.manager') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/40 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/40' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-white' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
@@ -440,7 +442,7 @@
                     </a>
                     @endif
 
-                    @if(config('platform.kitchen_module_enabled') && (auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isChef() || auth()->user()->role === 'ROLE_FLOOR_STAFF'))
+                    @if(config('platform.kitchen_module_enabled') && \App\Support\PermissionMatrix::userCan(auth()->user(), 'kitchen.view'))
                     <a href="{{ route('kitchen.board') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition {{ request()->routeIs('kitchen.board') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/40 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/40' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-white' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
@@ -448,7 +450,7 @@
                     </a>
                     @endif
 
-                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager())
+                    @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'utilities.view'))
                     <a href="{{ route('utility.fuel') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition {{ request()->routeIs('utility.fuel') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/40 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/40' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-white' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -456,7 +458,7 @@
                     </a>
                     @endif
 
-                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->role === 'ROLE_FLOOR_STAFF')
+                    @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'floor-plans.view'))
                     <a href="{{ route('seating.planner') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition {{ request()->routeIs('seating.planner') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/40 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/40' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-white' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
@@ -464,7 +466,7 @@
                     </a>
                     @endif
 
-                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isFrontDesk())
+                    @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'rsvps.view'))
                     <a href="{{ route('whatsapp.rsvp') }}" 
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition {{ request()->routeIs('whatsapp.rsvp') ? 'bg-[#C6A15B]/15 text-[#171513] border-[#C6A15B]/40 dark:bg-[#C6A15B]/20 dark:text-white dark:border-[#C6A15B]/40' : 'text-stone-600 dark:text-stone-300 border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#171513] dark:hover:text-white' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
@@ -633,7 +635,7 @@
                         </div>
                     @endif
 
-                    @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isFrontDesk())
+                    @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'bookings.create'))
                         <button onclick="Livewire.dispatch('openWalkInModal')" class="btn-gold !h-9 !px-4 text-xs font-bold font-sans tracking-wide rounded-lg shadow-sm transition-all duration-200">
                             <span>+ Walk-In Reservation</span>
                         </button>
@@ -667,30 +669,32 @@
                         @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isAccountant())
                             <a href="{{ route('dashboard') }}" class="py-2 hover:text-[#C6A15B]">Analytics</a>
                         @endif
-                        @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isFrontDesk() || auth()->user()->role === 'ROLE_FLOOR_STAFF')
+                        @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'bookings.view'))
                             <a href="{{ route('calendar') }}" class="py-2 hover:text-[#C6A15B]">Shift Matrix</a>
                         @endif
-                        @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isAccountant())
+                        @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'expenses.view'))
                             <a href="{{ route('expenses') }}" class="py-2 hover:text-[#C6A15B]">Expenses &amp; P&amp;L</a>
                             <a href="{{ route('staff.attendance') }}" class="py-2 hover:text-[#C6A15B]">Attendance</a>
                             <a href="{{ route('staff.payroll') }}" class="py-2 hover:text-[#C6A15B]">Payroll</a>
                         @endif
-                        @if(auth()->user()->isTenantOwner() || auth()->user()->isManager())
+                        @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'staff.manage'))
                             <a href="{{ route('staff') }}" class="py-2 hover:text-[#C6A15B]">Team &amp; Staff</a>
                             <a href="{{ route('hall.media') }}" class="py-2 hover:text-[#C6A15B]">Website &amp; Halls</a>
                             <a href="{{ route('utility.fuel') }}" class="py-2 hover:text-[#C6A15B]">Generator Fuel</a>
                         @endif
-                        @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isChef())
+                        @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'inventory.view'))
                             <a href="{{ route('inventory') }}" class="py-2 hover:text-[#C6A15B]">Inventory</a>
+                            @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'packages.view'))
                             <a href="{{ route('packages.manager') }}" class="py-2 hover:text-[#C6A15B]">Catering Menus</a>
+                            @endif
                         @endif
-                        @if(config('platform.kitchen_module_enabled') && (auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isChef() || auth()->user()->role === 'ROLE_FLOOR_STAFF'))
+                        @if(config('platform.kitchen_module_enabled') && \App\Support\PermissionMatrix::userCan(auth()->user(), 'kitchen.view'))
                             <a href="{{ route('kitchen.board') }}" class="py-2 hover:text-[#C6A15B]">Kitchen KOT</a>
                         @endif
-                        @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->isFrontDesk())
+                        @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'rsvps.view'))
                             <a href="{{ route('whatsapp.rsvp') }}" class="py-2 hover:text-[#C6A15B]">WhatsApp RSVP</a>
                         @endif
-                        @if(auth()->user()->isTenantOwner() || auth()->user()->isManager() || auth()->user()->role === 'ROLE_FLOOR_STAFF')
+                        @if(\App\Support\PermissionMatrix::userCan(auth()->user(), 'floor-plans.view'))
                             <a href="{{ route('seating.planner') }}" class="py-2 hover:text-[#C6A15B]">Floor Seating</a>
                         @endif
                     @endif
