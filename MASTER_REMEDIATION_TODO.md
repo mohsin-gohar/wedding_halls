@@ -133,3 +133,18 @@
 A task may be checked only when its acceptance criteria are met and evidence is recorded. A phase may close only when all its tasks are complete or explicitly classified as an owner-approved non-goal. The project may be called **repository release-ready** only after all repository-verifiable P0/P1 gates pass. It may be called **production-ready** only after the external OPS gates and owner acceptance are complete.
 
 **Current state:** backlog created from repository structure, current README/config/routes/tests, authoritative status docs and targeted code inspection. This is not yet a full line-by-line review of all 582 files; the remaining tasks deliberately track that work rather than pretending it has already happened.
+
+
+## Work log — 2026-11-26 (verification pending)
+
+The following remediation work has been committed to the audit branch. These entries remain **unchecked** until the full latest-head MySQL test suite and browser/CI gates pass.
+
+- Document access now checks tenant scope plus `documents.view`, `invoices.view`, or `payments.view`; platform finance has cross-tenant access only for its explicit financial permissions. KOT requires `kitchen.view`; salary slips require `payroll.view` except the employee's own slip. Payment proofs are restricted to platform finance with `payments.view`, tenant owners/accountants with `payments.view`, or the paying customer.
+- Added `tests/Feature/DocumentAuthorizationTest.php` for agreement, quotation, invoice, receipt, PDF, KOT, salary slip, platform-finance scope and cross-tenant denial.
+- Staff payroll ERP now requires `payroll.manage`; staff management requires `staff.manage`; expense ERP requires `expenses.view/manage`; inventory ERP requires `inventory.view/manage`. Sensitive vendor boards re-check their view permission during render as well as mount.
+- HR managers can manage operational employee roles but cannot provision finance, inventory-manager, general-manager or HR-manager privileges. Target-role checks protect edit/archive actions.
+- Removed the destructive permanent staff purge path and its UI controls. Staff removal now uses the existing soft-archive workflow; payroll, attendance, leave and correction rows remain in the database, and HR relations resolve soft-deleted users for historical records.
+- Added regression coverage in `PayrollPaymentIntegrityTest`, `ErpStaffPayrollAndInventoryTest`, and `ExpenseAuthorizationTest` for denied role escalation, retained paid payroll history, inventory permission boundaries, expense role boundaries and payroll access.
+- CI workflow push trigger was widened from `main` only to all branches so future branch pushes can run the same quality, MySQL and Playwright gates. GitHub Actions has not yet reported a run for these commits; no test pass is claimed.
+
+**Verification gate:** run PHP lint, Pint, full MySQL suite and Playwright against the exact latest branch head. Review any failures and correct them before checking these tasks complete.
