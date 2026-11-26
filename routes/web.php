@@ -525,7 +525,7 @@ Route::middleware(['auth', 'tenant.staff'])->group(function () {
         Route::get('/vendor/dashboard', Dashboard::class)->name('vendor.dashboard.generic');
     });
 
-    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_FRONT_DESK,ROLE_BOOKING_MANAGER,ROLE_FLOOR_STAFF')->get('/calendar', CalendarShiftGrid::class)->name('calendar');
+    Route::middleware('portal.role:ROLE_TENANT_OWNER,ROLE_MANAGER,ROLE_ACCOUNTANT,ROLE_FRONT_DESK,ROLE_BOOKING_MANAGER,ROLE_FLOOR_STAFF,ROLE_CHEF')->get('/calendar', CalendarShiftGrid::class)->name('calendar');
     Route::middleware(RequirePortalPermission::class.':kitchen.view')->get('/kitchen-kots', KitchenKotBoard::class)->name('kitchen.board');
     Route::middleware(RequirePortalPermission::class.':utilities.view')->get('/utility-fuel', UtilityFuelTracker::class)->name('utility.fuel');
     Route::middleware(RequirePortalPermission::class.':floor-plans.view')->get('/seating-planner', FloorPlanDesigner::class)->name('seating.planner');
