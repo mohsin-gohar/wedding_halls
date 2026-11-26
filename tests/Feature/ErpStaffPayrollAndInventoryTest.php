@@ -830,6 +830,27 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
             'id' => $item->id,
             'is_active' => true,
         ]);
+
+        $stockedItem = InventoryItem::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Stocked item cannot be archived',
+            'category' => 'OTHER',
+            'unit' => 'PIECES',
+            'current_stock' => 5,
+            'min_threshold' => 1,
+            'unit_cost' => 10,
+            'is_active' => true,
+        ]);
+
+        Livewire::actingAs($owner)
+            ->test(InventoryTracker::class)
+            ->call('deleteItem', $stockedItem->id)
+            ->assertStatus(422);
+
+        $this->assertDatabaseHas('inventory_items', [
+            'id' => $stockedItem->id,
+            'is_active' => true,
+        ]);
     }
 
 }
