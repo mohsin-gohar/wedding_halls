@@ -188,6 +188,8 @@ class HallMediaManager extends Component
             abort(403, 'Unauthorized. Tenant staff access required.');
         }
 
+        abort_unless(PermissionMatrix::userCan($user, 'business.view'), 403, 'Missing business view permission.');
+
         // Retrieve halls strictly scoped to the user's tenant
         $firstHall = Hall::where('tenant_id', $user->tenant_id)->first();
 
