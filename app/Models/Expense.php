@@ -49,6 +49,6 @@ class Expense extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by_user_id'->withTrashed();
+        return $this->belongsTo(User::class, 'created_by_user_id')->withTrashed();
     }
 }
