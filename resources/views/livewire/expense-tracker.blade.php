@@ -194,7 +194,7 @@
                                     <div class="mt-1 text-[10px] text-stone-400">
                                         {{ $exp->voidedBy?->name ?? 'Authorized user' }} · {{ $exp->voided_at?->format('d M Y, h:i A') }}
                                     </div>
-                                @elseif($exp->payroll_id || $paidPoNumbers->contains($exp->receipt_number) || $utilityExpenseIds->contains($exp->id))
+                                @elseif($exp->payroll_id || $paidPoNumbers->contains($exp->receipt_number) || $utilityExpenseIds->contains($exp->id) || in_array($exp->category, ['GENERATOR_DIESEL', 'WAPDA_ELECTRICITY'], true))
                                     <span class="text-[10px] font-bold uppercase tracking-wider text-stone-500">Source managed</span>
                                 @else
                                     <button wire:click="openEditModal('{{ $exp->id }}')" class="border border-[#E7E5E4] px-2.5 py-1 text-xs font-semibold text-[#171513] dark:border-white/15 dark:text-stone-200">Edit</button>
