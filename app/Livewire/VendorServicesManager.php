@@ -244,8 +244,8 @@ class VendorServicesManager extends Component
                     'name' => $this->serviceName,
                     'description' => $this->serviceDescription ?: null,
                     'pricing_type' => $this->pricingType,
-                    'price_from' => $this->priceFrom,
-                    'price_to' => $this->priceTo,
+                    'price_from' => $from,
+                    'price_to' => $to,
                     'unit' => $this->serviceUnit,
                     'is_active' => true,
                 ]);
