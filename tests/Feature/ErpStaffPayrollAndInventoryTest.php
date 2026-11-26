@@ -806,7 +806,7 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
             'is_active' => true,
         ]);
 
-        Livewire::actingAs($owner)
+        $component = Livewire::actingAs($owner)
             ->test(InventoryTracker::class)
             ->call('deleteItem', $item->id)
             ->assertHasNoErrors();
@@ -817,6 +817,12 @@ class ErpStaffPayrollAndInventoryTest extends TestCase
             'is_active' => false,
         ]);
         $this->assertNotNull(InventoryItem::find($item->id));
+
+        $component->call('restoreItem', $item->id)->assertHasNoErrors();
+        $this->assertDatabaseHas('inventory_items', [
+            'id' => $item->id,
+            'is_active' => true,
+        ]);
     }
 
 }
