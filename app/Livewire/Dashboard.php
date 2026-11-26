@@ -350,6 +350,7 @@ class Dashboard extends Component
             if (in_array($this->expenseCategory, ['GENERATOR_DIESEL', 'WAPDA_ELECTRICITY'], true)) {
                 UtilityLog::create([
                     'tenant_id' => $tenantId,
+                    'expense_id' => $expense->id,
                     'booking_id' => $this->fuelBookingId ?: null,
                     'generator_run_hours' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelRunHours : 0,
                     'diesel_liters_consumed' => $this->expenseCategory === 'GENERATOR_DIESEL' ? $this->fuelDieselLiters : 0,
