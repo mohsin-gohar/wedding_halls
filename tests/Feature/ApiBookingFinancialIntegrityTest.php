@@ -337,6 +337,19 @@ class ApiBookingFinancialIntegrityTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_platform_finance_can_request_a_specific_tenant_payment_summary(): void
+    {
+        $hall = Hall::query()->firstOrFail();
+        $finance = User::factory()->create([
+            'role' => 'ROLE_PLATFORM_FINANCE',
+            'status' => 'ACTIVE',
+        ]);
+
+        $this->actingAs($finance)
+            ->getJson('/api/v1/payments/summary?tenant_id='.$hall->tenant_id)
+            ->assertOk();
+    }
+
     public function test_staff_with_payment_view_permission_can_read_own_tenant_financials(): void
     {
         $hall = Hall::query()->firstOrFail();
