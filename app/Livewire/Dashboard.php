@@ -359,16 +359,6 @@ class Dashboard extends Component
         $this->expenseNotes = '';
     }
 
-    public function deleteDailyExpense(string $expenseId): void
-    {
-        $this->authorizeDashboardPermission('expenses.manage');
-        $tenantId = Auth::user()?->tenant_id;
-        $expense = Expense::where('tenant_id', $tenantId)->findOrFail($expenseId);
-        $amount = $expense->amount;
-        $expense->delete();
-
-        $this->expenseFeedback = 'Expense record [Rs '.number_format($amount).'] deleted.';
-    }
 
     public function setTimeframe(string $tf): void
     {
