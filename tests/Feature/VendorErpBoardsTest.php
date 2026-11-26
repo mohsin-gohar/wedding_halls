@@ -239,6 +239,58 @@ class VendorErpBoardsTest extends TestCase
             ->assertHasErrors(['serviceName']);
     }
 
+    public function test_per_head_and_hourly_services_require_a_positive_base_price(): void
+    {
+        $owner = $this->vendorOwner($this->cateringVendor());
+
+        Livewire::actingAs($owner)
+            ->test(VendorServicesManager::class)
+            ->set('serviceName', 'Unpriced Per Head Service')
+            ->set('pricingType', 'PER_HEAD')
+            ->set('priceFrom', 0)
+            ->set('priceTo', 1000)
+            ->call('saveService')
+            ->assertHasErrors(['priceFrom']);
+
+        Livewire::actingAs($owner)
+            ->test(VendorServicesManager::class)
+            ->set('serviceName', 'Unpriced Hourly Service')
+            ->set('pricingType', 'HOURLY')
+            ->set('priceFrom', null)
+            ->set('priceTo', null)
+            ->call('saveService')
+            ->assertHasErrors(['priceFrom']);
+
+        $this->assertDatabaseMissing('vendor_services', ['name' => 'Unpriced Per Head Service']);
+        $this->assertDatabaseMissing('vendor_services', ['name' => 'Unpriced Hourly Service']);
+    }
+
+    public function test_service_price_ranges_and_negative_values_are_rejected(): void
+    {
+        $owner = $this->vendorOwner($this->cateringVendor());
+
+        Livewire::actingAs($owner)
+            ->test(VendorServicesManager::class)
+            ->set('serviceName', 'Invalid Price Range Service')
+            ->set('pricingType', 'FIXED')
+            ->set('priceFrom', 5000)
+            ->set('priceTo', 4000)
+            ->call('saveService')
+            ->assertHasErrors(['priceTo']);
+
+        Livewire::actingAs($owner)
+            ->test(VendorServicesManager::class)
+            ->set('serviceName', 'Negative Price Service')
+            ->set('pricingType', 'FIXED')
+            ->set('priceFrom', -100)
+            ->set('priceTo', null)
+            ->call('saveService')
+            ->assertHasErrors(['priceFrom']);
+
+        $this->assertDatabaseMissing('vendor_services', ['name' => 'Invalid Price Range Service']);
+        $this->assertDatabaseMissing('vendor_services', ['name' => 'Negative Price Service']);
+    }
+
     // ─────────────────────────────────────────────────────────────
     // Vendor Service Bookings board
     // ─────────────────────────────────────────────────────────────
