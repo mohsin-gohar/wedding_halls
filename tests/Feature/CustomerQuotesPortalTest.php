@@ -129,6 +129,44 @@ class CustomerQuotesPortalTest extends TestCase
             ->assertSet('activeTab', 'bookings');
     }
 
+    public function test_vendor_staff_cannot_call_customer_dashboard_mutations(): void
+    {
+        $vendor = $this->vendor('catering');
+        $staff = User::query()->where('tenant_id', $vendor->id)
+            ->where('role', 'ROLE_TENANT_OWNER')
+            ->firstOrFail();
+
+        Livewire::actingAs($staff)
+            ->test(CustomerDashboard::class)
+            ->call('updateProfile')
+            ->assertForbidden();
+
+        Livewire::actingAs($staff)
+            ->test(CustomerDashboard::class)
+            ->call('acceptQuote', 1)
+            ->assertForbidden();
+    }
+
+    public function test_platform_admin_cannot_call_customer_dashboard_mutations(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'ROLE_SUPER_ADMIN',
+            'tenant_id' => null,
+            'status' => 'ACTIVE',
+        ]);
+        $admin->assignRole('ROLE_SUPER_ADMIN');
+
+        Livewire::actingAs($admin)
+            ->test(CustomerDashboard::class)
+            ->call('updateProfile')
+            ->assertForbidden();
+
+        Livewire::actingAs($admin)
+            ->test(CustomerDashboard::class)
+            ->call('acceptQuote', 1)
+            ->assertForbidden();
+    }
+
     public function test_guest_is_redirected_from_the_dashboard(): void
     {
         $this->get(route('customer.dashboard'))->assertRedirect(route('login'));
