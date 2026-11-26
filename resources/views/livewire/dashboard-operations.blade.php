@@ -45,7 +45,7 @@
                     <h2 class="font-serif-luxury text-xl text-[#171513] dark:text-white">Upcoming Events</h2>
                     <p class="mt-1 text-xs text-stone-500">Next scheduled venue functions</p>
                 </div>
-                <a href="{{ route('bookings') }}" class="text-xs font-bold text-[#8F7239] hover:underline dark:text-[#C6A15B]">View bookings</a>
+                <a href="{{ route('vendor.bookings') }}" class="text-xs font-bold text-[#8F7239] hover:underline dark:text-[#C6A15B]">View bookings</a>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[680px] text-left text-sm">
