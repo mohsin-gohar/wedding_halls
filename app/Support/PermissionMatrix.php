@@ -202,6 +202,9 @@ class PermissionMatrix
             'services.view', 'services.create', 'services.update', 'services.delete', 'services.manage',
             'portfolio.view', 'portfolio.manage',
             'availability.view', 'availability.manage',
+            'floor-plans.view', 'floor-plans.manage',
+            'utilities.view', 'utilities.manage',
+            'rsvps.view', 'rsvps.manage',
             'documents.view', 'documents.manage',
             'events.view', 'events-planning.view', 'events-planning.manage',
             'leads.view', 'leads.manage',
@@ -218,13 +221,15 @@ class PermissionMatrix
             'quotations.view', 'quotations.create', 'quotations.revise',
             'staff.view', 'staff.attendance',
             'kitchen.view', 'inventory.view', 'packages.view', 'services.view',
-            'availability.view', 'documents.view', 'locations.view', 'locations.manage',
+            'availability.view', 'floor-plans.view', 'floor-plans.manage',
+            'utilities.view', 'utilities.manage', 'rsvps.view', 'rsvps.manage',
+            'documents.view', 'locations.view', 'locations.manage',
             'events.view', 'events-planning.view',
             'leads.view', 'messages.view', 'messages.send',
             'reviews.view', 'reports.view', 'customers.view',
         ],
         'ROLE_VENDOR_ACCOUNTANT' => [
-            'dashboard.view',
+            'dashboard.view', 'staff.attendance',
             'bookings.view', 'service-bookings.view',
             'payments.view', 'payments.record',
             'invoices.view', 'invoices.manage',
@@ -289,9 +294,7 @@ class PermissionMatrix
         'ROLE_VENDOR_OWNER' => 'ROLE_TENANT_OWNER',
         'ROLE_VENDOR_MANAGER' => 'ROLE_MANAGER',
         'ROLE_VENDOR_ACCOUNTANT' => 'ROLE_ACCOUNTANT',
-        'ROLE_BOOKING_MANAGER' => 'ROLE_FRONT_DESK',
         'ROLE_CATERING_STAFF' => 'ROLE_CHEF',
-        'ROLE_HR_MANAGER' => 'ROLE_MANAGER',
     ];
 
     /** Flatten the matrix into permission strings. */
