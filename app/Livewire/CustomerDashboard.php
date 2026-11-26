@@ -194,14 +194,19 @@ class CustomerDashboard extends Component
     public function render()
     {
         $user = Auth::user();
-        abort_unless($user && $user->isCustomer(), 403, 'Customer account required.');
-        if (! $user) {
+
+        // mount() redirects non-customers. Keep the component render itself
+        // data-free as a second boundary if it is instantiated outside that
+        // route; every action independently enforces the customer role.
+        if (! $user || ! $user->isCustomer()) {
             return view('livewire.customer-dashboard', [
                 'bookings' => collect(),
                 'rfqs' => collect(),
                 'serviceBookings' => collect(),
                 'totalSpent' => 0,
                 'totalDue' => 0,
+                'totalGuests' => 0,
+                'upcomingBooking' => null,
             ]);
         }
 
