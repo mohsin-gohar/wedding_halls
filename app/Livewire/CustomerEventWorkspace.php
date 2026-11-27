@@ -528,12 +528,19 @@ class CustomerEventWorkspace extends Component
             // A vendor may have multiple bookings for the same event. Only
             // clear this exact booking reference and restore SHORTLISTED
             // when no other booking remains linked to that vendor row.
+            $replacementBooking = ServiceBooking::query()
+                ->where('customer_id', Auth::id())
+                ->where('customer_event_id', $event->id)
+                ->where('tenant_id', $lockedBooking->tenant_id)
+                ->orderByDesc('created_at')
+                ->first(['id']);
+
             CustomerEventVendor::query()
                 ->where('customer_event_id', $event->id)
                 ->where('service_booking_id', $lockedBooking->id)
                 ->update([
-                    'service_booking_id' => null,
-                    'status' => 'SHORTLISTED',
+                    'service_booking_id' => $replacementBooking?->id,
+                    'status' => $replacementBooking ? 'BOOKED' : 'SHORTLISTED',
                 ]);
         });
 
