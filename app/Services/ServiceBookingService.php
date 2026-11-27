@@ -212,7 +212,11 @@ class ServiceBookingService
             // Serialize every booking write for this vendor: the lock is held
             // for the rest of the transaction, so a concurrent direct booking
             // (or RFQ award) waits here and then sees our row.
-            $tenant = Tenant::query()->whereKey($tenantId)->lockForUpdate()->first();
+            $tenant = Tenant::query()
+                ->marketplaceVisible()
+                ->whereKey($tenantId)
+                ->lockForUpdate()
+                ->first();
 
             if (! $tenant || ! $tenant->canAcceptBookings()) {
                 throw ServiceBookingException::invalidState('This vendor subscription does not allow new bookings.');
