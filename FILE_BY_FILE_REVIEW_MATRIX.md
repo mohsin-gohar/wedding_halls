@@ -150,3 +150,13 @@ Evidence commits: 1fa89b5, 0a19393, 4ea94e1, 19d8cfb, dd6e3a3, 4be644a, a02d779,
 
 CI remains untouched. PHPUnit and build verification are still blocked in the local runtime; full Phase 1 review remains open.
 
+## 13. Phase 1 continuation — public submission abuse controls (2026-11-28)
+
+- app/Livewire/HallChat.php and app/Livewire/VenueChatWidget.php: added per-hall, per-user/visitor rate limits for text and voice submissions (10 text messages/minute; 5 voice uploads/10 minutes). Server-derived identity is used in the limiter key.
+- app/Livewire/PublicHallDetails.php and app/Livewire/PublicContact.php: consume inquiry/contact rate limits before validation and persistence, so malformed requests also count against the limit; bounded the contact city field.
+- Added PublicChatRateLimitTest for visitor chat message writes.
+
+Evidence commits: c4f826a, 255326b, 87876a0, 1883bac, ec28448.
+
+CI remains untouched. Local PHPUnit execution remains unavailable due missing PHP extensions.
+
