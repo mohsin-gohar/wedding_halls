@@ -230,6 +230,29 @@ class VendorErpBoardsTest extends TestCase
         ]);
     }
 
+    public function test_service_names_are_trimmed_before_persistence(): void
+    {
+        $vendor = $this->cateringVendor();
+        $owner = $this->vendorOwner($vendor);
+
+        Livewire::actingAs($owner)
+            ->test(VendorServicesManager::class)
+            ->set('serviceName', '  Royal Biryani Buffet Deluxe  ')
+            ->set('pricingType', 'FIXED')
+            ->set('priceFrom', 2500)
+            ->call('saveService')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('vendor_services', [
+            'tenant_id' => $vendor->id,
+            'name' => 'Royal Biryani Buffet Deluxe',
+        ]);
+        $this->assertDatabaseMissing('vendor_services', [
+            'tenant_id' => $vendor->id,
+            'name' => '  Royal Biryani Buffet Deluxe  ',
+        ]);
+    }
+
     public function test_service_creation_requires_service_name(): void
     {
         Livewire::actingAs($this->vendorOwner($this->cateringVendor()))
