@@ -45,3 +45,9 @@ Generated directories (`vendor/`, `node_modules/`, `public/build/`, compiled vie
 ## 5. Verification evidence for this matrix
 
 `composer audit --locked` → 0 advisories; `npm run build` → exit 0; `vendor/bin/pint --test` → exit 0; PHP lint over 386 tracked PHP files; `git ls-files` count 617; full MySQL suite artifact `full_suite_repair*.out`.
+
+## 6. Continuation (2026-11-27)
+
+- New migration `database/migrations/2026_12_23_000001_harden_financial_foreign_keys_and_unique_indexes.php` deep-reviewed and added (FK restrict + unique PO index with de-dupe).
+- `config/livewire.php` and `deploy/nginx-riwaj-grand.conf` updated for upload consistency and rate limit (prior push corrected).
+- No additional manual deep review of the remaining ~250 Livewire/Blade files; automated gates still pending local/CI re-run.

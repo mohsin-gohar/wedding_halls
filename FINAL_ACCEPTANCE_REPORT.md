@@ -79,3 +79,18 @@ CI Playwright job on `f837283`: **PASS**. Local real-Chromium verification cover
 ## 8. Deliverables
 
 `COMPLETE_REPOSITORY_AUDIT.md`, `FILE_BY_FILE_REVIEW_MATRIX.md`, `SECURITY_AND_TENANT_ISOLATION_REPORT.md`, `BUSINESS_MODULE_COMPLETION_REPORT.md`, `DATABASE_AND_FINANCIAL_INTEGRITY_REPORT.md`, `TESTING_AND_BROWSER_QA_REPORT.md`, `PRODUCTION_DEPLOYMENT_READINESS.md`, this report. All are committed on the repair branch.
+
+## 9. Continuation update (2026-11-27, HEAD after 732621b)
+
+**Additional safe fixes applied on this pass:**
+
+- Upload-size consistency: standalone Nginx `client_max_body_size` aligned to 64m (matches Docker Nginx and PHP limits). Livewire temporary upload middleware set to `throttle:10,1`.
+- New migration `2026_12_23_000001_harden_financial_foreign_keys_and_unique_indexes.php`:
+  - Deterministic de-duplication + unique index `purchase_orders_tenant_po_unique` on `(tenant_id, po_number)`.
+  - RestrictOnDelete applied to remaining financial FKs on expenses, staff_payrolls, purchase_orders, service_payments, vendor_payouts (where the constraint exists). Irreversible for data safety, matching prior cash-only pattern.
+- Wildcard API token issuance remains Super-Admin-only (prior commit). Platform-support global read continues as accepted risk pending owner product decision; no breaking change made.
+- Production Redis/queues/scheduler/mail/WhatsApp: configuration examples and deploy scripts reviewed and left intact. Real credentials, Redis daemon, queue workers, and live webhook secrets require owner hosting access and are **NOT VERIFIED**.
+
+**Test gates this session:** Not executed. Sandbox lacks MySQL, Composer, Docker daemon, and package-install permissions. No results fabricated. Prior CI on earlier head remains the last green evidence. Owner must re-run full MySQL suite, Pint, Composer/NPM audits, Vite build, Docker smoke, and Playwright on this head before any production promotion.
+
+**Genuine remaining external blockers:** staging duplicate/orphan audit + migration rehearsal for the new FK/index migration; production Redis/queue/scheduler/mail/WhatsApp secrets and host access; full CI re-run confirmation.
