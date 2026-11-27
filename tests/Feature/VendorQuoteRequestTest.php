@@ -133,6 +133,9 @@ class VendorQuoteRequestTest extends TestCase
             ->assertSet('submitted', true);
 
         $rfq = RFQ::query()->where('client_id', $customer->id)->firstOrFail();
+        // Model a category-wide request whose access is controlled by explicit
+        // tenant targets rather than a single owning vendor.
+        $rfq->update(['tenant_id' => null]);
         $targetOwner = User::factory()->create([
             'tenant_id' => $targetVendor->id,
             'role' => 'ROLE_TENANT_OWNER',
