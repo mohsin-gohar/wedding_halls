@@ -25,9 +25,11 @@ use Livewire\Component;
 #[Layout('components.layouts.public', ['title' => 'Request a Quote | Riwaj Grand'])]
 class VendorQuoteRequest extends Component
 {
-    #[Locked]\n    public Tenant $vendor;
+    #[Locked]
+    public Tenant $vendor;
 
-    #[Locked]\n    public ?VendorCategory $category;
+    #[Locked]
+    public ?VendorCategory $category;
 
     #[Url]
     public ?string $service = null;
