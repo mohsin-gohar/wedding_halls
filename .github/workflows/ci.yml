@@ -37,8 +37,10 @@ jobs:
 
       - name: PHP syntax lint
         run: |
-          find app config database routes tests -name '*.php' -print0 \
-            | xargs -0 -n1 -P4 php -l
+          # Lint every tracked PHP source file, including artisan/bootstrap/public,
+          # maintenance scripts and test support files outside the usual folders.
+          git ls-files -z -- '*.php' \
+            | xargs -0 -r -n1 -P4 php -l
 
       - name: Pint style check
         run: vendor/bin/pint --test
