@@ -9,6 +9,7 @@ use App\Models\Venue;
 use App\Services\PlatformAnalyticsService;
 use App\Support\PlatformMetrics;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class FinancialReportingIntegrityTest extends TestCase
