@@ -22,6 +22,7 @@ class PublicVendorProfile extends Component
     #[Locked]
     public Tenant $vendor;
 
+    #[Locked]
     public ?VendorCategory $category;
 
     public function mount(string $slug): void
