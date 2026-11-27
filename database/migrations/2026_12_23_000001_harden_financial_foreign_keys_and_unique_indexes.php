@@ -107,9 +107,13 @@ return new class extends Migration
             ['expenses', 'tenant_id', 'tenants'],
             ['staff_payrolls', 'tenant_id', 'tenants'],
             ['purchase_orders', 'tenant_id', 'tenants'],
+            ['service_bookings', 'tenant_id', 'tenants'],
+            ['service_bookings', 'customer_id', 'users'],
             ['service_payments', 'tenant_id', 'tenants'],
             ['service_payments', 'service_booking_id', 'service_bookings'],
+            ['service_payments', 'customer_id', 'users'],
             ['vendor_payouts', 'tenant_id', 'tenants'],
+            ['wallet_transactions', 'tenant_id', 'tenants'],
         ];
 
         foreach ($constraints as [$table, $column, $ref]) {
