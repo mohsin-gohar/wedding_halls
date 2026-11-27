@@ -175,6 +175,16 @@ class VendorServicesManager extends Component
             abort(403);
         }
 
+        $this->validate([
+            'serviceName' => ['required', 'string', 'min:3', 'max:150'],
+            'serviceDescription' => ['nullable', 'string', 'max:2000'],
+            'pricingType' => ['required', Rule::in(['FIXED', 'PER_HEAD', 'HOURLY', 'DAY', 'PROJECT', 'CONSULT'])],
+            'priceFrom' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
+            'priceTo' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
+            'serviceUnit' => ['required', 'string', 'max:60'],
+            'vendorCategoryId' => ['nullable', 'integer', Rule::exists('vendor_categories', 'id')->where('is_active', true)],
+        ]);
+
         $normalizedName = trim($this->serviceName);
 
         if ($normalizedName === '') {
