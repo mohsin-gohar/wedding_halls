@@ -5,6 +5,7 @@ namespace App\Livewire\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -32,11 +33,20 @@ class VerifyEmail extends Component
 
     public function verifyEmail(?string $token = null, ?string $email = null): void
     {
+        // Verification links are short-lived and signed. Checking the request
+        // signature also prevents callers from invoking this Livewire action
+        // with a copied deterministic token after the link has expired.
+        if (! request()->hasValidSignature()) {
+            $this->errorMessage = 'Invalid or expired verification link. Request a new one below.';
+
+            return;
+        }
+
         $token = $token ?? $this->token;
         $email = $email ?? $this->email;
 
-        if (empty($token) || empty($email)) {
-            $this->errorMessage = 'Invalid verification link.';
+        if (empty($token) || empty($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->errorMessage = 'Invalid or expired verification link. Request a new one below.';
 
             return;
         }
@@ -44,7 +54,7 @@ class VerifyEmail extends Component
         $user = User::where('email', $email)->first();
 
         if (! $user) {
-            $this->errorMessage = 'User not found.';
+            $this->errorMessage = 'Invalid or expired verification link. Request a new one below.';
 
             return;
         }
@@ -52,7 +62,7 @@ class VerifyEmail extends Component
         $expectedToken = hash_hmac('sha256', $user->email.'|'.$user->id, config('app.key'));
 
         if (! hash_equals($expectedToken, $token)) {
-            $this->errorMessage = 'Invalid or expired verification token.';
+            $this->errorMessage = 'Invalid or expired verification link. Request a new one below.';
 
             return;
         }
@@ -72,7 +82,10 @@ class VerifyEmail extends Component
 
     public function resendVerification(): void
     {
-        $throttleKey = 'email_resend|'.strtolower($this->email).'|'.request()->ip();
+        $email = strtolower(trim($this->email));
+        $this->validate(['email' => ['required', 'email', 'max:255']]);
+
+        $throttleKey = 'email_resend|'.$email.'|'.request()->ip();
 
         if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
             $seconds = RateLimiter::availableIn($throttleKey);
@@ -83,32 +96,29 @@ class VerifyEmail extends Component
 
         RateLimiter::hit($throttleKey, 60);
 
-        $user = User::where('email', $this->email)->first();
+        $user = User::where('email', $email)->first();
 
-        if (! $user) {
-            $this->errorMessage = 'User not found.';
+        // Keep the response identical for unknown, already-verified and
+        // pending accounts so this endpoint cannot be used for enumeration.
+        if ($user && ! $user->email_verified_at) {
+            $token = hash_hmac('sha256', $user->email.'|'.$user->id, config('app.key'));
+            $verificationUrl = URL::temporarySignedRoute(
+                'verify.email',
+                now()->addHour(),
+                ['token' => $token, 'email' => $user->email]
+            );
 
-            return;
+            Mail::send('emails.verify-email', [
+                'user' => $user,
+                'token' => $token,
+                'verificationUrl' => $verificationUrl,
+            ], function ($message) use ($user) {
+                $message->to($user->email)
+                    ->subject('Verify Your Email Address — Riwaj Grand');
+            });
         }
 
-        if ($user->email_verified_at) {
-            $this->feedbackMessage = 'Your email is already verified.';
-
-            return;
-        }
-
-        $token = hash_hmac('sha256', $user->email.'|'.$user->id, config('app.key'));
-
-        Mail::send('emails.verify-email', [
-            'user' => $user,
-            'token' => $token,
-            'verificationUrl' => route('verify.email', ['token' => $token, 'email' => $user->email]),
-        ], function ($message) use ($user) {
-            $message->to($user->email)
-                ->subject('Verify Your Email Address — Riwaj Grand');
-        });
-
-        $this->feedbackMessage = 'A new verification email has been sent to your inbox.';
+        $this->feedbackMessage = 'If this address is registered and still needs verification, a verification email will be sent shortly.';
     }
 
     public function render()
