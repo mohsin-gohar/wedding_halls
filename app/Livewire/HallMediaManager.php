@@ -160,7 +160,15 @@ class HallMediaManager extends Component
             return true;
         }
 
-        if (! is_string($value) || preg_match('/[\\x00-\\x20\\\\"\\'()<>]/', $value)) {
+        if (
+            ! is_string($value)
+            || preg_match('/[\\x00-\\x20]/', $value)
+            || str_contains($value, "'")
+            || str_contains($value, '"')
+            || str_contains($value, '(')
+            || str_contains($value, ')')
+            || str_contains($value, '\\\\')
+        ) {
             return false;
         }
 
