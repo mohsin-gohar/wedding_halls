@@ -160,3 +160,13 @@ Evidence commits: c4f826a, 255326b, 87876a0, 1883bac, ec28448.
 
 CI remains untouched. Local PHPUnit execution remains unavailable due missing PHP extensions.
 
+## 14. Phase 1 continuation — public page context and vendor bid bounds (2026-11-28)
+
+- app/Livewire/PublicHallDetails.php, PublicVendorProfile.php and PublicGuestRsvp.php: locked the mounted Hall, Tenant/category and invitation model properties so client-side Livewire updates cannot swap the record context after the server-side public visibility/phone lookup. Added reflection regression coverage.
+- app/Livewire/VendorQuotesBoard.php: bounded bid values to the supported decimal range, rejects non-finite amounts, and caps proposals at 5,000 characters. Added regression coverage for overflow and oversized proposals.
+- app/Livewire/PublicHallDetails.php and PublicContact.php inquiry throttles, plus HallChat/VenueChatWidget message/voice throttles, are recorded in section 13.
+
+Evidence commits: b124a9c, 7f01ea7, df62bca, 7b88ebf, d31055f, 4ee7722, b33e036, 59105f6.
+
+CI remains untouched. Full Phase 1 review remains in progress.
+
