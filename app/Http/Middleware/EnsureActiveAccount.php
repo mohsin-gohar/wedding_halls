@@ -13,7 +13,9 @@ class EnsureActiveAccount
     {
         $user = $request->user();
 
-        if ($user && in_array($user->status, ['SUSPENDED', 'INACTIVE', 'BLOCKED'], true)) {
+        // Default-deny every non-ACTIVE state, including PENDING and
+        // unknown future statuses. A demoted session must not remain usable.
+        if ($user && $user->status !== 'ACTIVE') {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
