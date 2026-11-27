@@ -12,8 +12,9 @@ use Illuminate\Support\Facades\Schema;
  * - Changes cascade deletes on critical financial tables to restrict so history
  *   cannot be destroyed by deleting a parent record.
  * - Adds unique (tenant_id, po_number) on purchase_orders and unique
- *   (tenant_id, booking_reference) on bookings after deterministic
- *   de-duplication of any legacy duplicates.
+ *   (tenant_id, booking_reference) on bookings only when no duplicates exist.
+ * - Duplicate business references stop the migration for manual review; this
+ *   migration never rewrites an existing PO number or booking reference.
  * - All operations are protective; existing rows are preserved.
  *
  * This migration is intended for staging rehearsal first. It does not touch
@@ -41,23 +42,18 @@ return new class extends Migration
         }
 
         $duplicates = DB::table('purchase_orders')
-            ->select('tenant_id', 'po_number', DB::raw('MIN(id) as keep_id'))
+            ->select('tenant_id', 'po_number')
             ->groupBy('tenant_id', 'po_number')
             ->havingRaw('COUNT(*) > 1')
+            ->limit(5)
             ->get();
 
-        foreach ($duplicates as $duplicate) {
-            $rows = DB::table('purchase_orders')
-                ->where('tenant_id', $duplicate->tenant_id)
-                ->where('po_number', $duplicate->po_number)
-                ->where('id', '!=', $duplicate->keep_id)
-                ->get(['id']);
-
-            foreach ($rows as $row) {
-                $suffix = '-LEGACY-'.$row->id;
-                $number = substr((string) $duplicate->po_number, 0, 50 - strlen($suffix)).$suffix;
-                DB::table('purchase_orders')->where('id', $row->id)->update(['po_number' => $number]);
-            }
+        if ($duplicates->isNotEmpty()) {
+            throw new RuntimeException(
+                'Cannot enforce unique purchase-order numbers: duplicate tenant/PO references exist. '
+                .'Resolve the listed legacy duplicates in a reviewed maintenance operation, then rerun migrations. '
+                .'Sample: '.json_encode($duplicates->toArray(), JSON_THROW_ON_ERROR)
+            );
         }
 
         Schema::table('purchase_orders', function (Blueprint $table): void {
@@ -74,24 +70,19 @@ return new class extends Migration
         }
 
         $duplicates = DB::table('bookings')
-            ->select('tenant_id', 'booking_reference', DB::raw('MIN(id) as keep_id'))
+            ->select('tenant_id', 'booking_reference')
             ->whereNotNull('booking_reference')
             ->groupBy('tenant_id', 'booking_reference')
             ->havingRaw('COUNT(*) > 1')
+            ->limit(5)
             ->get();
 
-        foreach ($duplicates as $duplicate) {
-            $rows = DB::table('bookings')
-                ->where('tenant_id', $duplicate->tenant_id)
-                ->where('booking_reference', $duplicate->booking_reference)
-                ->where('id', '!=', $duplicate->keep_id)
-                ->get(['id']);
-
-            foreach ($rows as $row) {
-                $suffix = '-LEGACY-'.$row->id;
-                $reference = substr((string) $duplicate->booking_reference, 0, 40 - strlen($suffix)).$suffix;
-                DB::table('bookings')->where('id', $row->id)->update(['booking_reference' => $reference]);
-            }
+        if ($duplicates->isNotEmpty()) {
+            throw new RuntimeException(
+                'Cannot enforce unique booking references: duplicate tenant/booking references exist. '
+                .'Resolve the listed legacy duplicates in a reviewed maintenance operation, then rerun migrations. '
+                .'Sample: '.json_encode($duplicates->toArray(), JSON_THROW_ON_ERROR)
+            );
         }
 
         Schema::table('bookings', function (Blueprint $table): void {
