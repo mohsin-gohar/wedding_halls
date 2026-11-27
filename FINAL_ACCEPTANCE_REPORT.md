@@ -94,3 +94,19 @@ CI Playwright job on `f837283`: **PASS**. Local real-Chromium verification cover
 **Test gates this session:** Not executed. Sandbox lacks MySQL, Composer, Docker daemon, and package-install permissions. No results fabricated. Prior CI on earlier head remains the last green evidence. Owner must re-run full MySQL suite, Pint, Composer/NPM audits, Vite build, Docker smoke, and Playwright on this head before any production promotion.
 
 **Genuine remaining external blockers:** staging duplicate/orphan audit + migration rehearsal for the new FK/index migration; production Redis/queue/scheduler/mail/WhatsApp secrets and host access; full CI re-run confirmation.
+
+## 10. Final CI verification (2026-11-27, HEAD fd15b25)
+
+**CI run on exact HEAD `fd15b25016abfbd6775cccb2a4ff7b7a38a46b68`:**  
+https://github.com/mohsin-gohar/wedding_halls/actions/runs/45949436835
+
+| Job | Result | Notes |
+|---|---|---|
+| Static quality gates | **FAILURE** | Pint style issue in new migration only (class_definition / fully_qualified_strict_types / unary_operator_spaces / braces_position / not_operator_with_successor_space). PHP lint passed. Composer/NPM/Docker checks skipped after Pint fail. |
+| MySQL test suite | **SUCCESS** | Full suite green (migrations including the new financial FK/index migration applied cleanly; tests passed). |
+| Playwright browser QA | **SUCCESS** | Browser suite green. |
+| Deploy | SKIPPED | Intentionally disabled. |
+
+**Style fix applied in follow-up:** migration rewritten for Pint compliance; booking-reference unique index `(tenant_id, booking_reference)` added after deterministic de-duplication (column already existed via `2026_10_10_000002`). Migration remains irreversible for data safety; recovery is full restore from backup + re-seed of de-duplicated references if needed. Staging rehearsal still required before production.
+
+**External blockers unchanged:** Redis/queue/scheduler/mail/WhatsApp live credentials and host access; staging forward/rollback rehearsal of the irreversible migration; full green CI on the style-fixed head.

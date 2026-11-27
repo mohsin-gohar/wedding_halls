@@ -11,18 +11,20 @@ use Illuminate\Support\Facades\Schema;
  *
  * - Changes cascade deletes on critical financial tables to restrict so history
  *   cannot be destroyed by deleting a parent record.
- * - Adds unique (tenant_id, po_number) on purchase_orders after deterministic
+ * - Adds unique (tenant_id, po_number) on purchase_orders and unique
+ *   (tenant_id, booking_reference) on bookings after deterministic
  *   de-duplication of any legacy duplicates.
  * - All operations are protective; existing rows are preserved.
  *
  * This migration is intended for staging rehearsal first. It does not touch
- * production data.
+ * production data. It is irreversible for data-safety reasons.
  */
 return new class extends Migration
 {
     public function up(): void
     {
         $this->hardenPurchaseOrderReferences();
+        $this->hardenBookingReferences();
         $this->restrictFinancialForeignKeys();
     }
 
@@ -63,6 +65,41 @@ return new class extends Migration
         Schema::table('purchase_orders', function (Blueprint $table): void {
             if (! Schema::hasIndex('purchase_orders', 'purchase_orders_tenant_po_unique')) {
                 $table->unique(['tenant_id', 'po_number'], 'purchase_orders_tenant_po_unique');
+            }
+        });
+    }
+
+    private function hardenBookingReferences(): void
+    {
+        if (! Schema::hasTable('bookings') || ! Schema::hasColumn('bookings', 'booking_reference')) {
+            return;
+        }
+
+        // Deterministically rename duplicate (tenant, booking_reference) rows.
+        $duplicates = DB::table('bookings')
+            ->select('tenant_id', 'booking_reference', DB::raw('MIN(id) as keep_id'))
+            ->whereNotNull('booking_reference')
+            ->groupBy('tenant_id', 'booking_reference')
+            ->havingRaw('COUNT(*) > 1')
+            ->get();
+
+        foreach ($duplicates as $duplicate) {
+            $rows = DB::table('bookings')
+                ->where('tenant_id', $duplicate->tenant_id)
+                ->where('booking_reference', $duplicate->booking_reference)
+                ->where('id', '!=', $duplicate->keep_id)
+                ->get(['id']);
+
+            foreach ($rows as $row) {
+                $suffix = '-LEGACY-'.$row->id;
+                $reference = substr((string) $duplicate->booking_reference, 0, 40 - strlen($suffix)).$suffix;
+                DB::table('bookings')->where('id', $row->id)->update(['booking_reference' => $reference]);
+            }
+        }
+
+        Schema::table('bookings', function (Blueprint $table): void {
+            if (! Schema::hasIndex('bookings', 'bookings_tenant_reference_unique')) {
+                $table->unique(['tenant_id', 'booking_reference'], 'bookings_tenant_reference_unique');
             }
         });
     }
@@ -108,7 +145,7 @@ return new class extends Migration
         try {
             $driver = Schema::getConnection()->getDriverName();
             if ($driver !== 'mysql') {
-                return true; // Assume present for non-MySQL test drivers.
+                return true;
             }
 
             $result = DB::select(
@@ -118,7 +155,7 @@ return new class extends Migration
             );
 
             return count($result) > 0;
-        } catch (\Throwable) {
+        } catch (\Throwable $exception) {
             return false;
         }
     }
