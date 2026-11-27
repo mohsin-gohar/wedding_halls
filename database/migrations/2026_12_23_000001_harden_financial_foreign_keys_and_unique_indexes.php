@@ -40,8 +40,6 @@ return new class extends Migration
             return;
         }
 
-        // Deterministically rename duplicate (tenant, po_number) rows so the
-        // unique index can be added without data loss.
         $duplicates = DB::table('purchase_orders')
             ->select('tenant_id', 'po_number', DB::raw('MIN(id) as keep_id'))
             ->groupBy('tenant_id', 'po_number')
@@ -75,7 +73,6 @@ return new class extends Migration
             return;
         }
 
-        // Deterministically rename duplicate (tenant, booking_reference) rows.
         $duplicates = DB::table('bookings')
             ->select('tenant_id', 'booking_reference', DB::raw('MIN(id) as keep_id'))
             ->whereNotNull('booking_reference')
@@ -126,7 +123,6 @@ return new class extends Migration
     {
         $constraint = "{$table}_{$column}_foreign";
 
-        // Only act if the foreign key exists.
         if (! $this->foreignKeyExists($table, $constraint)) {
             return;
         }
@@ -149,13 +145,12 @@ return new class extends Migration
             }
 
             $result = DB::select(
-                'SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS
-                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = ? AND CONSTRAINT_TYPE = ?',
+                'SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = ? AND CONSTRAINT_TYPE = ?',
                 [$table, $constraint, 'FOREIGN KEY']
             );
 
             return count($result) > 0;
-        } catch (\Throwable $exception) {
+        } catch (Throwable $e) {
             return false;
         }
     }
