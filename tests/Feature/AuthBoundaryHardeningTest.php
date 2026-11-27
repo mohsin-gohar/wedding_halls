@@ -62,9 +62,11 @@ class AuthBoundaryHardeningTest extends TestCase
         );
     }
 
-    public function test_wildcard_access_requires_an_explicit_request(): void
+    public function test_wildcard_access_requires_explicit_request_and_platform_administrator(): void
     {
-        $this->actingAs($this->owner())
+        $superAdmin = User::query()->where('role', 'ROLE_SUPER_ADMIN')->firstOrFail();
+
+        $this->actingAs($superAdmin)
             ->postJson('/account/api-tokens', [
                 'name' => 'Explicit wildcard token',
                 'abilities' => ['*'],
