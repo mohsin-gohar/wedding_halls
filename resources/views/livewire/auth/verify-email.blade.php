@@ -2,7 +2,7 @@
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
         <div class="flex justify-center">
             <div class="w-16 h-16 bg-[#C6A15B] rounded-2xl flex items-center justify-center text-[#171513] font-bold text-2xl shadow-lg">
-                EH
+                RG
             </div>
         </div>
 
