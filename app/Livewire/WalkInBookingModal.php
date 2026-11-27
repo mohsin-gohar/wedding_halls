@@ -149,6 +149,9 @@ class WalkInBookingModal extends Component
      */
     private function hallQueryForCurrentUser()
     {
+        // isStaff is public Livewire state, so recompute it before using it
+        // as an authorization decision on every action/hydration.
+        $this->determineStaffMode();
         $user = Auth::user();
         $query = $this->isStaff ? Hall::query() : Hall::publicVisible();
 
