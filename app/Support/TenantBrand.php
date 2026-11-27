@@ -78,7 +78,11 @@ class TenantBrand
 
         // Local public-storage paths only; reject quotes, parentheses,
         // control characters and CSS delimiters before a view uses url(...).
-        return preg_match('#\\A/?[A-Za-z0-9._/%-]+\\z#', $value) ? $value : null;
+        if (! preg_match('#\\A/?[A-Za-z0-9._/%-]+\\z#', $value)) {
+            return null;
+        }
+
+        return Media::publicUrl($value);
     }
 
     /**
