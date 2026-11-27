@@ -295,7 +295,9 @@ class HallMediaManager extends Component
 
     public function openCreateModal()
     {
-        $tenant = Auth::user()->tenant;
+        $user = Auth::user();
+        abort_unless($user && $user->tenant_id, 403, 'Select an assigned tenant before creating a hall.');
+        $tenant = $user->tenant;
         if ($tenant && ! $tenant->canAddHall()) {
             session()->flash('error', 'Hall limit reached ('.$tenant->halls()->count().'/'.($tenant->subscriptionPlan->max_halls ?? 1).'). Please upgrade your SaaS subscription to add more banquet halls.');
 
@@ -333,8 +335,8 @@ class HallMediaManager extends Component
         ]);
 
         $user = Auth::user();
-        if (! $user || (! $user->isSuperAdmin() && ! $user->tenant_id)) {
-            abort(403, 'Tenant required to create hall.');
+        if (! $user || ! $user->tenant_id) {
+            abort(403, 'An assigned tenant is required to create a hall.');
         }
         $venue = Venue::where('tenant_id', $user->tenant_id)->first();
         if (! $venue) {
@@ -449,8 +451,9 @@ class HallMediaManager extends Component
             return;
         }
 
-        $tenantId = Auth::user()->tenant_id ?? 'platform';
-        $hallId = $this->hall?->id ?? 'new';
+        abort_unless($this->hall instanceof Hall && Auth::user()?->tenant_id, 403, 'Select an assigned hall before uploading media.');
+        $tenantId = Auth::user()->tenant_id;
+        $hallId = $this->hall->id;
         foreach ($this->imageUploads as $file) {
             $path = $file->store('halls/'.$tenantId.'/'.$hallId.'/images', 'public');
             $url = Storage::disk('public')->url($path);
@@ -478,8 +481,9 @@ class HallMediaManager extends Component
             return;
         }
 
-        $tenantId = Auth::user()->tenant_id ?? 'platform';
-        $hallId = $this->hall?->id ?? 'new';
+        abort_unless($this->hall instanceof Hall && Auth::user()?->tenant_id, 403, 'Select an assigned hall before uploading media.');
+        $tenantId = Auth::user()->tenant_id;
+        $hallId = $this->hall->id;
         foreach ($this->videoUploads as $file) {
             $path = $file->store('halls/'.$tenantId.'/'.$hallId.'/videos', 'public');
             $url = Storage::disk('public')->url($path);
@@ -493,6 +497,7 @@ class HallMediaManager extends Component
     public function save()
     {
         $this->assertCanManageHall();
+        abort_unless($this->hall instanceof Hall, 404, 'No hall is selected.');
         $this->validate();
 
         $user = Auth::user();
@@ -546,7 +551,7 @@ class HallMediaManager extends Component
             $targetTenant = $this->hall->tenant ?: $user->tenant;
             if ($targetTenant) {
                 $targetTenant->update([
-                    'name' => $this->venue_name,
+                    'name' => trim($this->venue_name) !== '' ? $this->venue_name : $this->name,
                     'city' => $this->city,
                     'address' => $this->address,
                     'phone' => $this->phone,
