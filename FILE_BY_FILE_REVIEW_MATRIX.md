@@ -119,3 +119,13 @@ Further review of middleware, policies, service classes and their callers identi
 
 The new/updated tests have been committed but could not be executed in the current local runtime because required PHP extensions are absent. No CI action was taken. Full Phase 1 file-by-file review remains in progress; no 100% completion claim is made.
 
+## 10. Phase 1 continuation — hall media and guest chat context (2026-11-28)
+
+- app/Livewire/HallMediaManager.php: blocked hall creation without an assigned tenant, blocked uploads without a selected tenant-owned hall, stopped silent saves when no hall is selected, preserved the existing tenant name when the optional venue name is blank, and moved hall creation into a tenant-row-locked transaction so concurrent requests cannot exceed the plan's hall limit. Added a regression test for the orphan-hall case.
+- app/Livewire/HallChat.php and app/Livewire/VenueChatWidget.php: locked the hall model and server-derived visitor IP/session properties so guests cannot forge another conversation's identity or switch the component to a hidden hall through Livewire property updates. Added a reflection-based regression test for both components.
+- Also reviewed PublicGuestRsvp, WhatsAppRsvpManager, NotificationCenter, AttendanceCalendar, FloorPlanDesigner, HallReviews, DirectBooking, CalendarShiftGrid, and KitchenKotBoard for their current access and tenant-scope patterns.
+
+Evidence commits: 7b96c6a, 7ba63ba, ceec92c, 7568408, 61790db, 6969975, d8451f4, 448d9f8, a7b4b05.
+
+Full Phase 1 review remains open; these targeted checks do not mark the remaining unreviewed files complete. CI remains untouched.
+
