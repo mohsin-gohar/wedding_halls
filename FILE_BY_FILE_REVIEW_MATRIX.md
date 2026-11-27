@@ -129,3 +129,14 @@ Evidence commits: 7b96c6a, 7ba63ba, ceec92c, 7568408, 61790db, 6969975, d8451f4,
 
 Full Phase 1 review remains open; these targeted checks do not mark the remaining unreviewed files complete. CI remains untouched.
 
+## 11. Phase 1 continuation — marketplace stale-state and tenant-context guards (2026-11-28)
+
+- app/Livewire/VendorQuoteRequest.php and app/Livewire/DirectBooking.php: locked the mounted vendor/category model context against Livewire client mutation.
+- app/Livewire/VendorQuoteRequest.php: re-resolves the vendor through the marketplace-visible scope under the tenant row lock before creating an RFQ, so a vendor hidden or unapproved after form mount cannot receive a new quote request.
+- app/Services/ServiceBookingService.php: direct booking now re-resolves the vendor through the marketplace-visible scope under lock before creating a booking. A stale open booking page cannot book a vendor after marketplace visibility is revoked.
+- Added stale-page regression tests to VendorQuoteRequestTest and DirectServiceBookingTest.
+
+Evidence commits: 83a5f92, 999d007, 689ee6a, 08f5acf, 256b434, ea82b62, cb80b28, 48214b7, a270b81, 770ea16, b21fa4f. Intermediate attribute-formatting commits were corrected before the final branch state.
+
+CI remains untouched. Full Phase 1 review remains in progress.
+
