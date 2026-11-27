@@ -15,6 +15,28 @@ class FinancialReportingIntegrityTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_financial_ledger_foreign_keys_restrict_parent_deletion(): void
+    {
+        $constraints = [
+            ['service_bookings', 'service_bookings_tenant_id_foreign'],
+            ['service_bookings', 'service_bookings_customer_id_foreign'],
+            ['service_payments', 'service_payments_tenant_id_foreign'],
+            ['service_payments', 'service_payments_service_booking_id_foreign'],
+            ['service_payments', 'service_payments_customer_id_foreign'],
+            ['wallet_transactions', 'wallet_transactions_tenant_id_foreign'],
+        ];
+
+        foreach ($constraints as [$table, $constraint]) {
+            $result = DB::selectOne(
+                'SELECT DELETE_RULE FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = ?',
+                [$table, $constraint],
+            );
+
+            $this->assertNotNull($result, "Missing financial foreign key {$constraint}.");
+            $this->assertSame('RESTRICT', strtoupper($result->DELETE_RULE), "Unexpected delete rule for {$constraint}.");
+        }
+    }
+
     public function test_gmv_excludes_unconfirmed_hold_bookings(): void
     {
         $tenant = Tenant::create([
