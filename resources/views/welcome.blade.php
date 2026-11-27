@@ -544,7 +544,7 @@
                                 <span class="text-[10px] uppercase font-semibold tracking-wider text-stone-500 dark:text-stone-400 block font-sans">Per Head Rate</span>
                                 <strong class="font-cinzel text-xl text-[#171513] dark:text-[#C6A15B]">PKR {{ number_format($pkg->per_head_price) }}</strong>
                             </div>
-                            <button onclick="Livewire.dispatch('openWalkInModal', { package_id: '{{ $pkg->id }}' })" class="btn-obsidian !h-9 !px-4 text-xs font-semibold hover:border-[#C6A15B] hover:text-[#E8DCBE] transition-all flex items-center gap-1.5">
+                            <button onclick="Livewire.dispatch('openWalkInModal', { package_id: @js($pkg->id) })" class="btn-obsidian !h-9 !px-4 text-xs font-semibold hover:border-[#C6A15B] hover:text-[#E8DCBE] transition-all flex items-center gap-1.5">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                                 Reserve
                             </button>
