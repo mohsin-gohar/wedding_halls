@@ -246,7 +246,7 @@ class VendorServicesManager extends Component
         $this->priceFrom = $from;
         $this->priceTo = $to;
 
-        DB::transaction(function () use ($tenantId, $from, $to) {
+        DB::transaction(function () use ($tenantId, $from, $to, $normalizedName) {
             if ($this->isEditing) {
                 $service = VendorService::query()->where('tenant_id', $tenantId)->find($this->editingServiceId);
 
