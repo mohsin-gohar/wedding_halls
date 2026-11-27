@@ -51,3 +51,9 @@ Generated directories (`vendor/`, `node_modules/`, `public/build/`, compiled vie
 - New migration `database/migrations/2026_12_23_000001_harden_financial_foreign_keys_and_unique_indexes.php` deep-reviewed and added (FK restrict + unique PO index with de-dupe).
 - `config/livewire.php` and `deploy/nginx-riwaj-grand.conf` updated for upload consistency and rate limit (prior push corrected).
 - No additional manual deep review of the remaining ~250 Livewire/Blade files; automated gates still pending local/CI re-run.
+
+## 7. Final pass (2026-11-27, HEAD cb6ad80)
+
+- Financial migration `2026_12_23_000001` deep-reviewed: de-dupe logic, unique indexes, restrictOnDelete, irreversibility documented with staging restore-drill commands.
+- Production configs (Redis/queue/scheduler/mail/WhatsApp) reviewed; live verification blocked on owner credentials.
+- CI on exact HEAD in progress (static gates largely green; MySQL/Playwright running). Prior green evidence retained.

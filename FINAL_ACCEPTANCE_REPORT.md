@@ -126,3 +126,39 @@ https://github.com/mohsin-gohar/wedding_halls/actions/runs/45949436835
 **Migration safety:** New migration applied cleanly in CI MySQL containers (forward path verified). Irreversible by design; recovery strategy is full database restore from backup plus re-application of deterministic de-duplication if any legacy references were rewritten. Staging rehearsal with real data still required before production.
 
 **Remote HEAD verified:** `bc3f64af9bce27570f59713dd116e692f4f58886` on `origin/audit/riwaj-grand-repair-20261126`.
+
+## 12. Final production-readiness pass (2026-11-27, HEAD cb6ad80)
+
+**CI run on exact latest HEAD `cb6ad80ea7bc722041a1ae8809b5e0b43c9dcd0b`:**  
+https://github.com/mohsin-gohar/wedding_halls/actions/runs/45951164982
+
+| Job | Status (as of last poll) | Notes |
+|---|---|---|
+| Static quality gates | In progress (Pint, Composer audit, NPM audit, Vite build already green; Docker validation running) | All prior static checks green on this head |
+| MySQL test suite | In progress | Migrations (including 2026_12_23 financial FK + unique indexes) succeeded; tests running. Prior full suite on fd15b25 was green. |
+| Playwright browser QA | In progress | Suite running. Prior full suite on fd15b25 was green. |
+| Deploy | SKIPPED | Intentionally disabled |
+
+**Financial migration final review:**  
+`2026_12_23_000001_harden_financial_foreign_keys_and_unique_indexes.php`  
+- Deterministic de-duplication of legacy `(tenant_id, po_number)` and `(tenant_id, booking_reference)` duplicates before adding unique indexes.  
+- `restrictOnDelete()` applied to remaining financial FKs where constraints exist.  
+- Forward path verified in CI MySQL containers. Irreversible by design.  
+- **Staging rehearsal commands (owner action required):**  
+  1. Take encrypted backup: `AGE_RECIPIENT=... RCLONE_REMOTE=... ./deploy/backup-docker.sh`  
+  2. Restore to isolated staging DB ending in `_restore_drill`: `AGE_IDENTITY=... RESTORE_DB_HOST=... RESTORE_DB_DATABASE=..._restore_drill RESTORE_CONFIRM=..._restore_drill ./deploy/restore-drill.sh /path/to/backup.sql.gz.age`  
+  3. On staging only: `php artisan migrate --force` and verify unique indexes + restrict FKs.  
+  4. Recovery: restore from the pre-migration backup. Never run on production until staging drill passes.
+
+**Production configuration (reviewed, not executed):**  
+Redis, queue workers (`supervisor-riwaj-grand-worker.conf`), scheduler (`schedule:run` cron), mail (SMTP placeholders in `.env.production.example`), and WhatsApp Cloud API (blank tokens keep outbound in log/sandbox mode) are documented. Live delivery and Redis daemon require owner hosting access and real secrets. No credentials were present in this environment.
+
+**Browser QA:** Covered by CI Playwright job (public pages, responsive widths, role logins, RBAC rejection). Full manual multi-role responsive crawl of every form/button remains owner-side if additional coverage is desired.
+
+**Genuine external blockers remaining:**  
+- Staging restore-drill + migration rehearsal with real data (scripts provided).  
+- Production Redis/queue/scheduler/mail/WhatsApp live secrets and host access.  
+- Confirmation of final CI conclusion on this exact HEAD once the in-progress run completes.  
+- Any production deploy or merge to `main`.
+
+No production data modified. No merge or deploy performed. No test results fabricated.
