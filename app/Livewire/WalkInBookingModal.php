@@ -144,6 +144,21 @@ class WalkInBookingModal extends Component
         }
     }
 
+    /**
+     * Resolve halls only within the current public or staff tenant context.
+     */
+    private function hallQueryForCurrentUser()
+    {
+        $user = Auth::user();
+        $query = $this->isStaff ? Hall::query() : Hall::publicVisible();
+
+        if ($this->isStaff && ! $user?->isSuperAdmin()) {
+            $query->where('tenant_id', $user?->tenant_id);
+        }
+
+        return $query;
+    }
+
     public function openModalWithData(array $payload = [])
     {
         $this->resetErrorBag();
@@ -154,8 +169,7 @@ class WalkInBookingModal extends Component
         $this->isOpen = true;
 
         if (! empty($payload['hall_id'])) {
-            $hallQuery = $this->isStaff ? Hall::query() : Hall::publicVisible();
-            $hall = $hallQuery->with('tenant')->find($payload['hall_id']);
+            $hall = $this->hallQueryForCurrentUser()->with('tenant')->find($payload['hall_id']);
             if ($hall) {
                 // If staff mode, ensure hall belongs to tenant
                 $user = Auth::user();
@@ -178,7 +192,7 @@ class WalkInBookingModal extends Component
             $this->slot_type = strtoupper($payload['slot_type']);
         }
         if (! empty($payload['package_id'])) {
-            $selectedHall = $this->hall_id ? Hall::query()->find($this->hall_id) : null;
+            $selectedHall = $this->hall_id ? $this->hallQueryForCurrentUser()->find($this->hall_id) : null;
             $pkg = $this->scopedPackage(
                 (string) $payload['package_id'],
                 (string) ($selectedHall?->tenant_id ?? '')
@@ -199,8 +213,7 @@ class WalkInBookingModal extends Component
 
     public function updatedHallId($value)
     {
-        $hallQuery = $this->isStaff ? Hall::query() : Hall::publicVisible();
-        $hall = $hallQuery->with('tenant')->find($value);
+        $hall = $this->hallQueryForCurrentUser()->with('tenant')->find($value);
         if ($hall) {
             $user = Auth::user();
             if ($this->isStaff && ! $user->isSuperAdmin() && $hall->tenant_id !== $user->tenant_id) {
@@ -299,7 +312,7 @@ class WalkInBookingModal extends Component
     public function updatedPackageId($packageId)
     {
         if ($packageId && $this->hall_id) {
-            $hall = Hall::find($this->hall_id);
+            $hall = $this->hallQueryForCurrentUser()->find($this->hall_id);
 
             if ($hall) {
                 $pkg = $this->scopedPackage((string) $packageId, (string) $hall->tenant_id);
@@ -438,8 +451,7 @@ class WalkInBookingModal extends Component
             'transaction_reference' => 'nullable|string|max:100',
         ]);
 
-        $hallQuery = $this->isStaff ? Hall::with('tenant') : Hall::publicVisible()->with('tenant');
-        $hall = $hallQuery->findOrFail($this->hall_id);
+        $hall = $this->hallQueryForCurrentUser()->with('tenant')->findOrFail($this->hall_id);
         $user = Auth::user();
 
         // Server-Side Authorization & Tenant Isolation Checks
@@ -559,11 +571,7 @@ class WalkInBookingModal extends Component
 
         $selectedHall = null;
         if ($this->hall_id) {
-            $selectedHallQuery = $this->isStaff ? Hall::with('tenant') : Hall::publicVisible()->with('tenant');
-            if ($this->isStaff && ! $user?->isSuperAdmin() && $user?->tenant_id) {
-                $selectedHallQuery->where('tenant_id', $user->tenant_id);
-            }
-            $selectedHall = $selectedHallQuery->find($this->hall_id);
+            $selectedHall = $this->hallQueryForCurrentUser()->with('tenant')->find($this->hall_id);
         }
 
         if ($this->isStaff && ! $user?->isSuperAdmin() && $user?->tenant_id) {
