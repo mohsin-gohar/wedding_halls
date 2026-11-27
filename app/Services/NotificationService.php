@@ -23,11 +23,18 @@ class NotificationService
         ?string $tenantId = null,
         array $data = []
     ): Notification {
+        $user = User::query()->findOrFail($userId);
+
+        if ($tenantId !== null && (string) $user->tenant_id !== (string) $tenantId) {
+            throw new \\InvalidArgumentException('A notification cannot be assigned to a different tenant than its recipient.');
+        }
+
+        // Tenant-owned users inherit their tenant context when callers omit it.
+        $tenantId ??= $user->tenant_id;
+
         $notification = Notification::createNotification(
             $userId, $type, $title, $message, $tenantId, $data
         );
-
-        $user = User::find($userId);
 
         if ($user && $user->email_notifications_enabled) {
             $this->sendEmailNotification($notification, $user);
