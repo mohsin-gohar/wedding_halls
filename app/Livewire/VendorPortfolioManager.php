@@ -131,15 +131,26 @@ class VendorPortfolioManager extends Component
             abort(403);
         }
 
-        $path = $file->store('vendor-portfolio', 'public');
+        $path = $file->store('vendor-portfolio/'.$tenantId, 'public');
 
-        VendorPortfolioMedia::create([
-            'tenant_id' => $tenantId,
-            'type' => $file->getMimeType() === 'video/mp4' || str_starts_with($file->getMimeType(), 'video/') ? 'VIDEO' : 'IMAGE',
-            'path' => $path,
-            'caption' => $this->mediaCaption ?: null,
-            'category' => $this->mediaCategory ?: null,
-        ]);
+        if (! $path) {
+            $this->addError('file', 'The portfolio file could not be stored. Please try again.');
+
+            return;
+        }
+
+        try {
+            VendorPortfolioMedia::create([
+                'tenant_id' => $tenantId,
+                'type' => $file->getMimeType() === 'video/mp4' || str_starts_with($file->getMimeType(), 'video/') ? 'VIDEO' : 'IMAGE',
+                'path' => $path,
+                'caption' => $this->mediaCaption ?: null,
+                'category' => $this->mediaCategory ?: null,
+            ]);
+        } catch (\\Throwable $exception) {
+            Storage::disk('public')->delete($path);
+            throw $exception;
+        }
 
         $this->mediaCaption = '';
         $this->mediaCategory = '';
