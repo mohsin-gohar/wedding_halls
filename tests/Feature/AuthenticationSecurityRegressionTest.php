@@ -19,7 +19,7 @@ class AuthenticationSecurityRegressionTest extends TestCase
 
     public function test_pending_account_is_logged_out_of_an_existing_session(): void
     {
-        $user = \\App\\Models\\User::factory()->create([
+        $user = \App\Models\User::factory()->create([
             'role' => 'ROLE_CUSTOMER',
             'status' => 'PENDING',
         ]);
