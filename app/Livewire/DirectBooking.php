@@ -28,9 +28,11 @@ use Livewire\Component;
 #[Layout('components.layouts.public', ['title' => 'Book Now | Riwaj Grand'])]
 class DirectBooking extends Component
 {
-    #[Locked]\n    public Tenant $vendor;
+    #[Locked]
+    public Tenant $vendor;
 
-    #[Locked]\n    public ?VendorCategory $category = null;
+    #[Locked]
+    public ?VendorCategory $category = null;
 
     #[Url]
     public ?string $service = null;
