@@ -175,7 +175,9 @@ class VendorServicesManager extends Component
             abort(403);
         }
 
-        if (trim($this->serviceName) === '') {
+        $normalizedName = trim($this->serviceName);
+
+        if ($normalizedName === '') {
             $this->addError('serviceName', 'Service name is required.');
 
             return;
@@ -254,7 +256,7 @@ class VendorServicesManager extends Component
 
                 $service->update([
                     'vendor_category_id' => $this->vendorCategoryId,
-                    'name' => $this->serviceName,
+                    'name' => $normalizedName,
                     'description' => $this->serviceDescription ?: null,
                     'pricing_type' => $this->pricingType,
                     'price_from' => $from,
@@ -267,7 +269,7 @@ class VendorServicesManager extends Component
                 VendorService::create([
                     'tenant_id' => $tenantId,
                     'vendor_category_id' => $this->vendorCategoryId,
-                    'name' => $this->serviceName,
+                    'name' => $normalizedName,
                     'description' => $this->serviceDescription ?: null,
                     'pricing_type' => $this->pricingType,
                     'price_from' => $from,
