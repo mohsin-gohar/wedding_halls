@@ -78,7 +78,7 @@
                                         {{ $bAfternoon->status === 'CONFIRMED' ? 'Booked' : 'Reserved Hold' }}
                                     </span>
                                 @else
-                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}', event_date: '{{ $selectedDate }}', slot_type: 'AFTERNOON' })" 
+                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: @js($hall->id), event_date: @js($selectedDate), slot_type: 'AFTERNOON' })" 
                                             class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
                                         <span>Available</span>
                                         <span class="opacity-50">&bull;</span>
@@ -99,7 +99,7 @@
                                         {{ $bEvening->status === 'CONFIRMED' ? 'Booked' : 'Reserved Hold' }}
                                     </span>
                                 @else
-                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}', event_date: '{{ $selectedDate }}', slot_type: 'EVENING' })" 
+                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: @js($hall->id), event_date: @js($selectedDate), slot_type: 'EVENING' })" 
                                             class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
                                         <span>Available</span>
                                         <span class="opacity-50">&bull;</span>
@@ -120,7 +120,7 @@
                                         {{ $bNight->status === 'CONFIRMED' ? 'Booked' : 'Reserved Hold' }}
                                     </span>
                                 @else
-                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}', event_date: '{{ $selectedDate }}', slot_type: 'NIGHT' })" 
+                                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: @js($hall->id), event_date: @js($selectedDate), slot_type: 'NIGHT' })" 
                                             class="btn-gold !h-7 !px-3 rounded-md text-[10px] font-bold font-mono tracking-wider shadow-sm">
                                         <span>Available</span>
                                         <span class="opacity-50">&bull;</span>
