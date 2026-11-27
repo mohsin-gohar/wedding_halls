@@ -48,6 +48,20 @@ class TwoFactorChallengeHttpTest extends TestCase
         $this->get('/account/api-tokens')->assertOk();
     }
 
+    public function test_tampered_intended_property_cannot_redirect_to_an_external_host(): void
+    {
+        [$user, $google2fa, $secret] = $this->twoFactorUser();
+
+        Livewire::actingAs($user)
+            ->test(TwoFactorAuthComponent::class, ['intended' => '/account/api-tokens'])
+            ->set('intended', 'https://attacker.example')
+            ->set('code', $google2fa->getCurrentOtp($secret))
+            ->call('verifyTwoFactor')
+            ->assertRedirect('/');
+
+        $this->assertTrue(session('2fa_verified'));
+    }
+
     public function test_other_livewire_components_stay_gated_during_the_challenge(): void
     {
         [$user] = $this->twoFactorUser();
