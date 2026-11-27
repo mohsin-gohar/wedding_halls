@@ -7,6 +7,7 @@ use App\Models\HallChatMessage;
 use App\Models\Package;
 use App\Support\ShiftWindows;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -96,8 +97,31 @@ class VenueChatWidget extends Component
         $this->sendMessage();
     }
 
+    private function hitChatRateLimit(string $action, int $maximum, int $decaySeconds): bool
+    {
+        $user = Auth::user();
+        $identity = $user
+            ? 'user:'.$user->id
+            : 'guest:'.hash('sha256', request()->ip().'|'.session()->getId());
+        $key = 'hall-chat:'.$this->hall->id.':'.$identity.':'.$action;
+
+        if (RateLimiter::tooManyAttempts($key, $maximum)) {
+            return true;
+        }
+
+        RateLimiter::hit($key, $decaySeconds);
+
+        return false;
+    }
+
     public function sendMessage(): void
     {
+        if ($this->hitChatRateLimit('message', 10, 60)) {
+            $this->addError('newMessage', 'Too many chat messages. Please wait a minute.');
+
+            return;
+        }
+
         $userText = trim($this->newMessage);
         if (empty($userText)) {
             return;
@@ -148,6 +172,12 @@ class VenueChatWidget extends Component
 
     public function uploadVoice(): void
     {
+        if ($this->hitChatRateLimit('voice', 5, 600)) {
+            $this->addError('voiceRecording', 'Too many voice messages. Please wait before sending another.');
+
+            return;
+        }
+
         $this->validate([
             'voiceRecording' => 'required|file|mimetypes:audio/mpeg,audio/mp4,audio/ogg,audio/wav,audio/m4a,audio/webm|mimes:mp3,wav,ogg,m4a,webm|max:5120', // 5MB
         ]);
