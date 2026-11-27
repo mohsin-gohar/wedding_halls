@@ -259,7 +259,7 @@ class VendorErpBoardsTest extends TestCase
         $owner = $this->vendorOwner($vendor);
         $categoryId = (int) $vendor->vendor_category_id;
 
-        \\App\\Models\\VendorCategory::query()->whereKey($categoryId)->update(['is_active' => false]);
+        \App\Models\VendorCategory::query()->whereKey($categoryId)->update(['is_active' => false]);
 
         Livewire::actingAs($owner)
             ->test(VendorServicesManager::class)
@@ -290,7 +290,7 @@ class VendorErpBoardsTest extends TestCase
             ->call('saveService')
             ->assertHasErrors(['serviceName', 'serviceDescription']);
 
-        $this->assertSame(0, \\App\\Models\\VendorService::query()
+        $this->assertSame(0, \App\Models\VendorService::query()
             ->where('tenant_id', $vendor->id)
             ->where('name', str_repeat('S', 151))
             ->count());
