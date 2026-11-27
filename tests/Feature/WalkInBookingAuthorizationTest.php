@@ -37,6 +37,22 @@ class WalkInBookingAuthorizationTest extends TestCase
             ->assertSet('customer_name', '');
     }
 
+    public function test_customer_cannot_forge_staff_mode_when_selecting_a_hall(): void
+    {
+        $hall = \\App\\Models\\Hall::publicVisible()->firstOrFail();
+        $customer = User::factory()->create([
+            'role' => 'ROLE_CUSTOMER',
+            'status' => 'ACTIVE',
+        ]);
+
+        Livewire::actingAs($customer)
+            ->test(WalkInBookingModal::class)
+            ->set('isStaff', true)
+            ->set('hall_id', $hall->id)
+            ->assertSet('isStaff', false)
+            ->assertSet('hall_id', $hall->id);
+    }
+
     public function test_front_desk_with_booking_permission_can_lookup_contacts_inside_their_tenant(): void
     {
         $booking = Booking::query()->whereNotNull('customer_phone')->firstOrFail();
