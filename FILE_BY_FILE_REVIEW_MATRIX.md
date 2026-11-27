@@ -140,3 +140,13 @@ Evidence commits: 83a5f92, 999d007, 689ee6a, 08f5acf, 256b434, ea82b62, cb80b28,
 
 CI remains untouched. Full Phase 1 review remains in progress.
 
+## 12. Phase 1 continuation — media and catalogue input hardening (2026-11-28)
+
+- app/Livewire/HallMediaManager.php: validates cover/gallery media URLs, limits gallery payload counts, and only accepts known video embed hosts or direct video files. This closes a path where a tenant editor could tamper with the public videos array and persist an arbitrary iframe destination. Added focused URL allow-list tests.
+- app/Livewire/VendorServicesManager.php: added server-side length/type/range validation for service metadata and requires any selected vendor category to exist and remain active. Added regression tests for inactive categories and oversized metadata.
+- app/Livewire/VendorPortfolioManager.php: bounds caption/category metadata, stores uploads under a tenant-specific directory, and deletes the stored file if the database row creation fails.
+
+Evidence commits: 1fa89b5, 0a19393, 4ea94e1, 19d8cfb, dd6e3a3, 4be644a, a02d779, 3caecce, f9e16c0, ec4d8c0, 77e3261, bfdf638.
+
+CI remains untouched. PHPUnit and build verification are still blocked in the local runtime; full Phase 1 review remains open.
+
