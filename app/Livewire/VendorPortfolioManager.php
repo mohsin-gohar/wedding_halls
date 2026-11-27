@@ -105,6 +105,8 @@ class VendorPortfolioManager extends Component
         $this->resetValidation();
 
         $file = $this->validate([
+            'mediaCaption' => ['nullable', 'string', 'max:160'],
+            'mediaCategory' => ['nullable', 'string', 'max:80'],
             'file' => [
                 'required',
                 'file',
