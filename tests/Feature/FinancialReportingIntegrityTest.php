@@ -19,11 +19,15 @@ class FinancialReportingIntegrityTest extends TestCase
     public function test_financial_ledger_foreign_keys_restrict_parent_deletion(): void
     {
         $constraints = [
+            ['expenses', 'expenses_tenant_id_foreign'],
+            ['staff_payrolls', 'staff_payrolls_tenant_id_foreign'],
+            ['purchase_orders', 'purchase_orders_tenant_id_foreign'],
             ['service_bookings', 'service_bookings_tenant_id_foreign'],
             ['service_bookings', 'service_bookings_customer_id_foreign'],
             ['service_payments', 'service_payments_tenant_id_foreign'],
             ['service_payments', 'service_payments_service_booking_id_foreign'],
             ['service_payments', 'service_payments_customer_id_foreign'],
+            ['vendor_payouts', 'vendor_payouts_tenant_id_foreign'],
             ['wallet_transactions', 'wallet_transactions_tenant_id_foreign'],
         ];
 
