@@ -43,7 +43,7 @@ Generated directories (`vendor/`, `node_modules/`, `public/build/`, compiled vie
 
 ## 5. Verification evidence for this matrix
 
-`composer audit --locked` → 0 advisories; `npm run build` → exit 0; `vendor/bin/pint --test` → exit 0; PHP lint over 386 tracked PHP files; `git ls-files` count 559; full MySQL suite artifact `full_suite_repair*.out`.
+`composer audit --locked` → 0 advisories; `npm run build` → exit 0; `vendor/bin/pint --test` → exit 0; PHP lint over 477 tracked PHP files; `git ls-files` count 559; full MySQL suite artifact `full_suite_repair*.out`.
 
 ## 6. Continuation (2026-11-27)
 
@@ -55,7 +55,7 @@ Generated directories (`vendor/`, `node_modules/`, `public/build/`, compiled vie
 
 - Financial migration `2026_12_23_000001` deep-reviewed: de-dupe logic, unique indexes, restrictOnDelete, irreversibility documented with staging restore-drill commands.
 - Production configs (Redis/queue/scheduler/mail/WhatsApp) reviewed; live verification blocked on owner credentials.
-- CI on exact HEAD in progress (static gates largely green; MySQL/Playwright running). Prior green evidence retained.
+- CI on source HEAD `1b57773` completed successfully: run 45982335954 (609 MySQL tests passed, 3 skipped; Playwright 8/8; static/build/security/Docker gates green).
 
 
 ## 8. Latest verification and cleanup

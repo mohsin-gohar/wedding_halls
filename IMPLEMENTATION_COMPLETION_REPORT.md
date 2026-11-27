@@ -101,8 +101,7 @@ migrated destructively.
 Final commands and their recorded results are listed in
 `PRODUCTION_READINESS_REPORT.md`. Only runs actually executed in this pass are
 claimed; no placeholder or historical result is presented as current. The
-completed authoritative gates were the full MySQL suite (**444 tests, 2,602
-assertions, 1 skipped, exit 0**) and the responsive browser suite (**8/8 passed,
+completed authoritative gates were the full MySQL suite (**609 passed, 3 skipped, 3,153 assertions (CI run 45982335954)**) and the responsive browser suite (**8/8 passed,
 exit 0**); static gates (lint, Pint, route/view cache, build, secret scan) were
 also green.
 
