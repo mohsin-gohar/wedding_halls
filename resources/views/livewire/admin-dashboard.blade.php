@@ -80,7 +80,17 @@
 
             <div class="flex flex-wrap items-center gap-3 pt-2">
                     <button type="button" 
-                            onclick="const text = `Assalamu Alaikum {{ $provisionedCredentials['owner_name'] }}!\nYour Riwaj Grand Luxury ERP portal for *{{ $provisionedCredentials['business_name'] }}* is ready.\n\nLogin URL: {{ $provisionedCredentials['login_url'] }}\nEmail: {{ $provisionedCredentials['email'] }}\n\nLive Hall Website: {{ $provisionedCredentials['hall_url'] }}\n\nPlease sign in to customize your hall photos, services catalog, and shifts.`; navigator.clipboard.writeText(text); window.luxuryToast('WhatsApp credentials message copied to clipboard!', 'gold');"
+                            onclick="const text = [
+                                'Assalamu Alaikum ' + @js($provisionedCredentials['owner_name']) + '!',
+                                'Your Riwaj Grand Luxury ERP portal for *' + @js($provisionedCredentials['business_name']) + '* is ready.',
+                                '',
+                                'Login URL: ' + @js($provisionedCredentials['login_url']),
+                                'Email: ' + @js($provisionedCredentials['email']),
+                                '',
+                                'Live Hall Website: ' + @js($provisionedCredentials['hall_url']),
+                                '',
+                                'Please sign in to customize your hall photos, services catalog, and shifts.'
+                            ].join('\\n'); navigator.clipboard.writeText(text); window.luxuryToast('WhatsApp credentials message copied to clipboard!', 'gold');"
                             class="btn-gold !h-9 !px-4 text-xs font-bold font-sans tracking-wide rounded-lg shadow-sm transition-all duration-200">
                         <span>Copy WhatsApp Handover Message</span>
                     </button>
