@@ -16,6 +16,8 @@ class TenantBrandTest extends TestCase
                 'primary_color' => '#171513; background-image:url(https://attacker.invalid/x)',
                 'secondary_color' => 'red',
                 'accent_color' => '#AABBCC',
+                'logo' => 'javascript:alert(1)',
+                'cover_image' => 'https://cdn.example.test/vendor-cover.jpg',
             ],
         ]);
 
@@ -24,5 +26,7 @@ class TenantBrandTest extends TestCase
         $this->assertSame('#171513', $brand->primaryColor);
         $this->assertSame('#24211E', $brand->secondaryColor);
         $this->assertSame('#AABBCC', $brand->accentColor);
+        $this->assertNull($brand->logo);
+        $this->assertSame('https://cdn.example.test/vendor-cover.jpg', $brand->coverImage);
     }
 }
