@@ -26,7 +26,13 @@ class VerifyEmail extends Component
 
     public function mount(?string $token = null, ?string $email = null): void
     {
-        if ($token && $email) {
+        // The signed verification route carries token/email as query
+        // parameters, not path parameters. Read them from the initial GET
+        // request so visiting the email link actually verifies the account.
+        $token = $token ?? request()->query('token');
+        $email = $email ?? request()->query('email');
+
+        if (is_string($token) && is_string($email) && $token !== '' && $email !== '') {
             $this->verifyEmail($token, $email);
         }
     }
