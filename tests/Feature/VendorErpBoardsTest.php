@@ -142,6 +142,22 @@ class VendorErpBoardsTest extends TestCase
         $this->assertSame(0, RfqBid::query()->where('rfq_id', $rfq->id)->count());
     }
 
+    public function test_bid_submission_rejects_overflow_amount_and_oversized_proposal(): void
+    {
+        $vendor = $this->cateringVendor();
+        $owner = $this->vendorOwner($vendor);
+        $rfq = $this->openRfq($vendor, $this->customer());
+        $page = Livewire::actingAs($owner)->test(VendorQuotesBoard::class);
+
+        $page->call('submitBid', $rfq->id, 10000000000.00, 'A sufficiently detailed proposal that exceeds the amount limit.')
+            ->assertHasErrors(['bidAmount']);
+
+        $page->call('submitBid', $rfq->id, 1850000, str_repeat('P', 5001))
+            ->assertHasErrors(['bidProposal']);
+
+        $this->assertSame(0, RfqBid::query()->where('rfq_id', $rfq->id)->count());
+    }
+
     public function test_vendor_can_mark_open_rfq_as_viewed(): void
     {
         $vendor = $this->cateringVendor();
