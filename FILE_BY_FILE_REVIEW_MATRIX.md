@@ -76,3 +76,22 @@ Generated directories (`vendor/`, `node_modules/`, `public/build/`, compiled vie
 - Playwright: **8/8 passed**; artifact `playwright-artifacts` (ID 15204463518) includes responsive screenshots and role-dashboard captures.
 - Static gates: PHP lint, Pint, Composer audit, NPM audit, Vite build, Docker configuration/build and Nginx runtime smoke all passed.
 - Remaining manual-review limitation remains: not every Livewire/Blade/test file was individually deep-read. Production deployment, live secrets and staging restore drill remain unverified.
+
+## 8. Phase 1 continuation — security-focused file review (2026-11-28)
+
+The following additional files received a targeted manual review of the security-sensitive control flow and output contexts:
+
+- app/Livewire/Auth/VerifyEmail.php and routes/web.php: signed verification route uses query parameters. Fixed initial mount to read token and email from the signed GET query; added valid-link and expired-link feature tests.
+- app/Livewire/CustomerEventWorkspace.php, resources/views/livewire/customer-event-workspace.blade.php, and tests/Feature/CustomerEventWorkspaceTest.php: booking ownership, row locking, event linkage, vendor shortlist state, and manual status transitions. Made booking link/unlink atomic, prevented forged BOOKED state, preserved a booked shortlist on replay, and retained the booked state when another booking for the same vendor remains linked. Added regression coverage.
+- app/Livewire/WalkInBookingModal.php and tests/Feature/WalkInBookingAuthorizationTest.php: public Livewire isStaff state must not be trusted for authorization. Centralized hall resolution, recomputes staff mode before scoped hall queries, and added a forged-staff-mode hall-selection regression test.
+- app/Support/TenantBrand.php, resources/views/livewire/white-label-site.blade.php, and tests/Unit/TenantBrandTest.php: validated white-label colors as six-digit hex values and restricted logo/cover URLs to HTTP(S) or safe local media paths before rendering into CSS/image contexts.
+- resources/views/livewire/admin-dashboard.blade.php, public-availability-checker.blade.php, hall-chat.blade.php, public-hall-details.blade.php, public-menus.blade.php, and welcome.blade.php: replaced raw Blade interpolation inside inline JavaScript strings/handlers with @js encoding.
+
+### Evidence and limits
+
+- Repair-branch commits for this continuation: afb9bc3, 29c5249, bcf4552, a2432cc, d7de480, ea21697, 6d3da33, c6fe47c, 8659d49, ae94378, 6fcb695, 27c513f, d6ea2bb, 2df3329, e627a17, 45db70d, 431e08b, eb2a011.
+- The uploaded source archive snapshot (1b57773) passed PHP syntax lint for 477 tracked PHP files with zero parse errors. This is snapshot evidence, not verification of the newer repair-branch commits.
+- The local PHPUnit runner could not start because the available PHP runtime lacks dom, mbstring, and xmlwriter. Local Pint is blocked by missing mbstring and xml; Vite build is blocked because the archive's node_modules lacks the Linux Rollup native package.
+- CI was intentionally not inspected, triggered, or modified per the user's instruction.
+- This is a targeted continuation, not a claim that every remaining PHP/Blade file has now received a line-by-line manual review. The original unreviewed remainder in sections 2 and 4 remains open until individually reviewed.
+
