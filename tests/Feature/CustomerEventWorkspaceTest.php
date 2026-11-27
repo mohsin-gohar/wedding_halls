@@ -358,4 +358,44 @@ class CustomerEventWorkspaceTest extends TestCase
         $this->assertSame(240000.0, (float) $budget['outstanding']);
         $this->assertSame(2, $budget['booking_count']);
     }
+
+    public function test_customer_cannot_manually_mark_a_shortlisted_vendor_as_booked(): void
+    {
+        $customer = $this->customer();
+        $event = $this->makeEvent($customer);
+        $vendor = $this->vendor('nawab-caterers');
+        $row = CustomerEventVendor::create([
+            'customer_event_id' => $event->id,
+            'tenant_id' => $vendor->id,
+            'status' => 'SHORTLISTED',
+        ]);
+
+        Livewire::actingAs($customer)
+            ->test(CustomerEventWorkspace::class)
+            ->call('selectEvent', $event->id)
+            ->call('updateVendorStatus', $row->id, 'BOOKED')
+            ->assertSet('errorMessage', 'Invalid vendor status. Booking status is updated automatically.');
+
+        $this->assertSame('SHORTLISTED', $row->fresh()->status);
+    }
+
+    public function test_replaying_vendor_shortlist_does_not_downgrade_booked_status(): void
+    {
+        $customer = $this->customer();
+        $event = $this->makeEvent($customer);
+        $vendor = $this->vendor('nawab-caterers');
+        $row = CustomerEventVendor::create([
+            'customer_event_id' => $event->id,
+            'tenant_id' => $vendor->id,
+            'status' => 'BOOKED',
+            'service_booking_id' => null,
+        ]);
+
+        Livewire::actingAs($customer)
+            ->test(CustomerEventWorkspace::class)
+            ->call('selectEvent', $event->id)
+            ->call('attachVendor', $vendor->id);
+
+        $this->assertSame('BOOKED', $row->fresh()->status);
+    }
 }
