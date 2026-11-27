@@ -9,6 +9,7 @@ use App\Models\VendorCategory;
 use App\Services\ServiceBookingService;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -18,6 +19,7 @@ use Livewire\Component;
 #[Layout('components.layouts.public', ['title' => 'Vendor Profile | Riwaj Grand'])]
 class PublicVendorProfile extends Component
 {
+    #[Locked]
     public Tenant $vendor;
 
     public ?VendorCategory $category;
