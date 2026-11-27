@@ -8,6 +8,7 @@ use App\Models\Package;
 use App\Support\ShiftWindows;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
