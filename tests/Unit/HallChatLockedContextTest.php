@@ -11,14 +11,16 @@ class HallChatLockedContextTest extends TestCase
 {
     public function test_guest_identity_and_hall_context_are_locked_livewire_properties(): void
     {
-        $reflection = new ReflectionClass(HallChat::class);
+        foreach ([HallChat::class, VenueChatWidget::class] as $componentClass) {
+            $reflection = new ReflectionClass($componentClass);
 
-        foreach (['hall', 'visitorIp', 'visitorSession'] as $propertyName) {
-            $property = $reflection->getProperty($propertyName);
-            $this->assertNotEmpty(
-                $property->getAttributes(Locked::class),
-                "{$propertyName} must not be client-mutable."
-            );
+            foreach (['hall', 'visitorIp', 'visitorSession'] as $propertyName) {
+                $property = $reflection->getProperty($propertyName);
+                $this->assertNotEmpty(
+                    $property->getAttributes(Locked::class),
+                    "{$componentClass}::{$propertyName} must not be client-mutable."
+                );
+            }
         }
     }
 }
