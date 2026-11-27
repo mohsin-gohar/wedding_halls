@@ -100,7 +100,9 @@ final class PlatformMetrics
             'pendingTenants' => Tenant::where('verification_status', 'PENDING')->count(),
             'totalHalls' => Hall::count(),
             'totalBookings' => Booking::count(),
-            'totalGmv' => (float) Booking::sum('grand_total'),
+            'totalGmv' => (float) Booking::query()
+                ->whereIn('status', ['CONFIRMED', 'COMPLETED'])
+                ->sum('grand_total'),
             'totalPageVisits' => PageVisit::count(),
             'totalHallViews' => HallView::count(),
             'totalWishlists' => HallWishlist::count(),
