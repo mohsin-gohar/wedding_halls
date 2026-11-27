@@ -14,16 +14,20 @@ class PublicPageLockedContextTest extends TestCase
     public function test_public_page_models_cannot_be_replaced_by_client_updates(): void
     {
         foreach ([
-            PublicHallDetails::class => 'hall',
-            PublicVendorProfile::class => 'vendor',
-            PublicGuestRsvp::class => 'foundRsvp',
-        ] as $componentClass => $propertyName) {
-            $property = (new ReflectionClass($componentClass))->getProperty($propertyName);
+            PublicHallDetails::class => ['hall'],
+            PublicVendorProfile::class => ['vendor', 'category'],
+            PublicGuestRsvp::class => ['foundRsvp'],
+        ] as $componentClass => $propertyNames) {
+            $reflection = new ReflectionClass($componentClass);
 
-            $this->assertNotEmpty(
-                $property->getAttributes(Locked::class),
-                "{$componentClass}::{$propertyName} must be locked."
-            );
+            foreach ($propertyNames as $propertyName) {
+                $property = $reflection->getProperty($propertyName);
+
+                $this->assertNotEmpty(
+                    $property->getAttributes(Locked::class),
+                    "{$componentClass}::{$propertyName} must be locked."
+                );
+            }
         }
     }
 }
