@@ -383,7 +383,9 @@ class CustomerEventWorkspace extends Component
                 return null;
             }
 
-            CustomerEventVendor::updateOrCreate(
+            // Never downgrade an existing BOOKED/REQUESTED row when a
+            // duplicate or replayed shortlist action is submitted.
+            CustomerEventVendor::firstOrCreate(
                 [
                     'customer_event_id' => $event->id,
                     'tenant_id' => $tenant->id,
@@ -428,8 +430,11 @@ class CustomerEventWorkspace extends Component
     {
         $event = $this->currentEvent();
 
-        if (! in_array($status, CustomerEventVendor::STATUSES, true)) {
-            $this->errorMessage = 'Invalid vendor status.';
+        // BOOKED is derived only from a real linked booking. It must never
+        // be set manually from a client-controlled Livewire payload.
+        $manualStatuses = ['SHORTLISTED', 'REQUESTED', 'DROPPED'];
+        if (! in_array($status, $manualStatuses, true)) {
+            $this->errorMessage = 'Invalid vendor status. Booking status is updated automatically.';
 
             return;
         }
@@ -469,7 +474,23 @@ class CustomerEventWorkspace extends Component
             return;
         }
 
-        $booking->update(['customer_event_id' => $event->id]);
+        DB::transaction(function () use ($booking, $event) {
+            $lockedBooking = ServiceBooking::query()
+                ->whereKey($booking->id)
+                ->where('customer_id', Auth::id())
+                ->lockForUpdate()
+                ->first();
+
+            if (! $lockedBooking) {
+                abort(404, 'Booking not found.');
+            }
+
+            if ($lockedBooking->customer_event_id && $lockedBooking->customer_event_id !== $event->id) {
+                abort(409, 'This booking is already linked to another event.');
+            }
+
+            $lockedBooking->update(['customer_event_id' => $event->id]);
+        });
 
         // If the booked vendor is on the shortlist, mark them booked and
         // attach the reference so the shortlist reflects reality.
