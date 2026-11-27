@@ -144,7 +144,7 @@ class VendorQuoteRequestTest extends TestCase
             'status' => 'ACTIVE',
         ]);
 
-        $policy = new \\App\\Policies\\RFQPolicy();
+        $policy = new \App\Policies\RFQPolicy();
 
         $this->assertTrue($policy->bid($targetOwner, $rfq));
         $this->assertFalse($policy->bid($otherOwner, $rfq));
