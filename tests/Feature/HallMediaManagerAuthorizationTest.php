@@ -31,9 +31,4 @@ class HallMediaManagerAuthorizationTest extends TestCase
 
         $this->assertSame(0, Hall::query()->whereNull('tenant_id')->count());
     }
-
-    public function test_hall_editor_does_not_report_a_successful_save_without_a_selected_hall(): void
-    {
-        $this->markTestSkipped('A tenant-scoped hall fixture is required to exercise this UI state.');
-    }
 }
