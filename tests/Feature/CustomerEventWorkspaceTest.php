@@ -316,6 +316,38 @@ class CustomerEventWorkspaceTest extends TestCase
         $this->assertSame('SHORTLISTED', $row->status);
     }
 
+    public function test_unlinking_one_of_multiple_vendor_bookings_keeps_vendor_marked_booked(): void
+    {
+        $customer = $this->customer();
+        $event = $this->makeEvent($customer);
+        $vendor = $this->vendor('nawab-caterers');
+        $first = $this->makeBooking($customer, $vendor, [
+            'customer_event_id' => $event->id,
+            'booking_reference' => 'RG-SB-MULTI01',
+        ]);
+        $second = $this->makeBooking($customer, $vendor, [
+            'customer_event_id' => $event->id,
+            'booking_reference' => 'RG-SB-MULTI02',
+        ]);
+        $row = CustomerEventVendor::create([
+            'customer_event_id' => $event->id,
+            'tenant_id' => $vendor->id,
+            'status' => 'BOOKED',
+            'service_booking_id' => $first->id,
+        ]);
+
+        Livewire::actingAs($customer)
+            ->test(CustomerEventWorkspace::class)
+            ->call('selectEvent', $event->id)
+            ->call('unlinkBooking', $first->id)
+            ->assertHasNoErrors();
+
+        $this->assertNull($first->fresh()->customer_event_id);
+        $this->assertSame($event->id, $second->fresh()->customer_event_id);
+        $this->assertSame('BOOKED', $row->fresh()->status);
+        $this->assertSame($second->id, $row->fresh()->service_booking_id);
+    }
+
     public function test_customer_cannot_link_another_customers_booking(): void
     {
         $me = $this->customer();
