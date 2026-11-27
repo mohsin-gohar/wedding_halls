@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('components.layouts.public')]
@@ -31,6 +32,7 @@ class PublicHallDetails extends Component
         'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1200&auto=format&fit=crop',
     ];
 
+    #[Locked]
     public Hall $hall;
 
     public string $activePhoto = '';
