@@ -151,7 +151,7 @@ class HallMediaManager extends Component
         'has_generator_backup' => 'boolean',
         'has_bridal_room' => 'boolean',
         'is_active' => 'boolean',
-        'cover_image' => ['nullable', 'string', 'max:2048', fn ($attribute, $value, $fail) => $this->isSafePublicMediaUrl($value) ?: $fail('The cover image must be a safe HTTPS or public-storage URL.')],
+        'cover_image' => 'nullable|string|max:2048',
     ];
 
     private function isSafePublicMediaUrl(mixed $value): bool
@@ -562,6 +562,12 @@ class HallMediaManager extends Component
         $this->assertCanManageHall();
         abort_unless($this->hall instanceof Hall, 404, 'No hall is selected.');
         $this->validate();
+
+        if (! $this->isSafePublicMediaUrl($this->cover_image)) {
+            $this->addError('cover_image', 'The cover image must be a safe HTTPS or public-storage URL.');
+
+            return;
+        }
 
         validator([
             'images' => $this->images,
