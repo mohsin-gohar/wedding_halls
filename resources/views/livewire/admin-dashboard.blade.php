@@ -1441,7 +1441,7 @@
                                              {{ $hl->is_active ? 'Hide' : 'Publish' }}
                                          </button>
                                          <button wire:click="deleteHall('{{ $hl->id }}')"
-                                                 onclick="return confirm('Delete hall {{ $hl->name }}?') || event.stopImmediatePropagation()"
+                                                 onclick="return confirm('Delete hall ' + @js($hl->name) + '?') || event.stopImmediatePropagation()"
                                                  class="tbtn tbtn-red">
                                              Del
                                          </button>
@@ -1619,7 +1619,7 @@
                                             </button>
                                         @endif
                                         <button wire:click="deleteBooking('{{ $b->id }}')"
-                                                onclick="return confirm('Delete booking {{ $b->booking_reference }}?') || event.stopImmediatePropagation()"
+                                                onclick="return confirm('Delete booking ' + @js($b->booking_reference) + '?') || event.stopImmediatePropagation()"
                                                 class="tbtn tbtn-red">
                                             Del
                                         </button>
