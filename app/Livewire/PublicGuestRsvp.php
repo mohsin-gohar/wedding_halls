@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\GuestRsvp;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('components.layouts.public', ['title' => 'RSVP Your Invitation — Riwaj Grand Pakistan'])]
@@ -12,6 +13,7 @@ class PublicGuestRsvp extends Component
 {
     public string $phone = '';
 
+    #[Locked]
     public ?GuestRsvp $foundRsvp = null;
 
     public int $attendingGuests = 2;
