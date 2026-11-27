@@ -167,7 +167,7 @@ class HallMediaManager extends Component
             || str_contains($value, '"')
             || str_contains($value, '(')
             || str_contains($value, ')')
-            || str_contains($value, '\\\\')
+            || str_contains($value, '\\')
         ) {
             return false;
         }
