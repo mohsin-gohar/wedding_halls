@@ -144,7 +144,7 @@
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <select wire:change="updateVendorStatus('{{ $row->id }}', $event.target.value)" class="input-luxury !py-1.5 !text-[11px] w-auto">
-                                            @foreach(\App\Models\CustomerEventVendor::STATUSES as $status)
+                                            @foreach(['SHORTLISTED', 'REQUESTED', 'DROPPED'] as $status)
                                                 <option value="{{ $status }}" @selected($row->status === $status)>{{ ucfirst(strtolower($status)) }}</option>
                                             @endforeach
                                         </select>
