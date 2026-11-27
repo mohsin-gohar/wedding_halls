@@ -178,14 +178,16 @@ class VendorQuotesBoard extends Component
             abort(404, 'Quotation not found.');
         }
 
-        if ($bidAmount <= 0) {
-            $this->addError('bidAmount', 'Bid amount must be greater than zero.');
+        if (! is_finite($bidAmount) || $bidAmount <= 0 || $bidAmount > 9999999999.99) {
+            $this->addError('bidAmount', 'Bid amount must be greater than zero and within the supported PKR amount limit.');
 
             return;
         }
 
-        if (mb_strlen(trim($proposal)) < 20) {
-            $this->addError('bidProposal', 'Please provide a detailed proposal (at least 20 characters) so the client can compare offers.');
+        $proposal = trim($proposal);
+
+        if (mb_strlen($proposal) < 20 || mb_strlen($proposal) > 5000) {
+            $this->addError('bidProposal', 'Please provide a proposal between 20 and 5,000 characters.');
 
             return;
         }
