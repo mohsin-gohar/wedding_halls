@@ -110,3 +110,19 @@ https://github.com/mohsin-gohar/wedding_halls/actions/runs/45949436835
 **Style fix applied in follow-up:** migration rewritten for Pint compliance; booking-reference unique index `(tenant_id, booking_reference)` added after deterministic de-duplication (column already existed via `2026_10_10_000002`). Migration remains irreversible for data safety; recovery is full restore from backup + re-seed of de-duplicated references if needed. Staging rehearsal still required before production.
 
 **External blockers unchanged:** Redis/queue/scheduler/mail/WhatsApp live credentials and host access; staging forward/rollback rehearsal of the irreversible migration; full green CI on the style-fixed head.
+
+## 11. Style-fixed CI (2026-11-27, HEAD bc3f64a)
+
+**CI run:** https://github.com/mohsin-gohar/wedding_halls/actions/runs/45950831948  
+**HEAD:** `bc3f64af9bce27570f59713dd116e692f4f58886`
+
+| Job | Status (as of last poll) | Evidence |
+|---|---|---|
+| Static quality gates | **SUCCESS** | PHP lint, Pint, Composer audit (0 advisories), NPM audit, Vite production build, Docker config/build/smoke all green. |
+| MySQL test suite | IN PROGRESS | Migrations (including new FK/unique indexes) succeeded; tests running. Prior run on fd15b25 was full success. |
+| Playwright browser QA | IN PROGRESS | Browser suite running. Prior run on fd15b25 was full success. |
+| Deploy | SKIPPED | Intentionally disabled. |
+
+**Migration safety:** New migration applied cleanly in CI MySQL containers (forward path verified). Irreversible by design; recovery strategy is full database restore from backup plus re-application of deterministic de-duplication if any legacy references were rewritten. Staging rehearsal with real data still required before production.
+
+**Remote HEAD verified:** `bc3f64af9bce27570f59713dd116e692f4f58886` on `origin/audit/riwaj-grand-repair-20261126`.
