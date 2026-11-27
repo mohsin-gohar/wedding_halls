@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Livewire\HallChat;
+use App\Livewire\VenueChatWidget;
 use Livewire\Attributes\Locked;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
