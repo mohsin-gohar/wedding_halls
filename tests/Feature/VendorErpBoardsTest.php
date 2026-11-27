@@ -253,6 +253,49 @@ class VendorErpBoardsTest extends TestCase
         ]);
     }
 
+    public function test_service_catalog_rejects_inactive_vendor_categories(): void
+    {
+        $vendor = $this->cateringVendor();
+        $owner = $this->vendorOwner($vendor);
+        $categoryId = (int) $vendor->vendor_category_id;
+
+        \\App\\Models\\VendorCategory::query()->whereKey($categoryId)->update(['is_active' => false]);
+
+        Livewire::actingAs($owner)
+            ->test(VendorServicesManager::class)
+            ->set('serviceName', 'Inactive Category Service')
+            ->set('pricingType', 'FIXED')
+            ->set('priceFrom', 1000)
+            ->set('vendorCategoryId', $categoryId)
+            ->call('saveService')
+            ->assertHasErrors(['vendorCategoryId']);
+
+        $this->assertDatabaseMissing('vendor_services', [
+            'tenant_id' => $vendor->id,
+            'name' => 'Inactive Category Service',
+        ]);
+    }
+
+    public function test_service_catalog_bounds_service_name_and_description_lengths(): void
+    {
+        $vendor = $this->cateringVendor();
+        $owner = $this->vendorOwner($vendor);
+
+        Livewire::actingAs($owner)
+            ->test(VendorServicesManager::class)
+            ->set('serviceName', str_repeat('S', 151))
+            ->set('serviceDescription', str_repeat('D', 2001))
+            ->set('pricingType', 'FIXED')
+            ->set('priceFrom', 1000)
+            ->call('saveService')
+            ->assertHasErrors(['serviceName', 'serviceDescription']);
+
+        $this->assertSame(0, \\App\\Models\\VendorService::query()
+            ->where('tenant_id', $vendor->id)
+            ->where('name', str_repeat('S', 151))
+            ->count());
+    }
+
     public function test_service_creation_requires_service_name(): void
     {
         Livewire::actingAs($this->vendorOwner($this->cateringVendor()))
