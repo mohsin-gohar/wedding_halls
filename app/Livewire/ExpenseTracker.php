@@ -8,11 +8,13 @@ use App\Models\Expense;
 use App\Models\Hall;
 use App\Models\PurchaseOrder;
 use App\Models\UtilityLog;
+use App\Services\ExpenseCorrectionService;
 use App\Support\CashOnlyPayments;
 use App\Support\PermissionMatrix;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -77,6 +79,16 @@ class ExpenseTracker extends Component
     public ?string $voidingExpenseId = null;
 
     public string $voidReason = '';
+
+    public bool $showCorrectionModal = false;
+
+    public ?string $correctingExpenseId = null;
+
+    public string $correctionDesiredAmount = '';
+
+    public string $correctionReason = '';
+
+    public string $correctionToken = '';
 
     protected $rules = [
         'category' => 'required|in:RAW_FOOD_MEAT,FRESH_FLORAL_DECOR,STAFF_WAGES,STAFF_DAILY_WAGES,MAINTENANCE_REPAIRS,CATERING_SUPPLIES,MARKETING_ADS,OTHER,CHILLER_AC,CLEANING_HYGIENE,KITCHEN_GAS,MISC_OPERATIONAL',
@@ -279,6 +291,12 @@ class ExpenseTracker extends Component
 
     private function assertExpenseCanBeManuallyAdjusted(Expense $expense): void
     {
+        // Correction rows are ordinary ledger entries with their own audit
+        // trail; only the original source-linked row is protected.
+        if ($expense->corrects_expense_id !== null) {
+            return;
+        }
+
         if ($expense->payroll_id) {
             abort(403, 'Payroll-linked expenses must be corrected through the payroll workflow.');
         }
@@ -368,6 +386,80 @@ class ExpenseTracker extends Component
         $this->cancelVoid();
     }
 
+    public function openCorrectionModal(string $expenseId): void
+    {
+        $this->authorizeExpenseManager();
+        $expense = Expense::withoutGlobalScope('not_voided')
+            ->where('tenant_id', Auth::user()->tenant_id)
+            ->whereKey($expenseId)
+            ->firstOrFail();
+
+        abort_unless(
+            ! $expense->is_voided
+                && $expense->corrects_expense_id === null
+                && ($expense->payroll_id
+                    || in_array($expense->category, ['GENERATOR_DIESEL', 'WAPDA_ELECTRICITY'], true)
+                    || UtilityLog::where('expense_id', $expense->id)->exists()
+                    || ($expense->receipt_number && PurchaseOrder::where('tenant_id', $expense->tenant_id)
+                        ->where('po_number', $expense->receipt_number)->where('status', 'PAID')->exists())),
+            403,
+            'Only a posted source-linked expense can be corrected here.'
+        );
+
+        $this->correctingExpenseId = $expenseId;
+        $this->correctionDesiredAmount = (string) round(
+            (float) $expense->amount + (float) $expense->corrections()->sum('amount'), 2
+        );
+        $this->correctionReason = '';
+        $this->correctionToken = (string) Str::ulid();
+        $this->showCorrectionModal = true;
+        $this->errorMessage = null;
+    }
+
+    public function closeCorrectionModal(): void
+    {
+        $this->showCorrectionModal = false;
+        $this->correctingExpenseId = null;
+        $this->correctionReason = '';
+    }
+
+    public function correctExpense(): void
+    {
+        $this->authorizeExpenseManager();
+        $this->validate([
+            'correctingExpenseId' => ['required', 'string'],
+            'correctionDesiredAmount' => ['required', 'numeric', 'min:0', 'max:9999999999.99'],
+            'correctionReason' => ['required', 'string', 'min:8', 'max:500'],
+        ]);
+
+        $expense = Expense::withoutGlobalScope('not_voided')
+            ->where('tenant_id', Auth::user()->tenant_id)
+            ->whereKey($this->correctingExpenseId)
+            ->firstOrFail();
+
+        try {
+            $outcome = app(ExpenseCorrectionService::class)->correct(
+                $expense,
+                (float) $this->correctionDesiredAmount,
+                trim($this->correctionReason),
+                $this->correctionToken,
+                'EXPENSE',
+                (string) $expense->id
+            );
+        } catch (\RuntimeException $e) {
+            $this->addError('correctionReason', $e->getMessage());
+
+            return;
+        }
+
+        if ($outcome['result'] === 'corrected') {
+            $this->feedbackMessage = 'Correction posted; the original expense and its history are unchanged.';
+        } else {
+            $this->feedbackMessage = 'No new correction was needed (duplicate or unchanged amount).';
+        }
+        $this->closeCorrectionModal();
+    }
+
     public function render()
     {
         $this->authorizeExpenseViewer();
@@ -423,6 +515,7 @@ class ExpenseTracker extends Component
             'expenses' => $expenses,
             'paidPoNumbers' => PurchaseOrder::where('tenant_id', $tenantId)->where('status', 'PAID')->pluck('po_number'),
             'utilityExpenseIds' => UtilityLog::where('tenant_id', $tenantId)->whereNotNull('expense_id')->pluck('expense_id'),
+            'canCorrectSourceExpenses' => PermissionMatrix::userCan(Auth::user(), 'expenses.manage'),
             'halls' => $halls,
             'totalExpenses' => $totalExpenses,
             'totalRevenue' => $totalRevenue,

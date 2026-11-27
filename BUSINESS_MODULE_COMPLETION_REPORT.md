@@ -37,11 +37,9 @@ Every present module was inspected in code and exercised by existing feature/API
 
 ## 4. Genuinely remaining product gaps (not "complete")
 
-1. No hall-cancellation cash-refund UI (API only).
-2. Complimentary onboarding duration differs between registration and provisioning.
-3. Utility tracker creates `utility_logs` without linking the generated expense (`expense_id`); source-link protection is dead for that path.
-4. Source-linked expense correction workflows (payroll/PO/utility) need dedicated UI and tests beyond the current guard-and-void behavior.
-5. Some financial KPIs count `HOLD` bookings as collected cash while others count only `CONFIRMED`.
-6. Platform support / wildcard tokens / Livewire throttling require product decision (see security report).
+1. FK `restrictOnDelete()` hardening and unique indexes for booking/PO references (staging rehearsal required).
+2. Platform-support API scope and upload-limit alignment (product/owner decisions).
+3. Dashboard still labels HOLD-inclusive booked value as "gross" in one KPI; analytics GMV is corrected, dashboard display alignment is pending UI copy work.
+4. Host-level production gates (deploy, restore drill, mail/WhatsApp, secrets) remain owner-dependent.
 
-None of these were hidden or represented as complete.
+Completed with regression tests in this pass: hall cancellation cash-refund UI, append-only source-linked expense correction workflow, historical utility `expense_id` backfill, onboarding policy, GMV definition.

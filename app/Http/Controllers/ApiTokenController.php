@@ -48,6 +48,13 @@ class ApiTokenController extends Controller
             'payments.read',
         ];
 
+        // Wildcard tokens are a platform-administrator capability. Tenant and
+        // customer accounts may only mint explicitly scoped, least-privilege
+        // tokens; downstream RBAC still applies to every token.
+        if (in_array(ApiToken::ABILITY_ALL, $abilities, true) && ! $user->isSuperAdmin()) {
+            abort(403, 'Only platform administrators may issue unrestricted API tokens.');
+        }
+
         $expiresAt = now()->addDays((int) ($validated['expires_in_days'] ?? 90));
 
         [$token, $plain] = ApiToken::issue(

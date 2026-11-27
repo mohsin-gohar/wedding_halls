@@ -360,6 +360,13 @@
                         <span>Remaining Balance:</span>
                         <span>PKR {{ number_format($viewingBooking->balance_due ?? (($viewingBooking->grand_total ?? $viewingBooking->total_amount) - $viewingBooking->advance_paid), 0) }}</span>
                     </div>
+                    @if($canRefundPayments && $viewingBooking->status === 'CANCELLED' && (float) $viewingBooking->advance_paid > 0)
+                        <div class="pt-2">
+                            <button wire:click="openRefundModal('{{ $viewingBooking->id }}')" class="w-full px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white text-center font-bold transition">
+                                💵 Issue Cash Refund
+                            </button>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Printable Business Documents Actions -->
@@ -415,6 +422,38 @@
                 </ul>
                 <div class="flex justify-end">
                     <button wire:click="closeConflictModal" class="btn-gold !h-9 !px-5 text-xs font-bold">Close</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if($showRefundModal)
+        <div class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div class="w-full max-w-lg space-y-5 border border-rose-500/40 bg-white p-6 shadow-2xl dark:bg-[#171513]">
+                <div>
+                    <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">Cash-only refund · authorized staff</p>
+                    <h3 class="mt-2 font-serif-luxury text-2xl text-[#171513] dark:text-white">Issue cash refund</h3>
+                    <p class="mt-2 text-xs text-stone-500">Recorded against the cancelled booking. Reusing the same reference is idempotent.</p>
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-stone-300">Refund amount (PKR)</label>
+                    <input type="number" step="0.01" min="0.01" wire:model="refundAmount" class="w-full border border-[#E7E5E4] bg-[#F8F5EF] px-3 py-2 text-sm dark:border-white/15 dark:bg-[#171513] dark:text-white">
+                    @error('refundAmount') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-stone-300">Voucher / reference</label>
+                    <input type="text" maxlength="100" wire:model="refundReference" class="w-full border border-[#E7E5E4] bg-[#F8F5EF] px-3 py-2 text-sm dark:border-white/15 dark:bg-[#171513] dark:text-white">
+                    @error('refundReference') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-stone-300">Notes</label>
+                    <textarea rows="2" maxlength="1000" wire:model="refundNotes" class="w-full border border-[#E7E5E4] bg-[#F8F5EF] p-3 text-sm dark:border-white/15 dark:bg-[#171513] dark:text-white"></textarea>
+                </div>
+                @if($refundError) <div class="text-xs text-rose-600">{{ $refundError }}</div> @endif
+                @if($refundSuccess) <div class="text-xs text-emerald-600">{{ $refundSuccess }}</div> @endif
+                <div class="flex justify-end gap-3 border-t border-[#E7E5E4] pt-4 dark:border-white/10">
+                    <button type="button" wire:click="closeRefundModal" class="border border-[#E7E5E4] px-4 py-2 text-xs font-bold uppercase text-stone-600 dark:border-white/15 dark:text-stone-300">Cancel</button>
+                    <button type="button" wire:click="recordBookingRefund" class="border border-rose-500/50 bg-rose-600 px-4 py-2 text-xs font-bold uppercase text-white">Record refund</button>
                 </div>
             </div>
         </div>

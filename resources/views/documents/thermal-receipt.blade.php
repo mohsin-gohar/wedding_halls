@@ -88,7 +88,7 @@
 
 <div class="divider"></div>
 
-<div class="center bold">CASH PAYMENT RECEIPT</div>
+<div class="center bold">{{ $payment->payment_type === 'REFUND' ? 'CASH REFUND VOUCHER' : 'CASH PAYMENT RECEIPT' }}</div>
 <div class="flex">
     <span>RCP #:</span>
     <span class="bold">{{ $payment->receipt_no }}</span>
@@ -129,7 +129,7 @@
 <div class="divider"></div>
 
 <div class="flex bold" style="font-size: 13px; margin: 4px 0;">
-    <span>AMOUNT PAID:</span>
+    <span>{{ $payment->payment_type === 'REFUND' ? 'AMOUNT REFUNDED:' : 'AMOUNT PAID:' }}</span>
     <span>PKR {{ number_format($payment->amount, 2) }}</span>
 </div>
 <div class="flex">
@@ -159,8 +159,12 @@
 <div class="divider"></div>
 
 <div class="center" style="font-size: 9px; margin-top: 8px;">
-    * Non-refundable Token Advance *<br>
-    All milestone payments subject to company policy.<br>
+    @if($payment->payment_type === 'REFUND')
+        * Cash refund recorded against a cancelled event *<br>
+    @else
+        * Non-refundable Token Advance *<br>
+        All milestone payments subject to company policy.<br>
+    @endif
     Thank you for choosing Wedding_Hall!<br><br>
     *** COMPUTER GENERATED SLIP ***
 </div>

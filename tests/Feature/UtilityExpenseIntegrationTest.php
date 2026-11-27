@@ -10,6 +10,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UtilityLog;
 use App\Models\Venue;
+use App\Services\ExpenseCorrectionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -60,6 +61,7 @@ class UtilityExpenseIntegrationTest extends TestCase
         $this->assertSame(12000.0, (float) $log->expense->amount);
         $this->assertSame(1, Expense::where('tenant_id', $tenant->id)->count());
 
+        // A changed cost must not silently rewrite the posted expense.
         Livewire::actingAs($owner)
             ->test(UtilityFuelTracker::class)
             ->set('selectedBookingId', $booking->id)
@@ -69,11 +71,19 @@ class UtilityExpenseIntegrationTest extends TestCase
             ->set('wapda_unit_rate', 0)
             ->set('generator_run_hours', 6)
             ->call('saveUtilityLog')
-            ->assertHasNoErrors();
+            ->assertHasErrors('diesel_liters_consumed');
 
         $this->assertSame(1, UtilityLog::where('booking_id', $booking->id)->count());
         $this->assertSame(1, Expense::where('tenant_id', $tenant->id)->count());
-        $this->assertSame(15000.0, (float) $log->fresh()->expense->amount);
-        $this->assertSame(15000.0, (float) $log->fresh()->total_utility_cost);
+        $this->assertSame(12000.0, (float) $log->fresh()->expense->amount);
+
+        // The audited correction path appends a signed row instead.
+        $correction = app(ExpenseCorrectionService::class)->correct(
+            $log->expense, 15000.0, 'Correct recorded fuel quantity', 'CORR-UTILITY-001', 'UTILITY', (string) $log->id
+        );
+        $this->assertSame('corrected', $correction['result']);
+        $this->assertSame(12000.0, (float) $log->fresh()->expense->amount);
+        $this->assertSame(1, Expense::where('tenant_id', $tenant->id)->whereNotNull('corrects_expense_id')->count());
+        $this->assertSame(15000.0, (float) $log->fresh()->expense->corrections()->sum('amount') + 12000.0);
     }
 }

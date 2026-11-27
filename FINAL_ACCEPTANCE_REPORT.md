@@ -69,13 +69,12 @@ CI Playwright job on `f837283`: **PASS**. Local real-Chromium verification cover
 
 ## 7. Remaining gaps and accepted risks
 
-1. No dedicated authorized-staff UI for hall cancellation cash refunds (API exists).
-2. Source-linked expense correction UI (payroll/PO/utility) is guard-only, not a full workflow.
-3. Historical `utility_logs` rows lack `expense_id` backfill (new writes are linked correctly).
-4. Financial FK `restrictOnDelete()` hardening and unique indexes for booking/PO references need a staging duplicate audit + migration rehearsal.
-5. Platform-support global API read, wildcard token self-issuance, Livewire update throttling: **ACCEPTED RISK** pending owner product decision (documented in security report).
-6. Upload-limit mismatch across standalone Nginx (32m), PHP (70m) and Livewire (50MB) remains a deployment-config item.
-7. No 100% claim: host-level secrets, HTTPS, workers, scheduler, backups/restore, mail and WhatsApp delivery are unverified.
+1. Financial FK `restrictOnDelete()` hardening and unique indexes for booking/PO references need a staging duplicate audit + migration rehearsal before production.
+2. Platform-support global API read and Livewire component traffic controls remain **ACCEPTED RISK** pending owner product decision; this Livewire version has no `/livewire/update` route to throttle, so per-component guards remain the control. Wildcard API token self-issuance is now restricted to Super Admin (regression-tested).
+3. Upload-limit mismatch across standalone Nginx (32m), PHP (70m) and Livewire (50MB) remains a deployment-config item.
+4. Now completed with regression tests: authorized-staff CASH refund UI (calendar booking modal, cancelled bookings only, over-refund guarded, refund voucher), append-only source-linked expense corrections (payroll/PO/utility), historical utility `expense_id` backfill, unified 30-day onboarding, HOLD excluded from GMV, utility expenses no longer silently rewritten.
+5. Production deploy / staging restore drill / live mail and WhatsApp delivery / real secrets: **NOT VERIFIED** (owner infrastructure and approval required).
+6. No 100% claim: host-level items unverified.
 
 ## 8. Deliverables
 

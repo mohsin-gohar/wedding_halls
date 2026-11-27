@@ -8,6 +8,7 @@ use App\Models\Hall;
 use App\Models\Tenant;
 use App\Models\Venue;
 use App\Services\HallAvailabilityService;
+use App\Services\PaymentService;
 use App\Support\PermissionMatrix;
 use App\Support\ShiftWindows;
 use Carbon\Carbon;
@@ -49,6 +50,21 @@ class CalendarShiftGrid extends Component
     public bool $showConflictModal = false;
 
     public bool $showDetailsModal = false;
+
+    // Cash refund (authorized staff, CASH only)
+    public bool $showRefundModal = false;
+
+    public ?string $refundBookingId = null;
+
+    public string $refundAmount = '';
+
+    public string $refundReference = '';
+
+    public string $refundNotes = '';
+
+    public ?string $refundError = null;
+
+    public ?string $refundSuccess = null;
 
     protected $listeners = [
         'bookingCreated' => '$refresh',
@@ -332,6 +348,75 @@ class CalendarShiftGrid extends Component
         $this->conflictDetails = null;
     }
 
+    public function openRefundModal(string $bookingId): void
+    {
+        $user = Auth::user();
+        abort_unless($user && PermissionMatrix::userCan($user, 'payments.refund'), 403);
+
+        $booking = $this->refundableBooking($user, $bookingId);
+        abort_unless($booking->status === 'CANCELLED', 403, 'Only cancelled bookings may be refunded from this surface.');
+
+        $this->refundBookingId = $bookingId;
+        $this->refundAmount = (string) round(max(0, (float) $booking->advance_paid), 2);
+        $this->refundReference = 'REF-'.strtoupper(substr($booking->id, 0, 8)).'-'.strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
+        $this->refundNotes = '';
+        $this->refundError = null;
+        $this->refundSuccess = null;
+        $this->showRefundModal = true;
+    }
+
+    public function closeRefundModal(): void
+    {
+        $this->showRefundModal = false;
+        $this->refundBookingId = null;
+        $this->refundError = null;
+    }
+
+    public function recordBookingRefund(): void
+    {
+        $user = Auth::user();
+        abort_unless($user && PermissionMatrix::userCan($user, 'payments.refund'), 403);
+
+        $booking = $this->refundableBooking($user, (string) $this->refundBookingId);
+        abort_unless($booking->status === 'CANCELLED', 403, 'Only cancelled bookings may be refunded.');
+
+        $refundable = round(max(0, (float) $booking->advance_paid), 2);
+        $this->validate([
+            'refundAmount' => ['required', 'numeric', 'min:0.01', 'max:'.$refundable],
+            'refundReference' => ['nullable', 'string', 'max:100'],
+            'refundNotes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        try {
+            $payment = app(PaymentService::class)->recordCashRefund(
+                $booking,
+                (float) $this->refundAmount,
+                $user,
+                $this->refundReference ?: null,
+                $this->refundNotes ?: null
+            );
+        } catch (\Throwable $e) {
+            $this->refundError = $e->getMessage();
+
+            return;
+        }
+
+        $this->refundSuccess = 'Cash refund recorded. Receipt: '.$payment->receipt_no;
+        $this->showRefundModal = false;
+        $this->viewingBooking = $booking->fresh();
+    }
+
+    private function refundableBooking($user, string $bookingId): Booking
+    {
+        $query = Booking::query();
+        if (! $user->isSuperAdmin()) {
+            abort_unless($user->tenant_id, 403);
+            $query->where('tenant_id', $user->tenant_id);
+        }
+
+        return $query->findOrFail($bookingId);
+    }
+
     public function render()
     {
         $user = Auth::user();
@@ -446,6 +531,7 @@ class CalendarShiftGrid extends Component
             'rangeTitle' => $rangeStart->format('d M').' â€“ '.$rangeEnd->format('d M Y'),
             'shiftWindows' => ShiftWindows::normalize($selectedHall?->tenant?->shift_windows),
             'shiftBuffer' => (int) ($selectedHall?->tenant?->shift_buffer_minutes ?? 0),
+            'canRefundPayments' => PermissionMatrix::userCan(Auth::user(), 'payments.refund'),
         ]);
     }
 }

@@ -49,11 +49,9 @@ Regression: `tests/Feature/FinancialReportingIntegrityTest.php` asserts a HOLD b
 
 ## 6. Remaining gaps (NOT verified / product decisions)
 
-- No authorized staff UI for hall-cancellation cash refunds (API exists).
-- `expense_id` backfill for historical `utility_logs` rows not applied to existing installs (new writes are linked correctly).
-- Source-linked expense correction UI (payroll/PO/utility) is guard-only, not a dedicated workflow.
 - Unique indexes for booking references / PO numbers require a duplicate-data audit first.
 - FK `restrictOnDelete()` hardening requires a staging migration rehearsal before production.
 - Binary floating-point is still used in some legacy decimal calculations (`float` casts); critical monetary paths use integer paisa or `round(..., 2)` and are covered by tests, but a full decimal migration is a larger refactor.
+- Completed in this pass: utility historical `expense_id` backfill migration (additive, null-safe), append-only corrections via `ExpenseCorrectionService` (no original rewrite, signed delta rows, audit), refund voucher branch, HOLD excluded from analytics GMV.
 
 No financial defect with an executed failing test remains unaddressed on the repair branch.

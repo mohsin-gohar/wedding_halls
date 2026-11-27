@@ -20,7 +20,8 @@ Middleware (`bootstrap/app.php`, `app/Http/Middleware/*`), routes (`web.php`, `a
 | MEDIUM | HR manager could provision privileged roles | `allowedRoles()` returned seven operational roles | Restricted to `ROLE_STAFF_MEMBER`; owner retains full set |
 | MEDIUM | Livewire login only blocked `SUSPENDED`; reset auto-login ignored status | `Login.php:48`, `ResetPassword.php:64-71` | Require `ACTIVE` in both |
 | MEDIUM | Password reset email enumeration | `ForgotPassword.php` used `exists:users,email` and distinct errors | Rule relaxed to `email`; generic success for both outcomes |
-| MEDIUM | Wildcard API token self-service / platform-support global read / Livewire update throttling | Documented design choices | Left unchanged; require product decision (not silently altered) |
+| MEDIUM | Wildcard API token self-service | `ApiTokenController::store()` allowed `*` for any user | Fixed: only Super Admin may mint `*`; scoped tokens unchanged; regression-tested |
+| MEDIUM | Platform-support global read / Livewire traffic | Design/infra dependent | Documented accepted risk: support scope needs owner decision; this Livewire build has no `/livewire/update` route, so component-level authorization remains the control |
 
 ## 3. Controls verified correct
 
@@ -39,7 +40,7 @@ New/updated: `PublicJsonLdSecurityTest`, `ApiBookingFinancialIntegrityTest` (cus
 
 ## 5. Remaining security gaps (not silently "fixed")
 
-1. Livewire update endpoint lacks a global throttle; per-component guards exist for auth flows only.
+1. Livewire traffic has no global throttle; per-component guards exist for all mutating actions and auth flows. This Livewire build has no `/livewire/update` endpoint to throttle; documented accepted risk.
 2. Platform support has global API read scope; requires product sign-off or ticket-scoped implementation.
 3. `*` API tokens can be self-issued; downstream RBAC still applies.
 4. Financial FKs still cascade on deletion for several tables; application paths suspend instead of delete, but DB-level guarantee is incomplete.

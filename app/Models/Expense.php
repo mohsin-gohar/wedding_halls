@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Expense extends Model
@@ -27,6 +28,8 @@ class Expense extends Model
         'receipt_number',
         'notes',
         'created_by_user_id',
+        'corrects_expense_id',
+        'correction_sequence',
     ];
 
     protected $casts = [
@@ -34,6 +37,7 @@ class Expense extends Model
         'expense_date' => 'date',
         'is_voided' => 'boolean',
         'voided_at' => 'datetime',
+        'correction_sequence' => 'integer',
     ];
 
     protected static function booted(): void
@@ -78,5 +82,15 @@ class Expense extends Model
     public function utilityLog(): HasOne
     {
         return $this->hasOne(UtilityLog::class, 'expense_id');
+    }
+
+    public function corrections(): HasMany
+    {
+        return $this->hasMany(Expense::class, 'corrects_expense_id');
+    }
+
+    public function correctedExpense(): BelongsTo
+    {
+        return $this->belongsTo(Expense::class, 'corrects_expense_id')->withoutGlobalScope('not_voided');
     }
 }

@@ -169,7 +169,14 @@ class UtilityFuelTracker extends Component
             ];
 
             if ($expense) {
-                $expense->update($expenseData);
+                // Posted financial records are never silently rewritten. A
+                // changed cost must be posted as an audited correction from
+                // the expense ledger instead.
+                if (abs((float) $expense->amount - $totalCost) > 0.009) {
+                    $this->addError('diesel_liters_consumed', 'Utility cost changed. Post an audited expense correction from the expense ledger instead of rewriting the original.');
+
+                    return;
+                }
             } else {
                 $expense = Expense::create($expenseData);
                 AuditLog::log('EXPENSE_CREATED', 'Utility-linked expense PKR '.number_format($totalCost, 2).' created for booking '.$booking->booking_reference.'.', $booking->tenant_id, 'Expense', $expense->id);

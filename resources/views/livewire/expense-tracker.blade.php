@@ -196,6 +196,9 @@
                                     </div>
                                 @elseif($exp->payroll_id || $paidPoNumbers->contains($exp->receipt_number) || $utilityExpenseIds->contains($exp->id) || in_array($exp->category, ['GENERATOR_DIESEL', 'WAPDA_ELECTRICITY'], true))
                                     <span class="text-[10px] font-bold uppercase tracking-wider text-stone-500">Source managed</span>
+                                    @if($canCorrectSourceExpenses)
+                                        <button wire:click="openCorrectionModal('{{ $exp->id }}')" class="ml-2 border border-[#C6A15B]/50 px-2 py-1 text-xs font-semibold text-[#8F7239] dark:text-[#C6A15B]">Correct</button>
+                                    @endif
                                 @else
                                     <button wire:click="openEditModal('{{ $exp->id }}')" class="border border-[#E7E5E4] px-2.5 py-1 text-xs font-semibold text-[#171513] dark:border-white/15 dark:text-stone-200">Edit</button>
                                     <button wire:click="openVoidModal('{{ $exp->id }}')" class="border border-rose-500/30 bg-rose-500/5 px-2 py-1 text-xs font-semibold text-rose-700 dark:text-rose-300">Void</button>
@@ -421,6 +424,32 @@
                 <div class="flex justify-end gap-3 border-t border-[#E7E5E4] pt-4 dark:border-white/10">
                     <button type="button" wire:click="cancelVoid" class="border border-[#E7E5E4] px-4 py-2 text-xs font-bold uppercase text-stone-600 dark:border-white/15 dark:text-stone-300">Cancel</button>
                     <button type="button" wire:click="voidExpense" class="border border-rose-500/50 bg-rose-600 px-4 py-2 text-xs font-bold uppercase text-white">Void and retain history</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if($showCorrectionModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div class="w-full max-w-lg space-y-5 border border-[#C6A15B]/50 bg-white p-6 shadow-2xl dark:bg-[#171513]">
+                <div>
+                    <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8F7239] dark:text-[#C6A15B]">Append-only correction</p>
+                    <h3 class="mt-2 font-serif-luxury text-2xl text-[#171513] dark:text-white">Correct posted expense</h3>
+                    <p class="mt-2 text-xs leading-relaxed text-stone-500">The original entry and its audit history stay unchanged. A signed correction line is appended and nets out in totals.</p>
+                </div>
+                <div>
+                    <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">Corrected effective total (PKR)</label>
+                    <input type="number" step="0.01" min="0" wire:model="correctionDesiredAmount" class="w-full border border-[#E7E5E4] bg-[#F8F5EF] px-3 py-2 text-sm outline-none focus:border-[#C6A15B] dark:border-white/15 dark:bg-[#171513] dark:text-white">
+                    @error('correctionDesiredAmount') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
+                </div>
+                <div>
+                    <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">Reason</label>
+                    <textarea wire:model="correctionReason" rows="3" maxlength="500" class="w-full border border-[#E7E5E4] bg-[#F8F5EF] p-3 text-sm outline-none focus:border-[#C6A15B] dark:border-white/15 dark:bg-[#171513] dark:text-white" placeholder="Why is this correction required?"></textarea>
+                    @error('correctionReason') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
+                </div>
+                <div class="flex justify-end gap-3 border-t border-[#E7E5E4] pt-4 dark:border-white/10">
+                    <button type="button" wire:click="closeCorrectionModal" class="border border-[#E7E5E4] px-4 py-2 text-xs font-bold uppercase text-stone-600 dark:border-white/15 dark:text-stone-300">Cancel</button>
+                    <button type="button" wire:click="correctExpense" class="border border-[#C6A15B] bg-[#C6A15B] px-4 py-2 text-xs font-bold uppercase text-[#171513]">Post correction</button>
                 </div>
             </div>
         </div>
