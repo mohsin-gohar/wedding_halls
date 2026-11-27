@@ -168,6 +168,35 @@ class DirectServiceBookingTest extends TestCase
         ]);
     }
 
+    public function test_hidden_vendor_cannot_receive_booking_from_a_stale_page(): void
+    {
+        $vendor = $this->vendor('nawab-caterers');
+        $customer = $this->customer();
+        $service = $this->makeService($vendor);
+        $vendor->update(['marketplace_visible' => false]);
+
+        try {
+            app(ServiceBookingService::class)->createDirectBooking(
+                $vendor,
+                (int) $customer->id,
+                $service,
+                [
+                    'event_name' => 'Hidden Vendor Stale Page',
+                    'event_date' => now()->addDays(60)->toDateString(),
+                    'guest_count' => 200,
+                ]
+            );
+            $this->fail('A vendor hidden after page load must not receive a new booking.');
+        } catch (ServiceBookingException $exception) {
+            $this->assertSame(409, $exception->getCode());
+        }
+
+        $this->assertDatabaseMissing('service_bookings', [
+            'tenant_id' => $vendor->id,
+            'event_name' => 'Hidden Vendor Stale Page',
+        ]);
+    }
+
     public function test_booking_service_rejects_a_bookable_owned_by_another_vendor(): void
     {
         $vendor = $this->vendor('nawab-caterers');
