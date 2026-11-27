@@ -112,6 +112,44 @@ class VendorQuoteRequestTest extends TestCase
         );
     }
 
+    public function test_rfq_bid_policy_allows_only_the_explicitly_targeted_vendor(): void
+    {
+        $customer = $this->customer();
+        $targetVendor = $this->marketplaceVendor('catering');
+        $otherVendor = $this->marketplaceVendor('photography');
+        $service = VendorService::query()
+            ->where('tenant_id', $targetVendor->id)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        Livewire::actingAs($customer)
+            ->test(VendorQuoteRequest::class, ['slug' => $targetVendor->slug])
+            ->set('service', $service->id)
+            ->set('eventName', 'Targeted Vendor Policy Check')
+            ->set('eventDate', now()->addDays(35)->toDateString())
+            ->set('guestCount', 250)
+            ->set('requirements', 'Full catering service and staffed buffet for the event.')
+            ->call('save')
+            ->assertSet('submitted', true);
+
+        $rfq = RFQ::query()->where('client_id', $customer->id)->firstOrFail();
+        $targetOwner = User::factory()->create([
+            'tenant_id' => $targetVendor->id,
+            'role' => 'ROLE_TENANT_OWNER',
+            'status' => 'ACTIVE',
+        ]);
+        $otherOwner = User::factory()->create([
+            'tenant_id' => $otherVendor->id,
+            'role' => 'ROLE_TENANT_OWNER',
+            'status' => 'ACTIVE',
+        ]);
+
+        $policy = new \\App\\Policies\\RFQPolicy();
+
+        $this->assertTrue($policy->bid($targetOwner, $rfq));
+        $this->assertFalse($policy->bid($otherOwner, $rfq));
+    }
+
     public function test_per_head_category_requires_guest_count(): void
     {
         $customer = $this->customer();
