@@ -26,7 +26,7 @@
                 <span>&larr;</span>
                 <span>Back to Venue</span>
             </a>
-            <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}' })"
+            <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: @js($hall->id) })"
                     class="btn-gold !h-10 !px-5 text-xs font-bold font-sans tracking-wide">
                 Reserve Shift &rarr;
             </button>
