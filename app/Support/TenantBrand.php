@@ -40,7 +40,7 @@ class TenantBrand
         return new self(
             tenant: $tenant,
             name: (string) ($settings['brand_name'] ?? $tenant->name),
-            logo: $tenant->logo ?: null,
+            logo: self::safeImageUrl($tenant->logo),
             tagline: (string) ($settings['tagline'] ?? $tenant->vendorCategory?->tagline ?? ''),
             // website_settings may be edited through admin tooling or imported
             // data. Never let arbitrary stored strings become CSS declarations.
@@ -51,7 +51,7 @@ class TenantBrand
             phone: $tenant->phone,
             email: $tenant->email,
             address: $tenant->address,
-            coverImage: $tenant->cover_image ?: null,
+            coverImage: self::safeImageUrl($tenant->cover_image),
         );
     }
 
@@ -60,6 +60,25 @@ class TenantBrand
         return is_string($value) && preg_match('/\\A#[0-9a-fA-F]{6}\\z/', $value)
             ? $value
             : $fallback;
+    }
+
+    private static function safeImageUrl(?string $value): ?string
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        if (filter_var($value, FILTER_VALIDATE_URL)) {
+            $scheme = strtolower((string) parse_url($value, PHP_URL_SCHEME));
+
+            return in_array($scheme, ['http', 'https'], true) ? $value : null;
+        }
+
+        // Local public-storage paths only; reject quotes, parentheses,
+        // control characters and CSS delimiters before a view uses url(...).
+        return preg_match('#\\A/?[A-Za-z0-9._/%-]+\\z#', $value) ? $value : null;
     }
 
     /**
