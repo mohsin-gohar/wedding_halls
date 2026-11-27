@@ -128,6 +128,10 @@ class PublicHallDetails extends Component
             return;
         }
 
+        // Count every submission attempt, including invalid payloads, and
+        // consume the limit before persistence to close concurrent bursts.
+        RateLimiter::hit($key, 60);
+
         $this->validate([
             'inquiryName' => 'required|string|min:2|max:120',
             'inquiryPhone' => 'required|string|min:7|max:30',
@@ -146,7 +150,6 @@ class PublicHallDetails extends Component
             'status' => 'NEW',
         ]);
 
-        RateLimiter::hit($key, 60);
         AuditLog::log(
             'LISTING_INQUIRY',
             "Inquiry for [{$this->hall->name}] from {$this->inquiryName}.",
