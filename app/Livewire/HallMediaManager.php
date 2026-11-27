@@ -151,8 +151,48 @@ class HallMediaManager extends Component
         'has_generator_backup' => 'boolean',
         'has_bridal_room' => 'boolean',
         'is_active' => 'boolean',
-        'cover_image' => 'nullable|url',
+        'cover_image' => ['nullable', 'string', 'max:2048', fn ($attribute, $value, $fail) => $this->isSafePublicMediaUrl($value) ?: $fail('The cover image must be a safe HTTPS or public-storage URL.')],
     ];
+
+    private function isSafePublicMediaUrl(mixed $value): bool
+    {
+        if ($value === null || $value === '') {
+            return true;
+        }
+
+        if (! is_string($value) || preg_match('/[\\x00-\\x20\\\\"\\'()<>]/', $value)) {
+            return false;
+        }
+
+        if (preg_match('#\\A/storage/(?!.*(?:\\.\\./))[A-Za-z0-9._/-]+\\z#', $value)) {
+            return true;
+        }
+
+        if (! filter_var($value, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+
+        return in_array(strtolower((string) parse_url($value, PHP_URL_SCHEME)), ['http', 'https'], true);
+    }
+
+    private function isSafeVideoUrl(mixed $value): bool
+    {
+        if (! $this->isSafePublicMediaUrl($value)) {
+            return false;
+        }
+
+        if (Media::isDirectVideo((string) $value)) {
+            return true;
+        }
+
+        $host = strtolower((string) parse_url((string) $value, PHP_URL_HOST));
+
+        return in_array($host, [
+            'youtube.com', 'www.youtube.com', 'youtube-nocookie.com', 'www.youtube-nocookie.com',
+            'youtu.be', 'vimeo.com', 'www.vimeo.com', 'player.vimeo.com',
+            'dailymotion.com', 'www.dailymotion.com', 'dai.ly',
+        ], true);
+    }
 
     /**
      * Central permission guards for the hall website editor. The route allows
@@ -514,6 +554,16 @@ class HallMediaManager extends Component
         $this->assertCanManageHall();
         abort_unless($this->hall instanceof Hall, 404, 'No hall is selected.');
         $this->validate();
+
+        validator([
+            'images' => $this->images,
+            'videos' => $this->videos,
+        ], [
+            'images' => ['array', 'max:100'],
+            'images.*' => ['required', 'string', 'max:2048', fn ($attribute, $value, $fail) => $this->isSafePublicMediaUrl($value) ?: $fail('Image URL is not safe.')],
+            'videos' => ['array', 'max:30'],
+            'videos.*' => ['required', 'string', 'max:2048', fn ($attribute, $value, $fail) => $this->isSafeVideoUrl($value) ?: $fail('Video URL must be a supported HTTPS embed or direct media URL.')],
+        ])->validate();
 
         $user = Auth::user();
 
