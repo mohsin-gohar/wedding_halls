@@ -95,3 +95,27 @@ The following additional files received a targeted manual review of the security
 - CI was intentionally not inspected, triggered, or modified per the user's instruction.
 - This is a targeted continuation, not a claim that every remaining PHP/Blade file has now received a line-by-line manual review. The original unreviewed remainder in sections 2 and 4 remains open until individually reviewed.
 
+## 9. Phase 1 continuation — additional authorization and state-integrity fixes (2026-11-28)
+
+Further review of middleware, policies, service classes and their callers identified and corrected:
+
+- app/Livewire/Auth/TwoFactorAuthComponent.php: the post-verification redirect target was normalized only in mount, while Livewire public properties remain client-controlled. Re-normalize immediately before successful verification redirects; added an external-host tampering regression test.
+- app/Http/Middleware/EnsureActiveAccount.php: changed the session guard from a deny-list of three statuses to default-deny unless status is exactly ACTIVE. This prevents PENDING and unknown future statuses from retaining an authenticated session; added a regression test.
+- app/Policies/RFQPolicy.php: vendor bidding policy previously returned true for every tenant owner. It now requires rfq.bid permission and an RFQ owned by or explicitly targeted to that vendor tenant; added a targeted-vendor policy regression test.
+- app/Services/NotificationService.php: notifications now inherit the recipient's tenant when omitted and reject a conflicting tenant for tenant-assigned recipients. Tenant-less customer recipients can still receive support notifications associated with a tenant ticket; added tenant-context tests.
+- app/Livewire/WalkInBookingModal.php: public isStaff state is recalculated before hall-resolution queries, closing the state-tampering gap; added a hall-selection regression test.
+
+### Evidence commits
+
+- 107c460 — 2FA redirect revalidation
+- 4fbb27c — 2FA redirect tampering regression
+- 11d756a — active-account default-deny middleware
+- 9933271 — pending-account session regression
+- 44c265c — RFQ bid policy tenant targeting
+- 1eb9e71 — explicit RFQ target regression
+- 47a799d, 98ee402, 9ac8c70 — notification tenant context guard and customer-support compatibility
+- 45db70d, eb2a011 — walk-in staff-mode revalidation and regression
+- 47b? — notification regression coverage is included in commit 4f010ac and follow-up 117ddb1
+
+The new/updated tests have been committed but could not be executed in the current local runtime because required PHP extensions are absent. No CI action was taken. Full Phase 1 file-by-file review remains in progress; no 100% completion claim is made.
+
