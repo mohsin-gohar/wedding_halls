@@ -1,7 +1,7 @@
 # File-by-File Review Matrix — Riwaj Grand (independent re-audit)
 
 **Branch:** `audit/riwaj-grand-repair-20261126` · **Base:** `df8de437` · **Date:** 2026-11-26  
-**Tracked files after cleanup (git ls-files):** 559
+**Tracked files at latest verified HEAD (recursive Git tree):** 552
 
 ## 1. Review depth legend
 
@@ -17,7 +17,7 @@ Generated directories (`vendor/`, `node_modules/`, `public/build/`, compiled vie
 |---|---:|---|
 | `(root)` | 35 | D: Composer/npm manifests and locks, PHPUnit/Playwright config, env examples, Docker files, README and current authoritative reports. Historical snapshots are recoverable from Git history, not the active tree. |
 | `.github` | 1 | D: `ci.yml` (quality, MySQL, browser and manual-only deploy gates). |
-| `app` | 185 | D: security-sensitive controllers, middleware, policies, domain services, permission/tenant support and components tied to confirmed fixes. A/N: remaining Livewire components were syntax-checked and exercised through CI tests/browser coverage, not individually deep-read. |
+| `app` | 178 | D: security-sensitive controllers, middleware, policies, domain services, permission/tenant support and components tied to confirmed fixes. A/N: remaining Livewire components were syntax-checked and exercised through CI tests/browser coverage, not individually deep-read. |
 | `bootstrap` | 3 | D: application bootstrap, providers and cache/exception/rate-limit wiring. |
 | `config` | 18 | D: platform, services, filesystems, Livewire, database, app and rate-limit configs. A: remaining framework configs. |
 | `database` | 84 | D: recent financial/booking/attendance migrations, seeders and schema changes involved in fixes. A/N: older migrations covered by clean MySQL migrations and tests, not all individually reviewed line-by-line. |
@@ -43,17 +43,17 @@ Generated directories (`vendor/`, `node_modules/`, `public/build/`, compiled vie
 
 ## 5. Verification evidence for this matrix
 
-`composer audit --locked` → 0 advisories; `npm run build` → exit 0; `vendor/bin/pint --test` → exit 0; PHP lint over 477 tracked PHP files; `git ls-files` count 559; full MySQL suite artifact `full_suite_repair*.out`.
+`composer audit --locked` → 0 advisories; `npm run build` → exit 0; `vendor/bin/pint --test` → exit 0; PHP lint over 470 tracked PHP files; recursive Git tree count 552; full MySQL suite artifact `full_suite_repair*.out`.
 
 ## 6. Continuation (2026-11-27)
 
-- New migration `database/migrations/2026_12_23_000001_harden_financial_foreign_keys_and_unique_indexes.php` deep-reviewed and added (FK restrict + unique PO index with de-dupe).
+- New migration `database/migrations/2026_12_23_000001_harden_financial_foreign_keys_and_unique_indexes.php` deep-reviewed and added (FK restrict + unique PO/booking indexes with fail-closed duplicate checks).
 - `config/livewire.php` and `deploy/nginx-riwaj-grand.conf` updated for upload consistency and rate limit (prior push corrected).
 - No additional manual deep review of the remaining ~250 Livewire/Blade files; automated gates still pending local/CI re-run.
 
 ## 7. Final pass (2026-11-27, HEAD cb6ad80)
 
-- Financial migration `2026_12_23_000001` deep-reviewed: de-dupe logic, unique indexes, restrictOnDelete, irreversibility documented with staging restore-drill commands.
+- Financial migration `2026_12_23_000001` deep-reviewed: fail-closed duplicate checks, unique indexes, restrictOnDelete, irreversibility documented with staging restore-drill commands.
 - Production configs (Redis/queue/scheduler/mail/WhatsApp) reviewed; live verification blocked on owner credentials.
 - CI on source HEAD `1b57773` completed successfully: run 45982335954 (609 MySQL tests passed, 3 skipped; Playwright 8/8; static/build/security/Docker gates green).
 
@@ -66,3 +66,13 @@ Generated directories (`vendor/`, `node_modules/`, `public/build/`, compiled vie
 - Sixty-four superseded root/audit Markdown reports were removed from the active tree after confirming `DOCS_STATUS.md` marked them historical; their original content remains recoverable from Git history.
 - ZIP also contained ignored local dependency trees, environment files, logs and a nested duplicate project snapshot. These are not application source and are not committed.
 - No application runtime code, database migration, route, dependency lockfile or production data was changed in this cleanup.
+
+
+## 9. Exact latest verification (2026-11-27)
+
+- Verified HEAD: `846ac407f098d641add8cfeabdc9784fc8b87c8b`; GitHub CI run [46011895564](https://github.com/mohsin-gohar/wedding_halls/actions/runs/46011895564).
+- Recursive Git tree: **552 tracked blobs** (non-truncated), including **470 PHP** files. Inventory count only; not a claim of individual manual review.
+- MySQL: **611 passed, 3 skipped, 0 failed; 3,184 assertions**.
+- Playwright: **8/8 passed**; artifact `playwright-artifacts` (ID 15204463518) includes responsive screenshots and role-dashboard captures.
+- Static gates: PHP lint, Pint, Composer audit, NPM audit, Vite build, Docker configuration/build and Nginx runtime smoke all passed.
+- Remaining manual-review limitation remains: not every Livewire/Blade/test file was individually deep-read. Production deployment, live secrets and staging restore drill remain unverified.

@@ -7,12 +7,12 @@
 
 ## Current verification snapshot (2026-11-27)
 
-The latest GitHub-verified source baseline before documentation cleanup is
-`1b57773f8add34f515b92995b54a812f6d060cdf`. CI run
-[45982335954](https://github.com/mohsin-gohar/wedding_halls/actions/runs/45982335954)
-passed MySQL (609 passed, 3 skipped, 3,153 assertions), Playwright (8 passed),
-and all static/build/security/Docker gates. Deployment was intentionally
-skipped. Older test counts and incomplete workflow states below are historical.
+The latest exact-head GitHub CI run is [46011895564](https://github.com/mohsin-gohar/wedding_halls/actions/runs/46011895564) on source HEAD
+`846ac407f098d641add8cfeabdc9784fc8b87c8b`. MySQL: **611 passed, 3 skipped, 0 failed (3,184 assertions)**.
+Playwright: **8/8 passed**. Static quality, PHP lint/Pint, Composer audit,
+NPM audit, Vite build, Docker config/build/runtime smoke: **PASS**.
+Deployment was intentionally skipped; production hosting and database were
+not changed.
 
 ## 1. Decision summary
 
@@ -23,12 +23,12 @@ still requires the owner-controlled staging and host checklist in section 5.
 ## 2. Final verification ledger
 
 The latest exact-head GitHub Actions run on source HEAD
-`1b57773f8add34f515b92995b54a812f6d060cdf` is
-[45982335954](https://github.com/mohsin-gohar/wedding_halls/actions/runs/45982335954).
+`846ac407f098d641add8cfeabdc9784fc8b87c8b` is
+[46011895564](https://github.com/mohsin-gohar/wedding_halls/actions/runs/46011895564).
 
 | Gate | Evidence | Result |
 |---|---|---|
-| Full MySQL suite | GitHub CI MySQL test job | **PASS — 609 passed, 3 skipped, 3,153 assertions** |
+| Full MySQL suite | GitHub CI MySQL test job | **PASS — 611 passed, 3 skipped, 3,184 assertions** |
 | Browser QA | GitHub CI Playwright job | **PASS — 8/8 tests** |
 | PHP lint / Pint | GitHub CI static quality job | **PASS** |
 | Composer security audit | GitHub CI static quality job | **PASS — 0 advisories** |

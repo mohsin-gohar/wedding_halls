@@ -5,7 +5,7 @@
 **GitHub `main` baseline:** `07bc5fe397fbb0fd7de05678d68830fc027a8872`
 **Audited code baseline:** `1b57773f8add34f515b92995b54a812f6d060cdf` (latest GitHub-verified source head before this documentation/artifact cleanup)
 **Audit date:** 2026-11-27
-**Tracked files after cleanup:** 559 (review coverage: `FILE_BY_FILE_REVIEW_MATRIX.md`)
+**Tracked files at latest verified HEAD:** 552 (review coverage: `FILE_BY_FILE_REVIEW_MATRIX.md`)
 **No changes to `main`; no force-push, reset, deployment or production-data change.**
 
 ## 1. CI evidence (authoritative, GitHub-confirmed)
@@ -197,3 +197,30 @@ limitations do not override the successful GitHub CI evidence above.
 **External production gates remain:** staging backup/restore and irreversible
 financial migration rehearsal; live Redis/queue/scheduler/mail/WhatsApp
 verification with owner infrastructure; production deployment approval.
+
+
+## 14. Latest exact-head verification (2026-11-27)
+
+**Verified repair-branch HEAD:** `846ac407f098d641add8cfeabdc9784fc8b87c8b`  
+**GitHub Actions:** [run 46011895564](https://github.com/mohsin-gohar/wedding_halls/actions/runs/46011895564)  
+**GitHub main baseline remains:** `07bc5fe397fbb0fd7de05678d68830fc027a8872`
+
+| Gate | Result |
+|---|---|
+| MySQL full suite | **PASS — 611 passed, 3 skipped, 0 failed; 3,184 assertions** |
+| Playwright browser QA | **PASS — 8/8 tests** |
+| PHP lint / Pint | **PASS** |
+| Composer security audit | **PASS — 0 advisories** |
+| NPM audit | **PASS — 0 vulnerabilities** |
+| Vite production build | **PASS** |
+| Docker config/build + Nginx runtime smoke | **PASS** — built assets and public media served; private storage path returned 404 |
+| Deployment | **SKIPPED** — manual-only by design |
+
+The financial migration was hardened on this head:
+- Parent deletion is restricted for hall payments/bookings, subscription payments, expenses, payroll, purchase orders, service bookings/payments, vendor payouts, wallet transactions and audit logs (when the corresponding FK exists).
+- Unique tenant-scoped PO and booking-reference indexes are added only when duplicate preflight is clean.
+- Existing PO numbers and booking references are never rewritten by this migration; detected duplicates stop migration with a sample for reviewed maintenance.
+
+The Playwright artifact is `playwright-artifacts` (ID 15204463518). Visual inspection of its homepage, responsive pages and Super Admin/Tenant Owner/Customer screenshots confirmed the luxury dark/gold UI renders. The browser suite proves its defined route, overflow and access checks, not every possible control on every role.
+
+**Still not verified:** staging restore/rehearsal using real production-like data, production deployment, live mail/WhatsApp delivery, Redis/queue/scheduler health on the owner's host, backup restore drill and Lighthouse/load testing. No merge to `main`, deployment or production DB change was made.

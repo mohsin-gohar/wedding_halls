@@ -11,10 +11,8 @@ All database verification used the isolated MariaDB 10.4 / MySQL-8-compatible da
 - New migrations this pass: `2026_11_26_000001` (expense void metadata), `000002` (utility→expense link), `2026_12_22_000001` (payout→booking link). All are additive, guarded with `Schema::hasColumn`/`hasIndex`, and have deterministic `down()` methods.
 - Migration ordering matters: the payout link must sort **after** `2026_12_01_000002` (creates `vendor_payouts`); the earlier date was renamed accordingly.
 - Critical finding repaired: a merge-broken Blade view (`inventory-tracker.blade.php`) caused inventory/procurement tests to 500; fixed.
-- Remaining schema risks (documented, not silently changed):
-  - Several financial tables (`service_payments`, `vendor_payouts`, `wallet_transactions`, `expenses`, `subscription_payments`) still use `cascadeOnDelete()` on tenant/booking FKs. Application paths suspend instead of delete, so the risk is latent; DB-level immutability is incomplete.
-  - `bookings.booking_reference` and `purchase_orders.po_number` lack unique constraints; generation uses `uniqid()`/random suffixes. Additive dedup migrations exist for payment references; these two need a duplicate audit before indexing.
-  - `Tenant::$fillable` contains phantom columns (`billing_enabled`, `timezone`, `free_access_days`, etc.) with no migrations; live code uses `config('platform.*')`.
+- Financial FK deletion hardening and unique reference indexes are implemented by `2026_12_23_000001_harden_financial_foreign_keys_and_unique_indexes.php`. The migration uses a fail-closed duplicate preflight: it does not rename or rewrite existing PO/booking references; it stops with a sample if duplicates are present. Staging duplicate/orphan audit and migration rehearsal remain mandatory before production.
+- `Tenant::$fillable` contains legacy/phantom columns with no matching migrations in some historical paths; active free-access configuration uses `config('platform.*')`.
 
 ## 3. Financial definitions (authoritative)
 
@@ -49,9 +47,15 @@ Regression: `tests/Feature/FinancialReportingIntegrityTest.php` asserts a HOLD b
 
 ## 6. Remaining gaps (NOT verified / product decisions)
 
-- Unique indexes for booking references / PO numbers require a duplicate-data audit first.
-- FK `restrictOnDelete()` hardening requires a staging migration rehearsal before production.
+- Unique indexes and FK `restrictOnDelete()` are implemented and pass clean-schema MySQL CI. A real-data duplicate/orphan audit plus staging rehearsal remains mandatory before production; duplicate references cause migration failure without rewriting them.
 - Binary floating-point is still used in some legacy decimal calculations (`float` casts); critical monetary paths use integer paisa or `round(..., 2)` and are covered by tests, but a full decimal migration is a larger refactor.
 - Completed in this pass: utility historical `expense_id` backfill migration (additive, null-safe), append-only corrections via `ExpenseCorrectionService` (no original rewrite, signed delta rows, audit), refund voucher branch, HOLD excluded from analytics GMV.
 
 No financial defect with an executed failing test remains unaddressed on the repair branch.
+
+
+## 7. Latest verified schema evidence (2026-11-27)
+
+On HEAD `846ac407f098d641add8cfeabdc9784fc8b87c8b`, GitHub CI run [46011895564](https://github.com/mohsin-gohar/wedding_halls/actions/runs/46011895564) applied the complete migration set to clean MySQL successfully and passed **611 tests / 3,184 assertions**. Regression coverage asserts RESTRICT delete rules for hall payments, subscription payments, expenses, payroll, purchase orders, service bookings/payments, vendor payouts, wallet transactions and audit logs.
+
+The migration's unique-index preflight is intentionally non-destructive: duplicate tenant-scoped PO numbers or booking references stop migration and emit a small sample for manual review. It never automatically renames those identifiers. CI's clean database does not replace the required production-like staging duplicate audit or restore drill.

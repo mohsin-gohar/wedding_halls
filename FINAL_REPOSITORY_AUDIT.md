@@ -8,12 +8,12 @@
 
 ## Current verification snapshot (2026-11-27)
 
-The latest GitHub-verified source baseline before documentation cleanup is
-`1b57773f8add34f515b92995b54a812f6d060cdf`. CI run
-[45982335954](https://github.com/mohsin-gohar/wedding_halls/actions/runs/45982335954)
-passed MySQL (609 passed, 3 skipped, 3,153 assertions), Playwright (8 passed),
-and all static/build/security/Docker gates. Deployment was intentionally
-skipped. Older test counts and incomplete workflow states below are historical.
+The latest exact-head GitHub CI run is [46011895564](https://github.com/mohsin-gohar/wedding_halls/actions/runs/46011895564) on source HEAD
+`846ac407f098d641add8cfeabdc9784fc8b87c8b`. MySQL: **611 passed, 3 skipped, 0 failed (3,184 assertions)**.
+Playwright: **8/8 passed**. Static quality, PHP lint/Pint, Composer audit,
+NPM audit, Vite build, Docker config/build/runtime smoke: **PASS**.
+Deployment was intentionally skipped; production hosting and database were
+not changed.
 
 ## 1. Scope and authority
 
@@ -27,7 +27,7 @@ skipped. Older test counts and incomplete workflow states below are historical.
 | `PRODUCTION_READINESS_REPORT.md` | Go-live gates and infrastructure limits |
 
 No production deployment and no production database change was performed or
-authorized. All work below is in the repository and local test environments.
+authorized. Financial deletion protections now cover hall payments/bookings, subscription payments, expenses, payroll, purchase orders, service bookings/payments, vendor payouts, wallet transactions and audit logs. Duplicate PO/booking references stop the migration for manual review; the migration never renames them. All work below is in the repository and local test environments.
 
 ## 2. Architecture map
 
@@ -95,7 +95,7 @@ The phase names below follow preserved legacy execution notes available in Git h
 See `IMPLEMENTATION_COMPLETION_REPORT.md` and
 `PRODUCTION_READINESS_REPORT.md` for the final commands and their recorded
 results. No result is claimed unless its output file from this pass exists.
-Latest exact-head CI gates: full MySQL suite **609 passed, 3 skipped / 3,153 assertions** and Playwright **8/8 passed** on `1b57773` (run 45982335954).
+Latest exact-head CI gates: full MySQL suite **611 passed, 3 skipped / 3,184 assertions** and Playwright **8/8 passed** on `1b57773` (run 46011895564).
 
 ## 7. Residual risk / non-goals
 

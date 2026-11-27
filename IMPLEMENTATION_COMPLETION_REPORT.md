@@ -8,20 +8,19 @@
 
 ## Current verification snapshot (2026-11-27)
 
-The latest GitHub-verified source baseline before documentation cleanup is
-`1b57773f8add34f515b92995b54a812f6d060cdf`. CI run
-[45982335954](https://github.com/mohsin-gohar/wedding_halls/actions/runs/45982335954)
-passed MySQL (609 passed, 3 skipped, 3,153 assertions), Playwright (8 passed),
-and all static/build/security/Docker gates. Deployment was intentionally
-skipped. Older test counts and incomplete workflow states below are historical.
+The latest exact-head GitHub CI run is [46011895564](https://github.com/mohsin-gohar/wedding_halls/actions/runs/46011895564) on source HEAD
+`846ac407f098d641add8cfeabdc9784fc8b87c8b`. MySQL: **611 passed, 3 skipped, 0 failed (3,184 assertions)**.
+Playwright: **8/8 passed**. Static quality, PHP lint/Pint, Composer audit,
+NPM audit, Vite build, Docker config/build/runtime smoke: **PASS**.
+Deployment was intentionally skipped; production hosting and database were
+not changed.
 
 ## 1. Outcome
 
 The repository now implements the Phase 1–9 feature scope with a strict
 **CASH-only** money boundary, tenant-isolated workflows, locked/idempotent
 financial writes, and browser proof for the mandated responsive viewports.
-Historical rows and labels were preserved; no data was rewritten, deleted or
-migrated destructively.
+Historical rows and labels were preserved; no production data was changed. The financial-reference migration now fails closed on duplicate PO/booking references instead of silently renaming them.
 
 ## 2. Changes implemented
 
@@ -101,7 +100,7 @@ migrated destructively.
 Final commands and their recorded results are listed in
 `PRODUCTION_READINESS_REPORT.md`. Only runs actually executed in this pass are
 claimed; no placeholder or historical result is presented as current. The
-completed authoritative gates were the full MySQL suite (**609 passed, 3 skipped, 3,153 assertions (CI run 45982335954)**) and the responsive browser suite (**8/8 passed,
+completed authoritative gates were the full MySQL suite (**611 passed, 3 skipped, 3,184 assertions (CI run 46011895564)**) and the responsive browser suite (**8/8 passed,
 exit 0**); static gates (lint, Pint, route/view cache, build, secret scan) were
 also green.
 

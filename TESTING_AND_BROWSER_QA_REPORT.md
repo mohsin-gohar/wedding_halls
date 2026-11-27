@@ -2,6 +2,10 @@
 
 **Branch:** `audit/riwaj-grand-repair-20261126` · **Base:** `df8de437` · **Date:** 2026-11-26
 
+## Latest exact-head CI evidence (2026-11-27)
+
+On HEAD `846ac407f098d641add8cfeabdc9784fc8b87c8b`, [GitHub Actions run 46011895564](https://github.com/mohsin-gohar/wedding_halls/actions/runs/46011895564) passed: MySQL **611 passed, 3 skipped, 3,184 assertions**; Playwright **8/8 passed**; PHP lint/Pint, Composer audit, NPM audit, Vite build and Docker config/build/runtime smoke all passed. The browser artifact is `playwright-artifacts` (ID 15204463518), with screenshots at 390px and 1440px plus Super Admin, Tenant Owner and Customer captures. Production deployment was skipped intentionally.
+
 ## 1. How to reproduce
 
 Local isolated test DB: MariaDB 10.4 at `127.0.0.1:3307`, database `wedding_hall_mysql_test`.  
