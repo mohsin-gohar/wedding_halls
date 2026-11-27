@@ -147,7 +147,7 @@ class VendorPortfolioManager extends Component
                 'caption' => $this->mediaCaption ?: null,
                 'category' => $this->mediaCategory ?: null,
             ]);
-        } catch (\\Throwable $exception) {
+        } catch (\Throwable $exception) {
             Storage::disk('public')->delete($path);
             throw $exception;
         }
