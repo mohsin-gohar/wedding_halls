@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\RFQ;
 use App\Models\User;
+use App\Support\PermissionMatrix;
 
 class RFQPolicy
 {
