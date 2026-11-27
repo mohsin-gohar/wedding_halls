@@ -185,6 +185,10 @@ class TwoFactorAuthComponent extends Component
 
     public function verifyTwoFactor(): void
     {
+        // Livewire public properties are client-controlled after mount. Re-run
+        // the allow-list immediately before using this redirect destination.
+        $this->intended = $this->normalizeIntended($this->intended);
+
         $this->validate([
             'code' => 'required|string|min:6|max:10',
         ]);
