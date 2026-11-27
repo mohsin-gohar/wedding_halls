@@ -511,14 +511,31 @@ class CustomerEventWorkspace extends Component
             abort(404, 'Booking not found.');
         }
 
-        $booking->update(['customer_event_id' => null]);
+        DB::transaction(function () use ($booking, $event): void {
+            $lockedBooking = ServiceBooking::query()
+                ->whereKey($booking->id)
+                ->where('customer_id', Auth::id())
+                ->where('customer_event_id', $event->id)
+                ->lockForUpdate()
+                ->first();
 
-        // Keep the shortlist row, but drop the booking link so it no longer
-        // claims a reference that isn't attached to this event.
-        CustomerEventVendor::query()
-            ->where('customer_event_id', $event->id)
-            ->where('service_booking_id', $booking->id)
-            ->update(['service_booking_id' => null]);
+            if (! $lockedBooking) {
+                abort(404, 'Booking not found.');
+            }
+
+            $lockedBooking->update(['customer_event_id' => null]);
+
+            // A vendor may have multiple bookings for the same event. Only
+            // clear this exact booking reference and restore SHORTLISTED
+            // when no other booking remains linked to that vendor row.
+            CustomerEventVendor::query()
+                ->where('customer_event_id', $event->id)
+                ->where('service_booking_id', $lockedBooking->id)
+                ->update([
+                    'service_booking_id' => null,
+                    'status' => 'SHORTLISTED',
+                ]);
+        });
 
         $this->feedbackMessage = 'Booking unlinked from this event.';
     }
