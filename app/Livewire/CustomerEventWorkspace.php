@@ -459,24 +459,9 @@ class CustomerEventWorkspace extends Component
     {
         $event = $this->currentEvent();
 
-        $booking = ServiceBooking::query()
-            ->where('id', $bookingId)
-            ->where('customer_id', Auth::id())
-            ->first();
-
-        if (! $booking) {
-            abort(404, 'Booking not found.');
-        }
-
-        if ($booking->customer_event_id && $booking->customer_event_id !== $event->id) {
-            $this->errorMessage = 'This booking is already linked to another event. Unlink it there first.';
-
-            return;
-        }
-
-        DB::transaction(function () use ($booking, $event) {
+        $bookingReference = DB::transaction(function () use ($bookingId, $event): string {
             $lockedBooking = ServiceBooking::query()
-                ->whereKey($booking->id)
+                ->whereKey($bookingId)
                 ->where('customer_id', Auth::id())
                 ->lockForUpdate()
                 ->first();
@@ -486,23 +471,30 @@ class CustomerEventWorkspace extends Component
             }
 
             if ($lockedBooking->customer_event_id && $lockedBooking->customer_event_id !== $event->id) {
-                abort(409, 'This booking is already linked to another event.');
+                $this->errorMessage = 'This booking is already linked to another event. Unlink it there first.';
+
+                return '';
             }
 
             $lockedBooking->update(['customer_event_id' => $event->id]);
+
+            // Keep the shortlist and booking reference in sync atomically.
+            CustomerEventVendor::query()
+                ->where('customer_event_id', $event->id)
+                ->where('tenant_id', $lockedBooking->tenant_id)
+                ->update([
+                    'status' => 'BOOKED',
+                    'service_booking_id' => $lockedBooking->id,
+                ]);
+
+            return $lockedBooking->booking_reference;
         });
 
-        // If the booked vendor is on the shortlist, mark them booked and
-        // attach the reference so the shortlist reflects reality.
-        CustomerEventVendor::query()
-            ->where('customer_event_id', $event->id)
-            ->where('tenant_id', $booking->tenant_id)
-            ->update([
-                'status' => 'BOOKED',
-                'service_booking_id' => $booking->id,
-            ]);
+        if ($bookingReference === '') {
+            return;
+        }
 
-        $this->feedbackMessage = 'Booking '.$booking->booking_reference.' linked to this event.';
+        $this->feedbackMessage = 'Booking '.$bookingReference.' linked to this event.';
     }
 
     public function unlinkBooking(string $bookingId): void
