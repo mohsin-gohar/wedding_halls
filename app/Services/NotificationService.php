@@ -25,7 +25,8 @@ class NotificationService
     ): Notification {
         $user = User::query()->findOrFail($userId);
 
-        if ($tenantId !== null && (string) $user->tenant_id !== (string) $tenantId) {
+        if ($tenantId !== null && $user->tenant_id !== null
+            && (string) $user->tenant_id !== (string) $tenantId) {
             throw new \InvalidArgumentException('A notification cannot be assigned to a different tenant than its recipient.');
         }
 
