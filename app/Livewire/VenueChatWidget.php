@@ -15,7 +15,7 @@ class VenueChatWidget extends Component
 {
     use WithFileUploads;
 
-    public Hall $hall;
+    #[Locked]\n    public Hall $hall;
 
     public bool $isOpen = false;
 
@@ -23,9 +23,9 @@ class VenueChatWidget extends Component
 
     public $voiceRecording = null;
 
-    public string $visitorIp = '';
+    #[Locked]\n    public string $visitorIp = '';
 
-    public string $visitorSession = '';
+    #[Locked]\n    public string $visitorSession = '';
 
     public array $messages = [];
 
