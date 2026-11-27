@@ -26,7 +26,7 @@ class CustomerRegister extends Component
         'name' => 'required|string|min:3|max:100',
         'email' => 'required|email|unique:users,email',
         'phone' => 'required|string|min:10|max:25',
-        'password' => 'required|string|min:6|confirmed',
+        'password' => 'required|string|min:8|confirmed',
     ];
 
     public function register()
