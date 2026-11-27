@@ -58,7 +58,7 @@ class Register extends Component
         'phone' => 'required|string|min:10|max:25',
         'city' => 'required|string|max:80',
         'vendorCategoryId' => 'nullable|integer|exists:vendor_categories,id',
-        'password' => 'required|string|min:6|confirmed',
+        'password' => 'required|string|min:8|confirmed',
     ];
 
     public function mount()
