@@ -86,7 +86,7 @@
                                 class="btn-secondary !h-9 !px-3.5 text-xs font-sans font-semibold">
                             Use in Calculator
                         </button>
-                        <button onclick="Livewire.dispatch('openWalkInModal', { package_id: '{{ $pkg->id }}' })" 
+                        <button onclick="Livewire.dispatch('openWalkInModal', { package_id: @js($pkg->id) })" 
                                 class="btn-obsidian !h-9 !px-4 text-xs font-sans font-semibold">
                             Reserve Menu &rarr;
                         </button>
