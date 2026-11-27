@@ -320,14 +320,6 @@ class HallMediaManager extends Component
         $this->assertCanManageHall();
         abort_unless(PermissionMatrix::userCan(Auth::user(), 'locations.manage'), 403);
 
-        $tenant = Auth::user()->tenant;
-        if ($tenant && ! $tenant->canAddHall()) {
-            session()->flash('error', 'Hall limit reached. Please upgrade your SaaS subscription.');
-            $this->showCreateModal = false;
-
-            return;
-        }
-
         $this->validate([
             'newHallName' => 'required|string|min:3|max:120',
             'newHallCapacity' => 'required|integer|min:50|max:10000',
@@ -335,37 +327,60 @@ class HallMediaManager extends Component
         ]);
 
         $user = Auth::user();
-        if (! $user || ! $user->tenant_id) {
-            abort(403, 'An assigned tenant is required to create a hall.');
-        }
-        $venue = Venue::where('tenant_id', $user->tenant_id)->first();
-        if (! $venue) {
-            $venue = Venue::create([
-                'tenant_id' => $user->tenant_id,
-                'name' => ($user->tenant->name ?? 'Venue Complex'),
-                'slug' => Str::slug(($user->tenant->name ?? 'venue').'-'.Str::random(4)),
-                'city' => $user->tenant->city ?? 'Lahore',
-                'address' => $user->tenant->address ?? 'Main Boulevard, Gulberg III, Lahore',
-                'phone' => $user->tenant->phone ?? '+92 300 1234567',
+        abort_unless($user && $user->tenant_id, 403, 'An assigned tenant is required to create a hall.');
+
+        // Serialize hall creation against the tenant's plan limit so two
+        // concurrent requests cannot both consume the final hall slot.
+        $newHall = DB::transaction(function () use ($user): ?Hall {
+            $tenant = Tenant::query()
+                ->whereKey($user->tenant_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! $tenant->canAddHall()) {
+                return null;
+            }
+
+            $venue = Venue::query()
+                ->where('tenant_id', $tenant->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $venue) {
+                $venue = Venue::create([
+                    'tenant_id' => $tenant->id,
+                    'name' => $tenant->name ?: 'Venue Complex',
+                    'slug' => Str::slug(($tenant->name ?: 'venue').'-'.Str::random(4)),
+                    'city' => $tenant->city ?: 'Lahore',
+                    'address' => $tenant->address ?: 'Main Boulevard, Gulberg III, Lahore',
+                    'phone' => $tenant->phone ?: '+92 300 1234567',
+                    'is_active' => true,
+                ]);
+            }
+
+            return Hall::create([
+                'tenant_id' => $tenant->id,
+                'venue_id' => $venue->id,
+                'name' => $this->newHallName,
+                'min_capacity' => (int) ($this->newHallCapacity * 0.4),
+                'max_capacity' => $this->newHallCapacity,
+                'base_rent' => $this->newHallRent,
+                'description' => 'Spectacular wedding banquet marquee ballroom.',
+                'cover_image' => null,
+                'images' => [],
+                'has_air_conditioning' => true,
+                'has_generator_backup' => true,
+                'has_bridal_room' => true,
                 'is_active' => true,
             ]);
-        }
+        });
 
-        $newHall = Hall::create([
-            'tenant_id' => $user->tenant_id,
-            'venue_id' => $venue->id,
-            'name' => $this->newHallName,
-            'min_capacity' => (int) ($this->newHallCapacity * 0.4),
-            'max_capacity' => $this->newHallCapacity,
-            'base_rent' => $this->newHallRent,
-            'description' => 'Spectacular wedding banquet marquee ballroom.',
-            'cover_image' => null,
-            'images' => [],
-            'has_air_conditioning' => true,
-            'has_generator_backup' => true,
-            'has_bridal_room' => true,
-            'is_active' => true,
-        ]);
+        if (! $newHall) {
+            session()->flash('error', 'Hall limit reached. Please upgrade your SaaS subscription.');
+            $this->showCreateModal = false;
+
+            return;
+        }
 
         $this->showCreateModal = false;
         $this->loadHall($newHall);
