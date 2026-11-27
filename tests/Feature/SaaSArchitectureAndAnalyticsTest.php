@@ -155,6 +155,15 @@ class SaaSArchitectureAndAnalyticsTest extends TestCase
         ]);
     }
 
+    public function test_platform_metrics_do_not_invent_visitors_when_no_page_visits_exist(): void
+    {
+        PlatformMetrics::flush();
+        $metrics = PlatformMetrics::snapshot();
+
+        $this->assertSame(0, $metrics['uniqueVisitorsCount']);
+        $this->assertSame(0, $metrics['activeSessionsCount']);
+    }
+
     public function test_hall_page_view_counter_increments_dynamically_when_visiting_showcase(): void
     {
         $initialViews = HallView::where('hall_id', $this->hallA->id)->count();
