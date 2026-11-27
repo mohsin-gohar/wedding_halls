@@ -313,6 +313,7 @@ class CustomerEventWorkspaceTest extends TestCase
 
         $row->refresh();
         $this->assertNull($row->service_booking_id);
+        $this->assertSame('SHORTLISTED', $row->status);
     }
 
     public function test_customer_cannot_link_another_customers_booking(): void
