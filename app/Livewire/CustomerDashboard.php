@@ -90,7 +90,7 @@ class CustomerDashboard extends Component
     {
         $this->validate([
             'currentPassword' => 'required|string',
-            'newPassword' => 'required|string|min:6|confirmed',
+            'newPassword' => 'required|string|min:8|confirmed',
         ]);
 
         $user = Auth::user();
