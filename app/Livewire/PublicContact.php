@@ -30,7 +30,7 @@ class PublicContact extends Component
         'name' => 'required|string|min:3|max:100',
         'email' => 'required|email|max:150',
         'phone' => 'required|string|min:10|max:25',
-        'city' => 'required|string',
+        'city' => 'required|string|max:80',
         'eventDate' => 'nullable|date',
         'message' => 'required|string|min:10|max:2000',
     ];
@@ -44,8 +44,10 @@ class PublicContact extends Component
             return;
         }
 
-        $this->validate();
+        // Count malformed submissions too, and consume the limit before writes.
         RateLimiter::hit($throttleKey, 60);
+
+        $this->validate();
 
         ContactInquiry::create([
             'name' => trim($this->name),
