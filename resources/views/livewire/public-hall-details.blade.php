@@ -109,7 +109,7 @@
                         <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">{{ $wishlistCount }}</span>
                     </button>
 
-                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}' })"
+                    <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: @js($hall->id) })"
                             class="btn-gold !h-11 !px-6 text-xs font-bold font-sans tracking-wide">
                         Reserve Event Shift &rarr;
                     </button>
@@ -443,7 +443,7 @@
                                     @endif
                                 </div>
 
-                                <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}' })" 
+                                <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: @js($hall->id) })" 
                                         class="btn-gold !h-9 !px-4 text-xs font-sans font-semibold tracking-wide flex items-center gap-1.5 whitespace-nowrap rounded-lg shadow-sm hover:scale-[1.02] transition-transform">
                                     <span>Inquire</span>
                                     <span>&rarr;</span>
@@ -510,7 +510,7 @@
                     </div>
 
                     <div class="pt-4 border-t border-[#E7E5E4] dark:border-white/10">
-                        <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}', package_id: '{{ $pkg->id }}' })" 
+                        <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: @js($hall->id), package_id: @js($pkg->id) })" 
                                 class="btn-gold !w-full !h-9 text-xs font-mono font-bold uppercase">
                             Select This Menu &rarr;
                         </button>
@@ -1106,7 +1106,7 @@
                     </div>
 
                     <div class="space-y-3 pt-2">
-                          <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: '{{ $hall->id }}' })" 
+                          <button onclick="Livewire.dispatch('openWalkInModal', { hall_id: @js($hall->id) })" 
                                   class="btn-gold !w-full !h-12 text-xs font-bold font-sans tracking-wide rounded-xl shadow-md transition-all duration-200">
                               <span>Instant Shift Reservation &rarr;</span>
                           </button>
