@@ -115,7 +115,7 @@ Further review of middleware, policies, service classes and their callers identi
 - 1eb9e71 — explicit RFQ target regression
 - 47a799d, 98ee402, 9ac8c70 — notification tenant context guard and customer-support compatibility
 - 45db70d, eb2a011 — walk-in staff-mode revalidation and regression
-- 47b? — notification regression coverage is included in commit 4f010ac and follow-up 117ddb1
+- 4f010ac, 117ddb1 — notification tenant-context regression coverage
 
 The new/updated tests have been committed but could not be executed in the current local runtime because required PHP extensions are absent. No CI action was taken. Full Phase 1 file-by-file review remains in progress; no 100% completion claim is made.
 
