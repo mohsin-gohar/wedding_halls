@@ -16,15 +16,15 @@ class HallChat extends Component
 {
     use WithFileUploads;
 
-    public ?Hall $hall = null;
+    #[Locked]\n    public ?Hall $hall = null;
 
     public string $newMessage = '';
 
     public $voiceRecording = null;
 
-    public string $visitorIp = '';
+    #[Locked]\n    public string $visitorIp = '';
 
-    public string $visitorSession = '';
+    #[Locked]\n    public string $visitorSession = '';
 
     public ?string $selectedCustomerIp = null;
 
