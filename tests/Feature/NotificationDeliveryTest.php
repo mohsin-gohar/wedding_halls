@@ -196,7 +196,7 @@ class NotificationDeliveryTest extends TestCase
 
     public function test_notification_inherits_the_recipient_tenant_when_omitted(): void
     {
-        $tenant = \\App\\Models\\Tenant::create([
+        $tenant = \App\Models\Tenant::create([
             'name' => 'Notification Tenant',
             'slug' => 'notification-'.uniqid(),
             'email' => 'notification-'.uniqid().'@example.test',
@@ -223,7 +223,7 @@ class NotificationDeliveryTest extends TestCase
 
     public function test_notification_cannot_be_written_to_another_tenant_context(): void
     {
-        $tenant = \\App\\Models\\Tenant::create([
+        $tenant = \App\Models\Tenant::create([
             'name' => 'Notification Tenant',
             'slug' => 'notification-'.uniqid(),
             'email' => 'notification-'.uniqid().'@example.test',
@@ -238,7 +238,7 @@ class NotificationDeliveryTest extends TestCase
             'sms_notifications_enabled' => false,
         ]);
 
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
 
         app(NotificationService::class)->send(
             $user->id,
