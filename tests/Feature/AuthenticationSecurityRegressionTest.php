@@ -17,6 +17,20 @@ class AuthenticationSecurityRegressionTest extends TestCase
         $this->assertFalse(method_exists(Login::class, 'setLoginPassword'));
     }
 
+    public function test_pending_account_is_logged_out_of_an_existing_session(): void
+    {
+        $user = \\App\\Models\\User::factory()->create([
+            'role' => 'ROLE_CUSTOMER',
+            'status' => 'PENDING',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('customer.dashboard'))
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
+    }
+
     public function test_native_login_routes_are_not_exempt_from_csrf_validation(): void
     {
         $excluded = app(ValidateCsrfToken::class)->getExcludedPaths();
