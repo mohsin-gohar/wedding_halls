@@ -69,11 +69,9 @@ final class PlatformMetrics
             $activeSessionsCount = PageVisit::where('visited_at', '>=', now()->subMinutes(15))
                 ->distinct('ip_address')
                 ->count('ip_address');
-
         }
 
         $uniqueVisitorsCount = PageVisit::distinct('ip_address')->count('ip_address');
-
 
         $shiftRows = Booking::query()
             ->selectRaw('slot_type, COUNT(*) as aggregate')
