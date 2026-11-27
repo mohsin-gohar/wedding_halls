@@ -223,6 +223,31 @@ class VendorQuoteRequestTest extends TestCase
         $this->assertNull($rfq->preferences['service_name']);
     }
 
+    public function test_vendor_hidden_after_form_mount_cannot_receive_quote_request(): void
+    {
+        $customer = $this->customer();
+        $vendor = $this->marketplaceVendor('catering');
+        $service = VendorService::query()
+            ->where('tenant_id', $vendor->id)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $page = Livewire::actingAs($customer)
+            ->test(VendorQuoteRequest::class, ['slug' => $vendor->slug])
+            ->set('service', $service->id)
+            ->set('eventName', 'Stale Vendor Page')
+            ->set('eventDate', now()->addDays(35)->toDateString())
+            ->set('guestCount', 180);
+
+        $vendor->update(['marketplace_visible' => false]);
+
+        $page->call('save')
+            ->assertSet('submitted', false)
+            ->assertHasErrors(['requirements']);
+
+        $this->assertSame(0, RFQ::query()->where('client_id', $customer->id)->count());
+    }
+
     public function test_rate_limit_blocks_more_than_ten_requests_per_hour(): void
     {
         $customer = $this->customer();
