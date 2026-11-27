@@ -70,16 +70,10 @@ final class PlatformMetrics
                 ->distinct('ip_address')
                 ->count('ip_address');
 
-            if ($activeSessionsCount === 0) {
-                $activeSessionsCount = 1;
-            }
         }
 
         $uniqueVisitorsCount = PageVisit::distinct('ip_address')->count('ip_address');
 
-        if ($uniqueVisitorsCount === 0) {
-            $uniqueVisitorsCount = max(1, User::count());
-        }
 
         $shiftRows = Booking::query()
             ->selectRaw('slot_type, COUNT(*) as aggregate')
