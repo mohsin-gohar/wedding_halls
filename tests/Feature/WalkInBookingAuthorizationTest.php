@@ -39,7 +39,7 @@ class WalkInBookingAuthorizationTest extends TestCase
 
     public function test_customer_cannot_forge_staff_mode_when_selecting_a_hall(): void
     {
-        $hall = \\App\\Models\\Hall::publicVisible()->firstOrFail();
+        $hall = \App\Models\Hall::publicVisible()->firstOrFail();
         $customer = User::factory()->create([
             'role' => 'ROLE_CUSTOMER',
             'status' => 'ACTIVE',
