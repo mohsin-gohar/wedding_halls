@@ -42,15 +42,24 @@ class TenantBrand
             name: (string) ($settings['brand_name'] ?? $tenant->name),
             logo: $tenant->logo ?: null,
             tagline: (string) ($settings['tagline'] ?? $tenant->vendorCategory?->tagline ?? ''),
-            primaryColor: (string) ($settings['primary_color'] ?? '#171513'),
-            secondaryColor: (string) ($settings['secondary_color'] ?? '#24211E'),
-            accentColor: (string) ($settings['accent_color'] ?? $tenant->vendorCategory?->hero_color ?? '#C6A15B'),
+            // website_settings may be edited through admin tooling or imported
+            // data. Never let arbitrary stored strings become CSS declarations.
+            primaryColor: self::safeColor($settings['primary_color'] ?? null, '#171513'),
+            secondaryColor: self::safeColor($settings['secondary_color'] ?? null, '#24211E'),
+            accentColor: self::safeColor($settings['accent_color'] ?? $tenant->vendorCategory?->hero_color, '#C6A15B'),
             fontFamily: (string) ($settings['font_family'] ?? 'Cinzel'),
             phone: $tenant->phone,
             email: $tenant->email,
             address: $tenant->address,
             coverImage: $tenant->cover_image ?: null,
         );
+    }
+
+    private static function safeColor(mixed $value, string $fallback): string
+    {
+        return is_string($value) && preg_match('/\\A#[0-9a-fA-F]{6}\\z/', $value)
+            ? $value
+            : $fallback;
     }
 
     /**
