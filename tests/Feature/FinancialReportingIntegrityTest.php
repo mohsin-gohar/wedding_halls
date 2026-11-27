@@ -47,5 +47,8 @@ class FinancialReportingIntegrityTest extends TestCase
         $this->assertNotNull($todayPoint);
         // HOLD is pipeline value, not GMV: only the CONFIRMED 100,000 counts.
         $this->assertSame(100000.0, (float) $todayPoint['value']);
+
+        PlatformMetrics::flush();
+        $this->assertSame(100000.0, (float) PlatformMetrics::snapshot()['totalGmv']);
     }
 }
