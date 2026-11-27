@@ -161,6 +161,7 @@ class VendorQuoteRequest extends Component
             // Recheck under a tenant-row lock: Livewire properties can outlive
             // a vendor's subscription or marketplace suspension.
             $vendor = Tenant::query()
+                ->marketplaceVisible()
                 ->whereKey($this->vendor->id)
                 ->lockForUpdate()
                 ->first();
