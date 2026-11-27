@@ -3,9 +3,9 @@
 **Branch:** `audit/riwaj-grand-repair-20261126`
 **Base / merge-base with `main`:** `df8de43717415f3c7f47d50845f114502f437037`
 **GitHub `main` baseline:** `07bc5fe397fbb0fd7de05678d68830fc027a8872`
-**Final SHA:** `f83728308a0717380e6c55f13cd471de894b7c3e`
+**Audited code baseline:** `1b57773f8add34f515b92995b54a812f6d060cdf` (latest GitHub-verified source head before this documentation/artifact cleanup)
 **Audit date:** 2026-11-27
-**Tracked files:** 617 (review coverage: `FILE_BY_FILE_REVIEW_MATRIX.md`)
+**Tracked files after cleanup:** 559 (review coverage: `FILE_BY_FILE_REVIEW_MATRIX.md`)
 **No changes to `main`; no force-push, reset, deployment or production-data change.**
 
 ## 1. CI evidence (authoritative, GitHub-confirmed)
@@ -127,7 +127,11 @@ https://github.com/mohsin-gohar/wedding_halls/actions/runs/45949436835
 
 **Remote HEAD verified:** `bc3f64af9bce27570f59713dd116e692f4f58886` on `origin/audit/riwaj-grand-repair-20261126`.
 
-## 12. Final production-readiness pass (2026-11-27, HEAD cb6ad80)
+## 12. Historical in-progress snapshot (superseded by §13)
+
+The status table in this section records the last poll before CI completed. Its in-progress labels are historical only; §13 records the completed exact-head run.
+
+## 12A. Historical production-readiness details (HEAD cb6ad80)
 
 **CI run on exact latest HEAD `cb6ad80ea7bc722041a1ae8809b5e0b43c9dcd0b`:**  
 https://github.com/mohsin-gohar/wedding_halls/actions/runs/45951164982
@@ -162,3 +166,34 @@ Redis, queue workers (`supervisor-riwaj-grand-worker.conf`), scheduler (`schedul
 - Any production deploy or merge to `main`.
 
 No production data modified. No merge or deploy performed. No test results fabricated.
+
+
+## 13. Latest exact-head CI verification (2026-11-27)
+
+**Verified branch HEAD before this docs/artifact-only cleanup:**
+`1b57773f8add34f515b92995b54a812f6d060cdf`
+**GitHub Actions:** https://github.com/mohsin-gohar/wedding_halls/actions/runs/45982335954
+
+| Job | Result |
+|---|---|
+| MySQL test suite | **SUCCESS — 609 passed, 3 skipped, 0 failed; 3,153 assertions** |
+| Playwright browser QA | **SUCCESS — 8 passed** |
+| Static quality gates | **SUCCESS** — PHP lint, Pint, Composer audit, NPM audit, Vite production build and Docker configuration/build/smoke |
+| Deploy | **SKIPPED** — intentionally manual-only |
+
+The cleanup following this verified head removes superseded historical documents
+and three tracked local-output artifacts only; it does not change application
+PHP, database migrations, routes, browser code, dependencies or runtime
+configuration. A fresh CI run is still required on the cleanup commit before
+calling that exact commit fully verified.
+
+**Local inspection of the uploaded ZIP:** PHP syntax lint passed for all 477
+tracked PHP files and `php artisan route:list` registered 109 routes. Local
+Pint and PHPUnit could not run because this inspection runtime lacks
+`mbstring`, `xml`, `dom` and `xmlwriter`; the ZIP's Windows-installed Rollup
+optional binary is also incompatible with this Linux runtime. These local
+limitations do not override the successful GitHub CI evidence above.
+
+**External production gates remain:** staging backup/restore and irreversible
+financial migration rehearsal; live Redis/queue/scheduler/mail/WhatsApp
+verification with owner infrastructure; production deployment approval.

@@ -10,7 +10,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
- * Seeds the granular RBAC permission matrix (see RBAC_PERMISSION_MATRIX.md).
+ * Seeds granular RBAC permissions defined by App\\Support\\PermissionMatrix.
  * Idempotent: safe to re-run; syncs without deleting user assignments.
  */
 class PermissionMatrixSeeder extends Seeder

@@ -6,15 +6,14 @@
 
 
 
-## 26 Nov 2026 follow-up — post-baseline changes not yet CI-verified
+## Current verification snapshot (2026-11-27)
 
-The following repository changes were added after the recorded verification baseline:
-- Vendor service pricing now rejects non-finite/negative amounts, reversed ranges, and missing/non-positive PER_HEAD/HOURLY base prices; regression tests were added.
-- API booking/service-booking list and detail endpoints now require explicit read permissions; Finance and Content Moderator no longer inherit global booking visibility. Regression tests were added.
-- WhatsApp webhook and simulator now require explicit RSVP intent; unclear messages receive clarification and leave RSVP state unchanged. Regression tests were added. Outbound WhatsApp requests now have a 10-second timeout and provider HTTP failures are logged; the fallback Graph API version is v26.0.
-- Vendor quote boards now expose only the signed-in vendor's own bid, never competitor amounts/identity; modal prefill is similarly scoped. Bid submission locks and rechecks that the RFQ is still OPEN, with regression tests for confidentiality and closed-RFQ rejection.
-
-Latest code follow-up commits checked: `bef3966cd582f943165e3c60c4d9f54c8f797b3e`, `5cade99da456b29bdd4e6f6150c3459784f3e617`, `6f01c263e1e662002f2bae2f68d5ea096f94d97b`, `36bb0d4b63e3929ce648102b82ef93a563617ee4`, `7044976a9acc95acd9325e29f2b97383df27982c`. GitHub currently reports no workflow run or status checks for this head. Therefore the historical test/build/browser results below apply only to their recorded baseline and **must not be represented as verification of these follow-up changes** until CI is run successfully.
+The latest GitHub-verified source baseline before documentation cleanup is
+`1b57773f8add34f515b92995b54a812f6d060cdf`. CI run
+[45982335954](https://github.com/mohsin-gohar/wedding_halls/actions/runs/45982335954)
+passed MySQL (609 passed, 3 skipped, 3,153 assertions), Playwright (8 passed),
+and all static/build/security/Docker gates. Deployment was intentionally
+skipped. Older test counts and incomplete workflow states below are historical.
 
 ## 1. Scope and authority
 
@@ -66,9 +65,7 @@ authorized. All work below is in the repository and local test environments.
 
 ## 4. Phase 1–9 audit ledger
 
-The phase names below follow `RIWAJ_GRAND_EXECUTION_PROGRESS.md` (Phases 1–9);
-the earlier five-phase stabilise/SEO/UI/advanced/QA sequence is also covered by
-the same evidence.
+The phase names below follow preserved legacy execution notes available in Git history; the earlier five-phase stabilise/SEO/UI/advanced/QA sequence is also covered by the same current code and test evidence.
 
 | Phase | Scope | Status | Evidence |
 |---|---|---|---|
@@ -98,8 +95,7 @@ the same evidence.
 See `IMPLEMENTATION_COMPLETION_REPORT.md` and
 `PRODUCTION_READINESS_REPORT.md` for the final commands and their recorded
 results. No result is claimed unless its output file from this pass exists.
-Recorded final gates: full MySQL suite **444 tests / 2,602 assertions / exit 0**
-and browser proof **8/8 passed / exit 0**.
+Latest exact-head CI gates: full MySQL suite **609 passed, 3 skipped / 3,153 assertions** and Playwright **8/8 passed** on `1b57773` (run 45982335954).
 
 ## 7. Residual risk / non-goals
 

@@ -1,7 +1,7 @@
 # File-by-File Review Matrix — Riwaj Grand (independent re-audit)
 
 **Branch:** `audit/riwaj-grand-repair-20261126` · **Base:** `df8de437` · **Date:** 2026-11-26  
-**Tracked files (git ls-files):** 617
+**Tracked files after cleanup (git ls-files):** 559
 
 ## 1. Review depth legend
 
@@ -15,21 +15,20 @@ Generated directories (`vendor/`, `node_modules/`, `public/build/`, compiled vie
 
 | Directory | Tracked | Review coverage |
 |---|---:|---|
-| `(root)` | 93 | D: `composer.json`, `composer.lock`, `phpunit.xml`, `phpunit.local.xml`, `playwright.config.ts`, `package.json`, `.env.example`, `.env.production.example`, `Dockerfile`, `docker-compose.yml`, `README.md`, `DOCS_STATUS.md` and the eight current audit/acceptance reports. A/N: historical audit/roadmap markdown (superseded per `DOCS_STATUS.md`; not individually re-read this pass). |
-| `.github` | 1 | D: `ci.yml` (all jobs, quality/test/browser/deploy gates, rate-limit env). |
-| `.kilo` | 2 | N: local agent plan artifacts, not application source. |
-| `app` | 184 | D: controllers (`Api/*`, `DocumentController`, `WhatsAppWebhookController`, `ApiTokenController`), middleware (all), policies, services (`ServiceBookingService`, `BookingService`, `PaymentService`, `SubscriptionService`, `PlatformAnalyticsService`, `HallAvailabilityService`), `Support/*` (PermissionMatrix, CashOnlyPayments, PlatformMetrics, TenantAccess), models touched by fixes, and Livewire components relevant to the confirmed defects (AdminDashboard, Dashboard, ExpenseTracker, InventoryTracker, UtilityFuelTracker, StaffManager, auth components, walk-in, vendor boards). A/N: remaining components were syntax/style-checked and exercised indirectly by the feature suite, not individually read. |
-| `audit` | 7 | N: historical audit snapshots; superseded. |
-| `bootstrap` | 3 | D: `app.php`, `providers.php`, `cache/*` behaviour (rate limiters, middleware, exception rendering). |
-| `config` | 18 | D: `platform.php`, `services.php`, `filesystems.php`, `livewire.php`, `database.php`, `app.php`, `rate-limits.php`. A: remaining framework configs. |
-| `database` | 81 | D: all `2026_11_26_*` and new `2026_12_22_*` migrations; cash-only integrity migrations; service-booking/finance migrations; `DatabaseSeeder`, `VendorCategorySeeder`, `PermissionMatrixSeeder`. A/N: earlier migrations reviewed via schema/test coverage (`migrate:fresh` on isolated DB), not individually line-by-line. |
-| `deploy` | 15 | D: `supervisor.conf`, `nginx*.conf`, `Caddyfile`, backup/restore drills, `PRODUCTION_CHECKLIST.md`, `php-production.ini`, `entrypoint.sh`. |
-| `docker` | 1 | D: entrypoint helpers. |
-| `public` | 14 | A: static assets/entrypoints; build output verified. N: binary/asset files excluded from source review by policy. |
-| `resources` | 86 | D: `inventory-tracker.blade.php`, `public-hall-details.blade.php`, `dashboard*.blade.php`, `expense-tracker.blade.php`, layouts (public/app), auth views. A/N: remaining Blade templates compiled via `view:clear` + test/browser rendering; not individually read. |
-| `routes` | 3 | D: `web.php`, `api.php`, `console.php` (all route groups, middleware, schedules). |
-| `storage` | 10 | N: placeholders/logs/fixtures, not application source. |
-| `tests` | 99 | D: all newly added/edited tests plus the hardening suites cited in reports. A: full suite executed; remaining test files verified by execution rather than individual reading. |
+| `(root)` | 35 | D: Composer/npm manifests and locks, PHPUnit/Playwright config, env examples, Docker files, README and current authoritative reports. Historical snapshots are recoverable from Git history, not the active tree. |
+| `.github` | 1 | D: `ci.yml` (quality, MySQL, browser and manual-only deploy gates). |
+| `app` | 185 | D: security-sensitive controllers, middleware, policies, domain services, permission/tenant support and components tied to confirmed fixes. A/N: remaining Livewire components were syntax-checked and exercised through CI tests/browser coverage, not individually deep-read. |
+| `bootstrap` | 3 | D: application bootstrap, providers and cache/exception/rate-limit wiring. |
+| `config` | 18 | D: platform, services, filesystems, Livewire, database, app and rate-limit configs. A: remaining framework configs. |
+| `database` | 84 | D: recent financial/booking/attendance migrations, seeders and schema changes involved in fixes. A/N: older migrations covered by clean MySQL migrations and tests, not all individually reviewed line-by-line. |
+| `deploy` | 15 | D: Nginx/Caddy, supervisor, backup/restore scripts, production checklist and operations guidance. |
+| `docker` | 1 | D: container entrypoint helpers. |
+| `public` | 14 | A: public entrypoints and static assets; build integrity covered by CI. Binary assets not manually reviewed. |
+| `resources` | 86 | D: key layouts and defect-related Blade views. A/N: remaining templates covered by CI Blade compilation/browser tests, not individually read. |
+| `routes` | 3 | D: web, API and console routes; 109 routes registered in local inspection. |
+| `storage` | 10 | N: framework placeholders only; runtime logs/uploads are ignored and not committed. |
+| `tests` | 104 | D: added/changed security, finance, tenancy and workflow regression tests. Full suite executed in CI; not every test file individually read. |
+
 
 ## 3. Files personally opened and changed this re-audit
 
@@ -37,14 +36,14 @@ Generated directories (`vendor/`, `node_modules/`, `public/build/`, compiled vie
 
 ## 4. Unreviewed files and reasons
 
-- Historical `*.md` reports (root, `audit/`, `.kilo/`): superseded by `DOCS_STATUS.md`; claims were checked against code instead of re-reading every document.
+- Historical `*.md` reports were removed from the active tree; their original content remains recoverable from Git history and is not current source of truth.
 - Remaining Livewire/Blade files (~250): covered by syntax lint, Blade compilation through the full web route crawl, Playwright page loads, and feature tests; not individually manually reviewed. This is explicitly **NOT** a 100% manual file-review claim.
 - Binary/static assets under `public/`: excluded from source review; build integrity verified by `npm run build` and browser asset loads.
 - `vendor/`, `node_modules/`, compiled caches: generated, untracked; audited through lockfiles, `composer audit` and `npm run build`.
 
 ## 5. Verification evidence for this matrix
 
-`composer audit --locked` → 0 advisories; `npm run build` → exit 0; `vendor/bin/pint --test` → exit 0; PHP lint over 386 tracked PHP files; `git ls-files` count 617; full MySQL suite artifact `full_suite_repair*.out`.
+`composer audit --locked` → 0 advisories; `npm run build` → exit 0; `vendor/bin/pint --test` → exit 0; PHP lint over 386 tracked PHP files; `git ls-files` count 559; full MySQL suite artifact `full_suite_repair*.out`.
 
 ## 6. Continuation (2026-11-27)
 
@@ -57,3 +56,13 @@ Generated directories (`vendor/`, `node_modules/`, `public/build/`, compiled vie
 - Financial migration `2026_12_23_000001` deep-reviewed: de-dupe logic, unique indexes, restrictOnDelete, irreversibility documented with staging restore-drill commands.
 - Production configs (Redis/queue/scheduler/mail/WhatsApp) reviewed; live verification blocked on owner credentials.
 - CI on exact HEAD in progress (static gates largely green; MySQL/Playwright running). Prior green evidence retained.
+
+
+## 8. Latest verification and cleanup
+
+- GitHub CI run [45982335954](https://github.com/mohsin-gohar/wedding_halls/actions/runs/45982335954) on source HEAD `1b57773`: MySQL **609 passed / 3 skipped / 3,153 assertions**, Playwright **8 passed**, static/security/build/Docker gates **PASS**; deploy skipped intentionally.
+- Uploaded ZIP inspection: 477 tracked PHP files pass `php -l`; Laravel registered 109 routes.
+- Three tracked generated artifacts (`$null`, `migration_status.txt`, `routes.json`) were identified as shell/test/route-list outputs with no application references and removed.
+- Sixty-four superseded root/audit Markdown reports were removed from the active tree after confirming `DOCS_STATUS.md` marked them historical; their original content remains recoverable from Git history.
+- ZIP also contained ignored local dependency trees, environment files, logs and a nested duplicate project snapshot. These are not application source and are not committed.
+- No application runtime code, database migration, route, dependency lockfile or production data was changed in this cleanup.

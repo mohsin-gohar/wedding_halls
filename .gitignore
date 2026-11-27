@@ -46,3 +46,6 @@ wedding_halls/
 /test_results.txt
 /vite_err.txt
 /dashboard_render.html
+/$null
+/migration_status.txt
+/routes.json

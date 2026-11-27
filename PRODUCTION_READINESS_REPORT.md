@@ -5,7 +5,22 @@
 
 
 
-## 26 Nov 2026 follow-up — post-baseline changes not yet CI-verified
+## Current verification snapshot (2026-11-27)
+
+The latest GitHub-verified source baseline before documentation cleanup is
+`1b57773f8add34f515b92995b54a812f6d060cdf`. CI run
+[45982335954](https://github.com/mohsin-gohar/wedding_halls/actions/runs/45982335954)
+passed MySQL (609 passed, 3 skipped, 3,153 assertions), Playwright (8 passed),
+and all static/build/security/Docker gates. Deployment was intentionally
+skipped. Older test counts and incomplete workflow states below are historical.
+
+<!-- superseded preamble removed -->
+
+## 1. Decision summary
+
+Local code, test, build and browser evidence for the Phase 1–9 / cash-only scope
+is recorded below, including the latest exact-head GitHub CI run.
+
 
 The following repository changes were added after the recorded verification baseline:
 - Vendor service pricing now rejects non-finite/negative amounts, reversed ranges, and missing/non-positive PER_HEAD/HOURLY base prices; regression tests were added.
@@ -24,28 +39,30 @@ the host-level checklist in section 5.
 
 ## 2. Final verification ledger
 
-| Gate | Command / evidence | Result |
-|---|---|---|
-| Targeted regression (8 files) | `phpunit -c phpunit.local.xml <8 hardening/smoke files>` | **PASS — 63 tests, 321 assertions, exit 0** |
-| Full MySQL suite | `phpunit -c phpunit.local.xml` | **PASS — 444 tests, 2,602 assertions, 1 skipped, exit 0** |
-| Responsive browser proof | `npm run test:browser` | **PASS — 8 tests, 8 passed, exit 0** |
-| PHP syntax | `php -l` on changed non-Blade PHP files | **PASS — 85 files** |
-| Code style | `pint --test` on changed non-Blade PHP | **PASS** |
-| Whitespace / patch hygiene | `git diff --check` | **PASS — only pre-existing CRLF warnings** |
-| Route registration | `php artisan route:list --except-vendor --json` | **PASS — 108 routes** |
-| Blade compilation | `php artisan view:cache` | **PASS** |
-| Front-end build | `npm run build` | **PASS — `app-B6jCqcvY.css`, `app-DThEJBru.js`** |
-| Secret scan | repository pattern scan | **PASS — no configured secrets found** |
-| Clean migration + seed | `migrate:fresh --seed` on local MySQL | **PASS — 3 QA users, 3 halls, 7 tenants** |
-| Previous cash-only CI | GitHub Actions run `44723054819` | **GREEN** — https://github.com/mohsin-gohar/wedding_halls/actions/runs/44723054819 |
+The latest exact-head GitHub Actions run on source HEAD
+`1b57773f8add34f515b92995b54a812f6d060cdf` is
+[45982335954](https://github.com/mohsin-gohar/wedding_halls/actions/runs/45982335954).
 
-The authoritative output files for this pass are kept outside the repository in
-`F:\opencode-scratch-archive\` (`full_suite_clean.out/.exit`,
-`browser_qa_clean2.out/.exit`, `targeted_fixes_*.out` and the earlier
-`targeted_regression_final.out/.exit`). A later full-suite confirmation run was
-cancelled by a workstation/server restart and is deliberately not counted. The
-final two Blade layout fixes and the Playwright helper refinement were verified
-by a live DOM overflow sweep and the complete 8/8 browser suite.
+| Gate | Evidence | Result |
+|---|---|---|
+| Full MySQL suite | GitHub CI MySQL test job | **PASS — 609 passed, 3 skipped, 3,153 assertions** |
+| Browser QA | GitHub CI Playwright job | **PASS — 8/8 tests** |
+| PHP lint / Pint | GitHub CI static quality job | **PASS** |
+| Composer security audit | GitHub CI static quality job | **PASS — 0 advisories** |
+| NPM audit | GitHub CI static quality job | **PASS — 0 vulnerabilities** |
+| Vite production build | GitHub CI static quality job | **PASS** |
+| Docker config/build/smoke | GitHub CI static quality job | **PASS** |
+| Deploy | Workflow deploy job | **SKIPPED — manual-only by design** |
+
+Local inspection of the uploaded ZIP also passed PHP syntax lint on all 477
+tracked PHP files and `php artisan route:list` (109 registered routes). Local
+Pint/PHPUnit could not run because this runtime lacks `mbstring`, `xml`, `dom`
+and `xmlwriter`; the bundled Rollup native optional dependency was Windows-only.
+The CI run above is the authoritative test/build evidence for the source head.
+
+The following repository cleanup is documentation/artifact-only and does not
+change application runtime code. A new CI run is required on its resulting
+commit before that exact commit is considered verified.
 
 ## 3. Browser proof scope
 
