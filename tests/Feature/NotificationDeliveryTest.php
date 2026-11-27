@@ -194,6 +194,61 @@ class NotificationDeliveryTest extends TestCase
         $this->assertNull($notification->fresh()->email_sent_at);
     }
 
+    public function test_notification_inherits_the_recipient_tenant_when_omitted(): void
+    {
+        $tenant = \\App\\Models\\Tenant::create([
+            'name' => 'Notification Tenant',
+            'slug' => 'notification-'.uniqid(),
+            'email' => 'notification-'.uniqid().'@example.test',
+            'verification_status' => 'APPROVED',
+            'subscription_status' => 'ACTIVE',
+            'is_active' => true,
+        ]);
+        $user = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_TENANT_OWNER',
+            'email_notifications_enabled' => false,
+            'sms_notifications_enabled' => false,
+        ]);
+
+        $notification = app(NotificationService::class)->send(
+            $user->id,
+            'TENANT_TEST',
+            'Tenant notification',
+            'Correct tenant context'
+        );
+
+        $this->assertSame($tenant->id, $notification->tenant_id);
+    }
+
+    public function test_notification_cannot_be_written_to_another_tenant_context(): void
+    {
+        $tenant = \\App\\Models\\Tenant::create([
+            'name' => 'Notification Tenant',
+            'slug' => 'notification-'.uniqid(),
+            'email' => 'notification-'.uniqid().'@example.test',
+            'verification_status' => 'APPROVED',
+            'subscription_status' => 'ACTIVE',
+            'is_active' => true,
+        ]);
+        $user = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'ROLE_TENANT_OWNER',
+            'email_notifications_enabled' => false,
+            'sms_notifications_enabled' => false,
+        ]);
+
+        $this->expectException(\\InvalidArgumentException::class);
+
+        app(NotificationService::class)->send(
+            $user->id,
+            'TENANT_TEST',
+            'Tenant notification',
+            'Wrong tenant context',
+            '00000000-0000-4000-8000-000000000001'
+        );
+    }
+
     private function makeUser(): User
     {
         return User::factory()->create([
