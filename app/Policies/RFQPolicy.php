@@ -29,12 +29,16 @@ class RFQPolicy
         if ($user->isSuperAdmin()) {
             return true;
         }
-        if ($user->isTenantOwner()) {
-            // Vendor can bid on RFQs targeting their category
-            return true;
+        $tenantId = $user->tenant_id;
+
+        if (! $tenantId || ! PermissionMatrix::userCan($user, 'rfq.bid')) {
+            return false;
         }
 
-        return false;
+        // A vendor may respond only to its own RFQ or one explicitly targeted
+        // to its tenant. Category membership alone is not an invitation.
+        return (string) $rfq->tenant_id === (string) $tenantId
+            || $rfq->targets()->where('tenant_id', $tenantId)->exists();
     }
 
     public function award(User $user, RFQ $rfq): bool
